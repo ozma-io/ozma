@@ -20,22 +20,17 @@
 </template>
 
 <script lang="ts">
-export interface ICellCoords {
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+
+interface ICellCoords {
   x: number;
   y: number;
 }
 
-export interface IEditParams {
-  width: number;
-  height: number;
-  minHeight: number;
-}
-
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-
 @Component
 export default class TableCellEdit extends Vue {
-  @Prop({ default: () => ({ x: 0, y: 0 }) }) coords!: ICellCoords;
+  @Prop({ type: Number }) x!: number | undefined;
+  @Prop({ type: Number }) y!: number | undefined;
   @Prop() width!: number;
   @Prop() height!: number;
   @Prop() minHeight!: number;
@@ -58,8 +53,8 @@ export default class TableCellEdit extends Vue {
     const offsetY = cellRect.bottom > viewportRect.bottom ? cellRect.bottom - viewportRect.bottom : 0;
 
     this.movedCellCoords = {
-      x: this.coords.x - offsetX,
-      y: this.coords.y - offsetY,
+      x: this.sourceCoords.x - offsetX,
+      y: this.sourceCoords.y - offsetY,
     };
   }
 
@@ -67,13 +62,17 @@ export default class TableCellEdit extends Vue {
     this.updateMovedCoords();
   }
 
-  @Watch("coords")
+  @Watch("sourceCoords")
   private coordsUpdated() {
     this.updateMovedCoords();
   }
 
+  private get sourceCoords(): ICellCoords {
+    return { x: this.x ?? 0, y: this.y ?? 0 };
+  }
+
   private get cellCoords(): ICellCoords {
-    return this.movedCellCoords ?? this.coords;
+    return this.movedCellCoords ?? this.sourceCoords;
   }
 }
 </script>

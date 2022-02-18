@@ -81,7 +81,7 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     return { };
   },
 
-  createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
+  createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView?: IBaseViewExtra, oldRow?: IBaseRowExtra) {
     const selectionEntry = uv.info.mainEntity ? {
       entity: uv.info.mainEntity,
       id: row.mainId!,
@@ -96,7 +96,7 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     };
   },
 
-  createAddedLocalRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
+  createAddedLocalRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView?: IBaseViewExtra, oldRow?: IBaseRowExtra) {
     const selected = oldRow?.selected ?? false;
     if (selected) {
       uv.extra.selectedRows.insert({ type: "added", id: rowId });
@@ -114,7 +114,7 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     };
   },
 
-  createLocalUserView(uv: IBaseCombinedUserView, oldView: IBaseViewExtra | null) {
+  createLocalUserView(uv: IBaseCombinedUserView, oldView?: IBaseViewExtra) {
     return {
       rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),

@@ -70,10 +70,11 @@
       v-if="editingValue"
       ref="tableCellEdit"
       v-click-outside="{ 'handler': removeCellEditing, 'middleware': checkModal }"
-      :width="editParams.width"
-      :min-height="editParams.minHeight"
-      :height="editParams.height"
-      :coords="editCellCoords"
+      :width="editing.width"
+      :min-height="editing.minHeight"
+      :height="editing.height"
+      :x="editing.x"
+      :y="editing.y"
     >
       <FormValueControl
         :value="editingValue.value"
@@ -276,7 +277,7 @@
             :show-selection-column="showSelectionColumn"
             @select="selectTableRow(rowIndex, $event)"
             @cell-click="clickCell({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
-            @cell-mousedown="startCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mousedown="cellMouseDown({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
             @cell-mouseover="continueCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
             @cell-mouseup="endCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
             @cell-contextmenu="openCellContextMenu({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
@@ -344,13 +345,14 @@ import { IAttrToQueryOpts, ICurrentQueryHistory } from "@/state/query";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
+import TableCellEdit from "@/components/views/table/TableCellEdit.vue";
 import { Link, attrToLinkSelf } from "@/links";
 import {
   IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   CommittedRowRef,
   valueToPunnedText,
+  equalValueRef,
 } from "@/user_views/combined";
 import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
@@ -407,6 +409,7 @@ export interface ITableViewExtra extends IBaseViewExtra {
   hasRowLinks: boolean;
   selectedValues: ObjectSet<ValueRef>;
   cursorValue: ValueRef | null;
+  oldCursorValue: ValueRef | null;
   rowsParentPositions: Record<number, number>;
   treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
@@ -442,7 +445,7 @@ export type ITableExtendedRow = IExtendedRow<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedRowCommon = IExtendedRowCommon<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedAddedRow = IExtendedAddedRow<ITableValueExtra, ITableRowExtra>;
 
-const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal: ITableRowExtra | null) => {
+const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal?: ITableRowExtra) => {
   const getRowAttr = (name: string) => tryDicts(name, row.attributes, uv.attributes);
 
   const defaultArrow = Boolean(getRowAttr("tree_all_open"));
@@ -595,9 +598,9 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     row: ICombinedRow & ITableExtendedRowInfo,
     columnIndex: number,
     value: ICombinedValue,
-    oldView: ITableViewExtra | null,
-    oldRow: ITableRowExtra | null,
-    oldValue: ITableValueExtra | null,
+    oldView?: ITableViewExtra,
+    oldRow?: ITableRowExtra,
+    oldValue?: ITableValueExtra,
   ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
 
@@ -636,16 +639,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-
-    const cursor = (oldValue?.cursor ?? false) && !row.deleted;
-    if (cursor) {
-      uv.extra.cursorValue = valueRef;
-    }
-
     return {
       ...baseExtra,
       selected,
-      cursor,
+      cursor: false,
     };
   },
 
@@ -655,9 +652,9 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     row: IAddedRow & ITableExtendedRowInfo,
     columnIndex: number,
     value: ICombinedValue,
-    oldView: ITableViewExtra | null,
-    oldRow: ITableRowExtra | null,
-    oldValue: ITableValueExtra | null,
+    oldView?: ITableViewExtra,
+    oldRow?: ITableRowExtra,
+    oldValue?: ITableValueExtra,
   ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
 
@@ -670,14 +667,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-    const cursor = oldValue?.cursor ?? false;
-    if (cursor) {
-      uv.extra.cursorValue = valueRef;
-    }
     return {
       ...baseExtra,
       selected,
-      cursor,
+      cursor: false,
     };
   },
 
@@ -686,9 +679,9 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     row: IRowCommon & ITableExtendedRowInfo,
     columnIndex: number,
     value: ICombinedValue,
-    oldView: ITableViewExtra | null,
-    oldRow: ITableRowExtra | null,
-    oldValue: ITableValueExtra | null,
+    oldView?: ITableViewExtra,
+    oldRow?: ITableRowExtra,
+    oldValue?: ITableValueExtra,
   ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
 
@@ -700,14 +693,11 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-    const cursor = oldValue?.cursor ?? false;
-    if (cursor) {
-      uv.extra.cursorValue = valueRef;
-    }
+
     return {
       ...baseExtra,
       selected,
-      cursor,
+      cursor: false,
     };
   },
 
@@ -723,7 +713,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     baseUserViewHandler.updateEmptyValue(uv, columnIndex, value);
   },
 
-  createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+  createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView?: ITableViewExtra, oldRow?: ITableRowExtra) {
     const baseExtra = baseUserViewHandler.createLocalRow(uv, rowIndex, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
     return {
@@ -732,7 +722,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null, meta?: unknown) {
+  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView?: ITableViewExtra, oldRow?: ITableRowExtra, meta?: unknown) {
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
 
@@ -764,7 +754,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  createEmptyLocalRow(uv: ITableCombinedUserView, row: IRowCommon, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+  createEmptyLocalRow(uv: ITableCombinedUserView, row: IRowCommon, oldView?: ITableViewExtra, oldRow?: ITableRowExtra) {
     const baseExtra = baseUserViewHandler.createEmptyLocalRow(uv, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
     return {
@@ -794,10 +784,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
           column: colI,
         });
       }
-      if (value.extra.cursor) {
-        value.extra.cursor = false;
-        uv.extra.cursorValue = null;
-      }
     });
   },
 
@@ -812,17 +798,13 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
           column: colI,
         });
       }
-      if (value.extra.cursor) {
-        value.extra.cursor = false;
-        uv.extra.cursorValue = null;
-      }
     });
     if (row.newId === undefined) {
       deleteFromPositions({ type: "added", addedId: rowId }, uv.extra);
     }
   },
 
-  createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null): ITableViewExtra {
+  createLocalUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra): ITableViewExtra {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
 
     const lazyLoad = oldView?.lazyLoad ?? TableLazyLoad.parse(uv.attributes["lazy_load"]);
@@ -836,6 +818,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       hasRowLinks: false,
       selectedValues: new ObjectSet<ValueRef>(),
       cursorValue: null,
+      oldCursorValue: null,
       rowsParentPositions: {},
       treeParentColumnIndex: 0,
       newRowTopSidePositions,
@@ -849,7 +832,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  postInitUserView(uv: ITableCombinedUserView) {
+  postInitUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra) {
     if (!R.isEmpty(uv.extra.rowsParentPositions)) {
       uv = initTreeChildren(uv);
     }
@@ -859,6 +842,23 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         // `index.type === "existing"` here; "added" may only appear after a commit.
         const index = uv.mainRowMapping[pos.id][0] as IExistingRowRef;
         uv.rows![index.position].extra.shownAsNewRow = true;
+      }
+    }
+
+    const cursorValue = oldView?.cursorValue ?? null;
+    if (cursorValue) {
+      const value = uv.getValueByRef(cursorValue);
+      if (value) {
+        uv.extra.cursorValue = cursorValue;
+        value.value.extra.cursor = true;
+      }
+    }
+
+    const oldCursorValue = oldView?.oldCursorValue ?? null;
+    if (oldCursorValue) {
+      const value = uv.getValueByRef(oldCursorValue);
+      if (value) {
+        uv.extra.oldCursorValue = oldCursorValue;
       }
     }
   },
@@ -910,6 +910,11 @@ const isEmptyRow = (row: IRowCommon) => {
 
 interface ITableEditing {
   ref: ValueRef;
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+  minHeight: number;
 }
 
 const entities = namespace("entities");
@@ -1032,25 +1037,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   currentFilter: string[] = [];
   rowPositions: CommittedRowRef[] = [];
   lastSelectedRow: number | null = null;
-  lastSelectedValue: IVisualPosition | null = null;
   editing: ITableEditing | null = null;
   printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
-  clickTimeoutId: NodeJS.Timeout | null = null;
-  editParams: IEditParams = {
-    height: 0,
-    width: 0,
-    minHeight: 0,
-  };
+  clickTimeout: { id: NodeJS.Timeout; ref: ValueRef } | null = null;
   // Keep references to entries used for editing once, so we don't re-request them.
   keptEntries = new ObjectSet<IFieldRef>();
   showAddRowButtons = false;
 
-  // Used for Tab-Enter selection moving.
-  // Probably need to move to extra.
-  columnDelta = 0;
-
   cellContextMenu: CellContextMenuData | null = null;
-  cellSelectionStartCell: IVisualPosition | null = null;
 
   get columns() {
     const viewAttrs = this.uv.attributes;
@@ -1165,8 +1159,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   get keymap() {
     return {
       "enter": () => this.onPressEnter(),
-      /* "tab": () => this.onPressTab(), */
-      /* "shift+tab": () => this.onPressTab(), */
       "esc": () => this.removeCellEditing(),
       "delete": () => this.clearSelectedCells(),
       "up": () => this.moveCursor("up"),
@@ -1437,57 +1429,37 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private expandSelection(direction: MoveDirection) {
-    if (this.selectedCells.length === 0) return;
+    const oldCursorValue = this.uv.extra.oldCursorValue;
+    if (!oldCursorValue) {
+      return;
+    }
+    const oldCursorPosition = this.getCellVisualPosition(oldCursorValue)!;
+    if (!oldCursorPosition) {
+      // Old cursor position got deleted.
+      this.moveCursor(direction);
+      return;
+    }
 
-    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as IVisualPosition);
-    const positions2D =
-      Object.entries(R.groupBy(cell => String(cell.row), positions))
-        .sort(([y, _]) => Number(y))
-        .map(([_, row]) => row)
-        .map(row => row.sort((c1, c2) => c1.column - c2.column));
-    const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
-    if (!isRectangular) return;
+    this.moveCursor(direction, { keepOldCursor: true });
+    const cursorPosition = this.getCellVisualPosition(this.uv.extra.cursorValue!)!;
 
-    const cursorValue = this.uv.extra.cursorValue as ValueRef;
-    const cursorPosition = this.getCellVisualPosition(cursorValue) as IVisualPosition;
-
-    const height = positions2D.length;
-    const width = positions2D[0].length;
-    const topLeft = positions2D[0][0];
-    const bottomRight = positions2D[height - 1][width - 1];
-    const bottom = bottomRight.row;
-    const right = bottomRight.column;
-    /* const top = topLeft.row; */
-    /* const left = topLeft.column; */
-    const expandedDown = cursorPosition.row < bottom;
-    const expandedRight = cursorPosition.column < right;
-    /* const expandedUp = cursorPosition.row > top; */
-    /* const expandedLeft = cursorPosition.column > left; */
-
-    const cornerPosition = positions2D[expandedDown ? height - 1 : 0][expandedRight ? width - 1 : 0];
-    const newCornerPosition = this.getMovedCell(cornerPosition, direction);
-
-    this.deselectAllCells({ clearCursor: false });
-    for (const cellPos of this.getCellsInRectangle(cornerPosition, newCornerPosition)) {
+    for (const cellPos of this.getCellsInRectangle(oldCursorPosition, cursorPosition)) {
       const cellRef = this.getValueRefByVisualPosition(cellPos);
       this.selectValue(cellRef, true);
     }
-
-    // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
-    this.getVisualCellElement(newCornerPosition)?.scrollIntoView({ block: "nearest" });
   }
 
   private getMovedCell(
     ref: IVisualPosition,
     direction: MoveDirection,
-    options: { step?: number } = { step: 1 },
+    options?: { step?: number },
   ): IVisualPosition {
     const maxRow = this.shownRows.length - 1;
     const maxColumn = this.columnIndexes.length - 1;
 
     /* eslint-disable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
     const calcDelta = (decDirection: MoveDirection, incDirection: MoveDirection) =>
-      (options.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
+      (options?.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
     const rowDelta    = calcDelta("up"  , "down" );
     const columnDelta = calcDelta("left", "right");
 
@@ -1502,11 +1474,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private moveCursor(
     direction: MoveDirection,
-    options: { step?: number; resetColumnDelta?: boolean } = { step: 1, resetColumnDelta: true },
+    options?: { step?: number; keepOldCursor?: boolean },
   ): boolean {
-    if (options.resetColumnDelta ?? true) {
-      this.columnDelta = 0;
-    }
     const { cursorValue } = this.uv.extra;
     if (!cursorValue) return false;
 
@@ -1518,27 +1487,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
     const newCursorPosition = this.getMovedCell(cursorPosition, direction, options);
     const newCursorValue = this.getValueRefByVisualPosition(newCursorPosition);
-    this.setCursorCell(newCursorValue);
+    this.setCursorCell(newCursorValue, options);
 
     // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
     this.getVisualCellElement(newCursorPosition)?.scrollIntoView({ block: "nearest" });
 
     return !deepEquals(cursorValue, newCursorValue);
-  }
-
-  private moveCursorNextColumn() {
-    const isMoved = this.moveCursor("right", { resetColumnDelta: false });
-    if (isMoved) {
-      this.columnDelta += 1;
-    }
-    this.editCellOnCursor();
-  }
-
-  private moveCursorNextRow() {
-    this.moveCursor("down", { resetColumnDelta: false });
-    this.moveCursor("left", { step: this.columnDelta });
-    this.columnDelta = 0;
-    this.editCellOnCursor();
   }
 
   private getVisualCellElement(ref: IVisualPosition): HTMLElement | null {
@@ -1558,9 +1512,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private editCellOnCursor() {
     const valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
-    const valuePosition = this.getCellVisualPosition(valueRef);
-    if (!valuePosition) return;
-    this.editCellByTarget(valuePosition);
+    this.setCellEditing(valueRef);
   }
 
   get columnIndexes() {
@@ -1909,15 +1861,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private onPressTab() {
-    if (this.editing) {
-      this.removeCellEditing();
-      this.moveCursorNextColumn();
-    } else {
-      this.moveCursor("right");
-    }
-  }
-
   private onOtherTableClicked(uid: any) {
     if (this.uid !== uid) {
       this.deselectAllCells();
@@ -2019,8 +1962,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       window.removeEventListener("beforeprint", this.printListener.printCallback);
       this.printListener.query.removeListener(this.printListener.queryCallback);
     }
-    if (this.clickTimeoutId !== null) {
-      clearTimeout(this.clickTimeoutId);
+    if (this.clickTimeout !== null) {
+      clearTimeout(this.clickTimeout.id);
     }
     this.releaseEntries();
   }
@@ -2239,10 +2182,25 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (!this.canEditCell(ref)) return;
 
     const refPos = this.getCellVisualPosition(ref);
-    if (refPos) {
-      this.getVisualCellElement(refPos)?.scrollIntoView({ block: "nearest" });
+    if (!refPos) {
+      return;
     }
-    this.editing = { ref };
+
+    const element = this.getVisualCellElement(refPos);
+    if (!element) {
+      return;
+    }
+
+    element.scrollIntoView({ block: "nearest" });
+    const cellRect = element.getBoundingClientRect();
+    this.editing = {
+      ref,
+      x: cellRect.x,
+      y: cellRect.y,
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+      minHeight: element.offsetHeight,
+    };
   }
 
   private canEditCell(ref: ValueRef) {
@@ -2270,32 +2228,22 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private get editCellCoords(): ICellCoords | undefined {
-    if (!this.editing) return undefined;
-    const cellPosition = this.getCellVisualPosition(this.editing.ref);
-    if (!cellPosition) return undefined;
-    const cellElement = this.getVisualCellElement(cellPosition);
-    if (!cellElement) return undefined;
-
-    const cellRect = cellElement.getBoundingClientRect();
-    return { x: cellRect.x, y: cellRect.y };
-  }
-
-  private updateClickTimer(pos: IVisualPosition) {
-    const sameCellClicked = deepEquals(this.lastSelectedValue, pos);
-    if (this.clickTimeoutId === null) {
-      this.clickTimeoutId = setTimeout(() => {
-        this.clickTimeoutId = null;
+  private updateClickTimer(ref: ValueRef) {
+    if (this.clickTimeout === null || !equalValueRef(this.clickTimeout.ref, ref)) {
+      if (this.clickTimeout) {
+        clearTimeout(this.clickTimeout.id);
+      }
+      const id = setTimeout(() => {
+        this.clickTimeout = null;
       }, doubleClickTime);
-      if (this.lastSelectedValue !== null && !sameCellClicked) {
-        this.removeCellEditing();
-      }
+      this.clickTimeout = {
+        id,
+        ref,
+      };
     } else {
-      clearTimeout(this.clickTimeoutId);
-      this.clickTimeoutId = null;
-      if (this.lastSelectedValue !== null && sameCellClicked) {
-        this.setCellEditing(this.getValueRefByVisualPosition(pos));
-      }
+      clearTimeout(this.clickTimeout.id);
+      this.clickTimeout = null;
+      this.setCellEditing(ref);
     }
   }
 
@@ -2313,7 +2261,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const tableRef = (this.$refs["tableContainer"] as HTMLElement | undefined);
     if (!tableRef) throw new Error("Can't find `tableContainer` ref");
 
-    this.selectCell(pos);
+    const ref = this.getValueRefByVisualPosition(pos);
+    this.setCursorCell(ref);
 
     this.cellContextMenu = {
       reference: {
@@ -2382,53 +2331,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     );
   }
 
-  private startCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+  private cellMouseDown(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (event.shiftKey || event.ctrlKey) return;
 
+    const ref = this.getValueRefByVisualPosition(pos);
     this.deselectAllCells();
-
-    this.cellSelectionStartCell = ref;
-    /* this.selectValue(ref); */
-    this.setCursorCell(this.getValueRefByVisualPosition(ref));
-  }
-
-  private continueCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
-    if (!this.cellSelectionStartCell) return;
-
-    this.deselectAllCells({ clearCursor: false });
-
-    const positions = this.getCellsInRectangle(this.cellSelectionStartCell, ref);
-    for (const pos of positions) {
-      this.selectValue(this.getValueRefByVisualPosition(pos), true);
-    }
-  }
-
-  private endCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
-    this.cellSelectionStartCell = null;
-  }
-
-  private clickCell(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
-    this.columnDelta = 0;
-    this.removeCellEditing();
-    this.updateClickTimer(pos);
-
-    if (event.ctrlKey) {
-      const ref = this.getValueRefByVisualPosition(pos);
-      this.selectValue(ref, true);
-    } else if (event.shiftKey && this.uv.extra.cursorValue) {
-      const prevValue = this.getCellVisualPosition(this.uv.extra.cursorValue);
-      if (prevValue) {
-        const cells = this.getCellsInRectangle(prevValue, pos);
-        this.deselectAllCells({ clearCursor: false });
-        for (const cell of cells) {
-          this.selectValue(this.getValueRefByVisualPosition(cell), true);
-        }
-      }
-    } else {
-      this.handleCellEdit(pos, element);
-    }
+    this.setCursorCell(ref);
 
     // FIXME: `v-click-outside` somehow doesn't trigger on cell clicks, so close context menu there too.
+    this.removeCellEditing();
     this.closeCellContextMenu();
 
     // We capture click-events from cells so we need to manually close popups here.
@@ -2437,37 +2348,62 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private editCellByTarget(pos: IVisualPosition) {
-    this.setCellEditing(this.getValueRefByVisualPosition(pos));
-    this.handleCellEdit(pos, this.getVisualCellElement(pos)!);
+  private continueCellSelection(cursorPosition: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    if (!(event.buttons & 1) || !this.uv.extra.oldCursorValue) return;
+    const oldCursorPosition = this.getCellVisualPosition(this.uv.extra.oldCursorValue);
+    if (!oldCursorPosition) {
+      this.uv.extra.oldCursorValue = null;
+      return;
+    }
+
+    this.deselectAllCells({ clearCursor: false });
+    const cursorValue = this.getValueRefByVisualPosition(cursorPosition);
+    this.setCursorCell(cursorValue, { keepOldCursor: true });
+
+    const positions = this.getCellsInRectangle(oldCursorPosition, cursorPosition);
+    for (const pos of positions) {
+      this.selectValue(this.getValueRefByVisualPosition(pos), true);
+    }
   }
 
-  private handleCellEdit(pos: IVisualPosition, target: HTMLElement) {
-    this.editParams.width = target.offsetWidth;
-    this.editParams.height = target.offsetHeight;
-    this.editParams.minHeight = target.offsetHeight;
+  private endCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    this.uv.extra.oldCursorValue = this.uv.extra.cursorValue;
+  }
 
-    this.selectCell(pos);
+  private shiftSelectCells(pos: IVisualPosition) {
+    const ref = this.getValueRefByVisualPosition(pos);
+    this.deselectAllCells({ clearCursor: false });
+    this.setCursorCell(ref, { keepOldCursor: true });
 
-    if (this.lastSelectedValue
-        && !equalVisualPosition(this.lastSelectedValue, pos)) {
-      const lastRef = this.getValueRefByVisualPosition(this.lastSelectedValue);
-      if (lastRef.type === "added") {
-        const row = this.uv.newRows[lastRef.id];
-        if (!row) {
-          this.lastSelectedValue = null;
-        } else if (isEmptyRow(row)) {
-          const entity = this.uv.info.mainEntity;
-          if (!entity) {
-            throw new Error("View doesn't have a main entity");
-          }
+    if (!this.uv.extra.oldCursorValue) {
+      return;
+    }
+    const prevValue = this.getCellVisualPosition(this.uv.extra.oldCursorValue);
+    if (!prevValue) {
+      this.uv.extra.oldCursorValue = null;
+      return;
+    }
 
-          void this.resetAddedEntry({
-            entityRef: entity,
-            id: lastRef.id,
-          });
-        }
+    const cells = this.getCellsInRectangle(prevValue, pos);
+    for (const cell of cells) {
+      this.selectValue(this.getValueRefByVisualPosition(cell), true);
+    }
+  }
+
+  private clickCell(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    if (event.ctrlKey) {
+      this.removeCellEditing();
+      if (this.uv.extra.cursorValue) {
+        this.selectValue(this.uv.extra.cursorValue, true);
       }
+      const ref = this.getValueRefByVisualPosition(pos);
+      this.setCursorCell(ref);
+    } else if (event.shiftKey) {
+      this.removeCellEditing();
+      this.shiftSelectCells(pos);
+    } else {
+      const ref = this.getValueRefByVisualPosition(pos);
+      this.updateClickTimer(ref);
     }
   }
 
@@ -2484,33 +2420,27 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
     }
 
-    // Deselect another cells.
+    // Deselect other cells.
     /* this.$root.$emit("cell-click", this.uid); */
   }
 
-  // More high-level than `selectValue`: deselects other cells and
-  // remembers last selected cell.
-  private selectCell(pos: IVisualPosition) {
-    this.deselectAllCells({ clearCursor: false });
-    const ref = this.getValueRefByVisualPosition(pos);
-    this.selectValue(ref, true);
-    this.setCursorCell(ref);
-    this.lastSelectedValue = pos;
-  }
-
-  private setCursorCell(ref: ValueRef) {
+  private setCursorCell(ref: ValueRef, opts?: { keepOldCursor?: boolean }) {
     const cell = this.uv.getValueByRef(ref);
     if (!cell) return;
 
-    this.clearCursorCell();
+    this.clearCursorCell(opts);
 
     this.uv.extra.cursorValue = ref;
     cell.value.extra.cursor = true;
 
+    if (!opts?.keepOldCursor) {
+      this.uv.extra.oldCursorValue = ref;
+    }
+
     this.$root.$emit("cell-click", this.uid);
   }
 
-  private clearCursorCell() {
+  private clearCursorCell(opts?: { keepOldCursor?: boolean }) {
     if (!this.uv.extra.cursorValue) return;
 
     const cell = this.uv.getValueByRef(this.uv.extra.cursorValue);
@@ -2518,6 +2448,27 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       cell.value.extra.cursor = false;
     }
     this.uv.extra.cursorValue = null;
+    if (!opts?.keepOldCursor) {
+      const oldCursorValue = this.uv.extra.oldCursorValue;
+      this.uv.extra.oldCursorValue = null;
+
+      if (oldCursorValue) {
+        if (oldCursorValue.type === "added") {
+          const row = this.uv.newRows[oldCursorValue.id];
+          if (row && isEmptyRow(row)) {
+            const entity = this.uv.info.mainEntity;
+            if (!entity) {
+              throw new Error("View doesn't have a main entity");
+            }
+
+            void this.resetAddedEntry({
+              entityRef: entity,
+              id: oldCursorValue.id,
+            });
+          }
+        }
+      }
+    }
   }
 
   @Watch("allRows")
@@ -2774,8 +2725,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const newRef = await this.updateValue(ref, rawValue);
     if (ref.type === "new") {
       editing.ref = newRef;
-      const pos = this.getCellVisualPosition(newRef)!;
-      this.selectCell(pos);
+      this.setCursorCell(ref);
       // FIXME: we shouldn't implement this logic purely for barcodes. Instead, react to keyboard <RET> event!
       if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
         void this.addNewRowOnPosition("bottom_back");

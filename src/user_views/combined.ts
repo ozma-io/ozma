@@ -317,9 +317,9 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
     row: ICombinedRow & IExtendedRowInfo<RowT>,
     columnIndex: ColumnPosition,
     value: ICombinedValue,
-    oldView: ViewT | null,
-    oldRow: RowT | null,
-    oldValue: ValueT | null,
+    oldView?: ViewT,
+    oldRow?: RowT,
+    oldValue?: ValueT,
   ): ValueT;
   // Local data for added, but not yet committed, values.
   createAddedLocalValue(
@@ -328,9 +328,9 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
     row: IAddedRow & IExtendedRowInfo<RowT>,
     columnIndex: ColumnPosition,
     value: ICombinedValue,
-    oldView: ViewT | null,
-    oldRow: RowT | null,
-    oldValue: ValueT | null,
+    oldView?: ViewT,
+    oldRow?: RowT,
+    oldValue?: ValueT,
     meta?: unknown,
   ): ValueT;
   // Local data for template values.
@@ -339,15 +339,15 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
     row: IRowCommon & IExtendedRowInfo<RowT>,
     columnIndex: ColumnPosition,
     value: ICombinedValue,
-    oldView: ViewT | null,
-    oldRow: RowT | null,
-    oldValue: ValueT | null,
+    oldView?: ViewT,
+    oldRow?: RowT,
+    oldValue?: ValueT,
   ): ValueT;
   // Local data for the user view itself.
-  createLocalUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>, oldView: ViewT | null): ViewT;
-  createLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: ICombinedRow, oldView: ViewT | null, oldRow: RowT | null): RowT;
-  createAddedLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IAddedRow, oldView: ViewT | null, oldRow: RowT | null, meta?: unknown): RowT;
-  createEmptyLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IRowCommon, oldView: ViewT | null, oldRow: RowT | null): RowT;
+  createLocalUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>, oldView?: ViewT): ViewT;
+  createLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: ICombinedRow, oldView?: ViewT, oldRow?: RowT): RowT;
+  createAddedLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IAddedRow, oldView?: ViewT, oldRow?: RowT, meta?: unknown): RowT;
+  createEmptyLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IRowCommon, oldView?: ViewT, oldRow?: RowT): RowT;
 
   updateValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, meta?: unknown): void;
   updateAddedValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, meta?: unknown): void;
@@ -357,10 +357,10 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
   deleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
   // Can happen when committed row is deleted.
   undeleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
-  postInitUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>): void;
-  postInitRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, meta?: unknown): void;
-  postInitAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
-  postInitEmptyRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IEmptyRow<ValueT, RowT>): void;
+  postInitUserView(uv: ICombinedUserView<ValueT, RowT, ViewT>, oldView?: ViewT): void;
+  postInitRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, oldView?: ViewT, oldRow?: RowT, meta?: unknown): void;
+  postInitAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, oldView?: ViewT, oldRow?: RowT, meta?: unknown): void;
+  postInitEmptyRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IEmptyRow<ValueT, RowT>, oldView?: ViewT, oldRow?: RowT): void;
   // Called when commit happens; from this point, the row is considered "committed" -- it's already in the database,
   // but we don't have updated user view rows yet, just that it's there somewhere.
   // In reloaded user views one can detect previously committed rows by checking `row.oldAddedId` field in existing rows.
@@ -491,10 +491,10 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       }
     }
 
-    this.extra = this.handler.createLocalUserView(this, oldLocal?.extra ?? null);
+    const oldViewExtra = oldLocal?.extra;
+    this.extra = this.handler.createLocalUserView(this, oldViewExtra);
 
     if (this.rows) {
-      const oldViewExtra = oldLocal?.extra ?? null;
       const mainRowOffsets: Record<RowId, number> | null = (this.info.mainEntity && oldLocal?.info.mainEntity && equalEntityRef(this.info.mainEntity, oldLocal.info.mainEntity)) ? {} : null;
       this.rows.forEach((row, rowI) => {
         let oldRow: IExtendedRowCommon<ValueT, RowT> | undefined;
@@ -514,40 +514,38 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         } else {
           oldRow = oldLocal?.rows?.[rowI];
         }
-        const oldRowExtra = oldRow?.extra ?? null;
+        const oldRowExtra = oldRow?.extra;
         row.extra = this.handler.createLocalRow(this, rowI, row, oldViewExtra, oldRowExtra);
         row.values.forEach((value, colI) => {
           const oldValue = oldRow?.values[colI];
-          value.extra = this.handler.createLocalValue(this, rowI, row, colI, value, oldViewExtra, oldRowExtra, oldValue?.extra ?? null);
+          value.extra = this.handler.createLocalValue(this, rowI, row, colI, value, oldViewExtra, oldRowExtra, oldValue?.extra);
         });
-        this.handler.postInitRow(this, rowI, row);
+        this.handler.postInitRow(this, rowI, row, oldViewExtra, oldRowExtra);
       });
     }
 
     for (const addedId of this.newRowsOrder) {
       const row = this.newRows[addedId];
-      const oldViewExtra = oldLocal!.extra;
       const oldRow = oldLocal!.newRows[addedId];
       row.extra = this.handler.createAddedLocalRow(this, addedId, row, oldViewExtra, oldRow.extra);
       row.values.forEach((value, colI) => {
         value.extra = this.handler.createAddedLocalValue(this, addedId, row, colI, value, oldViewExtra, oldRow.extra, oldRow.values[colI].extra);
       });
-      this.handler.postInitAddedRow(this, addedId, row);
+      this.handler.postInitAddedRow(this, addedId, row, oldViewExtra, oldRow.extra);
     }
 
     if (this.emptyRow) {
       const oldRow = oldLocal?.emptyRow;
-      const oldViewExtra = oldLocal?.extra ?? null;
-      const oldRowExtra = oldRow?.extra ?? null;
+      const oldRowExtra = oldRow?.extra;
       this.emptyRow.extra = this.handler.createEmptyLocalRow(this, this.emptyRow, oldViewExtra, oldRowExtra);
       this.emptyRow.values.forEach((value, colI) => {
         const oldValue = oldRow?.values[colI];
-        value.extra = this.handler.createEmptyLocalValue(this, this.emptyRow!, colI, value, oldViewExtra, oldRowExtra, oldValue?.extra ?? null);
+        value.extra = this.handler.createEmptyLocalValue(this, this.emptyRow!, colI, value, oldViewExtra, oldRowExtra, oldValue?.extra);
       });
-      this.handler.postInitEmptyRow(this, this.emptyRow);
+      this.handler.postInitEmptyRow(this, this.emptyRow, oldViewExtra, oldRowExtra);
     }
 
-    this.handler.postInitUserView(this);
+    this.handler.postInitUserView(this, oldViewExtra);
 
     this.prefetchUserViewInfo();
   }
@@ -664,11 +662,11 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
     const newValues = this.storeChanges.changes[eref.schema][eref.name].added[id];
     const row = this.pushAddedEntry(id, newValues, meta) as IExtendedAddedRow<ValueT, RowT>;
-    Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, null, null, meta));
+    Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, undefined, undefined, meta));
     row.values.forEach((value, colI) => {
-      Vue.set(value, "extra", this.handler.createAddedLocalValue(this, id, row, colI, value, null, null, null, meta));
+      Vue.set(value, "extra", this.handler.createAddedLocalValue(this, id, row, colI, value, undefined, undefined, undefined, meta));
     });
-    this.handler.postInitAddedRow(this, id, row, meta);
+    this.handler.postInitAddedRow(this, id, row, undefined, undefined, meta);
   }
 
   commitAddedEntry(entityRef: IEntityRef, id: AddedRowId, newId: RowId) {

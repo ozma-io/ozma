@@ -205,7 +205,7 @@ export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
 export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtra, IFormViewExtra> = {
   ...baseUserViewHandler,
 
-  createLocalUserView(uv: IFormCombinedUserView, oldView: IFormViewExtra | null) {
+  createLocalUserView(uv: IFormCombinedUserView, oldView?: IFormViewExtra) {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
 
     const lazyLoad = oldView?.lazyLoad ?? FormLazyLoad.parse(uv.attributes["lazy_load"]);
