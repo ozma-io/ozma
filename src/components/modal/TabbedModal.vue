@@ -96,7 +96,7 @@
           { 'is-mobile': $isMobile },
         ]"
       >
-        <ModalContent :nodes="tab.content" />
+        <ModalContent :content="tab.content" />
       </div>
     </div>
     <div
