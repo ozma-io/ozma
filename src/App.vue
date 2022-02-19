@@ -10,11 +10,11 @@
 </i18n>
 
 <template>
-  <!-- "window" class is used to detect active windows to limit v-click-outside. See also `Table.vue:isClickWithinThisWindow`. -->
   <div
     id="app"
+    :data-window="uid"
     :style="styleSettings"
-    class="default-variant default-local-variant window"
+    class="default-variant default-local-variant"
   >
     <AlertBanner
       v-if="bannerMessage"
@@ -74,6 +74,7 @@ import { IViewExprResult } from "ozma-api";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
+import type { WindowKey } from "@/state/windows";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
@@ -88,20 +89,15 @@ const settings = namespace("settings");
 const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
+const windows = namespace("windows");
 
 @Component({
   components: {
     ModalPortalTarget,
     InviteUserModal,
-    AlertBanner: () => ({
-      component: import("@/components/AlertBanner.vue") as any,
-    }),
-    ReadonlyDemoInstanceModal: () => ({
-      component: import("@/components/ReadonlyDemoInstanceModal.vue") as any,
-    }),
-    HelpModal: () => ({
-      component: import("@/components/HelpModal.vue") as any,
-    }),
+    AlertBanner: () => import("@/components/AlertBanner.vue"),
+    ReadonlyDemoInstanceModal: () => import("@/components/ReadonlyDemoInstanceModal.vue"),
+    HelpModal: () => import("@/components/HelpModal.vue"),
   },
 })
 export default class App extends Vue {
@@ -112,6 +108,8 @@ export default class App extends Vue {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
+  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
+  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
 
   private helpPageInfo: {
     key: string | null;
@@ -121,6 +119,8 @@ export default class App extends Vue {
 
   created() {
     void this.startAuth();
+
+    this.createWindow(this.uid);
 
     /* eslint-disable @typescript-eslint/unbound-method */
     document.addEventListener("copy", this.onCopy);
@@ -145,6 +145,8 @@ export default class App extends Vue {
     eventBus.off("show-help-modal", this.showHelpModal);
     eventBus.off("close-all-toasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
+
+    this.destroyWindow(this.uid);
   }
 
   private onCopy(event: ClipboardEvent) {

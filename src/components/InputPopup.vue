@@ -2,7 +2,7 @@
   <fragment>
     <template v-if="mode === 'modal'">
       <fragment>
-        <Modal
+        <TabbedModal
           :show="show"
           fullscreen
           @opened="onOpen"
@@ -29,7 +29,7 @@
               />
             </div>
           </div>
-        </Modal>
+        </TabbedModal>
 
         <div class="input-field-wrapper" @click="$emit('update:show', true)">
           <slot
@@ -82,11 +82,11 @@ import Popper from "vue-popperjs";
 import { Portal } from "portal-vue";
 
 import { Component, Vue, Prop } from "vue-property-decorator";
-import Modal from "@/components/modal/Modal.vue";
+import TabbedModal from "@/components/modal/TabbedModal.vue";
 
 type Mode = "popup" | "modal";
 
-@Component({ components: { Popper, Modal, Portal } })
+@Component({ components: { Popper, TabbedModal, Portal } })
 export default class InputPopup extends Vue {
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Boolean, default: false }) show!: boolean;

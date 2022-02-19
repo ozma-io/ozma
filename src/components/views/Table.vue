@@ -1,53 +1,52 @@
 <i18n>
-    {
-      "en": {
-        "cut": "Cut",
-        "copy": "Copy",
-        "paste": "Paste",
-        "edit_error": "Editing error",
-        "paste_error": "Pasting error",
-        "copy_error": "Copying error",
-        "clear_error": "Clearing error",
-        "read_only_cell": "Read-only cell",
-        "paste_no_referencefield_data": "Clipboard has no reference field data",
-        "paste_error_too_many_columns": "Clipboard has too many columns",
-        "non_rectangular_copy": "Only rectangular selections on copying are supported",
-        "no_results": "Empty",
-        "add_entry": "Add entry",
-        "add_entry_in_modal": "Add new entry (in modal window)",
-        "ok": "OK",
-        "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
-        "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
-        "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell",
-        "no_columns": "This query lacks visible columns"
-      },
-      "ru": {
-        "cut": "Вырезать",
-        "copy": "Копировать",
-        "paste": "Вставить",
-        "edit_error": "Ошибка при редактировании",
-        "paste_error": "Ошибка при вставке",
-        "copy_error": "Ошибка при копировании",
-        "clear_error": "Ошибка при очистке поля",
-        "read_only_cell": "Ячейка только для чтения",
-        "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
-        "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
-        "non_rectangular_copy": "При копировании поддерживаются только прямоугольные выделения",
-        "no_results": "Пусто",
-        "add_entry": "Добавить запись",
-        "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
-        "ok": "Продолжить",
-        "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
-        "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
-        "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку",
-        "no_columns": "В запросе отсутствуют видимые колонки"
-      }
+  {
+    "en": {
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "edit_error": "Editing error",
+      "paste_error": "Pasting error",
+      "copy_error": "Copying error",
+      "clear_error": "Clearing error",
+      "read_only_cell": "Read-only cell",
+      "paste_no_referencefield_data": "Clipboard has no reference field data",
+      "paste_error_too_many_columns": "Clipboard has too many columns",
+      "non_rectangular_copy": "Only rectangular selections on copying are supported",
+      "no_results": "Empty",
+      "add_entry": "Add entry",
+      "add_entry_in_modal": "Add new entry (in modal window)",
+      "ok": "OK",
+      "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
+      "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
+      "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell",
+      "no_columns": "This query lacks visible columns"
+    },
+    "ru": {
+      "cut": "Вырезать",
+      "copy": "Копировать",
+      "paste": "Вставить",
+      "edit_error": "Ошибка при редактировании",
+      "paste_error": "Ошибка при вставке",
+      "copy_error": "Ошибка при копировании",
+      "clear_error": "Ошибка при очистке поля",
+      "read_only_cell": "Ячейка только для чтения",
+      "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
+      "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
+      "non_rectangular_copy": "При копировании поддерживаются только прямоугольные выделения",
+      "no_results": "Пусто",
+      "add_entry": "Добавить запись",
+      "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
+      "ok": "Продолжить",
+      "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
+      "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
+      "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку",
+      "no_columns": "В запросе отсутствуют видимые колонки"
     }
+  }
 </i18n>
 
 <template>
   <div
-    ref="tableContainer"
     v-hotkey="keymap"
     :style="{
       /* In wide tables `table-block` had width of screen, while its parent and childs had correct bigger width.
@@ -69,7 +68,7 @@
     <TableCellEdit
       v-if="editingValue"
       ref="tableCellEdit"
-      v-click-outside="{ 'handler': removeCellEditing, 'middleware': checkModal }"
+      v-click-outside="{ 'handler': removeCellEditing, 'middleware': checkWindow }"
       :width="editing.width"
       :min-height="editing.minHeight"
       :height="editing.height"
@@ -336,7 +335,7 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } f
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue, elementIsVisible } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -360,6 +359,7 @@ import ButtonList from "@/components/buttons/ButtonList.vue";
 import { Button } from "@/components/buttons/buttons";
 import FormValueControl from "@/components/FormValueControl";
 import type TableCell from "./table/TableCell.vue";
+import { elementWindow, WindowKey } from "@/state/windows";
 
 export interface IColumn {
   caption: string;
@@ -917,10 +917,6 @@ interface ITableEditing {
   minHeight: number;
 }
 
-const entities = namespace("entities");
-const entries = namespace("entries");
-const query = namespace("query");
-
 interface IShownRow {
   key: string;
   row: ITableExtendedRowCommon;
@@ -997,25 +993,10 @@ const plainTextStringify = (table: string[][]): string => {
   return output;
 };
 
-const isClickWithinThisWindow = (el: HTMLElement, event: MouseEvent): boolean => {
-  if (!elementIsVisible(el)) {
-    // If element is hidden, don't react to outside clicks.
-    return false;
-  }
-  if (!(event.target instanceof HTMLElement)) {
-    // Default to true.
-    return true;
-  }
-  const myWindow = el.closest(".window");
-  if (myWindow === null) {
-    return true;
-  }
-  const eventWindow = event.target.closest(".window");
-  if (eventWindow === null) {
-    return true;
-  }
-  return myWindow === eventWindow;
-};
+const entities = namespace("entities");
+const entries = namespace("entries");
+const query = namespace("query");
+const windows = namespace("windows");
 
 @UserView({
   handler: tableUserViewHandler,
@@ -1031,6 +1012,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+  @windows.Getter("active") activeWindow!: WindowKey | null;
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
@@ -1876,15 +1858,24 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
-    return [
+    const handlers = [
       ["copy", this.copySelectedCells],
       ["cut", this.cutSelectedCell],
       ["paste", this.pasteClipboardToSelectedCells],
       ["cell-click", this.onOtherTableClicked],
       ["row-select", this.onRowInOtherTableSelected],
       ["form-input-focused", this.deselectAllCells],
-    ];
+    ] as [name: string, callback: (event: any) => void][];
     /* eslint-enable @typescript-eslint/unbound-method */
+
+    return handlers.map(([name, callback]) => {
+      const wrapper = (event: unknown) => {
+        if (this.checkWindow()) {
+          callback(event);
+        }
+      };
+      return [name, wrapper];
+    });
   }
 
   /* Actually table does't change its width for now,
@@ -1914,7 +1905,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   protected mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    (this.$el as HTMLElement).addEventListener("scroll", this.removeCellEditing);
     /* window.addEventListener("scroll", this.removeCellEditing, true); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
     if (this.$refs["table"]) {
@@ -1941,7 +1932,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   protected beforeDestroy() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
+    (this.$el as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
     /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
     if (this.$refs["table"]) {
@@ -2247,10 +2238,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private checkModal(event: MouseEvent) {
-    const cellEdit = this.$refs["tableCellEdit"] as TableCellEdit;
-    const cellEditEl = cellEdit.$el as HTMLElement;
-    return isClickWithinThisWindow(cellEditEl, event);
+  get parentWindow() {
+    return elementWindow(this.$el as HTMLElement);
+  }
+
+  private checkWindow() {
+    return this.activeWindow === this.parentWindow;
   }
 
   private closeCellContextMenu() {
@@ -2258,9 +2251,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private openCellContextMenu(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
-    const tableRef = (this.$refs["tableContainer"] as HTMLElement | undefined);
-    if (!tableRef) throw new Error("Can't find `tableContainer` ref");
-
     const ref = this.getValueRefByVisualPosition(pos);
     this.setCursorCell(ref);
 

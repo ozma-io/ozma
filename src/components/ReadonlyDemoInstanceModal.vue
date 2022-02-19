@@ -20,7 +20,7 @@
 </i18n>
 
 <template>
-  <VueModal
+  <ModalWindow
     adaptive
     class="demo-modal"
     :min-width="300"
@@ -60,7 +60,7 @@
         </b-button>
       </div>
     </div>
-  </VueModal>
+  </ModalWindow>
 </template>
 
 <script lang="ts">
@@ -68,10 +68,11 @@ import { Vue, Component } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { CurrentSettings } from "@/state/settings";
+import ModalWindow from "@/components/modal/ModalWindow.vue";
 
 const settings = namespace("settings");
 
-@Component
+@Component({ components: { ModalWindow } })
 export default class ReadonlyDemoInstanceModal extends Vue {
   @settings.State("current") settings!: CurrentSettings;
 

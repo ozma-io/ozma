@@ -25,7 +25,7 @@
       },
     ]"
   >
-    <Modal
+    <TabbedModal
       v-if="modal"
       :show="isModalOpen"
       fullscreen
@@ -58,7 +58,7 @@
           </div>
         </div>
       </div>
-    </Modal>
+    </TabbedModal>
     <template v-if="!(modalOnly && modal)">
       <b-col
         v-if="label"
@@ -147,12 +147,12 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-import Modal from "@/components/modal/Modal.vue";
+import TabbedModal from "@/components/modal/TabbedModal.vue";
 import Input from "@/components/form/Input.vue";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
 
-@Component({ components: { Modal, Input } })
+@Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop({ type: Boolean, default: false }) smallerLabel!: boolean;

@@ -8,6 +8,7 @@
         'is-mobile': $isMobile,
       }
     ]"
+    :data-window="windowKey"
     @click="$emit('tab-click')"
   >
     <slot name="header" />
@@ -16,15 +17,52 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
 import { interfaceButtonVariant } from "@/utils_colors";
+import { WindowKey } from "@/state/windows";
+
+const windows = namespace("windows");
 
 @Component({ components: { ButtonItem } })
 export default class ModalTabHeader extends Vue {
+  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
+  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
+  @windows.Mutation("activateWindow") activateWindow!: (_: WindowKey) => void;
+
   @Prop({ type: Boolean, default: false }) isActive!: boolean;
   @Prop({ type: Boolean, default: false }) onlyTab!: boolean;
+  @Prop({ type: String, required: true }) windowKey!: string;
+
+  @Watch("windowKey", { immediate: true })
+  private createWindowByKey(windowKey: string, oldWindowKey: string | undefined) {
+    if (windowKey === oldWindowKey) return;
+
+    if (oldWindowKey) {
+      throw new Error("Changing window key is not supported");
+    }
+    this.createWindow(windowKey);
+  }
+
+  mounted() {
+    if (this.isActive) {
+      this.activateWindow(this.windowKey);
+    }
+  }
+
+  destroyed() {
+    this.destroyWindow(this.windowKey);
+  }
+
+  @Watch("isActive")
+  private setActive() {
+    if (this.isActive) {
+      this.activateWindow(this.windowKey);
+    }
+  }
 
   private get closeButton(): Button {
     return {

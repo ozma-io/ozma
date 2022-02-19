@@ -26,6 +26,7 @@ import stagingChangesModule from "@/state/staging_changes";
 import queryModule from "@/state/query";
 import errorsModule from "@/state/errors";
 import reloadModule from "@/state/reload";
+import windowsModule from "@/state/windows";
 
 import "@/styles/style.scss";
 import { IEmbeddedPageRef } from "@/api";
@@ -59,6 +60,7 @@ export const store = new Vuex.Store({
     query: queryModule,
     errors: errorsModule,
     reload: reloadModule,
+    windows: windowsModule,
   },
 });
 

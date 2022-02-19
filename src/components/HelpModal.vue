@@ -14,7 +14,7 @@
 </i18n>
 
 <template>
-  <VueModal
+  <ModalWindow
     adaptive
     class="help-modal"
     :width="modalWidth"
@@ -57,13 +57,15 @@
         </b-button>
       </div>
     </div>
-  </VueModal>
+  </ModalWindow>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-@Component
+import ModalWindow from "./modal/ModalWindow.vue";
+
+@Component({ components: { ModalWindow } })
 export default class HelpModal extends Vue {
   @Prop({ type: String, required: true }) markup!: string;
 

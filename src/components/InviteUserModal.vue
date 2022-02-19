@@ -30,7 +30,7 @@
 </i18n>
 
 <template>
-  <VueModal
+  <ModalWindow
     adaptive
     class="invite-modal"
     :min-width="300"
@@ -90,7 +90,7 @@
         </div>
       </div>
     </div>
-  </VueModal>
+  </ModalWindow>
 </template>
 
 <script lang="ts">
@@ -102,8 +102,9 @@ import { randomId, waitTimeout } from "@/utils";
 import ReferenceField from "@/components/ReferenceField.vue";
 import InputSlot from "@/components/form/InputSlot.vue";
 import Input from "@/components/form/Input.vue";
+import ModalWindow from "./modal/ModalWindow.vue";
 
-@Component({ components: { ReferenceField, InputSlot, Input } })
+@Component({ components: { ModalWindow, ReferenceField, InputSlot, Input } })
 export default class InviteUserModal extends Vue {
   @Prop({ type: String, required: true }) authToken!: string;
 
