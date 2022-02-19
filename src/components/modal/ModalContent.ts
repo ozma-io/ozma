@@ -4,9 +4,10 @@ export default Vue.extend({
   name: "ModalContent",
   functional: true,
   props: {
-    nodes: {},
+    // eslint-disable-next-line vue/require-prop-types
+    content: { },
   },
   render: (createElement, ctx) => {
-    return ctx.props.nodes as VNode[];
-  }
+    return ctx.props.content as VNode | VNode[];
+  },
 });

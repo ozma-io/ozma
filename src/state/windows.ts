@@ -43,7 +43,7 @@ const windowsModule: Module<IWindowsState, {}> = {
       }
       state.stack.splice(windowPos, 1);
       state.stack.push(key);
-    }
+    },
   },
   getters: {
     active: state => {

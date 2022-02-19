@@ -122,7 +122,9 @@
     // Buggy.
     "@typescript-eslint/restrict-plus-operands": "off",
     // Also buggy.
-    "@typescript-eslint/no-unsafe-argument": "off"
+    "@typescript-eslint/no-unsafe-argument": "off",
+    // Buggy too.
+    "@typescript-eslint/no-unnecessary-type-assertion": "off"
   },
   "overrides": [
     {
