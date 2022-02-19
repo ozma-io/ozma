@@ -43,9 +43,10 @@ async (
           complete: true,
         };
       } else {
+        const realLimit = opts.chunk?.limit;
         // Increasing `limit` to compute `complete`.
-        if (opts.chunk?.limit !== undefined) {
-          opts = { ...opts, chunk: { ...opts.chunk, limit: opts.chunk.limit + 1 } };
+        if (realLimit !== undefined) {
+          opts = { ...opts, chunk: { ...opts.chunk, limit: realLimit + 1 } };
         }
         // Always recompile user views if development mode is enabled.
         if (developmentMode) {
@@ -56,7 +57,8 @@ async (
           func: Api.getNamedUserView.bind(Api),
           args: [args.source.ref, args.args, opts],
         }, { root: true });
-        const complete = opts.chunk?.limit !== undefined && res.result.rows.length <= opts.chunk.limit;
+
+        const complete = realLimit === undefined || res.result.rows.length <= realLimit;
         return {
           args,
           info: res.info,
