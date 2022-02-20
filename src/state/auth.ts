@@ -150,8 +150,8 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
       }
     }
     try {
-      let auth: CurrentAuth | null = null;
-      while (!auth) {
+      let auth: CurrentAuth | "fetch_error" | null = null;
+      do {
         try {
           // eslint-disable-next-line no-await-in-loop
           auth = await requestToken(params);
@@ -175,15 +175,21 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
               } catch (_) {
                 // just don't try.
               }
+
+              if (description) {
+                void dispatch("setError", `Error when getting token: ${description}`);
+              }
+            } else {
+              auth = "fetch_error";
+              // eslint-disable-next-line no-await-in-loop
+              await Utils.waitTimeout(10000);
             }
+
             // eslint-disable-next-line no-await-in-loop
             await dispatch("removeAuth");
           }
-
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise(resolve => setTimeout(resolve, 10000));
         }
-      }
+      } while (auth === "fetch_error");
     } finally {
       if (state.pending === pending.ref) {
         commit("setPending", null);
@@ -230,7 +236,8 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
 
   const validFor = state.current.validFor;
   // Random timeouts to not overload the server with different tabs.
-  const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
+  // const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
+  const timeoutSecs = 10;
 
   if (state.renewalTimeoutId !== null) {
     clearTimeout(state.renewalTimeoutId);
