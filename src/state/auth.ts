@@ -150,11 +150,12 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
       }
     }
     try {
-      let auth: CurrentAuth | "fetch_error" | null = null;
+      let networkError = false;
       do {
+        networkError = false;
         try {
           // eslint-disable-next-line no-await-in-loop
-          auth = await requestToken(params);
+          const auth = await requestToken(params);
           if (state.pending !== pending.ref) {
             throw new CancelledError();
           }
@@ -162,6 +163,9 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
           startTimeouts(context);
         } catch (e) {
           if (state.pending === pending.ref) {
+            // eslint-disable-next-line no-await-in-loop
+            await dispatch("removeAuth");
+
             let description: string | null = String(e);
             if (e instanceof Utils.FetchError && typeof e.body === "object") {
               // try setting a better error
@@ -180,16 +184,14 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
                 void dispatch("setError", `Error when getting token: ${description}`);
               }
             } else {
-              auth = "fetch_error";
+              // Most likely there are no internet connection now, so wait and try again.
+              networkError = true;
               // eslint-disable-next-line no-await-in-loop
               await Utils.waitTimeout(10000);
             }
-
-            // eslint-disable-next-line no-await-in-loop
-            await dispatch("removeAuth");
           }
         }
-      } while (auth === "fetch_error");
+      } while (networkError);
     } finally {
       if (state.pending === pending.ref) {
         commit("setPending", null);
