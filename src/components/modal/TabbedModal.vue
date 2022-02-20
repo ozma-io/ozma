@@ -70,7 +70,7 @@
           @tab-close="$emit('tab-close', index)"
         >
           <template #header>
-            <ModalContent v-if="tab.header" :nodes="tab.header" />
+            <ModalContent v-if="tab.header" :content="tab.header" />
           </template>
         </ModalTabHeader>
       </div>
