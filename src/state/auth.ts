@@ -236,8 +236,7 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
 
   const validFor = state.current.validFor;
   // Random timeouts to not overload the server with different tabs.
-  // const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
-  const timeoutSecs = 10;
+  const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
 
   if (state.renewalTimeoutId !== null) {
     clearTimeout(state.renewalTimeoutId);
