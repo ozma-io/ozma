@@ -30,14 +30,15 @@
 </i18n>
 
 <template>
-  <VueModal
+  <ModalWindow
     adaptive
+    class="invite-modal"
     :min-width="300"
     :min-height="200"
     :width="350"
     height="auto"
     :name="uid"
-    transition="modal"
+    transition="invite-modal-transition"
   >
     <div class="message-container">
       <i class="material-icons invite-icon">group</i>
@@ -67,16 +68,15 @@
           :inline="false"
           :is-cell-edit="false"
           :label="$t('role_label').toString()"
-          :empty="!roleValue.value"
+          :empty="!roleValue"
         >
           <ReferenceField
             :value="roleValue"
             :label="$t('role_label').toString()"
             :reference-entity="roleEntity"
-            :uv-args="mockUvArgs"
-            :nullable="true"
-            :scope="'no-scope'"
-            @update:value="roleValueValue = $event"
+            nullable
+            scope="no-scope"
+            @update:value="roleValue = $event"
           />
         </InputSlot>
 
@@ -90,7 +90,7 @@
         </div>
       </div>
     </div>
-  </VueModal>
+  </ModalWindow>
 </template>
 
 <script lang="ts">
@@ -98,36 +98,23 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { IEntityRef } from "ozma-api";
 import { invitesServiceUrl, instanceName, instancesHost } from "@/api";
 
-import { randomId } from "@/utils";
+import { randomId, waitTimeout } from "@/utils";
 import ReferenceField from "@/components/ReferenceField.vue";
-import { ICombinedValue } from "@/user_views/combined";
 import InputSlot from "@/components/form/InputSlot.vue";
 import Input from "@/components/form/Input.vue";
+import ModalWindow from "./modal/ModalWindow.vue";
 
-@Component({ components: { ReferenceField, InputSlot, Input } })
+@Component({ components: { ModalWindow, ReferenceField, InputSlot, Input } })
 export default class InviteUserModal extends Vue {
   @Prop({ type: String, required: true }) authToken!: string;
 
-  private mockUvArgs = { source: { type: "named", ref: { schema: "mock_schema", name: "mock_name" } }, args: {} };
-
   private emailValue = "";
+  private roleValue: number | null = null;
 
   private roleEntity: IEntityRef = {
     schema: "public",
-    name: "users",
+    name: "roles",
   };
-
-  private roleValueValue = null;
-
-  private get roleValue(): ICombinedValue {
-    return {
-      value: this.roleValueValue,
-      info: {
-        field: null,
-        fieldRef: { entity: this.roleEntity, name: "role_id" },
-      },
-    };
-  }
 
   private show() {
     this.$modal.show(this.uid);
@@ -150,7 +137,7 @@ export default class InviteUserModal extends Vue {
     const token = this.authToken;
     const body = JSON.stringify({
       email: this.emailValue,
-      role_id: this.roleValueValue,
+      role_id: this.roleValue,
       /* instance_name: "dev", */
       /* instance_domain: "ozma-dev.org", */
       instance_name: instanceName,
@@ -169,7 +156,7 @@ export default class InviteUserModal extends Vue {
         body,
       });
 
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitTimeout(100);
       this.$bvToast.hide(id);
       if (res.status === 200) {
         this.$bvToast.toast(this.$t("invite_success_description").toString(), {
@@ -179,9 +166,9 @@ export default class InviteUserModal extends Vue {
         });
 
         this.emailValue = "";
-        this.roleValueValue = null;
+        this.roleValue = null;
       } else {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await waitTimeout(100);
         this.$bvToast.hide(id);
         this.$bvToast.toast(this.$t("invite_fail_description").toString(), {
           title: this.$t("invite_fail_title").toString(),
@@ -190,9 +177,9 @@ export default class InviteUserModal extends Vue {
         });
       }
     } catch (e) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await waitTimeout(100);
       this.$bvToast.hide(id);
-      this.$bvToast.toast(e, {
+      this.$bvToast.toast(String(e), {
         title: this.$t("invite_fail_title").toString(),
         variant: "danger",
         solid: true,
@@ -203,33 +190,28 @@ export default class InviteUserModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .v--modal-overlay {
-    background: rgba(0, 0, 0, 0.8) !important;
-  }
-
   .form-container {
     width: 99%;
   }
 
+  .invite-modal ::v-deep > .vm--overlay {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .invite-modal ::v-deep > .vm--modal {
+    max-height: 80% !important;
+  }
+
   ::v-deep {
-    .v--modal-box {
-      max-height: 80% !important;
+    .invite-modal-transition-enter-active,
+    .invite-modal-transition-leave-active {
+      transition: all 1s ease-out;
     }
 
-    .modal-enter-active,
-    .modal-leave-active {
-      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.26, 1.55);
-    }
-
-    .modal-enter,
-    .modal-leave-to {
+    .invite-modal-transition-enter,
+    .invite-modal-transition-leave-to {
       transform: translateY(100%);
       opacity: 0;
-    }
-
-    .modal-enter-to,
-    .modal-leave {
-      opacity: 1;
     }
   }
 
@@ -239,6 +221,7 @@ export default class InviteUserModal extends Vue {
     flex-flow: column;
     align-items: center;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .invite-icon {

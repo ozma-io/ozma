@@ -25,7 +25,8 @@
       :height="`${height}px`"
       preview-style="tab"
       @change="onChange"
-      @focus="$root.$emit('form-input-focused')"
+      @focus="onFocus"
+      @blur="onBlur"
     />
   </div>
 </template>
@@ -53,39 +54,31 @@ export default class MarkdownEditor extends Vue {
   // TODO: implement.
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
-  private currentContent = this.content;
+  private currentContent = "";
   private key = 0;
-  private editorOptions = {
-    minHeight: "205px",
-    useCommandShortcut: true,
-    useDefaultHTMLSanitizer: true,
-    usageStatistics: false,
-    hideModeSwitch: false,
-    language: this.$root.$i18n.locale,
-    placeholder: this.$t("input_placeholder"),
-    toolbarItems: [
-      "heading",
-      "bold",
-      "italic",
-      "strike",
-      "divider",
-      "hr",
-      "quote",
-      "divider",
-      "ul",
-      "ol",
-      "task",
-      "indent",
-      "outdent",
-      "divider",
-      "table",
-      "image",
-      "link",
-      "divider",
-      "code",
-      "codeblock",
-    ],
-  };
+  private editorOptions: Record<string, unknown> = {};
+
+  created() {
+    this.currentContent = this.content;
+    this.editorOptions = {
+      minHeight: "205px",
+      useCommandShortcut: true,
+      useDefaultHTMLSanitizer: true,
+      usageStatistics: false,
+      hideModeSwitch: false,
+      language: this.$root.$i18n.locale,
+      placeholder: this.$t("input_placeholder"),
+    };
+  }
+
+  private onFocus(evt: Event) {
+    this.$root.$emit("form-input-focused"); // FIXME: figure it out why we need it
+    this.$emit("focus", evt);
+  }
+
+  private onBlur(evt: Event) {
+    this.$emit("blur", evt);
+  }
 
   private onChange() {
     const editor = this.$refs.editor as EditorType;
@@ -122,6 +115,10 @@ export default class MarkdownEditor extends Vue {
 
     .te-mode-switch-section {
       height: 25px;
+    }
+
+    .te-preview {
+      background-color: var(--default-backgroundDarker1Color);
     }
   }
 </style>

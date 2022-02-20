@@ -20,7 +20,7 @@
       :parent-scope="scope"
       autofocus
       @select="selectFromView"
-      @close="selectedView = null"
+      @close="closeSelectView"
     />
     <MultiSelect
       v-if="valueOptions !== null"
@@ -43,7 +43,8 @@
       @clear-values="$emit('clear-values')"
       @update:filter="updateFilter"
       @load-more="loadMore"
-      @focus="$emit('focus')"
+      @popup-opened="$emit('popup-opened')"
+      @popup-closed="onPopupClosed"
     >
       <template #option="select">
         <fragment>
@@ -71,7 +72,7 @@
           :key="index"
           type="button"
           class="material-button action-button"
-          @click="selectedView = action.query"
+          @click="beginSelect(action)"
         >
           <i class="material-icons md-18 rounded-circle open-modal-button">
             add
@@ -106,11 +107,10 @@
         style="border-color: var(--cell-foregroundDarkerColor); border-right-color: transparent;"
       />
     </div>
-    <QRCodeScanner
-      v-if="wasOpenedQRCodeScanner"
+    <QRCodeScannerModal
+      ref="scanner"
       :reference-entity="referenceEntity"
       :entries="entries"
-      :open-scanner="isQRCodeScanner"
       @select="selectFromScanner"
     />
   </span>
@@ -120,23 +120,23 @@
 import { Component, Prop, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
+import type { IEntityRef, RowId, SchemaName, ValueType } from "ozma-api";
+import { Debounce } from "vue-debounce-decorator";
 import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import SelectUserView from "@/components/SelectUserView.vue";
 import { IQuery } from "@/state/query";
 import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
-import type { IUserViewArguments } from "@/user_views/combined";
-import { currentValue, homeSchema, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
-import { mapMaybe, NeverError, nextRender } from "@/utils";
-import type { IEntityRef, RowId, ValueType } from "ozma-api";
+import { currentValue, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
+import { mapMaybe, NeverError } from "@/utils";
 import { equalEntityRef, valueIsNull } from "@/values";
 import { CancelledError } from "@/modules";
-import { Debounce } from "vue-debounce-decorator";
 import type { EntriesRef } from "@/state/entries";
 import type { ScopeName } from "@/state/staging_changes";
+import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 
-export interface IReferenceValue {
+export interface ICombinedReferenceValue {
   id: RowId;
   link: Link | null;
 }
@@ -146,7 +146,7 @@ export interface IReferenceSelectAction {
   query: IQuery;
 }
 
-export type ReferenceSelectOption = ISelectOption<IReferenceValue>;
+export type ReferenceSelectOption = ISelectOption<ICombinedReferenceValue>;
 
 const compareOptions = (a : ReferenceSelectOption, b : ReferenceSelectOption): number => {
   return a.label.localeCompare(b.label);
@@ -156,15 +156,20 @@ const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value i
   return value !== null && "value" in value;
 };
 
+export interface IReferenceValue {
+  value: number | null;
+  pun?: string | null;
+}
+
 @Component({
   components: {
     MultiSelect,
     SelectUserView,
-    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    QRCodeScannerModal,
   },
 })
 export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
-  @Prop({ required: true }) value!: ICombinedValue | ICombinedValue[] | null;
+  @Prop({ required: true }) value!: IReferenceValue | IReferenceValue[] | null;
   @Prop({ type: Boolean, default: false }) single!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
@@ -174,30 +179,22 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object, required: true }) entries!: EntriesRef;
   @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
-  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
+  @Prop({ type: String }) homeSchema!: SchemaName | undefined;
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
-  @Prop({ type: Boolean, default: false }) loadPunOnMount!: boolean;
   @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
   private selectedView: IQuery | null = null;
-  private wasOpenedQRCodeScanner = false;
-  private isQRCodeScanner = false;
 
   private openQRCodeScanner() {
-    this.wasOpenedQRCodeScanner = true;
-    void nextRender().then(() => {
-      this.isQRCodeScanner = !this.isQRCodeScanner;
-    });
+    (this.$refs.scanner as QRCodeScannerModal).scan();
   }
 
   @Watch("value", { immediate: true })
   // TODO: Possible unnecessary requests there, check this.
   private loadPun() {
-    if (!this.loadPunOnMount) return;
-
     if (this.single) {
       const value = this.value as ICombinedValue;
       if (value.pun || typeof value.value !== "number") return;
@@ -238,8 +235,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   get linkOpts(): IAttrToLinkOpts | undefined {
-    const home = homeSchema(this.uvArgs);
-    return home !== null ? { homeSchema: home } : undefined;
+    return this.homeSchema ? { homeSchema: this.homeSchema } : undefined;
   }
 
   private makeOption(id: RowId, pun: string): ReferenceSelectOption {
@@ -332,7 +328,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   private async processRawId(filterValue: string): Promise<boolean> {
     const id = Number(filterValue);
-    if (Number.isNaN(id)) {
+    if (filterValue === "" || Number.isNaN(id)) {
       return false;
     }
 
@@ -357,16 +353,27 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   private iconValue(target: string) {
-    if (target === "modal-auto" || target === "modal") {
-      return "flip_to_front";
-    } else {
-      return "open_in_new";
-    }
+    return "open_in_new";
   }
 
   private selectFromView(id: number) {
     this.selectedView = null;
     this.setValue(id);
+  }
+
+  private closeSelectView() {
+    this.selectedView = null;
+    this.$emit("popup-closed");
+  }
+
+  private onPopupClosed() {
+    if (this.selectedView === null) {
+      this.$emit("popup-closed");
+    }
+  }
+
+  private beginSelect(action: IReferenceSelectAction) {
+    this.selectedView = action.query;
   }
 
   get loadingState(): LoadingState {

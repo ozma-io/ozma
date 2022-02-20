@@ -1,10 +1,10 @@
 <template>
   <tr
-    :style="[row.extra.style, row.extra.colorVariables, style]"
+    :style="style"
     :class="['table-tr', { selected: row.extra.selected }]"
   >
     <td
-      v-if="uv.extra.isSelectionColumnEnabled"
+      v-if="showSelectionColumn"
       class="fixed-column checkbox-cells"
       @click="$emit('select', $event)"
     >
@@ -19,7 +19,7 @@
         'fixed-column',
         'openform-cells',
         {
-          'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
+          'without-selection-cell': !showSelectionColumn,
           'has-link': row.extra.link,
         }
       ]"
@@ -34,23 +34,26 @@
       </FunLink>
     </td>
     <TableCell
-      v-for="(i, index) in columnIndexes"
+      v-for="(i, tableColI) in columnIndexes"
       :key="i"
+      ref="cells"
+      :uv="uv"
+      :row="row"
       :value="row.values[i]"
       :tree="row.extra.tree"
-      :column-position="i"
-      :index="index"
-      :column="uv.extra.columns[i]"
+      :column-index="i"
+      :column="columns[i]"
       :not-existing="notExisting"
-      :last-fixed-column-index="lastFixedColumnIndex"
+      :first-non-fixed="tableColI == fixedColumnsLength"
+      :fixed-left="fixedColumnPositions[i]"
       :show-tree="showTree"
+      :height="height"
       :show-add-child="uv.info.mainEntity !== undefined"
-      @cell-click="$emit('cell-click', arguments[0], arguments[1], arguments[2])"
-      @cell-mousedown="$emit('cell-mousedown', arguments[0], arguments[1], arguments[2])"
-      @cell-mouseover="$emit('cell-mouseover', arguments[0], arguments[1], arguments[2])"
-      @cell-mouseup="$emit('cell-mouseup', arguments[0], arguments[1], arguments[2])"
-      @cell-contextmenu="$emit('cell-contextmenu', arguments[0], arguments[1], arguments[2])"
-      @update:visibleChildren="$emit('update:visibleChildren', arguments[0], arguments[1])"
+      @cell-click="$emit('cell-click', tableColI, arguments[0], arguments[1])"
+      @cell-mousedown="$emit('cell-mousedown', tableColI, arguments[0], arguments[1])"
+      @cell-mouseover="$emit('cell-mouseover', tableColI, arguments[0], arguments[1])"
+      @cell-mouseup="$emit('cell-mouseup', tableColI, arguments[0], arguments[1])"
+      @cell-contextmenu="$emit('cell-contextmenu', tableColI, arguments[0], arguments[1])"
       @toggle-children="$emit('toggle-children', $event)"
       @add-child="$emit('add-child')"
       @goto="$emit('goto', $event)"
@@ -63,7 +66,7 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 
 import TableCell from "@/components/views/table/TableCell.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import type { ITableCombinedUserView, ITableExtendedRowCommon } from "@/components/views/Table.vue";
+import type { IColumn, ITableCombinedUserView, ITableExtendedRowCommon } from "@/components/views/Table.vue";
 
 @Component({
   components: {
@@ -75,20 +78,37 @@ export default class TableRow extends Vue {
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
   @Prop({ type: Object, required: true }) row!: ITableExtendedRowCommon;
   @Prop({ type: Array, required: true }) columnIndexes!: number[];
+  @Prop({ type: Array, required: true }) columns!: IColumn[];
+  @Prop({ type: Object, required: true }) fixedColumnPositions!: Record<number, number>;
+  @Prop({ type: Number, required: true }) fixedColumnsLength!: number;
   @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
   @Prop({ type: Boolean, default: false }) showTree!: boolean;
   @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
-  @Prop({ type: Number, required: true }) rowIndex!: number;
+  @Prop({ type: Boolean, default: false }) showSelectionColumn!: boolean;
 
-  get lastFixedColumnIndex(): number {
-    return this.uv.extra.columns.filter(item => item.fixed).length;
+  private getRowAttr(name: string) {
+    return this.row.attributes?.[name] || this.uv.attributes[name];
   }
 
-  private get style() {
-    return this.row.extra.height
-      ? { "--max-height": `${this.row.extra.height}px` }
-      : null;
+  get style() {
+    const style: Record<string, unknown> = {};
+
+    if (this.height !== null) {
+      style["white-space"] = "nowrap";
+      style["--max-height"] = `${this.height}px`;
+    }
+
+    return style;
+  }
+
+  get height() {
+    const raw = this.getRowAttr("row_height");
+    if (typeof raw === "number") {
+      return raw;
+    } else {
+      return null;
+    }
   }
 }
 </script>
@@ -149,6 +169,7 @@ export default class TableRow extends Vue {
 
   .selected td {
     background-color: var(--table-backgroundDarker1Color);
+    color: var(--table-foregroundColor);
   }
 
   .table-tr > td:last-child {

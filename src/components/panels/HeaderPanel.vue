@@ -3,7 +3,7 @@
     :class="[
       'header-panel',
       {
-        'is-root': isRoot,
+        'is-root': type === 'root',
       },
     ]"
   >
@@ -37,7 +37,7 @@
             v-if="isEnableFilter"
             class="search-panel"
             :filter-string="filterString"
-            @update:filterString="$emit('update:filterString', $event)"
+            @update:filter-string="$emit('update:filter-string', $event)"
           />
         </template>
       </ButtonsPanel>
@@ -64,10 +64,12 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Array, required: true }) buttons!: Button[];
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
-  @Prop({ type: Object, default: null }) view!: IUserViewType;
+  @Prop({ type: Object, default: null }) view!: IUserViewType | null;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
-  @Prop({ type: Boolean, default: false }) isRoot!: boolean; // Is it TopLevelUserView's header or current tab of modal.
+  // Is it TopLevelUserView's header or current tab of modal or component (sub UserView).
+  // options: 'component', 'modal' ,'root', null
+  @Prop({ type: String, default: null }) type!: string | null;
 
   get headerButtons() {
     const buttons = buttonsToPanelButtons(this.buttons);
@@ -86,7 +88,7 @@ export default class HeaderPanel extends Vue {
         icon: "fullscreen",
         link: {
           type: "query",
-          target: "top",
+          target: (this.type === "modal") ? "top" : "root",
           query: this.view,
         },
       };
@@ -150,7 +152,8 @@ export default class HeaderPanel extends Vue {
     }
 
     .header-panel:not(.is-root) & {
-      padding-left: 0.25rem;
+      padding-left: 0.7rem;
+      white-space: nowrap;
     }
   }
 

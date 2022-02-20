@@ -15,7 +15,6 @@
             "cancel": "Cancel",
             "account": "Account",
             "theme": "Theme",
-            "contacts": "Support",
             "invite_user": "Invite",
             "workspaces": "Workspaces",
             "documentation": "Documentation",
@@ -28,6 +27,10 @@
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
             "error": "Error",
+            "forget_dismissed_help_pages": "Forget dismissed help pages",
+            "enable_development_mode": "Enable development mode",
+            "disable_development_mode": "Disable development mode",
+            "development_mode_indicator": "Development mode is on",
             "authed_link": "Copy link with authorization"
         },
         "ru": {
@@ -45,7 +48,6 @@
             "cancel": "Отмена",
             "account": "Профиль",
             "theme": "Тема",
-            "contacts": "Помощь",
             "invite_user": "Пригласить",
             "workspaces": "Базы",
             "documentation": "Документация",
@@ -58,6 +60,10 @@
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
             "error": "Ошибка",
+            "forget_dismissed_help_pages": "Сбросить пропущенные страницы помощи",
+            "enable_development_mode": "Включить режим разработки",
+            "disable_development_mode": "Выключить режим разработки",
+            "development_mode_indicator": "Включён режим разработки",
             "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
@@ -65,8 +71,13 @@
 
 <template>
   <div class="main-div">
-    <ProgressBar v-show="isLoading" />
-
+    <portal to="main-buttons">
+      <ButtonsPanel
+        class="main-buttons"
+        :buttons="mainButtons"
+        @goto="$emit('goto', $event)"
+      />
+    </portal>
     <template v-if="query !== null">
       <ModalUserView
         v-for="(window, i) in query.windows"
@@ -88,8 +99,8 @@
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
-        is-root
-        @update:filterString="replaceRootSearch($event)"
+        :type="'root'"
+        @update:filter-string="replaceRootSearch($event)"
         @goto="$emit('goto', $event)"
       >
         <template #main-buttons>
@@ -112,12 +123,11 @@
           @goto="pushRoot"
           @goto-previous="gotoPreviousRoot"
           @update:buttons="buttons = $event"
-          @update:statusLine="statusLine = $event"
-          @update:enableFilter="enableFilter = $event"
-          @update:bodyStyle="styleNode.innerHTML = $event"
+          @update:status-line="statusLine = $event"
+          @update:enable-filter="enableFilter = $event"
+          @update:body-style="styleNode.innerHTML = $event"
           @update:title="updateTitle"
-          @update:isLoading="isUserViewLoading = $event"
-          @update:currentPage="replaceRootPage($event)"
+          @update:current-page="replaceRootPage($event)"
         />
       </div>
     </div>
@@ -176,14 +186,14 @@
 
       <transition name="fade-2" mode="out-in">
         <div
-          v-if="!changes.isEmpty && isSaving"
+          v-if="( !changes.isEmpty && isSaving ) || isLoading"
           class="saving-spinner spinner-border"
         />
         <div
           v-else-if="!changes.isEmpty"
         >
           <div
-            v-if="autoSaveDisabled"
+            v-if="Object.keys(autoSaveLocks).length > 0"
             v-b-tooltip.hover.right.noninteractive="{
               title: $t('auto_save_disabled').toString(),
               disabled: $isMobile,
@@ -196,7 +206,6 @@
               timer_off
             </span>
           </div>
-
           <button
             v-b-tooltip.hover.right.noninteractive="{
               title: $t('save').toString(),
@@ -215,7 +224,7 @@
           </button>
         </div>
         <div
-          v-else-if="savedRecently.show"
+          v-else-if="( !$isMobile || savedRecently.show )"
           v-b-tooltip.hover.right.noninteractive="{
             title: $t('saved').toString(),
             disabled: $isMobile,
@@ -229,19 +238,27 @@
           </span>
         </div>
       </transition>
-    </div>
 
-    <QRCodeScanner
-      v-if="wasOpenedQRCodeScanner"
-      :open-scanner="isOpenQRCodeScanner"
+      <div
+        v-if="allowBusinessMode && !settingsPending && developmentModeEnabled"
+        v-b-tooltip.hover.right.noninteractive="{
+          title: $t('development_mode_indicator').toString(),
+        }"
+        class="development-mode-indicator"
+      >
+        <span class="material-icons md-36">developer_mode</span>
+      </div>
+    </div>
+    <QRCodeScannerModal
+      ref="scanner"
       multi-scan
       :link="currentQRCodeLink"
+      @before-push-root="currentQRCodeLink = null"
     />
   </div>
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
 import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
@@ -250,19 +267,18 @@ import * as Api from "@/api";
 import { eventBus } from "@/main";
 import { setHeadTitle } from "@/elements";
 import { ErrorKey } from "@/state/errors";
-import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory } from "@/state/query";
-import { convertToWords, homeLink, nextRender } from "@/utils";
+import { convertToWords, homeLink } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
-import { CurrentSettings } from "@/state/settings";
-import type { FullThemeName, ThemeName } from "@/utils_colors";
-import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
-import { ISocialLinks } from "./CommunicationsButton.vue";
+import { CurrentSettings, DisplayMode } from "@/state/settings";
+import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute, IThemeRef } from "@/utils_colors";
+import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -274,7 +290,7 @@ const errors = namespace("errors");
   components: {
     ModalUserView,
     ProgressBar,
-    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    QRCodeScannerModal,
     HeaderPanel,
   },
   /* Two hooks below catches only browser navigation buttons,
@@ -304,8 +320,7 @@ export default class TopLevelUserView extends Vue {
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.State("disableAutoSaveCount") disableAutoSaveCount!: number;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;
@@ -320,25 +335,25 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: ThemeName) => Promise<void>;
+  @settings.State("pending") settingsPending!: Promise<CurrentSettings> | null;
+  @settings.State("userIsRoot") userIsRoot!: boolean;
+  @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
+  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: IThemeRef) => Promise<void>;
+  @staging.State("autoSaveLocks") autoSaveLocks!: Object | null;
+  @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
-  private styleNode: HTMLStyleElement;
+  private styleNode!: HTMLStyleElement;
   private title = "";
-  private isUserViewLoading = false;
 
   private buttons: Button[] = [];
-  private themeButtons: Button[] = [];
-  private communicationButtons: Button[] = [];
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,
     timeoutId: null,
   };
 
-  private wasOpenedQRCodeScanner = false;
-  private isOpenQRCodeScanner = false;
   private currentQRCodeLink: Link | null = null;
 
   private get isSaving(): boolean {
@@ -371,105 +386,67 @@ export default class TopLevelUserView extends Vue {
     ];
   }
 
-  @Watch("mainButtons")
-  private pushMainButtons() {
-    eventBus.emit("updateMainButtons", this.mainButtons);
-  }
-
-  constructor() {
-    super();
-    this.styleNode = document.createElement("style");
-    this.styleNode.type = "text/css";
-  }
-
   mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
     document.addEventListener("keydown", this.onKeydown);
-    eventBus.on("closeAllToasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
-
-    void this.loadBurgerButtons();
   }
 
-  private destroyed() {
+  destroyed() {
     this.styleNode.remove();
 
     /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
     document.removeEventListener("keydown", this.onKeydown);
-    eventBus.off("closeAllToasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  @Watch("currentSettings")
-  private loadBurgerButtons() {
+  private get themeButtons(): Button[] {
     const themes = this.currentSettings.themes;
-    const themeNames = themes.map(theme => theme.themeName);
     const locale = this.$i18n.locale;
-    const translate = (theme: FullThemeName) => (typeof theme.localized?.[locale] === "string") ? theme.localized[locale] : theme.name;
-    this.themeButtons = themeNames.map(themeName => ({
-      caption: translate(themeName),
-      variant: defaultVariantAttribute,
-      type: "callback",
-      callback: () => this.setCurrentTheme(themeName.name),
-    }));
-
-    this.communicationButtons = ([
-      this.communicationStrings.email
-        ? {
-          caption: "E-mail",
-          icon: "email",
-          type: "link",
-          link: { type: "href", href: "mailto:" + this.communicationStrings.email, target: "_blank" },
-          variant: defaultVariantAttribute,
+    return Object.entries(this.currentSettings.themes).flatMap(([schemaName, themesSchema]) => {
+      return Object.entries(themesSchema).map(([themeName, theme]) => {
+        const ref = {
+          schema: schemaName,
+          name: themeName,
+        };
+        let name: string;
+        if (locale in theme.localized) {
+          name = theme.localized[locale];
+        } else if ("en" in theme.localized) {
+          name = theme.localized["en"];
+        } else {
+          name = `${schemaName}.${themeName}`;
         }
-        : undefined,
-      this.communicationStrings.whatsapp
-        ? {
-          caption: "WhatsApp",
-          icon: "phone",
-          type: "link",
-          link: { type: "href", href: this.communicationStrings.whatsapp, target: "_blank" },
+        return {
+          caption: name,
           variant: defaultVariantAttribute,
-        }
-        : undefined,
-      this.communicationStrings.telegram
-        ? {
-          caption: "Telegram",
-          icon: "send",
-          type: "link",
-          link: { type: "href", href: this.communicationStrings.telegram, target: "_blank" },
-          variant: defaultVariantAttribute,
-        }
-        : undefined,
-    ] as (Button | undefined)[]).filter(R.identity) as Button[];
-  }
-
-  private get communicationStrings(): ISocialLinks {
-    return {
-      telegram: this.currentSettings.getEntry("instance_help_telegram", String, undefined),
-      whatsapp: this.currentSettings.getEntry("instance_help_whatsapp", String, undefined),
-      email: this.currentSettings.getEntry("instance_help_email", String, undefined),
-    };
+          type: "callback",
+          callback: () => this.setCurrentTheme(ref),
+        };
+      });
+    });
   }
 
   private onKeydown(event: KeyboardEvent) {
     // 83 is code for `s`/`ы` key.
     if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
       event.preventDefault();
-
       void this.saveView();
+    }
+
+    if (event.ctrlKey && event.key === "D") {
+      event.preventDefault();
+
+      this.toggleDeveloperMode();
     }
   }
 
   private openQRCodeScanner(link: Link | null) {
     if (link !== null) {
       this.currentQRCodeLink = link;
-      this.wasOpenedQRCodeScanner = true;
-      void nextRender().then(() => {
-        this.isOpenQRCodeScanner = !this.isOpenQRCodeScanner;
-      });
+      (this.$refs.scanner as QRCodeScannerModal).scan();
     }
   }
 
@@ -510,10 +487,6 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  private closeAllToasts() {
-    this.$bvToast.hide();
-  }
-
   private makeErrorToast() {
     this.$bvToast.hide();
     this.errors.forEach(error => {
@@ -528,10 +501,6 @@ export default class TopLevelUserView extends Vue {
 
   private get canClearUnsavedChanges() {
     return this.errors.length !== 0 && !this.changes.isEmpty;
-  }
-
-  private get autoSaveDisabled() {
-    return this.disableAutoSaveCount > 0;
   }
 
   @Watch("$route", { deep: true, immediate: true })
@@ -552,34 +521,41 @@ export default class TopLevelUserView extends Vue {
   }
 
   private created() {
+    this.styleNode = document.createElement("style");
     document.head.appendChild(this.styleNode);
   }
 
-  private resetChanges() {
-    this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
-      okTitle: this.$t("clear_changes_ok").toString(),
-      cancelTitle: this.$t("cancel").toString(),
-      okVariant: "danger",
-      cancelVariant: "outline-secondary",
-      centered: true,
-    }).then(this.clearChanges)
-      .then(this.resetErrors)
-      .then(() => this.closeAllToasts())
-      .catch(err => {
+  private async resetChanges() {
+    try {
+      await this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
+        okTitle: this.$t("clear_changes_ok").toString(),
+        cancelTitle: this.$t("cancel").toString(),
+        okVariant: "danger",
+        cancelVariant: "outline-secondary",
+        centered: true,
       });
+    } catch (e) {
+      return;
+    }
+    await this.clearChanges();
+    this.resetErrors();
+    this.$bvToast.hide();
   }
 
-  private async saveChanges() {
+  private async saveChanges(): Promise<CombinedTransactionResult[]> {
     const scopes = Object.keys(this.changes.scopes);
-    const results: CombinedTransactionResult[] = [];
-    for (const scope of scopes) {
-      // eslint-disable-next-line no-await-in-loop
-      results.push(...await this.submitChanges({ scope, errorOnIncomplete: true }));
-    }
     if (scopes.length === 0) {
-      results.push(...await this.submitChanges({ errorOnIncomplete: true }));
+      const ret = await this.submitChanges({ errorOnIncomplete: true });
+      return ret.results;
+    } else {
+      const results: CombinedTransactionResult[] = [];
+      for (const scope of scopes) {
+        // eslint-disable-next-line no-await-in-loop
+        const ret = await this.submitChanges({ scope, errorOnIncomplete: true });
+        results.push(...ret.results);
+      }
+      return results;
     }
-    return results;
   }
 
   private async saveView() {
@@ -598,18 +574,18 @@ export default class TopLevelUserView extends Vue {
     }, 5000);
   }
 
+  private get allowBusinessMode() {
+    return this.currentSettings.getEntry("allow_business_mode", Boolean, false);
+  }
+
+  private toggleDeveloperMode() {
+    if (this.allowBusinessMode && this.userIsRoot) {
+      void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
+    }
+  }
+
   get burgerButton() {
     const buttons: Button[] = [];
-
-    if (this.communicationButtons.length > 0) {
-      buttons.push({
-        icon: "contact_support",
-        caption: this.$t("contacts").toString(),
-        variant: bootstrapVariantAttribute("info"),
-        type: "button-group",
-        buttons: this.communicationButtons,
-      });
-    }
 
     if (this.currentAuth?.token) {
       buttons.push({
@@ -617,25 +593,9 @@ export default class TopLevelUserView extends Vue {
         caption: this.$t("invite_user").toString(),
         variant: defaultVariantAttribute,
         type: "callback",
-        callback: () => eventBus.emit("showInviteUserModal"),
+        callback: () => eventBus.emit("show-invite-user-modal"),
       });
     }
-
-    buttons.push({
-      icon: "help_center",
-      caption: this.$t("documentation").toString(),
-      variant: defaultVariantAttribute,
-      type: "link",
-      link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
-    });
-
-    buttons.push({
-      icon: "view_list",
-      caption: this.$t("workspaces").toString(),
-      variant: defaultVariantAttribute,
-      type: "link",
-      link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
-    });
 
     if (this.themeButtons.length > 0) {
       buttons.push({
@@ -648,22 +608,67 @@ export default class TopLevelUserView extends Vue {
     }
 
     if (this.currentAuth?.token) {
-      if (Api.developmentMode) {
-        const currentAuth = this.currentAuth;
-        buttons.push({ icon: "link",
-          caption: this.$t("authed_link").toString(),
+      if (this.allowBusinessMode && this.userIsRoot) {
+        buttons.push({
+          icon: "developer_mode",
+          caption: this.$t(this.developmentModeEnabled ? "disable_development_mode" : "enable_development_mode").toString() + " (Ctrl+Shift+D)",
+          type: "callback",
+          callback: () => this.toggleDeveloperMode(),
+          variant: this.developmentModeEnabled ? bootstrapVariantAttribute("warning") : bootstrapVariantAttribute("info"),
+          keepButtonGroupOpened: true,
+        });
+      }
+
+      if (this.developmentModeEnabled) {
+        buttons.push({
+          icon: "help_center",
+          caption: this.$t("documentation").toString(),
+          variant: bootstrapVariantAttribute("info"),
+          type: "link",
+          link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
+        });
+
+        buttons.push({
+          icon: "view_list",
+          caption: this.$t("workspaces").toString(),
+          variant: bootstrapVariantAttribute("info"),
+          type: "link",
+          link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
+        });
+
+        if (Api.developmentMode) {
+          const currentAuth = this.currentAuth;
+          buttons.push({
+            icon: "link",
+            caption: this.$t("authed_link").toString(),
+            variant: bootstrapVariantAttribute("info"),
+            type: "callback",
+            callback: () => {
+              const link = getAuthedLink(currentAuth);
+              void navigator.clipboard.writeText(link);
+            },
+          });
+        }
+
+        buttons.push({
+          icon: "layers_clear",
+          caption: this.$t("forget_dismissed_help_pages").toString(),
+          variant: bootstrapVariantAttribute("info"),
+          type: "callback",
           callback: () => {
-            const link = getAuthedLink(currentAuth);
-            void navigator.clipboard.writeText(link);
+            const allKeys = Object.keys(localStorage);
+            const keys = ["dismissHelpPages", ...allKeys.filter(key => key.startsWith("watchedHelpPage_"))];
+            for (const key of keys) {
+              localStorage.removeItem(key);
+            }
           },
-          variant: defaultVariantAttribute,
-          type: "callback" });
+        });
       }
       buttons.push({
         icon: "perm_identity",
         caption: this.$t("account").toString(),
         type: "link",
-        link: { href: Api.accountUrl, type: "href", target: "_self" },
+        link: { href: Api.accountUrl, type: "href", target: "_blank" },
         variant: defaultVariantAttribute,
       });
       buttons.push({
@@ -798,16 +803,16 @@ export default class TopLevelUserView extends Vue {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #dc354533;
-    color: #dc3545cc;
+    background-color: #df4151;
+    color: #831721;
   }
 
   .show-errors-button {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #6c757d33;
-    color: #6c757dcc;
+    background-color: #6c757d;
+    color: #2b2e31;
   }
 
   .auto-save-indicator {
@@ -826,17 +831,29 @@ export default class TopLevelUserView extends Vue {
     color: var(--StateTextColor);
 
     &.save {
-      background-color: #97d777;
+      background-color: #39ac00;
     }
+  }
+
+  .shadow {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
   }
 
   .saving-spinner {
     height: 4rem;
     width: 4rem;
-    border-color: #97d777;
+    border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;
     opacity: 0.5;
+  }
+
+  .development-mode-indicator {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    color: var(--default-foregroundDarkerColor);
+    opacity: 0.75;
   }
 
   @media screen and (max-aspect-ratio: 13/9) {

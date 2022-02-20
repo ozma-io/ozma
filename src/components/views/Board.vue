@@ -3,8 +3,8 @@
         "en": {
             "view_error": "There are following errors in user view",
             "no_title": "No title",
-            "no_columns": "This query is lacking board_columns attribute",
-            "no_group": "This query is lacking board_group attribute on the grouping field"
+            "no_columns": "This query lacks board_columns attribute",
+            "no_group": "This query lacks board_group attribute on the grouping field"
         },
         "ru": {
             "view_error": "В отображении следующие ошибки",
@@ -67,7 +67,11 @@ import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
 import { IRowCard, default as RowCard, CardColumn } from "@/components/views/board/RowCard.vue";
 import { EntriesRef } from "@/state/entries";
-import { colorVariantFromAttribute } from "@/utils_colors";
+import {
+  colorVariantFromAttribute,
+  getColorVariantAttributeClassName,
+  getColorVariantAttributeVariables,
+} from "@/utils_colors";
 
 interface IGroupColumn {
   group: unknown;
@@ -404,7 +408,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       const info = this.uv.info.columns[colI];
       const columnAttrs = this.uv.columnAttributes[colI];
       const cellAttrs = value.attributes;
-      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs);
+      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, columnAttrs, rowAttrs, viewAttrs);
 
       const rowLink = attrToLinkSelf(getCellAttr("row_link"), value.info);
       if (rowLink !== null) {
@@ -418,12 +422,15 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
       const punnedValue = valueToPunnedText(info.valueType, value);
       const icon = getCellAttr("icon");
+      const colorCellVariant = colorVariantFromAttribute(getCellAttr("cell_variant"));
       return {
         type: "text",
         value: punnedValue,
         valueHtml: replaceHtmlLinks(punnedValue),
         size: 12,
         icon: icon ? String(icon) : null,
+        cellVariantClass: getColorVariantAttributeClassName(colorCellVariant),
+        cellVariantStyles: getColorVariantAttributeVariables(colorCellVariant),
       };
     }, row.values);
 

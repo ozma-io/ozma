@@ -26,7 +26,7 @@ export default class CodeEditor extends Vue {
   editor: monaco.editor.IStandaloneCodeEditor | null = null;
 
   get options(): monaco.editor.IStandaloneEditorConstructionOptions {
-    const fontSize = this.settings.getEntry("font_size", Number, 14);
+    const fontSize = this.settings.getEntry("font_size", Number, 12);
 
     const options: monaco.editor.IStandaloneEditorConstructionOptions = {
       language: this.language,
@@ -70,6 +70,10 @@ export default class CodeEditor extends Vue {
     });
     editor.onDidFocusEditorWidget(() => {
       this.$root.$emit("form-input-focused");
+      this.$emit("focus");
+    });
+    editor.onDidBlurEditorWidget(() => {
+      this.$emit("blur");
     });
     editor.onDidChangeModelContent(event => {
       const content = editor.getValue();
@@ -79,7 +83,9 @@ export default class CodeEditor extends Vue {
     });
     this.editor = editor;
     if (this.autofocus) {
-      editor.focus();
+      // FIXME: With the next line autofocus work for the first table cell open
+      //        with codeeditor. But close the edit cell for a second time.
+      // editor.focus();
     }
   }
 

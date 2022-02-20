@@ -56,6 +56,13 @@ module.exports = {
   },
 
   chainWebpack: config => {
+    config.module
+      .rule("vue")
+      .use("vue-loader")
+      .tap(options => {
+          options.compiler = require("vue-template-babel-compiler");
+          return options;
+      });
     /* Manually set prefetched chunks */
     config.plugins.delete("prefetch");
     config.plugin("define").tap(
@@ -70,7 +77,6 @@ module.exports = {
         .end();
   },
 
-  
   css: {
     loaderOptions: {
       sass: {

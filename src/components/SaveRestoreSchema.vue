@@ -137,7 +137,7 @@ export default class SaveRestoreSchema extends Vue {
         autoHideDelay: 2500,
       });
     } catch (e) {
-      this.$bvToast.toast(e.message, {
+      this.$bvToast.toast(String(e), {
         title: this.$t("error").toString(),
         variant: "danger",
         solid: true,
@@ -165,7 +165,7 @@ export default class SaveRestoreSchema extends Vue {
         autoHideDelay: 2500,
       });
     } catch (e) {
-      this.$bvToast.toast(e.message, {
+      this.$bvToast.toast(String(e), {
         title: this.$t("error").toString(),
         variant: "danger",
         solid: true,

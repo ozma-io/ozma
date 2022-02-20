@@ -8,7 +8,8 @@ $input-placeholder-color: var(--cell-foregroundDarkerColor);
 $border-color: var(--MainBorderColor);
 $input-border-color: var(--cell-borderColor, $border-color);
 
-@import '../../node_modules/bootstrap/scss/bootstrap';
+@import "../../node_modules/bootstrap/scss/bootstrap";
+@import "../../node_modules/vue-popperjs/dist/vue-popper.css";
 
 /*
  *общие настройки
@@ -74,8 +75,8 @@ body {
   @for $i from 1 through 12 {
     @each $size in $sizes {
       .col-#{$size}-#{$i} {
-        width: #{percentage(round($i*8.33)/100)} !important;
-        max-width: #{percentage(round($i*8.33)/100)} !important;
+        width: #{percentage(calc(round($i*8.33) / 100))} !important;
+        max-width: #{percentage(calc(round($i*8.33) / 100))} !important;
         float: left;
       }
     }
@@ -107,7 +108,7 @@ button:not(.btn) {
 @for $i from 1 through 10 {
   .fade-#{$i}-enter-active,
   .fade-#{$i}-leave-active {
-    transition: opacity #{$i / 10}s, $color-transition;
+    transition: opacity #{calc($i / 10)}s, $color-transition;
   }
 
   .fade-#{$i}-enter,
@@ -263,8 +264,6 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
   }
 }
 
-@import "../../node_modules/vue-popperjs/dist/vue-popper.css";
-
 .popper {
   min-width: 100px;
   padding: 0;
@@ -286,4 +285,32 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 
 .p-0-5 {
   padding: 0.125rem !important;
+}
+
+.help-button-variant {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  background: linear-gradient(-45deg, #ffa63d, #ff3d77, #338aff, #3cf0c5);
+  background-size: 600%;
+  animation: help-button-anim 12s linear infinite;
+  box-shadow: 0 0 0.4rem rgba(255, 100, 100, 1);
+
+  &:hover {
+    background: linear-gradient(-45deg, #ff3d77, #338aff, #3cf0c5, #ffa63d);
+  }
+}
+
+@keyframes help-button-anim {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }

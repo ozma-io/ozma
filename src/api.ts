@@ -1,4 +1,4 @@
-import FunDBAPI from "ozma-api";
+import FunDBAPI, { IEntityRef } from "ozma-api";
 
 const hostnameParts = location.hostname.split(".");
 export const instanceName = (typeof __INSTANCE_NAME__ === "string") ? String(__INSTANCE_NAME__) : hostnameParts[0];
@@ -9,7 +9,6 @@ export const invitesServiceUrl = typeof __INVITES_SERVICE_URL__ === "string" ? _
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
 export const disableAuth = Boolean(__DISABLE_AUTH__);
 const readonlyDemoInstanceName = typeof __READ_ONLY_INSTANCE_NAME__ === "string" ? __READ_ONLY_INSTANCE_NAME__ : undefined;
-export const isReadonlyDemoInstance = instanceName === readonlyDemoInstanceName;
 
 export const authOrigin = String(__API_AUTH_URL__);
 export const authUrlBase = `${authOrigin}${String(__API_AUTH_URL_BASE__)}`;
@@ -25,3 +24,7 @@ export const funappSchema = "funapp";
 
 const api = new FunDBAPI({ apiUrl });
 export default api;
+
+export type IDocumentRef = IEntityRef;
+export type IEmbeddedPageRef = IEntityRef;
+export type IIframeRef = IEntityRef;

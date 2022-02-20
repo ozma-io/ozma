@@ -37,7 +37,8 @@
         :filter-string="filterString"
         :view="view"
         :is-loading="isUserViewLoading"
-        @update:filterString="filterString = $event"
+        :type="'modal'"
+        @update:filter-string="filterString = $event"
         @goto="$emit('goto', $event)"
       />
     </template>
@@ -55,8 +56,8 @@
           :filter="filterWords"
           :filter-string="filterString"
           @update:buttons="buttons = $event"
-          @update:enableFilter="enableFilter = $event"
-          @update:isLoading="isUserViewLoading = $event"
+          @update:enable-filter="enableFilter = $event"
+          @update:is-loading="isUserViewLoading = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
@@ -73,7 +74,7 @@ import { namespace } from "vuex-class";
 
 import type { IQuery } from "@/state/query";
 import { queryLocation } from "@/state/query";
-import { CombinedTransactionResult, CurrentChanges, ScopeName } from "@/state/staging_changes";
+import { CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalPortal from "@/components/modal/ModalPortal";
 import { router } from "@/modules";
 import type { Button } from "@/components/buttons/buttons";
@@ -89,7 +90,7 @@ const auth = namespace("auth");
 export default class ModalUserView extends Vue {
   @auth.State("protectedCalls") protectedCalls!: number;
   @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean }) => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -210,22 +211,22 @@ export default class ModalUserView extends Vue {
     height: 3rem;
     width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #dc354533;
-    color: #dc3545cc;
+    background-color: #df4151;
+    color: #831721;
   }
 
   .save-button {
     color: var(--StateTextColor);
 
     &.save {
-      background-color: #97d777;
+      background-color: #39ac00;
     }
   }
 
   .saving-spinner {
     height: 4rem;
     width: 4rem;
-    border-color: #97d777;
+    border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;
     opacity: 0.5;

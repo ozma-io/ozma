@@ -15,6 +15,7 @@ export interface IButton {
   display?: ButtonDisplay;
   disabled?: boolean;
   variant: ColorVariantAttribute;
+  keepButtonGroupOpened?: boolean;
 }
 
 export interface ILocationButton extends IButton {
@@ -224,6 +225,7 @@ export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
     }
   });
 
+  extraButton.disabled = extraButton.buttons.length === 0;
   panelButtons.push(extraButton);
   return panelButtons;
 };

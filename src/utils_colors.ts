@@ -1,14 +1,22 @@
 import { rgba, toRgba, parseToRgba, readableColor, mix } from "color2k";
-import { IExecutedValue, IExecutedRow, IViewExprResult } from "ozma-api";
+import { z } from "zod";
+import { IViewExprResult, SchemaName, RowId } from "ozma-api";
 import { store } from "@/main";
 import { default as Api } from "@/api";
 // import type { ISettingsState } from "@/state/settings";
-import { objectMap } from "./utils";
+import { mapMaybe, objectMap, safeJsonParse } from "@/utils";
+
+const ThemeRef = z.object({
+  schema: z.string(),
+  name: z.string(),
+});
+
+export type IThemeRef = z.infer<typeof ThemeRef>;
 
 const orNull = <T, F>(func: (arg: T) => F) =>
-  (arg: unknown) => {
+  (arg: any) => {
     try {
-      return func(arg as any); // Function must throw exception when argument is wrong.
+      return func(arg as T);
     } catch (e) {
       return null;
     }
@@ -32,28 +40,21 @@ export const variantKeys = [
 ] as const;
 export type VariantKey = typeof variantKeys[number];
 
-export type ColorVariantRow = {
-  name: string;
-  "theme_id": string;
-} & {
-  [key in VariantKey]: string | null;
-};
-
-export type RawColorVariant = {
+type RawColorVariant = {
   [key in VariantKey]?: unknown;
 };
 export type ColorVariant = {
   [key in VariantKey]: string;
 };
 
-export type ColorVariables = Record<string, string>;
-
 export type ThemeName = string;
-export type FullThemeName = { name: ThemeName; localized: Record<string, undefined> | null };
-export type Theme = {
-  themeName: FullThemeName;
+
+export interface ITheme {
+  localized: Record<string, string>;
   colorVariants: Record<string, ColorVariant>;
-};
+}
+
+export type ThemesMap = Record<SchemaName, Record<ThemeName, ITheme>>;
 
 const darkenOrLighten = (color: string, amount: number): string => mix(color, readableColor(color), amount);
 const lightenOrDarken = (color: string, amount: number): string => mix(color, readableColor(readableColor(color)), amount);
@@ -77,6 +78,22 @@ export const colorVariantFromRaw = (raw: RawColorVariant): ColorVariant => {
   };
 };
 
+type SimpleBootstrapVariantName =
+  | "success"
+  | "primary"
+  | "secondary"
+  | "warning"
+  | "danger"
+  | "info"
+  | "light"
+  | "dark";
+
+type OutlineBootstrapVariantName = `outline-${SimpleBootstrapVariantName}`;
+
+export type BootstrapVariantName =
+  | SimpleBootstrapVariantName
+  | OutlineBootstrapVariantName;
+
 const rawSimpleBootstrapColorVariants: Record<SimpleBootstrapVariantName, RawColorVariant> = {
   primary: { foreground: "#e8e6e3", background: "#007bff" },
   secondary: { foreground: "#e8e6e3", background: "#6c757d" },
@@ -84,15 +101,19 @@ const rawSimpleBootstrapColorVariants: Record<SimpleBootstrapVariantName, RawCol
   warning: { foreground: "#e8e6e3", background: "#ffc107" },
   danger: { foreground: "#e8e6e3", background: "#dc3545" },
   info: { foreground: "#e8e6e3", background: "#17a2b8" },
-  light: { foreground: "#e8e6e3", background: "#f8f9fa" },
+  light: { foreground: "#212529", background: "#f8f9fa" },
   dark: { foreground: "#e8e6e3", background: "#343a40" },
 };
+
 const simpleToOutline = (simple: RawColorVariant): RawColorVariant =>
   ({ background: "transparent", foreground: simple.background, border: simple.background });
+
 const rawOutlineBootstrapColorVariants: Record<OutlineBootstrapVariantName, RawColorVariant> =
   Object.fromEntries(Object.entries(rawSimpleBootstrapColorVariants).map(([key, value]) =>
     [`outline-${key}`, simpleToOutline(value)])) as Record<OutlineBootstrapVariantName, RawColorVariant>;
+
 const rawBootstrapColorVariants = { ...rawSimpleBootstrapColorVariants, ...rawOutlineBootstrapColorVariants };
+
 export const bootstrapColorVariants: Record<BootstrapVariantName, ColorVariant> =
   objectMap(value => colorVariantFromRaw({ ...value }), rawBootstrapColorVariants);
 
@@ -100,50 +121,86 @@ export const transparentVariant = Object.fromEntries(variantKeys.map(key => [key
 
 export const defaultVariantAttribute: ColorVariantAttribute = ({ type: "existing", className: "default" }) as const;
 export const interfaceButtonVariant: ColorVariantAttribute = ({ type: "existing", className: "interfaceButton" }) as const;
+
 export const bootstrapVariantAttribute = (name: BootstrapVariantName) => ({ type: "existing", className: name }) as const;
 
-const loadFullThemeNames = async (): Promise<FullThemeName[]> => {
-  const ref = { schema: "funapp", name: "color_themes" };
+const loadColorThemeHeaders = async (): Promise<Record<SchemaName, Record<ThemeName, { id: RowId; theme: ITheme }>>> => {
+  const uvRef = { schema: "funapp", name: "color_themes" };
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {
     func: Api.getNamedUserView,
-    args: [ref],
+    args: [uvRef],
   }, { root: true });
 
+  const idColumnIndex = res.info.columns.findIndex(column => column.name === "id");
+  const schemaNameColumnIndex = res.info.columns.findIndex(column => column.name === "schema_name");
   const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
   const localizedNameColumnIndex = res.info.columns.findIndex(column => column.name === "localized_name");
-  return res.result.rows.map(row => ({
-    name: row.values[nameColumnIndex].value as string,
-    localized: row.values[localizedNameColumnIndex].value as Record<string, undefined>,
-  }));
+
+  const themes: Record<SchemaName, Record<ThemeName, { id: RowId; theme: ITheme }>> = {};
+  res.result.rows.forEach(row => {
+    const schemaName = row.values[schemaNameColumnIndex].value as string;
+    const name = row.values[nameColumnIndex].value as string;
+    let schema = themes[schemaName];
+    if (schema === undefined) {
+      schema = {};
+      themes[schemaName] = schema;
+    }
+    const id = row.values[idColumnIndex].value as RowId;
+    const theme = {
+      localized: row.values[localizedNameColumnIndex].value as Record<string, string>,
+      colorVariants: {},
+    };
+    schema[name] = { id, theme };
+  });
+  return themes;
 };
 
-const punOrValue = (value: IExecutedValue) => value.pun ?? value.value;
-
-export const loadColorVariants = async () => {
+const loadColorVariants = async (): Promise<Record<RowId, Record<string, ColorVariant>>> => {
   const ref = { schema: "funapp", name: "color_variants" };
   const res: IViewExprResult = await store.dispatch("callProtectedApi", {
     func: Api.getNamedUserView,
     args: [ref],
   }, { root: true });
 
-  const columnNames = res.info.columns.map(column => column.name);
-  const rowArrayToObject =
-    (row: IExecutedRow) => Object.fromEntries(columnNames.map((name, index) => ([name, punOrValue(row.values[index])])));
-  return (res.result.rows.map(rowArrayToObject) as ColorVariantRow[]);
-};
+  const idColumnIndex = res.info.columns.findIndex(column => column.name === "theme_id");
+  const nameColumnIndex = res.info.columns.findIndex(column => column.name === "name");
+  const columnIndexes = mapMaybe((column, i) => {
+    if (column.name === "theme_id" || column.name === "name") {
+      return undefined;
+    } else {
+      return i;
+    }
+  }, res.info.columns);
 
-export const loadThemes = async (): Promise<Theme[]> => {
-  const themeNames = await loadFullThemeNames();
-  const colorVariantRows = await loadColorVariants();
-  const themes = themeNames.map(themeName => {
-    const rowsForTheme = colorVariantRows.filter(row => row.theme_id === themeName.name);
-    const colorVariants = Object.fromEntries(rowsForTheme.map(row => [row.name, colorVariantFromRaw(row)]));
-    return {
-      themeName,
-      colorVariants,
-    };
+  const themes: Record<RowId, Record<string, ColorVariant>> = {};
+  res.result.rows.forEach(row => {
+    const colors = Object.fromEntries(columnIndexes.map(index => [res.info.columns[index].name, row.values[index].value])) as RawColorVariant;
+    const id = row.values[idColumnIndex].value as RowId;
+    const name = row.values[nameColumnIndex].value as string;
+    let theme = themes[id];
+    if (theme === undefined) {
+      theme = {};
+      themes[id] = theme;
+    }
+    theme[name] = colorVariantFromRaw(colors);
+    return [id, colors];
   });
   return themes;
+};
+
+export const loadThemes = async (): Promise<ThemesMap> => {
+  const themes = await loadColorThemeHeaders();
+  const colorVariantRows = await loadColorVariants();
+  return Object.fromEntries(Object.entries(themes).map(([schemaName, schemaHeaders]) => {
+    const schema = Object.fromEntries(Object.entries(schemaHeaders).map(([themeName, { id, theme }]) => {
+      const colorVariants = colorVariantRows[id];
+      if (colorVariants !== undefined) {
+        theme.colorVariants = colorVariants;
+      }
+      return [themeName, theme];
+    }));
+    return [schemaName, schema];
+  }));
 };
 
 const colorVariantPropToCssVariableEntry = (variantKey: VariantKey, color: string): [ColorVariantCssVariableName, string] =>
@@ -168,12 +225,12 @@ export type ColorVariantAttribute =
   | { type: "existing"; className: ColorVariantClassName }
   | { type: "inline"; variables: ColorVariantCssVariables };
 
-export const colorVariantFromAttribute = (attribute: unknown): ColorVariantAttribute =>
+export const colorVariantFromAttribute = (attribute: unknown, defaultVariant = defaultVariantAttribute): ColorVariantAttribute =>
   typeof attribute === "string"
     ? { type: "existing", className: `${attribute}` }
     : typeof attribute === "object" && attribute !== null
       ? { type: "inline", variables: colorVariantToCssVariables(colorVariantFromRaw(attribute)) }
-      : { type: "existing", className: "default" };
+      : defaultVariant;
 
 export const getColorVariantAttributeClassName = (attribute: ColorVariantAttribute): ColorVariantFullClassName | null =>
   attribute?.type === "existing" ? `${attribute.className}-variant` as const : null;
@@ -193,34 +250,30 @@ export const colorVariantsToCssRules = (colorVariants: Record<string, ColorVaria
   return rules;
 };
 
-export const getPreferredTheme = (themeNames: ThemeName[]): ThemeName => {
+export const getPreferredTheme = (themes: ThemesMap): IThemeRef | null => {
   const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-  const storagedTheme = localStorage.getItem("preferredTheme");
-  if (themeNames.includes(storagedTheme as any)) {
-    return storagedTheme as string;
-  } else if (prefersDarkTheme && themeNames.includes("dark")) {
-    return "dark";
+  const storedTheme = ThemeRef.safeParse(safeJsonParse(localStorage.getItem("preferredTheme")));
+
+  if (storedTheme.success) {
+    const themesSchema = themes[storedTheme.data.schema];
+    if (themesSchema !== undefined && storedTheme.data.name in themesSchema) {
+      return storedTheme.data;
+    }
+    console.error(`User theme ${storedTheme.data.schema}.${storedTheme.data.name} is not defined`);
+  }
+
+  const themesSchema = themes["user"];
+  if (themesSchema === undefined) {
+    return null;
+  } else if (prefersDarkTheme && "dark" in themesSchema) {
+    return { schema: "user", name: "dark" };
+  } else if ("light" in themesSchema) {
+    return { schema: "user", name: "light" };
   } else {
-    return "light";
+    return null;
   }
 };
-
-// In the end of file because template literals breaks tree-sitter highlighting
-// See https://github.com/tree-sitter/tree-sitter-typescript/issues/136
-type SimpleBootstrapVariantName =
-  | "success"
-  | "primary"
-  | "secondary"
-  | "warning"
-  | "danger"
-  | "info"
-  | "light"
-  | "dark";
-type OutlineBootstrapVariantName = `outline-${SimpleBootstrapVariantName}`;
-export type BootstrapVariantName =
-  | SimpleBootstrapVariantName
-  | OutlineBootstrapVariantName;
 
 export type ColorVariantCssVariableName = `--${VariantKey}Color`;
 export type ColorVariantCssVariables = Record<ColorVariantCssVariableName, string>;

@@ -20,32 +20,32 @@
 </template>
 
 <script lang="ts">
-export interface ICellCoords {
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+
+interface ICellCoords {
   x: number;
   y: number;
 }
 
-export interface IEditParams {
-  width: number;
-  height: number;
-  minHeight: number;
-}
-
-import { Component, Prop, Vue } from "vue-property-decorator";
-
 @Component
 export default class TableCellEdit extends Vue {
-  @Prop({ default: () => ({ x: 0, y: 0 }) }) coords!: ICellCoords;
+  @Prop({ type: Number }) x!: number | undefined;
+  @Prop({ type: Number }) y!: number | undefined;
   @Prop() width!: number;
   @Prop() height!: number;
   @Prop() minHeight!: number;
 
   private movedCellCoords: ICellCoords | null = null;
 
-  private mounted() {
-    const cellRect = (this.$refs["cellEdit"] as HTMLElement).getBoundingClientRect();
+  private updateMovedCoords() {
+    const cellRect = (this.$refs["cellEdit"] as HTMLElement | undefined)?.getBoundingClientRect();
+    if (!cellRect) {
+      this.movedCellCoords = null;
+      return;
+    }
     const viewportRect = document.querySelector(".userview-div")?.getBoundingClientRect();
     if (!viewportRect) {
+      this.movedCellCoords = null;
       throw Error("Can't find `.userview-div` selector");
     }
 
@@ -53,13 +53,26 @@ export default class TableCellEdit extends Vue {
     const offsetY = cellRect.bottom > viewportRect.bottom ? cellRect.bottom - viewportRect.bottom : 0;
 
     this.movedCellCoords = {
-      x: cellRect.x - offsetX,
-      y: cellRect.y - offsetY,
+      x: this.sourceCoords.x - offsetX,
+      y: this.sourceCoords.y - offsetY,
     };
   }
 
+  private mounted() {
+    this.updateMovedCoords();
+  }
+
+  @Watch("sourceCoords")
+  private coordsUpdated() {
+    this.updateMovedCoords();
+  }
+
+  private get sourceCoords(): ICellCoords {
+    return { x: this.x ?? 0, y: this.y ?? 0 };
+  }
+
   private get cellCoords(): ICellCoords {
-    return this.movedCellCoords ?? this.coords;
+    return this.movedCellCoords ?? this.sourceCoords;
   }
 }
 </script>

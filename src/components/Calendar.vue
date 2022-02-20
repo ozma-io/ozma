@@ -64,9 +64,9 @@
               :disabled="disabled"
               @input="$emit('update:value', $event)"
               @keypress.enter.prevent.stop="onPressEnter"
+              @keydown.esc.prevent.stop="closePopup"
               @focus="onInputFocus"
               @blur.prevent
-              @keydown.esc.prevent.stop="$emit('blur', $event)"
             />
             <b-input-group-append>
               <b-input-group-text
@@ -95,6 +95,7 @@
                 :class="['material-button clear-button', { 'disabled': value === null }]"
                 @click="updateValue(null)"
               >
+                <span class="material-icons md-18 mr-1">clear</span>
                 {{ $t("clear") }}
               </button>
             </div>
@@ -104,6 +105,7 @@
               @update:value="updateDate"
             />
             <button class="today material-button" @click="setDateToday($event)">
+              <span class="material-icons md-18 mr-1">today</span>
               {{ $t("today").toString() }}
             </button>
           </div>
@@ -111,11 +113,12 @@
           <div class="time">
             <TimePicker
               v-if="showTime"
-              :time="timeForPicker"
-              :is-open="true"
+              ref="timePicker"
+              :hour="timeForPicker.hour"
+              :min="timeForPicker.min"
               :time-step="timeStep"
-              @update:mins="updateMins"
-              @update:hours="updateHours"
+              @update:min="updateMins"
+              @update:hour="updateHours"
             />
             <button
               v-if="showTime"
@@ -135,9 +138,14 @@
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import moment, { Moment } from "moment";
 
-import DatePicker from "@/components/calendar/DatePicker.vue";
-import TimePicker, { ITime } from "@/components/calendar/TimePicker.vue";
 import Popper from "vue-popperjs";
+import DatePicker from "@/components/calendar/DatePicker.vue";
+import TimePicker from "@/components/calendar/TimePicker.vue";
+
+export interface ITime {
+  hour: number;
+  min: number;
+}
 
 @Component({
   components: {
@@ -157,7 +165,6 @@ export default class Calendar extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
-  private position = false;
   private isPopupOpen = false;
 
   get usedFormat() {
@@ -212,14 +219,16 @@ export default class Calendar extends Vue {
   }
 
   private async onOpenPopup() {
+    this.$emit("focus");
     this.isPopupOpen = true;
 
-    if (this.$isMobile) return;
     await Vue.nextTick();
     this.focusInput();
+    (this.$refs.timePicker as TimePicker | undefined)?.scrollToValue();
   }
 
   private onClosePopup() {
+    this.$emit("blur");
     this.isPopupOpen = false;
   }
 
@@ -250,7 +259,7 @@ export default class Calendar extends Vue {
     this.updateValue(target.value === "" ? null : moment(target.value, this.usedFormat));
     target.blur();
     this.$emit("blur");
-    this.$emit("move-selection-next-row", event);
+    this.$emit("enter-pressed", event);
   }
 
   private onInputFocus() {
@@ -258,12 +267,10 @@ export default class Calendar extends Vue {
     // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
     if (this.$isMobile && !this.isPopupOpen) {
       (this.$refs.control as HTMLInputElement).blur();
-    } else {
-      this.$emit("focus");
     }
   }
 
-  get timeForPicker() {
+  get timeForPicker(): ITime {
     return (this.dateValue.isUTC())
       ? {
         hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
@@ -415,6 +422,11 @@ export default class Calendar extends Vue {
     display: inline-flex;
     flex-direction: column;
     justify-content: space-between;
+  }
+
+  .today {
+    display: flex;
+    justify-content: center;
   }
 
   .today,

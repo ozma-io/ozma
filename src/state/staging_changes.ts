@@ -73,6 +73,7 @@ export interface ICombinedInsertEntityResult extends IInternalInsertEntityOp, II
 }
 
 export interface ICombinedUpdateEntityResult extends IInternalUpdateEntityOp, IUpdateEntityResult {
+  id: RowId;
 }
 
 export interface ICombinedDeleteEntityResult extends IDeleteEntityOp, IDeleteEntityResult {
@@ -169,16 +170,20 @@ export interface IStagingEventHandler {
 
 export type StagingKey = string;
 
+export interface ISubmitResult {
+  autoSave: boolean;
+  results: CombinedTransactionResult[];
+}
+
 export interface IStagingState {
   current: CurrentChanges;
   nextAddedId: AddedRowId;
   // Current submit promise
-  currentSubmit: Promise<CombinedTransactionResult[]> | null;
+  currentSubmit: Promise<ISubmitResult> | null;
   autoSaveTimeout: number | null;
   autoSaveTimeoutId: NodeJS.Timeout | null;
   lastAutoSaveLock: AutoSaveLock;
   autoSaveLocks: Record<AutoSaveLock, null>;
-  disableAutoSaveCount: number; // Each userview with disabled autosave adds 1 to count while it's alive.
   handlers: Record<StagingKey, IStagingEventHandler>;
 }
 
@@ -202,9 +207,7 @@ const startAutoSave = (context: ActionContext<IStagingState, {}>) => {
 
   if (state.autoSaveTimeout !== null) {
     const timeoutId = setTimeout(() => {
-      if (state.disableAutoSaveCount === 0) {
-        void dispatch("submit", {});
-      }
+      void dispatch("submit", { autoSave: true });
     }, state.autoSaveTimeout);
     commit("setAutoSaveHandler", timeoutId);
   }
@@ -214,7 +217,7 @@ const checkAutoSave = (context: ActionContext<IStagingState, {}>) => {
   const { state } = context;
   if (state.currentSubmit === null
    && Object.keys(state.autoSaveLocks).length === 0
-   && state.current.addedCount === 0
+   //  && state.current.addedCount === 0 // disable autosave for new records
   ) {
     startAutoSave(context);
   } else {
@@ -322,7 +325,7 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
           });
         return [...updated, ...added, ...deleted];
       } catch (e) {
-        throw new Error(`Invalid value for ${schemaName}.${entityName}: ${e.message}`);
+        throw new Error(`Invalid value for ${schemaName}.${entityName}: ${e}`);
       }
     }));
     return ret.flat(1);
@@ -356,7 +359,6 @@ const stagingModule: Module<IStagingState, {}> = {
     autoSaveTimeout: null,
     autoSaveTimeoutId: null,
     autoSaveLocks: {},
-    disableAutoSaveCount: 0,
     handlers: {},
   },
   mutations: {
@@ -373,19 +375,13 @@ const stagingModule: Module<IStagingState, {}> = {
       state.autoSaveTimeout = timeout;
     },
     addAutoSaveLock: state => {
-      state.autoSaveLocks[state.lastAutoSaveLock] = null;
+      Vue.set(state.autoSaveLocks, state.lastAutoSaveLock, null);
       state.lastAutoSaveLock++;
     },
     removeAutoSaveLock: (state, lock: AutoSaveLock) => {
       Vue.delete(state.autoSaveLocks, lock);
     },
-    addDisableAutoSaveCount: state => {
-      state.disableAutoSaveCount++;
-    },
-    removeDisableAutoSaveCount: state => {
-      state.disableAutoSaveCount--;
-    },
-    startSubmit: (state, submit: Promise<CombinedTransactionResult[]>) => {
+    startSubmit: (state, submit: Promise<ISubmitResult>) => {
       state.currentSubmit = submit;
     },
     finishSubmit: state => {
@@ -766,16 +762,20 @@ const stagingModule: Module<IStagingState, {}> = {
       context.commit("removeAutoSaveLock", id);
       checkAutoSave(context);
     },
-    submitIfNeeded: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
+    submitIfNeeded: async (context, params: { scope?: ScopeName; autoSave?: boolean; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<ISubmitResult> => {
       const { state, dispatch } = context;
-      if (state.current.isEmpty) return [];
+      if (state.current.isEmpty) {
+        const autoSave = params.autoSave ?? false;
+        return { autoSave, results: [] };
+      }
       return dispatch("submit", params);
     },
-    submit: async (context, params: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<CombinedTransactionResult[]> => {
+    submit: async (context, params: { scope?: ScopeName; autoSave?: boolean; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }): Promise<ISubmitResult> => {
       const { state, commit, dispatch } = context;
+      const autoSave = params.autoSave ?? false;
 
       if (params.scope && state.current.scopes[params.scope]?.locked) {
-        return [];
+        return { autoSave, results: [] };
       }
 
       if (state.currentSubmit !== null) {
@@ -788,7 +788,7 @@ const stagingModule: Module<IStagingState, {}> = {
       try {
         ops = await entityChangesToOperations(context, params.scope ?? null, params.errorOnIncomplete ?? false);
       } catch (e) {
-        commit("errors/pushError", { key: errorKey, error: e.message }, { root: true });
+        commit("errors/pushError", { key: errorKey, error: String(e) }, { root: true });
         throw e;
       }
       if (ops.length === 0) {
@@ -799,11 +799,11 @@ const stagingModule: Module<IStagingState, {}> = {
             console.error("Error while commiting", e);
           }
         }
-        return [];
+        return { autoSave, results: [] };
       }
       const action: ITransaction = { operations: ops.map(internalOpToTransactionOp) };
 
-      const submit = (async (): Promise<CombinedTransactionResult[]> => {
+      const submit = (async (): Promise<ISubmitResult> => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         let result: ITransactionResult | Error;
         try {
@@ -812,7 +812,11 @@ const stagingModule: Module<IStagingState, {}> = {
             args: [action],
           }, { root: true });
         } catch (e) {
-          result = e;
+          if (e instanceof Error) {
+            result = e;
+          } else {
+            throw e;
+          }
         }
         if (!(result instanceof Error)) {
           try {
@@ -829,10 +833,10 @@ const stagingModule: Module<IStagingState, {}> = {
         commit("finishSubmit");
         if (!(result instanceof Error)) {
           commit("errors/resetErrors", errorKey, { root: true });
-          eventBus.emit("closeAllToasts");
+          eventBus.emit("close-all-toasts");
           const opResults = R.zipWith((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
           await dispatch("clearUnchanged", opResults);
-          return opResults;
+          return { autoSave, results: opResults };
         } else {
           commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
           throw result;

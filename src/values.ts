@@ -1,4 +1,4 @@
-import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow, IResultViewInfo } from "ozma-api";
+import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow, IResultViewInfo, ScalarFieldType, IScalarSimpleType } from "ozma-api";
 import moment, { Moment, MomentInput } from "moment";
 
 import { deepEquals } from "@/utils";
@@ -60,12 +60,31 @@ export const valueEquals = (valueType: ValueType, a: unknown, b: unknown) : bool
 
   if (valueType.type === "date" || valueType.type === "datetime") {
     if (moment.isMoment(a)) {
-      return a.isSame(b as any);
+      return a.isSame(b as MomentInput);
     } else {
       return a === b;
     }
   } else {
     return deepEquals(a, b);
+  }
+};
+
+const scalarFieldToValueType = (fieldType: ScalarFieldType): IScalarSimpleType => {
+  if (fieldType.type === "reference") {
+    return { type: "int" };
+  } else if (fieldType.type === "enum") {
+    return { type: "string" };
+  } else {
+    return fieldType;
+  }
+};
+
+export const fieldToValueType = (fieldType: FieldType): ValueType => {
+  if (fieldType.type === "array") {
+    const subtype = scalarFieldToValueType(fieldType.subtype);
+    return { type: "array", subtype };
+  } else {
+    return scalarFieldToValueType(fieldType);
   }
 };
 

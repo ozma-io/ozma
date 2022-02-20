@@ -16,7 +16,7 @@
     :selection-mode="selectEntity !== undefined"
     :view="currentView"
     :autofocus="autofocus"
-    @close="$emit('close')"
+    @close="closeView"
     @goto="goto"
     @select="selectFromView"
     @update:actions="$emit('update:actions', $event)"
@@ -53,7 +53,12 @@ export default class SelectUserView extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String, required: true }) parentScope!: ScopeName;
 
-  private currentView: IQuery = this.initialView;
+  private currentView!: IQuery;
+
+  private created() {
+    this.currentView = this.initialView;
+    this.lockScope(this.parentScope);
+  }
 
   private async selectFromView(selection: ISelectionRef) {
     if (this.selectEntity === undefined) {
@@ -72,8 +77,8 @@ export default class SelectUserView extends Vue {
     this.$emit("select", selection.id);
   }
 
-  private mounted() {
-    this.lockScope(this.parentScope);
+  private closeView() {
+    this.$emit("close");
   }
 
   private destroyed() {

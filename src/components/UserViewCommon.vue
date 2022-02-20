@@ -7,7 +7,10 @@
             "import_from_csv": "Import from .csv",
             "selected_n_entries": "{n} out of {loaded} entries are selected",
             "remove_selected_rows": "Delete selected entries",
-            "error": "Error"
+            "error": "Error",
+            "help_button_caption": "Help page",
+            "contacts": "Support",
+            "help": "Help"
         },
         "ru": {
             "create": "Создать новую запись",
@@ -16,7 +19,10 @@
             "import_from_csv": "Импорт из .csv",
             "selected_n_entries": "Выбрано {n} из {loaded} записей",
             "remove_selected_rows": "Удалить выбранные записи",
-            "error": "Ошибка"
+            "error": "Ошибка",
+            "help_button_caption": "Справка",
+            "contacts": "Поддержка",
+            "help": "Помощь"
         }
     }
 </i18n>
@@ -76,8 +82,9 @@ import { mixins } from "vue-class-component";
 import { FunDBError, IEntity, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
 import { Action, namespace } from "vuex-class";
 
-import { encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
-import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
+import { AutoSaveLock } from "@/state/staging_changes";
+import { csvCell, csvSeparator, encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
+import { defaultVariantAttribute, bootstrapVariantAttribute, interfaceButtonVariant } from "@/utils_colors";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
 import { attrToQuery, IQuery } from "@/state/query";
 import SelectUserView from "@/components/SelectUserView.vue";
@@ -86,24 +93,18 @@ import { RowRef, ValueRef } from "@/user_views/combined";
 import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/combined";
 import { getReferenceInfo } from "@/state/entries";
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
-import { IAttrToLinkOpts } from "@/links";
+import { EntityRef, IAttrToLinkOpts } from "@/links";
 import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
-import { ErrorKey } from "@/state/errors";
 
 import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
+import { eventBus, IShowHelpModalArgs } from "@/main";
 
 interface IModalReferenceField {
   field: ValueRef;
   uv: IQuery;
   entity: IEntityRef;
 }
-
-const csvCell = (str: string): string => {
-  return `"${str.replace(/"/g, `""`)}"`;
-};
-
-const csvSeparator = "\t";
 
 const csvExportOpts: IEntriesRequestOpts = {
   chunk: { limit: 10000 },
@@ -114,6 +115,9 @@ const csvImportChunk = 100;
 const staging = namespace("staging");
 const errors = namespace("errors");
 const entities = namespace("entities");
+const settings = namespace("settings");
+
+const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
 
 @Component({
   components: {
@@ -124,44 +128,114 @@ const entities = namespace("entities");
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @Action("reload") reload!: () => Promise<void>;
-  @errors.Mutation("setError") setError!: (_: { key: ErrorKey; error: string }) => void;
-  @staging.Mutation("addDisableAutoSaveCount") addDisableAutoSaveCount!: () => void;
-  @staging.Mutation("removeDisableAutoSaveCount") removeDisableAutoSaveCount!: () => void;
+  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
+  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+  @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
 
-  modalView: IQuery | null = null;
-  openQRCodeScanner = false;
-  openBarCodeScanner = false;
-  showDeleteEntiesButton = false;
+  private modalView: IQuery | null = null;
+  private openQRCodeScanner = false;
+  private openBarCodeScanner = false;
+  private showDeleteEntiesButton = false;
+  private autoSaveLock: AutoSaveLock | null = null;
+
+  get helpPageReference() {
+    const helpRef = EntityRef.safeParse(this.uv.attributes["help_page"]);
+    if (helpRef.success) {
+      return helpRef.data;
+    } else {
+      const rawMarkupName = this.uv.attributes["help_embedded_page_name"];
+      if (rawMarkupName) {
+        console.error("Attribute help_embedded_page_name is deprecated; use help_page");
+        return {
+          schema: "user",
+          name: String(rawMarkupName),
+        };
+      }
+    }
+
+    return null;
+  }
+
+  @Watch("helpPageReference", { deep: true, immediate: true })
+  private updateHelpPage() {
+    if (this.helpPageReference !== null) {
+      this.showHelpModal(true);
+    }
+  }
+
+  private showHelpModal(skipIfShown?: boolean) {
+    const eventArgs: IShowHelpModalArgs = {
+      key: this.uv.args.source.type === "named" ? uvHelpPageKey(this.uv.args.source.ref) : null,
+      skipIfShown,
+      ref: this.helpPageReference!,
+    };
+    eventBus.emit("show-help-modal", eventArgs);
+  }
+
+  private async addMyAutoSaveLock() {
+    if (this.autoSaveLock !== null) return;
+
+    const lock = await this.addAutoSaveLock();
+    this.autoSaveLock = lock;
+  }
+
+  private removeMyAutoSaveLock() {
+    if (this.autoSaveLock === null) return;
+
+    void this.removeAutoSaveLock(this.autoSaveLock);
+    this.autoSaveLock = null;
+  }
 
   protected beforeDestroy() {
-    if (this.uv.attributes["disable_auto_save"]) {
-      this.removeDisableAutoSaveCount();
-    }
+    this.removeMyAutoSaveLock();
   }
 
   @Watch("uv", { immediate: true })
-  private watchUv(newUv: ICombinedUserViewAny, prevUv: ICombinedUserViewAny | null) {
-    const disabledOnNew = newUv.attributes["disable_auto_save"];
-    const disabledOnPrev = prevUv?.attributes["disable_auto_save"];
-    if (disabledOnNew && !disabledOnPrev) {
-      this.addDisableAutoSaveCount();
-    }
-    if (!disabledOnNew && disabledOnPrev) {
-      this.removeDisableAutoSaveCount();
+  private async onUserViewUpdate(uv: ICombinedUserViewAny) {
+    this.showDeleteEntiesButton = false;
+    let disableAutoSave: boolean;
+
+    const disableAutoSaveRaw = uv.attributes["disable_auto_save"];
+    if (typeof disableAutoSaveRaw === "boolean") {
+      disableAutoSave = disableAutoSaveRaw;
+    } else {
+      disableAutoSave = false;
+      if ("post_create_link" in uv.attributes) {
+        disableAutoSave = true;
+      } else if (uv.info.mainEntity) {
+        const entity = await this.getEntity(uv.info.mainEntity);
+        if (entity.hasInsertTriggers) {
+          disableAutoSave = true;
+        }
+      }
     }
 
-    void this.updateShowDeleteEntriesButton();
+    if (disableAutoSave) {
+      await this.addMyAutoSaveLock();
+    } else {
+      this.removeMyAutoSaveLock();
+    }
+    await this.updateShowDeleteEntriesButton();
   }
 
+  get softDisabled() {
+    return Boolean(this.uv.attributes["soft_disabled"]);
+  }
+
+  @Watch("businessModeEnabled")
   private async updateShowDeleteEntriesButton() {
     this.showDeleteEntiesButton = false;
 
     if (!this.uv.info.mainEntity) return;
-    if (this.uv.extra.softDisabled) return;
+    if (this.softDisabled) return;
 
-    const entity = await this.getEntity(this.uv.info.mainEntity);
-    this.showDeleteEntiesButton = entity?.access.delete ?? false;
+    if (this.businessModeEnabled) {
+      this.showDeleteEntiesButton = !this.uv.attributes["business_mode_disable_delete"];
+    } else {
+      const entity = await this.getEntity(this.uv.info.mainEntity);
+      this.showDeleteEntiesButton = entity?.access.delete ?? false;
+    }
   }
 
   private async exportToCsv() {
@@ -224,13 +298,12 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       const encoded = [bom, encodeUTF16LE(output)];
       saveToFile(`${title}.csv`, encoded, { type: "text/csv;charset=utf-16le" });
     } catch (e) {
-      this.setError({ key: "export_csv", error: e.message });
+      this.setError({ key: "export_csv", error: String(e) });
       throw e;
     }
   }
 
   private async importFromCsv(file: File) {
-    // @ts-ignore
     const Papa = await import("papaparse");
     const streaming = Boolean(this.uv.attributes["csv_import_streaming"]);
     const skipEmptyRows = Boolean(this.uv.attributes["csv_import_skip_empty_rows"] ?? true);
@@ -303,7 +376,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           submittedCount += currentOperations.length;
         } catch (e) {
           const suffix = submittedCount > 0 ? ` (imported ${submittedCount} rows)` : "";
-          this.setError({ key: "import_csv", error: e.message + suffix });
+          this.setError({ key: "import_csv", error: String(e) + suffix });
           throw e;
         }
       })();
@@ -337,7 +410,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
             entries: row,
           });
         } catch (e) {
-          this.setError({ key: "import_csv", error: e.message });
+          this.setError({ key: "import_csv", error: String(e) });
           throw e;
         }
         if (streaming && operations.length >= csvImportChunk) {
@@ -406,6 +479,69 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     return !(this.uv.attributes["hide_default_actions"] === true);
   }
 
+  private get communicationButtons() {
+    const buttons: Button[] = [];
+
+    if (this.settings.communicationLinks.email !== null) {
+      buttons.push({
+        caption: "E-mail",
+        icon: "email",
+        type: "link",
+        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "_blank" },
+        variant: defaultVariantAttribute,
+      });
+    }
+
+    if (this.settings.communicationLinks.whatsapp !== null) {
+      buttons.push({
+        caption: "WhatsApp",
+        icon: "phone",
+        type: "link",
+        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "_blank" },
+        variant: defaultVariantAttribute,
+      });
+    }
+
+    if (this.settings.communicationLinks.telegram !== null) {
+      buttons.push({
+        caption: "Telegram",
+        icon: "send",
+        type: "link",
+        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "_blank" },
+        variant: defaultVariantAttribute,
+      });
+    }
+
+    return buttons;
+  }
+
+  private get helpButtons(): Button[] {
+    const buttons: Button[] = [];
+
+    if (this.helpPageReference) {
+      buttons.push({
+        icon: "ondemand_video",
+        caption: this.$t("help_button_caption").toString(),
+        variant: { type: "existing", className: "help-button" }, // "help-button" is magic variant only for this case.
+        type: "callback",
+        callback: () => this.showHelpModal(),
+      });
+    }
+
+    if (this.communicationButtons.length > 0) {
+      const communicationButton: Button = {
+        icon: "contact_support",
+        caption: this.$t("contacts").toString(),
+        variant: defaultVariantAttribute,
+        type: "button-group",
+        buttons: this.communicationButtons,
+      };
+      buttons.push(communicationButton);
+    }
+
+    return buttons;
+  }
+
   get staticButtons(): Button[] {
     const extraActions = this.uv.attributes["extra_actions"];
     const extraActionsButtons = attrToButtonsOld(extraActions).map(button => ({ ...button, display: undefined }));
@@ -413,6 +549,17 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       console.warn("@extra_actions attribute deprecated,  will be deleted future.");
     }
     const buttons: Button[] = extraActionsButtons;
+
+    if (this.helpButtons.length > 0) {
+      buttons.push({
+        icon: "help_outline",
+        caption: this.$isMobile ? this.$t("help").toString() : undefined,
+        display: "desktop",
+        variant: interfaceButtonVariant,
+        type: "button-group",
+        buttons: this.helpButtons,
+      });
+    }
 
     if (this.creationButtons) {
       buttons.push({
@@ -520,7 +667,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   // Used to create referenced entries and automatically insert them into current table.
   get modalReferenceField(): IModalReferenceField | null {
     const modalReferenceField = mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
-      const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[columnIndex], this.uv.attributes);
+      const columnAttrs = this.uv.columnAttributes[columnIndex];
+      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, this.uv.attributes);
       const referenceViewAttr = Boolean(getColumnAttr("main_reference_field"));
       const referenceUV = attrToQuery(getColumnAttr("select_view"));
       const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;

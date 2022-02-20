@@ -1,51 +1,52 @@
 <i18n>
-    {
-      "en": {
-        "cut": "Cut",
-        "copy": "Copy",
-        "paste": "Paste",
-        "edit_error": "Editing error",
-        "paste_error": "Pasting error",
-        "copy_error": "Copying error",
-        "clear_error": "Clearing error",
-        "read_only_cell": "Read-only cell",
-        "paste_no_referencefield_data": "Clipboard has no reference field data",
-        "paste_error_too_many_columns": "Clipboard has too many columns",
-        "non_rectangular_copy": "Only rectangular selections on copying are supported",
-        "no_results": "No entries",
-        "add_entry": "Add entry",
-        "add_entry_in_modal": "Add new entry (in modal window)",
-        "ok": "OK",
-        "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
-        "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
-        "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell"
-      },
-      "ru": {
-        "cut": "Вырезать",
-        "copy": "Копировать",
-        "paste": "Вставить",
-        "edit_error": "Ошибка при редактировании",
-        "paste_error": "Ошибка при вставке",
-        "copy_error": "Ошибка при копировании",
-        "clear_error": "Ошибка при очистке поля",
-        "read_only_cell": "Ячейка только для чтения",
-        "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
-        "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
-        "non_rectangular_copy": "При копировании поддерживаются только прямоугольные выделения",
-        "no_results": "Нет записей",
-        "add_entry": "Добавить запись",
-        "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
-        "ok": "Продолжить",
-        "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
-        "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
-        "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку"
-      }
+  {
+    "en": {
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "edit_error": "Editing error",
+      "paste_error": "Pasting error",
+      "copy_error": "Copying error",
+      "clear_error": "Clearing error",
+      "read_only_cell": "Read-only cell",
+      "paste_no_referencefield_data": "Clipboard has no reference field data",
+      "paste_error_too_many_columns": "Clipboard has too many columns",
+      "non_rectangular_copy": "Only rectangular selections on copying are supported",
+      "no_results": "Empty",
+      "add_entry": "Add entry",
+      "add_entry_in_modal": "Add new entry (in modal window)",
+      "ok": "OK",
+      "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
+      "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
+      "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell",
+      "no_columns": "This query lacks visible columns"
+    },
+    "ru": {
+      "cut": "Вырезать",
+      "copy": "Копировать",
+      "paste": "Вставить",
+      "edit_error": "Ошибка при редактировании",
+      "paste_error": "Ошибка при вставке",
+      "copy_error": "Ошибка при копировании",
+      "clear_error": "Ошибка при очистке поля",
+      "read_only_cell": "Ячейка только для чтения",
+      "paste_no_referencefield_data": "В буфере обмена неверная информация для вставки в данное поле",
+      "paste_error_too_many_columns": "В буфере обмена слишком много столбцов",
+      "non_rectangular_copy": "При копировании поддерживаются только прямоугольные выделения",
+      "no_results": "Пусто",
+      "add_entry": "Добавить запись",
+      "add_entry_in_modal": "Добавить новую запись (в модальном окне)",
+      "ok": "Продолжить",
+      "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
+      "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
+      "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку",
+      "no_columns": "В запросе отсутствуют видимые колонки"
     }
+  }
 </i18n>
 
 <template>
   <div
-    ref="tableContainer"
     v-hotkey="keymap"
     :style="{
       /* In wide tables `table-block` had width of screen, while its parent and childs had correct bigger width.
@@ -66,19 +67,21 @@
   >
     <TableCellEdit
       v-if="editingValue"
-      v-click-outside="clickOutsideEdit"
-      :width="editParams.width"
-      :min-height="editParams.minHeight"
-      :height="editParams.height"
-      :coords="editCellCoords"
+      ref="tableCellEdit"
+      v-click-outside="{ 'handler': removeCellEditing, 'middleware': checkWindow }"
+      :width="editing.width"
+      :min-height="editing.minHeight"
+      :height="editing.height"
+      :x="editing.x"
+      :y="editing.y"
     >
-      <FormControl
+      <FormValueControl
         :value="editingValue.value"
         :attributes="editingValue.attributes"
         :type="editingValue.type"
         :locked="editingLocked"
         :disable-color="editing.ref.type === 'new'"
-        :uv-args="uv.args"
+        :home-schema="uv.homeSchema"
         :scope="scope"
         :level="level"
         caption=""
@@ -87,226 +90,236 @@
         autofocus
         modal-only
         @blur="removeCellEditing"
-        @move-selection-next-row="moveCursorNextRow"
-        @move-selection-next-column="moveCursorNextColumn"
         @update="updateCurrentValue"
         @close-modal-input="removeCellEditing"
       />
     </TableCellEdit>
 
-    <popper
-      v-if="cellContextMenu"
-      ref="contextMenuPopup"
-      v-click-outside="closeCellContextMenu"
-      force-show
-      :trigger="null"
-      :reference="cellContextMenu.reference"
-      transition="fade"
-      enter-active-class="fade-enter fade-enter-active"
-      leave-active-class="fade-leave fade-leave-active"
-      :visible-arrow="false"
-      :options="{
-        placement: 'bottom-start',
-        positionFixed: true,
-        modifiers: { offset: { offset: 0 } },
-      }"
-    >
-      <div class="popper border rounded overflow-hidden shadow">
-        <div class="context-menu-wrapper">
-          <ButtonList
-            :buttons="cellContextMenu.buttons"
-            @button-click="closeCellContextMenu"
-            @goto="$emit('goto', $event)"
-          />
-        </div>
-      </div>
-    </popper>
-
-    <div
-      v-if="uv.extra.lazyLoad.type === 'pagination'"
-      class="pagination-wrapper"
-      :style="{
-        // It's very bad, but I was unable to do this without JS.
-        right: `${(tableWidth || 0) - (parentWidth || 0) - (parentScrollLeft || 0) + 5}px`,
-      }"
-    >
-      <div
-        :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
-        :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
+    <!-- Don't know why there are one row in empty userview -->
+    <div v-if="uv.info.columns.length === 0" class="empty-userview">
+      {{ $t("empty_userview") }}
+    </div>
+    <template v-else>
+      <popper
+        v-if="cellContextMenu"
+        ref="contextMenuPopup"
+        v-click-outside="closeCellContextMenu"
+        force-show
+        :trigger="null"
+        :reference="cellContextMenu.reference"
+        transition="fade"
+        enter-active-class="fade-enter fade-enter-active"
+        leave-active-class="fade-leave fade-leave-active"
+        :visible-arrow="false"
+        :options="{
+          placement: 'bottom-start',
+          positionFixed: true,
+          modifiers: { offset: { offset: 0 } },
+        }"
       >
-        <b-spinner
-          v-if="uv.extra.lazyLoad.pagination.loading"
-          class="mr-1"
-          small
-          label="Next page is loading"
-        />
-        <div class="select-wrapper">
-          <b-select
-            class="page-select"
-            :value="uv.extra.lazyLoad.pagination.perPage"
-            :options="pageSizes"
-            size="sm"
-            @input="updatePageSize"
-          />
-        </div>
-        <ButtonItem :button="firstPageButton" />
-        <ButtonItem :button="prevPageButton" />
-        <div class="current-page-wrapper">
-          <div class="current-page">
-            {{ currentVisualPage }}
-            <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+        <div class="popper border rounded overflow-hidden shadow">
+          <div class="context-menu-wrapper">
+            <ButtonList
+              :buttons="cellContextMenu.buttons"
+              @button-click="closeCellContextMenu"
+              @goto="$emit('goto', $event)"
+            />
           </div>
         </div>
-        <ButtonItem :button="nextPageButton" />
-      </div>
-    </div>
+      </popper>
 
-    <div
-      v-if="showAddRowButtons || uv.extra.lazyLoad.type === 'pagination'"
-      class="button-container"
-      :style="{ width: `${parentWidth - 20}px` }"
-    >
-      <ButtonItem
-        v-visible="showAddRowButtons"
-        :button="topAddButton"
-        align-right
-      />
-    </div>
-
-    <table
-      ref="table"
-      class="custom-table table table-sm"
-    >
-      <colgroup>
-        <col
-          v-if="uv.extra.isSelectionColumnEnabled"
-          class="checkbox-col"
-        >
-        <col
-          v-if="hasLinksColumn"
-          class="open-form-col"
-        >
-        <col
-          v-for="i in columnIndexes"
-          :key="i"
-          class="data-col"
-          :style="uv.extra.columns[i].style"
-        >
-      </colgroup>
-      <thead
-        class="table-head"
+      <div
+        v-if="uv.extra.lazyLoad.type === 'pagination'"
+        class="pagination-wrapper"
+        :style="{
+          // It's very bad, but I was unable to do this without JS.
+          right: `${(tableWidth || 0) - (parentWidth || 0) - (parentScrollLeft || 0) + 5}px`,
+        }"
       >
-        <tr>
-          <th
-            v-if="uv.extra.isSelectionColumnEnabled"
-            class="fixed-column checkbox-cells table-th"
-            @click="toggleAllRows"
+        <div
+          :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
+          :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
+        >
+          <b-spinner
+            v-if="uv.extra.lazyLoad.pagination.loading"
+            class="mr-1"
+            small
+            label="Next page is loading"
+          />
+          <div class="select-wrapper">
+            <b-select
+              class="page-select"
+              :value="uv.extra.lazyLoad.pagination.perPage"
+              :options="pageSizes"
+              size="sm"
+              @input="updatePageSize"
+            />
+          </div>
+          <ButtonItem :button="firstPageButton" />
+          <ButtonItem :button="prevPageButton" />
+          <div class="current-page-wrapper">
+            <div class="current-page">
+              {{ currentVisualPage }}
+              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+            </div>
+          </div>
+          <ButtonItem :button="nextPageButton" />
+        </div>
+      </div>
+
+      <div
+        v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
+        class="button-container"
+        :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
+      >
+        <ButtonItem
+          v-visible="showAddRowButtons && uv.rows.length > 5"
+          :button="topAddButton"
+          align-right
+        />
+      </div>
+
+      <table
+        ref="table"
+        class="custom-table table table-sm"
+      >
+        <colgroup>
+          <col
+            v-if="showSelectionColumn"
+            class="checkbox-col"
           >
-            <Checkbox
-              :checked="selectedAll"
-              :indeterminate="!selectedAll && selectedSome"
-            />
-          </th>
-          <th
-            v-if="hasLinksColumn"
-            :class="[
-              'table-th',
-              'fixed-column',
-              'openform-cells',
-              {
-                'without-selection-cell': !uv.extra.isSelectionColumnEnabled,
-              }
-            ]"
+          <col
+            v-if="showLinkColumn"
+            class="open-form-col"
           >
-            <ButtonGroup
-              v-if="createEntryButtons && !uv.extra.softDisabled"
-              :button="createEntryButtons"
-              @goto="$emit('goto', $event)"
-            />
-            <ButtonItem
-              v-if="createEntryButton && !uv.extra.softDisabled"
-              :button="createEntryButton"
-              @goto="$emit('goto', $event)"
-            />
-          </th>
-          <th
+          <col
             v-for="i in columnIndexes"
             :key="i"
-            :class="['sorting', 'table-th', {
-              'fixed-column' : uv.extra.columns[i].fixed,
-              'td-moz': isFirefoxBrowser
-            }]"
-            :style="uv.extra.columns[i].style"
-            :title="uv.extra.columns[i].caption"
-            @click="loadAllRowsAndUpdateSort(i)"
+            class="data-col"
+            :style="columns[i].style"
           >
-            <span class="table_header__content">
-              {{ uv.extra.columns[i].caption }}
-            </span>
-            <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <TableRow
-          v-for="(row, rowIndex) in shownRows"
-          :key="row.key"
-          :class="{
-            'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
-            'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
-          }"
-          :uv="uv"
-          :row="row.row"
-          :column-indexes="columnIndexes"
-          :show-tree="showTree"
-          :not-existing="row.notExisting"
-          :show-link-column="hasLinksColumn"
-          :row-index="rowIndex"
-          @select="selectTableRow(rowIndex, $event)"
-          @cell-click="clickCell({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-mousedown="startCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-mouseover="continueCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-mouseup="endCellSelection({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @cell-contextmenu="openCellContextMenu({ ...row.ref, column: arguments[0] }, arguments[1], arguments[2])"
-          @toggle-children="toggleChildren(row.ref, $event)"
-          @add-child="addChild(row.ref)"
-          @goto="$emit('goto', $event)"
+        </colgroup>
+        <thead
+          class="table-head"
+        >
+          <tr>
+            <th
+              v-if="showSelectionColumn"
+              class="fixed-column checkbox-cells table-th"
+              @click="toggleAllRows"
+            >
+              <Checkbox
+                :checked="selectedAll"
+                :indeterminate="!selectedAll && selectedSome"
+              />
+            </th>
+            <th
+              v-if="showLinkColumn"
+              :class="[
+                'table-th',
+                'fixed-column',
+                'openform-cells',
+                {
+                  'without-selection-cell': !showSelectionColumn,
+                }
+              ]"
+            >
+              <ButtonGroup
+                v-if="createEntryButtons && !softDisabled"
+                :button="createEntryButtons"
+                @goto="$emit('goto', $event)"
+              />
+              <ButtonItem
+                v-if="createEntryButton && !softDisabled"
+                :button="createEntryButton"
+                @goto="$emit('goto', $event)"
+              />
+            </th>
+            <th
+              v-for="i in columnIndexes"
+              :key="i"
+              :class="['sorting', 'table-th', {
+                'fixed-column' : columns[i].fixed,
+              }]"
+              :style="columns[i].style"
+              :title="columns[i].caption"
+              @click="loadAllRowsAndUpdateSort(i)"
+            >
+              <span class="table_header__content">
+                {{ columns[i].caption }}
+              </span>
+              <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- We use dynamic refs here because order of keyed items in ref array is not guaranteed:
+               https://github.com/vuejs/vue/issues/4952
+          -->
+          <TableRow
+            v-for="(row, rowIndex) in shownRows"
+            :key="row.key"
+            :ref="`row-${row.key}`"
+            :class="{
+              'last-top-new': row.notExisting && rowIndex + 1 < shownRows.length && !shownRows[rowIndex + 1].notExisting,
+              'first-bottom-new': row.notExisting && rowIndex - 1 > 0 && !shownRows[rowIndex - 1].notExisting,
+            }"
+            :uv="uv"
+            :row="row.row"
+            :columns="columns"
+            :column-indexes="columnIndexes"
+            :fixed-column-positions="fixedColumnPositions"
+            :fixed-columns-length="fixedColumnsLength"
+            :show-tree="showTree"
+            :not-existing="row.notExisting"
+            :show-link-column="showLinkColumn"
+            :show-selection-column="showSelectionColumn"
+            @select="selectTableRow(rowIndex, $event)"
+            @cell-click="clickCell({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mousedown="cellMouseDown({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mouseover="continueCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-mouseup="endCellSelection({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @cell-contextmenu="openCellContextMenu({ row: rowIndex, column: arguments[0] }, arguments[1], arguments[2])"
+            @toggle-children="toggleChildren(row.ref, $event)"
+            @add-child="addChild(row.ref)"
+            @goto="$emit('goto', $event)"
+          />
+        </tbody>
+      </table>
+      <InfiniteLoading
+        v-if="useInfiniteScrolling"
+        ref="infiniteLoading"
+        force-use-infinite-wrapper
+        :identifier="infiniteIdentifier"
+        spinner="spiral"
+        :distance="500"
+        @infinite="infiniteHandler"
+      >
+        <template #no-results>
+          <div v-if="allRows.length === 0" class="no-results">
+            {{ $t("no_results") }}
+          </div>
+          <span v-else />
+        </template>
+        <template #no-more>
+          <span />
+        </template>
+        <template #error>
+          <span />
+        </template>
+      </InfiniteLoading>
+      <div
+        v-if="showAddRowButtons"
+        ref="bottomButtonContainer"
+        class="button-container"
+        :style="{ width: `${parentWidth - 20}px` }"
+      >
+        <ButtonItem
+          :button="bottomAddButton"
+          align-right
         />
-      </tbody>
-    </table>
-    <InfiniteLoading
-      v-if="useInfiniteScrolling"
-      ref="infiniteLoading"
-      force-use-infinite-wrapper
-      :identifier="infiniteIdentifier"
-      spinner="spiral"
-      :distance="500"
-      @infinite="infiniteHandler"
-    >
-      <template #no-results>
-        <div v-if="allRows.length === 0" class="no-results">
-          {{ $t("no_results") }}
-        </div>
-        <span v-else />
-      </template>
-      <template #no-more>
-        <span />
-      </template>
-      <template #error>
-        <span />
-      </template>
-    </InfiniteLoading>
-    <div
-      v-if="showAddRowButtons"
-      ref="bottomButtonContainer"
-      class="button-container"
-      :style="{ width: `${parentWidth - 20}px` }"
-    >
-      <ButtonItem
-        :button="bottomAddButton"
-        align-right
-      />
-    </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -319,32 +332,34 @@ import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } from "ozma-api";
-import sanitizeHtml from "sanitize-html";
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
-import { deepEquals, isFirefox, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, replaceHtmlLinks, stringifySpreadsheet, validNumberFormats, getNumberFormatter, NeverError, parseFromClipboard } from "@/utils";
-import type { ParseValue } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
-import { AddedRowId, AutoSaveLock } from "@/state/staging_changes";
+import { AddedRowId } from "@/state/staging_changes";
 import { IAttrToQueryOpts, ICurrentQueryHistory } from "@/state/query";
 import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, baseUserViewHandler } from "@/components/BaseUserView";
 import TableRow from "@/components/views/table/TableRow.vue";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
-import TableCellEdit, { ICellCoords, IEditParams } from "@/components/views/table/TableCellEdit.vue";
-import { Link, attrToLinkRef, attrToLinkSelf } from "@/links";
+import TableCellEdit from "@/components/views/table/TableCellEdit.vue";
+import { Link, attrToLinkSelf } from "@/links";
 import {
-  currentValue, IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedUserViewAny, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
+  IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
-  valueToPunnedText, CommittedRowRef,
+  CommittedRowRef,
+  valueToPunnedText,
+  equalValueRef,
 } from "@/user_views/combined";
-import { colorVariantFromAttribute, interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
-import type { ColorVariantAttribute } from "@/utils_colors";
+import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
-import { Button } from "../buttons/buttons";
+import { Button } from "@/components/buttons/buttons";
+import FormValueControl from "@/components/FormValueControl";
+import type TableCell from "./table/TableCell.vue";
+import { elementWindow, WindowKey } from "@/state/windows";
 
 export interface IColumn {
   caption: string;
@@ -358,13 +373,9 @@ export interface IColumn {
 }
 
 export interface ITableValueExtra extends IBaseValueExtra {
-  // FIXME: is this still needed? We could drop it and use computed properties in TableRows instead.
-  valueHtml: string; // Don't forget to sanitize!
-  link: Link | null;
-  style: Record<string, unknown> | null;
-  colorVariant: ColorVariantAttribute;
-  selected: boolean | "cursor";
-  htmlElement: HTMLElement | null;
+  // If an extra value is only needed during render, define it as a computed property instead.
+  selected: boolean;
+  cursor: boolean;
 }
 
 export interface ITableRowTree {
@@ -377,11 +388,8 @@ export interface ITableRowTree {
 export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
   shownAsNewRow: boolean;
-  style: Record<string, unknown> | null;
-  colorVariables: Record<string, unknown> | null;
-  height: number | null;
-  link: Link | null;
   tree: ITableRowTree;
+  link: Link | null;
 }
 
 export interface IAddedNewRowRef {
@@ -398,12 +406,10 @@ export interface ICommittedNewRowRef {
 export type NewRowRef = IAddedNewRowRef | ICommittedNewRowRef;
 
 export interface ITableViewExtra extends IBaseViewExtra {
-  isSelectionColumnEnabled: boolean;
   hasRowLinks: boolean;
   selectedValues: ObjectSet<ValueRef>;
   cursorValue: ValueRef | null;
-  columns: IColumn[];
-  fixedColumnPositions: Record<number, string>;
+  oldCursorValue: ValueRef | null;
   rowsParentPositions: Record<number, number>;
   treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
@@ -416,82 +422,21 @@ export interface ITableViewExtra extends IBaseViewExtra {
   sortColumn: number | null;
   sortAsc: boolean;
   sortOptions: Intl.CollatorOptions;
-
-  dirtyHackPreventEntireReloads: boolean;
 }
 
-export interface VisualPosition {
+export interface IVisualPosition {
   column: number;
   row: number;
 }
+
+const equalVisualPosition = (a: IVisualPosition, b: IVisualPosition): boolean => {
+  return a.column === b.column && a.row === b.row;
+};
 
 const showStep = 15;
 const doubleClickTime = 700;
 // FIXME: Use CSS variables to avoid this constant
 const technicalFieldsWidth = 35; // checkbox's and openform's td width
-
-const createColumns = (uv: ICombinedUserViewAny): IColumn[] => {
-  const viewAttrs = uv.attributes;
-  const columns: IColumn[] = [];
-  let isTreeUnfoldColumnSet = false;
-
-  uv.info.columns.forEach((columnInfo, i) => {
-    const columnAttrs = uv.columnAttributes[i];
-    const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
-
-    const captionAttr = getColumnAttr("caption");
-    const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
-
-    const style: Record<string, unknown> = {};
-
-    const columnWidthAttr = Number(getColumnAttr("column_width"));
-    const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
-    style["width"] = `${columnWidth}px`;
-
-    const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
-    const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
-    if (textAlignRightTypes.includes(punOrValue.type)) {
-      style["text-align"] = "right";
-    }
-
-    const textAlignAttr = getColumnAttr("text_align");
-    if (textAlignAttr !== undefined) {
-      style["text-align"] = String(textAlignAttr);
-    }
-
-    const fixedColumnAttr = getColumnAttr("fixed");
-    const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
-
-    const visibleColumnAttr = getColumnAttr("visible");
-    const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
-
-    const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
-    const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
-    if (treeUnfoldColumn) {
-      isTreeUnfoldColumnSet = true;
-    }
-
-    // "column_type" is old version, but "control" is consistent with forms.
-    const type = String(getColumnAttr("control") ?? getColumnAttr("column_type"));
-
-    columns[i] = {
-      caption,
-      style,
-      visible: visibleColumn,
-      fixed: fixedColumn,
-      columnInfo,
-      width: columnWidth,
-      treeUnfoldColumn,
-      type,
-    };
-  });
-
-  if (!isTreeUnfoldColumnSet && columns[0]) {
-    columns[0].treeUnfoldColumn = true;
-  }
-
-  return columns;
-};
 
 export type ITableCombinedUserView = ICombinedUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>;
 export type ITableExtendedValue = IExtendedValue<ITableValueExtra>;
@@ -500,87 +445,8 @@ export type ITableExtendedRow = IExtendedRow<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedRowCommon = IExtendedRowCommon<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedAddedRow = IExtendedAddedRow<ITableValueExtra, ITableRowExtra>;
 
-const createCommonLocalValue = (uv: ITableCombinedUserView, row: IRowCommon & ITableExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
-  const columnInfo = uv.info.columns[columnIndex];
-  const columnAttrs = uv.columnAttributes[columnIndex];
-  const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
-
-  let valueHtml = valueToPunnedText(columnInfo.valueType, value);
-  if (valueHtml.length > 1000) {
-    valueHtml = valueHtml.slice(0, 1000) + "...";
-  }
-  const style: Record<string, unknown> = {};
-
-  const punOrValueType: ValueType = columnInfo.punType ?? columnInfo.valueType;
-
-  const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
-  if (numberTypes.includes(punOrValueType.type)) {
-    style["text-align"] = "right";
-
-    const numberFormat = getCellAttr("number_format");
-    if (typeof numberFormat === "string" && validNumberFormats.includes(numberFormat.toLowerCase() as any)) {
-      const fractionDigitsRaw = getCellAttr("fraction_digits");
-      const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-      valueHtml = getNumberFormatter(numberFormat.toLowerCase() as any, fractionDigits).format(value.value as any);
-    }
-  } else if (punOrValueType.type === "string") {
-    valueHtml = replaceHtmlLinks(valueHtml);
-  }
-
-  const cellColor = getCellAttr("cell_color");
-  if (cellColor !== undefined && cellColor !== null) {
-    style["background-color"] = String(cellColor);
-  }
-
-  const textAlignAttr = getCellAttr("text_align");
-  if (textAlignAttr !== undefined) {
-    style["text-align"] = String(textAlignAttr);
-  }
-
-  if (row.extra.height !== null) {
-    style["height"] = `${row.extra.height}px`;
-  }
-
-  const fixedPosition = uv.extra.fixedColumnPositions[columnIndex];
-  if (fixedPosition !== undefined) {
-    style["left"] = fixedPosition;
-  }
-
-  if (getCellAttr("text_type") === "codeeditor") {
-    style["font-family"] = "monospace";
-  }
-
-  if (columnInfo.valueType.type === "datetime"
-   && moment.isMoment(value.value)
-   && getCellAttr("show_seconds") === true) {
-    valueHtml = value.value.local().format("L LTS");
-  }
-
-  const colorVariantAttribute = getCellAttr("cell_variant");
-  let colorVariant: ColorVariantAttribute;
-  if (colorVariantAttribute) {
-    colorVariant = colorVariantFromAttribute(colorVariantAttribute);
-  } else if (cellColor) {
-    colorVariant = colorVariantFromAttribute({ background: String(cellColor) });
-  } else {
-    colorVariant = { type: "existing", className: "default-variant" };
-  }
-
-  const extra = {
-    valueHtml,
-    style: null as Record<string, unknown> | null,
-    colorVariant,
-  };
-  if (Object.keys(style).length !== 0) {
-    extra.style = style;
-  }
-  return extra;
-};
-
-const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal: ITableRowExtra | null) => {
+const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal?: ITableRowExtra) => {
   const getRowAttr = (name: string) => tryDicts(name, row.attributes, uv.attributes);
-
-  const style: Record<string, unknown> = {};
 
   const defaultArrow = Boolean(getRowAttr("tree_all_open"));
 
@@ -588,48 +454,28 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
     children: [],
     level: 0,
     parent: null,
-    arrowDown: oldLocal?.tree.arrowDown ?? defaultArrow,
+    arrowDown: oldLocal?.tree!.arrowDown ?? defaultArrow,
   };
 
-  /* const colorVariant = getRowAttr("row_variant"); */
-  const colorVariables = null;
-
-  const extra = {
+  return {
     searchText: "",
-    height: null as number | null,
-    style: null as Record<string, unknown> | null,
-    colorVariables,
     link: null,
     shownAsNewRow: false,
     tree,
   };
-
-  const height = Number(getRowAttr("row_height"));
-  if (!Number.isNaN(height)) {
-    style["white-space"] = "nowrap";
-    extra.height = height;
-  }
-
-  if (Object.keys(style).length !== 0) {
-    extra.style = style;
-  }
-
-  return extra;
-};
-
-const updateCommonValue = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon, columnIndex: number, value: ITableExtendedValue) => {
-  const columnInfo = uv.info.columns[columnIndex];
-
-  const valueHtml = valueToPunnedText(columnInfo.valueType, value);
-  const sanitized = sanitizeHtml(valueHtml, { allowedTags: [], disallowedTagsMode: "escape" });
-  value.extra.valueHtml = sanitized;
 };
 
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
-  const searchStrings = row.values.map(value => {
-    return value.extra.valueHtml.toLocaleLowerCase();
-  });
-  row.extra.searchText = "\0".concat(...searchStrings);
+  // Needs to be performant, hence this custom loop.
+  let searchText = "";
+  for (const value of row.values) {
+    if (value.pun) {
+      searchText += value.pun + "\0";
+    } else if (typeof value.value === "string") {
+      searchText += value.value + "\0";
+    }
+  }
+  row.extra.searchText = searchText.toLocaleLowerCase();
 };
 
 const initTreeChildren = (uv: ITableCombinedUserView) => {
@@ -665,28 +511,6 @@ const initTreeChildren = (uv: ITableCombinedUserView) => {
   });
 
   return uv;
-};
-
-const technicalWidth = (uv: ITableCombinedUserView): number => {
-  let left = 0;
-  if (uv.extra.isSelectionColumnEnabled) {
-    left += technicalFieldsWidth;
-  }
-  if (uv.extra.hasRowLinks) {
-    left += technicalFieldsWidth;
-  }
-  return left;
-};
-
-const fixedColumnPositions = (uv: ITableCombinedUserView): Record<number, string> => {
-  let left = technicalWidth(uv);
-  const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, uv.extra.columns);
-  const positions: Record<number, string> = {};
-  for (const fixedColumnIndex of fixedColumnIndexes) {
-    positions[fixedColumnIndex] = `${left}px`;
-    left += uv.extra.columns[fixedColumnIndex].width;
-  }
-  return positions;
 };
 
 const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
@@ -774,18 +598,15 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     row: ICombinedRow & ITableExtendedRowInfo,
     columnIndex: number,
     value: ICombinedValue,
-    oldView: ITableViewExtra | null,
-    oldRow: ITableRowExtra | null,
-    oldValue: ITableValueExtra | null,
+    oldView?: ITableViewExtra,
+    oldRow?: ITableRowExtra,
+    oldValue?: ITableValueExtra,
   ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
-    const columnInfo = uv.info.columns[columnIndex];
     const columnAttrs = uv.columnAttributes[columnIndex];
-    const getCellAttr = (name: string) => tryDicts(name, value.attributes, row.attributes, columnAttrs, uv.attributes);
+    const getCellAttr = (name: string) => tryDicts(name, value.attributes, columnAttrs, row.attributes, uv.attributes);
 
-    const link = value.info?.field?.fieldType.type === "reference" ? attrToLinkRef(getCellAttr("link"), currentValue(value), uv.extra.linkOpts) : null;
     const currLinkForRow = attrToLinkSelf(getCellAttr("row_link"), value.info, uv.extra.linkOpts);
     const hasRowLinkWithId =
       (row.extra.link?.type === "query" && row.extra.link.query.args.args?.id !== undefined) ||
@@ -818,17 +639,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-
-    if (oldValue?.selected === "cursor") {
-      uv.extra.cursorValue = valueRef;
-    }
-
     return {
       ...baseExtra,
-      ...commonExtra,
       selected,
-      link,
-      htmlElement: null,
+      cursor: false,
     };
   },
 
@@ -838,12 +652,11 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     row: IAddedRow & ITableExtendedRowInfo,
     columnIndex: number,
     value: ICombinedValue,
-    oldView: ITableViewExtra | null,
-    oldRow: ITableRowExtra | null,
-    oldValue: ITableValueExtra | null,
-  ) {
+    oldView?: ITableViewExtra,
+    oldRow?: ITableRowExtra,
+    oldValue?: ITableValueExtra,
+  ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
     const valueRef: ValueRef = {
       type: "added",
@@ -854,15 +667,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-    if (selected === "cursor") {
-      uv.extra.cursorValue = valueRef;
-    }
     return {
       ...baseExtra,
-      ...commonExtra,
       selected,
-      htmlElement: null,
-      link: null,
+      cursor: false,
     };
   },
 
@@ -871,12 +679,11 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     row: IRowCommon & ITableExtendedRowInfo,
     columnIndex: number,
     value: ICombinedValue,
-    oldView: ITableViewExtra | null,
-    oldRow: ITableRowExtra | null,
-    oldValue: ITableValueExtra | null,
-  ) {
+    oldView?: ITableViewExtra,
+    oldRow?: ITableRowExtra,
+    oldValue?: ITableValueExtra,
+  ): ITableValueExtra {
     const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
 
     const valueRef: ValueRef = {
       type: "new",
@@ -886,34 +693,27 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (selected) {
       uv.extra.selectedValues.insert(valueRef);
     }
-    if (selected === "cursor") {
-      uv.extra.cursorValue = valueRef;
-    }
+
     return {
       ...baseExtra,
-      ...commonExtra,
       selected,
-      htmlElement: null,
-      link: null,
+      cursor: false,
     };
   },
 
   updateValue(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow, columnIndex: number, value: ITableExtendedValue) {
     baseUserViewHandler.updateValue(uv, rowIndex, row, columnIndex, value);
-    updateCommonValue(uv, row, columnIndex, value);
   },
 
   updateAddedValue(uv: ITableCombinedUserView, rowId: number, row: ITableExtendedAddedRow, columnIndex: number, value: ITableExtendedValue) {
     baseUserViewHandler.updateAddedValue(uv, rowId, row, columnIndex, value);
-    updateCommonValue(uv, row, columnIndex, value);
   },
 
   updateEmptyValue(uv: ITableCombinedUserView, columnIndex: number, value: ITableExtendedValue) {
     baseUserViewHandler.updateEmptyValue(uv, columnIndex, value);
-    updateCommonValue(uv, uv.emptyRow!, columnIndex, value);
   },
 
-  createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+  createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView?: ITableViewExtra, oldRow?: ITableRowExtra) {
     const baseExtra = baseUserViewHandler.createLocalRow(uv, rowIndex, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
     return {
@@ -922,7 +722,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null, meta?: unknown) {
+  createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView?: ITableViewExtra, oldRow?: ITableRowExtra, meta?: unknown) {
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
 
@@ -954,7 +754,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  createEmptyLocalRow(uv: ITableCombinedUserView, row: IRowCommon, oldView: ITableViewExtra | null, oldRow: ITableRowExtra | null) {
+  createEmptyLocalRow(uv: ITableCombinedUserView, row: IRowCommon, oldView?: ITableViewExtra, oldRow?: ITableRowExtra) {
     const baseExtra = baseUserViewHandler.createEmptyLocalRow(uv, row, oldView, oldRow);
     const commonExtra = createCommonLocalRow(uv, row, oldRow);
     return {
@@ -1004,34 +804,21 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     }
   },
 
-  createLocalUserView(uv: ITableCombinedUserView, oldView: ITableViewExtra | null) {
+  createLocalUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra): ITableViewExtra {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
-    const columns = createColumns(uv);
 
-    const disableSelectionColumn = uv.attributes["disable_selection_column"];
-    const isSelectionColumnEnabled = typeof disableSelectionColumn === "boolean"
-      ? !disableSelectionColumn
-      : true;
-
-    const lazyLoad = oldView?.lazyLoad ?? lazyLoadSchema.parse(uv.attributes["lazy_load"]);
+    const lazyLoad = oldView?.lazyLoad ?? TableLazyLoad.parse(uv.attributes["lazy_load"]);
 
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
     const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
-    const dirtyHackPreventEntireReloadsRaw = uv.attributes["dirty_hack_prevent_entire_reloads"];
-    const dirtyHackPreventEntireReloads = typeof dirtyHackPreventEntireReloadsRaw === "boolean"
-      ? dirtyHackPreventEntireReloadsRaw
-      : false;
-
     return {
       ...baseExtra,
-      isSelectionColumnEnabled,
       hasRowLinks: false,
       selectedValues: new ObjectSet<ValueRef>(),
       cursorValue: null,
-      columns,
-      fixedColumnPositions: {},
+      oldCursorValue: null,
       rowsParentPositions: {},
       treeParentColumnIndex: 0,
       newRowTopSidePositions,
@@ -1042,37 +829,36 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       sortOptions: oldView?.sortOptions ?? {},
       addedRowRefs,
       lazyLoad,
-      dirtyHackPreventEntireReloads,
     };
   },
 
-  postInitUserView(uv: ITableCombinedUserView) {
+  postInitUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra) {
     if (!R.isEmpty(uv.extra.rowsParentPositions)) {
       uv = initTreeChildren(uv);
     }
-
-    uv.extra.fixedColumnPositions = fixedColumnPositions(uv);
-    Object.entries(uv.extra.fixedColumnPositions).forEach(([colIRaw, position]) => {
-      const colI = Number(colIRaw);
-      uv.extra.columns[colI].style["left"] = position;
-
-      uv.forEachRow(row => {
-        const value = row.values[colI];
-
-        let style = value.extra.style;
-        if (style === null) {
-          style = {};
-          value.extra.style = style;
-        }
-        style["left"] = position;
-      });
-    });
 
     for (const pos of [...uv.extra.newRowTopSidePositions, ...uv.extra.newRowBottomSidePositions]) {
       if (pos.type === "committed") {
         // `index.type === "existing"` here; "added" may only appear after a commit.
         const index = uv.mainRowMapping[pos.id][0] as IExistingRowRef;
         uv.rows![index.position].extra.shownAsNewRow = true;
+      }
+    }
+
+    const cursorValue = oldView?.cursorValue ?? null;
+    if (cursorValue) {
+      const value = uv.getValueByRef(cursorValue);
+      if (value) {
+        uv.extra.cursorValue = cursorValue;
+        value.value.extra.cursor = true;
+      }
+    }
+
+    const oldCursorValue = oldView?.oldCursorValue ?? null;
+    if (oldCursorValue) {
+      const value = uv.getValueByRef(oldCursorValue);
+      if (value) {
+        uv.extra.oldCursorValue = oldCursorValue;
       }
     }
   },
@@ -1123,14 +909,13 @@ const isEmptyRow = (row: IRowCommon) => {
 };
 
 interface ITableEditing {
-  lock: AutoSaveLock;
   ref: ValueRef;
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+  minHeight: number;
 }
-
-const entities = namespace("entities");
-const entries = namespace("entries");
-const staging = namespace("staging");
-const query = namespace("query");
 
 interface IShownRow {
   key: string;
@@ -1141,7 +926,7 @@ interface IShownRow {
 
 const defaultPageSize = 5;
 // Just look at `ITableLazyLoad` to see which type this mess make.
-export const lazyLoadSchema =
+export const TableLazyLoad =
   z.union([
     z.object({
       pagination: z.object({
@@ -1165,7 +950,7 @@ export const lazyLoadSchema =
     })),
   ]).default({ infinite_scroll: true });
 
-type ITableLazyLoad = z.infer<typeof lazyLoadSchema>;
+export type ITableLazyLoad = z.infer<typeof TableLazyLoad>;
 
 type MoveDirection = "up" | "right" | "down" | "left";
 
@@ -1184,54 +969,165 @@ type CellContextMenuData = {
   buttons: Button[];
 };
 
+const plainTextCell = (str: string): string => {
+  if (/\n|\t/.test(str)) {
+    return `"${str.replace(/"/g, `""`)}"`;
+  } else {
+    return str;
+  }
+};
+
+const plainTextStringify = (table: string[][]): string => {
+  let output = "";
+
+  table.forEach(row => {
+    row.forEach((cell, colI) => {
+      output += plainTextCell(cell);
+      if (colI < row.length - 1) {
+        output += "\t";
+      }
+    });
+    output += "\n";
+  });
+
+  return output;
+};
+
+const entities = namespace("entities");
+const entries = namespace("entries");
+const query = namespace("query");
+const windows = namespace("windows");
+
 @UserView({
   handler: tableUserViewHandler,
   useLazyLoad: true,
 })
 @Component({
   components: {
-    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem, ButtonList, Popper,
+    TableRow, Checkbox, TableCellEdit, InfiniteLoading, ButtonItem, ButtonList, Popper, FormValueControl,
   },
 })
 export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra, ITableRowExtra, ITableViewExtra>>(BaseUserView) {
   @query.State("current") query!: ICurrentQueryHistory | null;
-  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
-  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entries.Mutation("removeEntriesConsumer") removeEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entries.Mutation("addEntriesConsumer") addEntriesConsumer!: (args: { ref: IFieldRef; reference: ReferenceName }) => void;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
+  @windows.Getter("active") activeWindow!: WindowKey | null;
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
-  private currentFilter: string[] = [];
-  private rowPositions: CommittedRowRef[] = [];
-  private lastSelectedRow: number | null = null;
-  private lastSelectedValue: ValueRef | null = null;
-  private editing: ITableEditing | null = null;
-  private printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
-  private clickTimeoutId: NodeJS.Timeout | null = null;
-  private isFirefoxBrowser: boolean = isFirefox();
-  private editParams: IEditParams = {
-    height: 0,
-    width: 0,
-    minHeight: 0,
-  };
+  currentFilter: string[] = [];
+  rowPositions: CommittedRowRef[] = [];
+  lastSelectedRow: number | null = null;
+  editing: ITableEditing | null = null;
+  printListener: { query: MediaQueryList; queryCallback: (mql: MediaQueryListEvent) => void; printCallback: () => void } | null = null;
+  clickTimeout: { id: NodeJS.Timeout; ref: ValueRef } | null = null;
   // Keep references to entries used for editing once, so we don't re-request them.
-  private keptEntries = new ObjectSet<IFieldRef>();
-  private showAddRowButtons = false;
+  keptEntries = new ObjectSet<IFieldRef>();
+  showAddRowButtons = false;
 
-  // Used for Tab-Enter selection moving.
-  // Probably need to move to extra.
-  private columnDelta = 0;
+  cellContextMenu: CellContextMenuData | null = null;
 
-  private cellContextMenu: CellContextMenuData | null = null;
-  private cellSelectionStartCell: ValueRef | null = null;
+  get columns() {
+    const viewAttrs = this.uv.attributes;
+    let isTreeUnfoldColumnSet = false;
 
-  private get useInfiniteScrolling() {
+    const columns = this.uv.info.columns.map((columnInfo, i): IColumn => {
+      const columnAttrs = this.uv.columnAttributes[i];
+      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
+
+      const captionAttr = getColumnAttr("caption");
+      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
+
+      const style: Record<string, unknown> = {};
+
+      const columnWidthAttr = Number(getColumnAttr("column_width"));
+      const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
+      style["width"] = `${columnWidth}px`;
+
+      const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
+      const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType;
+      if (textAlignRightTypes.includes(punOrValue.type)) {
+        style["text-align"] = "right";
+      }
+
+      const textAlignAttr = getColumnAttr("text_align");
+      if (textAlignAttr !== undefined) {
+        style["text-align"] = String(textAlignAttr);
+      }
+
+      const fixedColumnAttr = getColumnAttr("fixed");
+      const fixedColumn = fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr);
+
+      const visibleColumnAttr = getColumnAttr("visible");
+      const visibleColumn = visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr);
+
+      const treeUnfoldColumnAttr = getColumnAttr("tree_unfold_column");
+      const treeUnfoldColumn = treeUnfoldColumnAttr === undefined ? false : Boolean(treeUnfoldColumnAttr);
+      if (treeUnfoldColumn) {
+        isTreeUnfoldColumnSet = true;
+      }
+
+      // "column_type" is old version, but "control" is consistent with forms.
+      const type = String(getColumnAttr("control") ?? getColumnAttr("column_type"));
+
+      return {
+        caption,
+        style,
+        visible: visibleColumn,
+        fixed: fixedColumn,
+        columnInfo,
+        width: columnWidth,
+        treeUnfoldColumn,
+        type,
+      };
+    });
+
+    if (!isTreeUnfoldColumnSet && columns[0]) {
+      columns[0].treeUnfoldColumn = true;
+    }
+
+    return columns;
+  }
+
+  get technicalWidth() {
+    let left = 0;
+    if (this.showSelectionColumn) {
+      left += technicalFieldsWidth;
+    }
+    if (this.uv.extra.hasRowLinks) {
+      left += technicalFieldsWidth;
+    }
+    return left;
+  }
+
+  get fixedColumnsLength(): number {
+    return this.columns.filter(item => item.fixed).length;
+  }
+
+  get fixedColumnPositions() {
+    let left = this.technicalWidth;
+    const fixedColumnIndexes = mapMaybe((col, colI) => col.fixed ? colI : undefined, this.columns);
+    const positions: Record<number, number> = {};
+    for (const fixedColumnIndex of fixedColumnIndexes) {
+      positions[fixedColumnIndex] = left;
+      left += this.columns[fixedColumnIndex].width;
+    }
+    return positions;
+  }
+
+  get showSelectionColumn() {
+    const disableSelectionColumn = this.uv.attributes["disable_selection_column"];
+    return typeof disableSelectionColumn === "boolean"
+      ? !disableSelectionColumn
+      : true;
+  }
+
+  get useInfiniteScrolling() {
     return this.uv.extra.lazyLoad.type === "infinite_scroll";
   }
 
-  private get pageSizes() {
+  get pageSizes() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return [];
 
     const defaultSizes = [5, 10, 25, 50];
@@ -1242,11 +1138,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private get keymap() {
+  get keymap() {
     return {
       "enter": () => this.onPressEnter(),
-      "tab": () => this.onPressTab(),
-      "shift+tab": () => this.onPressTab(),
       "esc": () => this.removeCellEditing(),
       "delete": () => this.clearSelectedCells(),
       "up": () => this.moveCursor("up"),
@@ -1263,7 +1157,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get firstPageButton(): Button | null {
+  get firstPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -1275,7 +1169,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get prevPageButton(): Button | null {
+  get prevPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -1287,7 +1181,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get nextPageButton(): Button | null {
+  get nextPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -1299,7 +1193,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private get onLastPage() {
+  get onLastPage() {
     if (!this.uv.rows || this.uv.extra.lazyLoad.type !== "pagination") return false;
 
     const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 1);
@@ -1385,7 +1279,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
     if (!this.isTopLevel) return;
 
-    this.$emit("update:currentPage", this.uv.extra.lazyLoad.pagination.currentPage);
+    this.$emit("update:current-page", this.uv.extra.lazyLoad.pagination.currentPage);
   }
 
   private get pagesCount(): number | null {
@@ -1415,8 +1309,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
    *     this.uv.rowLoadState.perFetch = this.uv.extra.lazyLoad.pagination.perPage;
    *   } */
 
-  private get infiniteIdentifier() {
+  get infiniteIdentifier() {
     return `${this.uv.rows?.length}${this.existingRows}`;
+  }
+
+  get dirtyHackPreventEntireReloads() {
+    const dirtyHackPreventEntireReloadsRaw = this.uv.attributes["dirty_hack_prevent_entire_reloads"];
+    return typeof dirtyHackPreventEntireReloadsRaw === "boolean"
+      ? dirtyHackPreventEntireReloadsRaw
+      : false;
   }
 
   private async infiniteHandler(ev: StateChanger) {
@@ -1427,7 +1328,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // FIXME: Dirty hack.
     while (this.showTree && !this.uv.rowLoadState.complete) {
       // eslint-disable-next-line no-await-in-loop
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await waitTimeout(1000);
     }
 
     if (!this.uv.rowLoadState.complete
@@ -1481,7 +1382,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  private getCellVisualPosition(ref: ValueRef): VisualPosition | null {
+  private getCellVisualPosition(ref: ValueRef): IVisualPosition | null {
     const rowWithCell = this.uv.getRowByRef(ref);
     if (!rowWithCell) return null;
     const rowI = this.shownRows.findIndex(row => row.row === rowWithCell);
@@ -1502,7 +1403,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.columnIndexes.indexOf(stateIndex);
   }
 
-  private getValueRefByVisualPosition(position: VisualPosition): ValueRef {
+  private getValueRefByVisualPosition(position: IVisualPosition): ValueRef {
     return {
       ...this.shownRows[position.row].ref,
       column: this.columnIndexes[position.column],
@@ -1510,119 +1411,94 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private expandSelection(direction: MoveDirection) {
-    if (this.selectedCells.length === 0) return;
-
-    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
-    const positions2D =
-      Object.entries(R.groupBy(cell => String(cell.row), positions))
-        .sort(([y, _]) => Number(y))
-        .map(([_, row]) => row)
-        .map(row => row.sort((c1, c2) => c1.column - c2.column));
-    const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
-    if (!isRectangular) return;
-
-    const cursorValue = this.uv.extra.cursorValue as ValueRef;
-    const cursorPosition = this.getCellVisualPosition(cursorValue) as VisualPosition;
-
-    const height = positions2D.length;
-    const width = positions2D[0].length;
-    const topLeft = positions2D[0][0];
-    const bottomRight = positions2D[height - 1][width - 1];
-    const bottom = bottomRight.row;
-    const right = bottomRight.column;
-    /* const top = topLeft.row; */
-    /* const left = topLeft.column; */
-    const expandedDown = cursorPosition.row < bottom;
-    const expandedRight = cursorPosition.column < right;
-    /* const expandedUp = cursorPosition.row > top; */
-    /* const expandedLeft = cursorPosition.column > left; */
-
-    const cornerPosition = positions2D[expandedDown ? height - 1 : 0][expandedRight ? width - 1 : 0];
-    const cornerRef = this.getValueRefByVisualPosition(cornerPosition);
-    const newCornerRef = this.getMovedCell(cornerRef, direction);
-
-    this.deselectAllCells({ clearCursor: false });
-    for (const cell of this.getCellsInRectangle(cursorValue, newCornerRef)) {
-      this.selectValue(cell);
+    const oldCursorValue = this.uv.extra.oldCursorValue;
+    if (!oldCursorValue) {
+      return;
+    }
+    const oldCursorPosition = this.getCellVisualPosition(oldCursorValue)!;
+    if (!oldCursorPosition) {
+      // Old cursor position got deleted.
+      this.moveCursor(direction);
+      return;
     }
 
-    // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
-    this.getCellElement(newCornerRef)?.scrollIntoView({ block: "nearest" });
+    this.moveCursor(direction, { keepOldCursor: true });
+    const cursorPosition = this.getCellVisualPosition(this.uv.extra.cursorValue!)!;
+
+    for (const cellPos of this.getCellsInRectangle(oldCursorPosition, cursorPosition)) {
+      const cellRef = this.getValueRefByVisualPosition(cellPos);
+      this.selectValue(cellRef, true);
+    }
   }
 
   private getMovedCell(
-    ref: ValueRef,
+    ref: IVisualPosition,
     direction: MoveDirection,
-    options: { step?: number } = { step: 1 },
-  ): ValueRef {
-    const oldPosition = this.getCellVisualPosition(ref) as VisualPosition;
+    options?: { step?: number },
+  ): IVisualPosition {
     const maxRow = this.shownRows.length - 1;
     const maxColumn = this.columnIndexes.length - 1;
 
     /* eslint-disable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
     const calcDelta = (decDirection: MoveDirection, incDirection: MoveDirection) =>
-      (options.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
+      (options?.step ?? 1) * ((direction === incDirection ? 1 : 0) - (direction === decDirection ? 1 : 0));
     const rowDelta    = calcDelta("up"  , "down" );
     const columnDelta = calcDelta("left", "right");
 
     const newPosition = {
-      row   : R.clamp(0, maxRow   , oldPosition.row    + rowDelta   ),
-      column: R.clamp(0, maxColumn, oldPosition.column + columnDelta),
+      row   : R.clamp(0, maxRow   , ref.row    + rowDelta   ),
+      column: R.clamp(0, maxColumn, ref.column + columnDelta),
     };
     /* eslint-enable no-multi-spaces, comma-spacing, key-spacing, space-in-parens */
 
-    return this.getValueRefByVisualPosition(newPosition);
+    return newPosition;
   }
 
   private moveCursor(
     direction: MoveDirection,
-    options: { step?: number; resetColumnDelta?: boolean } = { step: 1, resetColumnDelta: true },
+    options?: { step?: number; keepOldCursor?: boolean },
   ): boolean {
-    if (options.resetColumnDelta ?? true) {
-      this.columnDelta = 0;
-    }
     const { cursorValue } = this.uv.extra;
     if (!cursorValue) return false;
 
     this.deselectAllCells({ clearCursor: false });
 
-    const newCursorValue = this.getMovedCell(cursorValue, direction, options);
-    this.setCursorCell(newCursorValue);
+    const cursorPosition = this.getCellVisualPosition(cursorValue);
+    if (!cursorPosition) {
+      throw new Error("Cursor is in invalid position");
+    }
+    const newCursorPosition = this.getMovedCell(cursorPosition, direction, options);
+    const newCursorValue = this.getValueRefByVisualPosition(newCursorPosition);
+    this.setCursorCell(newCursorValue, options);
 
     // TODO: fix scrolling to first row and to first non-fixed columns when there are fixed columns.
-    this.getCellElement(newCursorValue)?.scrollIntoView({ block: "nearest" });
+    this.getVisualCellElement(newCursorPosition)?.scrollIntoView({ block: "nearest" });
 
     return !deepEquals(cursorValue, newCursorValue);
   }
 
-  private moveCursorNextColumn() {
-    const isMoved = this.moveCursor("right", { resetColumnDelta: false });
-    if (isMoved) {
-      this.columnDelta += 1;
+  private getVisualCellElement(ref: IVisualPosition): HTMLElement | null {
+    const visualRow = this.shownRows[ref.row];
+    const row = (this.$refs[`row-${visualRow.key}`] as TableRow[] | undefined)?.[0];
+    if (!row) {
+      return null;
     }
-    this.editCellOnCursor();
-  }
-
-  private moveCursorNextRow() {
-    this.moveCursor("down", { resetColumnDelta: false });
-    this.moveCursor("left", { step: this.columnDelta });
-    this.columnDelta = 0;
-    this.editCellOnCursor();
-  }
-
-  private getCellElement(valueRef: ValueRef): HTMLElement | null {
-    return this.uv.getValueByRef(valueRef)?.value.extra.htmlElement ?? null;
+    console.assert(this.shownRows[ref.row].row === row.row, "shown row equal to ref row");
+    const cell = (row.$refs["cells"] as TableCell[] | undefined)?.[ref.column];
+    if (!cell) {
+      return null;
+    }
+    return (cell.$refs["cell"] as HTMLElement | undefined) ?? null;
   }
 
   private editCellOnCursor() {
     const valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
-
-    this.editCellByTarget(valueRef, this.getCellElement(valueRef) as any);
+    this.setCellEditing(valueRef);
   }
 
   get columnIndexes() {
-    const columns = this.uv.extra.columns.map((column, index) => ({
+    const columns = this.columns.map((column, index) => ({
       index,
       fixed: column.fixed,
       visible: column.visible,
@@ -1633,23 +1509,19 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get fixedColumnIndexes() {
-    return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.uv.extra.columns);
-  }
-
-  get lastFixedColumnIndex(): number {
-    return this.uv.extra.columns.filter(item => item.fixed).length;
+    return mapMaybe((col, colI) => col.fixed ? colI : undefined, this.columns);
   }
 
   get editingLocked() {
     if (this.editing === null || this.editingValue === null) {
       return false;
     } else {
-      return this.editingValue.value.extra.softDisabled || (this.editing.ref.type !== "existing" && this.addedLocked);
+      return this.editing.ref.type !== "existing" && this.addedLocked;
     }
   }
 
-  get hasLinksColumn() {
-    return this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons;
+  get showLinkColumn() {
+    return Boolean(this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons);
   }
 
   private get createEntryButtons(): Button | null {
@@ -1678,7 +1550,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   get editingValue() {
     if (this.editing === null
-     || this.editingNonNullableBoolean // Bools are special case because they toggles by double click.
+     || this.editingNonNullableBoolean // Bools are special case because they toggle on double click.
     ) {
       return null;
     } else {
@@ -1689,7 +1561,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         const columnInfo = this.uv.info.columns[this.editing.ref.column];
         const columnAttrs = this.uv.columnAttributes[this.editing.ref.column];
         const type = columnInfo.valueType;
-        const attributes = { ...this.uv.attributes, ...columnAttrs, ...value.row.attributes, ...value.value.attributes };
+        const attributes = { ...this.uv.attributes, ...value.row.attributes, ...columnAttrs, ...value.value.attributes };
         return {
           value: value.value,
           attributes,
@@ -1702,6 +1574,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   protected created() {
     this.currentFilter = this.filter;
     this.init();
+
+    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
+      this.goToPage(this.initialPage);
+    }
 
     /* if (this.isTopLevel) {
      *   const queryCallback = (mql: MediaQueryListEvent) => {
@@ -1736,51 +1612,45 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       : this.query.root.page;
   }
 
-  @Watch("uv", { immediate: true })
-  private uvInit(newUv: any, oldUv: any) {
-    if (oldUv) return; // Fire method once.
-
-    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
-      this.goToPage(this.initialPage);
-    }
-
-    void this.updateShowAddRowButtons();
+  get softDisabled() {
+    return Boolean(this.uv.attributes["soft_disabled"]);
   }
 
+  @Watch("uv.info.mainEntity", { immediate: true, deep: true })
   private async updateShowAddRowButtons() {
-    this.showAddRowButtons = false;
+    // Don't reset it here to avoid button flickering.
+    // this.showAddRowButtons = false;
 
-    if (!this.uv.info.mainEntity || this.uv.extra.softDisabled || this.uv.extra.dirtyHackPreventEntireReloads) return;
+    if (!this.uv.info.mainEntity) {
+      this.showAddRowButtons = false;
+      return;
+    }
 
     const entity = await this.getEntity(this.uv.info.mainEntity);
     this.showAddRowButtons = entity?.access.insert ?? false;
   }
 
-  private deselectAllCells({ clearCursor = true }: { clearCursor?: boolean } = {}) {
+  private deselectAllCells(opts?: { clearCursor?: boolean }) {
     this.uv.extra.selectedValues.keys().forEach(key => {
       this.selectValue(key, false);
     });
     this.lastSelectedRow = null;
 
-    if (clearCursor) {
+    if (opts?.clearCursor) {
       this.clearCursorCell();
     }
   }
 
   // Cell text intended for copy to clipboard.
-  private getClipboardTextByVisualPosition(pos: VisualPosition): string {
-    const value = this.uv.getValueByRef(this.getValueRefByVisualPosition(pos))!.value;
-    switch (value.info?.field?.fieldType.type) {
-      case "int":
-      case "decimal":
-        // We can't use `valueHtml` there because `number_format` attribute messes with it.
-        return String(value.value);
-      default:
-        return sanitizeHtml(value.extra.valueHtml, { allowedTags: [] });
-    }
+  private getClipboardTextByVisualPosition(pos: IVisualPosition): string {
+    const ref = this.getValueRefByVisualPosition(pos);
+    const value = this.uv.getValueByRef(ref);
+    console.assert(value);
+    const info = this.uv.info.columns[ref.column];
+    return valueToPunnedText(info.valueType, value!.value);
   }
 
-  private cellTdByVisualPosition(pos: VisualPosition): HTMLElement {
+  private cellTdByVisualPosition(pos: IVisualPosition): HTMLElement {
     const valueRef = this.getValueRefByVisualPosition(pos);
     const value = this.uv.getValueByRef(valueRef)!.value;
     const valueText = this.getClipboardTextByVisualPosition(pos);
@@ -1796,7 +1666,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return td;
   }
 
-  private cellVisualPositionsToSerializedTable(positions: VisualPosition[][]): string {
+  private cellVisualPositionsToSerializedTable(positions: IVisualPosition[][]): string {
     const cellTds = positions.map(row => row.map(cell => this.cellTdByVisualPosition(cell)));
     const trs = cellTds.map(row => {
       const tr = document.createElement("tr");
@@ -1820,13 +1690,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.selectedCells.length === 0) return;
     event.preventDefault();
 
-    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as VisualPosition);
+    const positions = this.selectedCells.map(cell => this.getCellVisualPosition(cell) as IVisualPosition);
     const positions2D = Object.values(R.groupBy(cell => String(cell.row), positions)).map(row => row.sort((c1, c2) => c1.column - c2.column));
     const isRectangular = positions2D.every(row => row.length === positions2D[0].length);
 
     if (isRectangular) {
       const cells = positions2D.map(row => row.map(vp => this.getClipboardTextByVisualPosition(vp)));
-      event.clipboardData?.setData("text/plain", stringifySpreadsheet(cells));
+      event.clipboardData?.setData("text/plain", plainTextStringify(cells));
 
       const serialized = this.cellVisualPositionsToSerializedTable(positions2D);
       event.clipboardData?.setData("text/html", serialized);
@@ -1846,8 +1716,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private valueIsReadOnly(valueRef: ValueRef, throwToastOnReadOnly = false): boolean {
-    const value = this.uv.getValueByRef(valueRef)!.value;
-    if (!value.info || !value.info.field || value.extra.softDisabled) {
+    const value = this.uv.getValueByRef(valueRef)!;
+    const rowSoftDisabled = Boolean(value.row.attributes?.["soft_disabled"]);
+    const valueSoftDisabled = Boolean(value.value.attributes?.["soft_disabled"]);
+    if (!value.value.info?.field || this.softDisabled || rowSoftDisabled || valueSoftDisabled) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
           title: this.$t("edit_error").toString(),
@@ -1883,7 +1755,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async updateValueWithParseValue(ref: ValueRef, parseValue: ParseValue) {
+  private async updateValueWithParseValue(ref: ValueRef, parseValue: ClipboardParseValue) {
     const value = this.uv.getValueByRef(ref)!.value;
     const fieldType = value.info?.field?.fieldType.type;
     if (parseValue.type === "reference") {
@@ -1901,7 +1773,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ParseValue[][]) {
+  private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ClipboardParseValue[][]) {
     if (this.editing) return;
     let valueRef = this.uv.extra.cursorValue;
     if (!valueRef) return;
@@ -1946,7 +1818,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
     }
     for (const cell of changedValueRefs) {
-      this.selectValue(cell);
+      this.selectValue(cell, true);
     }
   }
 
@@ -1966,18 +1838,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private onPressEnter() {
     if (this.editing) {
       this.removeCellEditing();
-      this.moveCursorNextRow();
     } else {
       this.editCellOnCursor();
-    }
-  }
-
-  private onPressTab() {
-    if (this.editing) {
-      this.removeCellEditing();
-      this.moveCursorNextColumn();
-    } else {
-      this.moveCursor("right");
     }
   }
 
@@ -1996,15 +1858,24 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
-    return [
+    const handlers = [
       ["copy", this.copySelectedCells],
       ["cut", this.cutSelectedCell],
       ["paste", this.pasteClipboardToSelectedCells],
       ["cell-click", this.onOtherTableClicked],
       ["row-select", this.onRowInOtherTableSelected],
       ["form-input-focused", this.deselectAllCells],
-    ];
+    ] as [name: string, callback: (event: any) => void][];
     /* eslint-enable @typescript-eslint/unbound-method */
+
+    return handlers.map(([name, callback]) => {
+      const wrapper = (event: unknown) => {
+        if (this.checkWindow()) {
+          callback(event);
+        }
+      };
+      return [name, wrapper];
+    });
   }
 
   /* Actually table does't change its width for now,
@@ -2034,7 +1905,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   protected mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    (this.$refs.tableContainer as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    (this.$el as HTMLElement).addEventListener("scroll", this.removeCellEditing);
     /* window.addEventListener("scroll", this.removeCellEditing, true); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
     if (this.$refs["table"]) {
@@ -2061,7 +1932,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   protected beforeDestroy() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    (this.$refs.tableContainer as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
+    (this.$el as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
     /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
     if (this.$refs["table"]) {
@@ -2075,22 +1946,22 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.uv.extra.lazyLoad.type === "pagination" && this.isTopLevel) {
-      this.$emit("update:currentPage", null);
+      this.$emit("update:current-page", null);
     }
 
     if (this.printListener !== null) {
       window.removeEventListener("beforeprint", this.printListener.printCallback);
       this.printListener.query.removeListener(this.printListener.queryCallback);
     }
-    if (this.clickTimeoutId !== null) {
-      clearTimeout(this.clickTimeoutId);
+    if (this.clickTimeout !== null) {
+      clearTimeout(this.clickTimeout.id);
     }
     this.releaseEntries();
   }
 
   @Watch("filter", { immediate: true })
   protected updateFilter() {
-    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+    if (this.dirtyHackPreventEntireReloads) return;
 
     if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
       this.$emit("load-all-chunks");
@@ -2113,9 +1984,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("editingValue")
   protected updateEditingValue() {
-    if (this.editingValue === null) {
-      this.removeCellEditing();
-    } else {
+    if (this.editingValue !== null) {
       const info = this.editingValue.value.info;
       const fieldType = info?.field?.fieldType;
       if (fieldType?.type === "reference") {
@@ -2125,6 +1994,31 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         }
       }
     }
+  }
+
+  private get autofocusColumnIndex(): number | null {
+    if (this.columnIndexes.length === 0) return null;
+    const values = this?.uv?.emptyRow?.values;
+    if (!values) return null;
+
+    let result = this.columnIndexes[0];
+    for (const icol of this.columnIndexes) {
+      const column = values[icol];
+      if (
+        column.rawValue === undefined
+        && column?.info !== undefined
+      ) {
+        if (!column?.info?.field?.isNullable) {
+          return icol;
+        } else if (
+          values[result].rawValue !== undefined
+          && column.rawValue === undefined
+        ) {
+          result = icol;
+        }
+      }
+    }
+    return result;
   }
 
   // TODO: Load all rows is temporary until we can't load rows by ids.
@@ -2139,28 +2033,23 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
     const rowId = await this.addNewRow({ side });
-    const firstNotDisabledColumn = this.uv.newRows[rowId].values.findIndex((value, i) => {
-      return value.info !== undefined && this.uv.extra.columns[i].visible;
-    });
-    const firstNotDisabledDOMColumn = this.columnIndexes.indexOf(firstNotDisabledColumn);
-    if (firstNotDisabledDOMColumn === -1) return;
 
     void nextRender().then(() => {
-      const sideName = side === "bottom_back" ? "newRowsBottomSideRef" : "newRowsTopSideRef";
-      const newRowsRef = this.$refs[sideName] as TableRow[] | undefined;
-      if (newRowsRef === undefined) return;
-      const childRef = newRowsRef[newRowsRef.length - 1]?.$children?.[1 + firstNotDisabledDOMColumn].$el;
-      if (childRef === undefined) return;
-
-      this.editCellByTarget(
-        {
-          type: "added",
-          id: rowId,
-          column: firstNotDisabledColumn,
-        },
-        childRef as HTMLElement,
-      );
+      const row = this.getVisualIndexOfAddedRow(rowId);
+      if (row === null || this.autofocusColumnIndex === null) {
+        console.error("Unable to autofocus to new row");
+        return;
+      }
+      const column = this.getVisualColumnIndex(this.autofocusColumnIndex);
+      const cellToFocus = this.getValueRefByVisualPosition({ row, column });
+      this.setCursorCell(cellToFocus);
+      this.editCellOnCursor();
     });
+  }
+
+  private getVisualIndexOfAddedRow(id: number): number | null {
+    const index = this.shownRows.findIndex(row => row.key === `added-${id}`);
+    return index === -1 ? null : index;
   }
 
   private showTreeChildren(parentRef: CommittedRowRef) {
@@ -2274,50 +2163,39 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private clickOutsideEdit(event: Event) {
-    const element = (event instanceof MouseEvent) ? document.elementFromPoint(event.x, event.y) : null;
-    // Fix for case when some cell is being edited and modal opens,
-    // otherwise any click on this modal will close the cell editing and modal too.
-    // FIXME: rely on CSS-classes for logic is bad thing, fix it someone, please.
-    if (element === null
-     || (element.closest(".v--modal-box") && !this.$el.closest(".v--modal-box"))
-     || (element.closest(".modal__tab-content") !== this.$el.closest(".modal__tab-content"))
-    ) {
-      return;
-    }
-
-    this.removeCellEditing();
-  }
-
   private removeCellEditing() {
-    if (this.editing === null) return;
-
-    void this.removeAutoSaveLock(this.editing.lock);
+    // return;
     this.editing = null;
   }
 
   // Value is not actually required to be editable - it can be opened in read-only mode too.
   private setCellEditing(ref: ValueRef) {
-    this.removeCellEditing();
-
     if (!this.canEditCell(ref)) return;
 
-    void this.addAutoSaveLock().then(async lock => {
-      const value = this.uv.getValueByRef(ref);
+    const refPos = this.getCellVisualPosition(ref);
+    if (!refPos) {
+      return;
+    }
 
-      if (this.editing !== null // Lock already taken (somehow)
-       || !value
-      ) {
-        await this.removeAutoSaveLock(lock);
-        return;
-      }
-      this.getCellElement(ref)?.scrollIntoView({ block: "nearest" });
-      this.editing = { ref, lock };
-    });
+    const element = this.getVisualCellElement(refPos);
+    if (!element) {
+      return;
+    }
+
+    element.scrollIntoView({ block: "nearest" });
+    const cellRect = element.getBoundingClientRect();
+    this.editing = {
+      ref,
+      x: cellRect.x,
+      y: cellRect.y,
+      width: element.offsetWidth,
+      height: element.offsetHeight,
+      minHeight: element.offsetHeight,
+    };
   }
 
   private canEditCell(ref: ValueRef) {
-    return !(this.uv.extra.columns[ref.column].type === "buttons");
+    return !(this.columns[ref.column].type === "buttons");
   }
 
   private get editingNonNullableBoolean(): boolean {
@@ -2334,53 +2212,47 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const ref = this.editing.ref;
     if (ref.type === "new") return;
 
-    if (this.editingNonNullableBoolean && !this.uv.getValueByRef(this.editing.ref)?.value.extra.softDisabled) {
+    if (this.editingNonNullableBoolean && !this.valueIsReadOnly(ref)) {
       const value = this.uv.getValueByRef(ref)!.value.value;
       await this.updateCurrentValue(!value);
       this.removeCellEditing();
     }
   }
 
-  private get editCellCoords(): ICellCoords | null {
-    if (!this.editing) return null;
-    const cellElement = this.getCellElement(this.editing.ref);
-    if (!cellElement) return null;
-
-    const cellRect = cellElement.getBoundingClientRect();
-    const { x, y } = cellRect;
-    return { x, y };
+  private updateClickTimer(ref: ValueRef) {
+    if (this.clickTimeout === null || !equalValueRef(this.clickTimeout.ref, ref)) {
+      if (this.clickTimeout) {
+        clearTimeout(this.clickTimeout.id);
+      }
+      const id = setTimeout(() => {
+        this.clickTimeout = null;
+      }, doubleClickTime);
+      this.clickTimeout = {
+        id,
+        ref,
+      };
+    } else {
+      clearTimeout(this.clickTimeout.id);
+      this.clickTimeout = null;
+      this.setCellEditing(ref);
+    }
   }
 
-  private updateClickTimer(ref: ValueRef) {
-    const sameCellClicked = deepEquals(this.lastSelectedValue, ref);
-    if (this.clickTimeoutId === null) {
-      this.clickTimeoutId = setTimeout(() => {
-        this.clickTimeoutId = null;
-      }, doubleClickTime);
-      if (this.lastSelectedValue !== null && !sameCellClicked) {
-        this.removeCellEditing();
-      }
-    } else {
-      clearTimeout(this.clickTimeoutId);
-      this.clickTimeoutId = null;
-      if (this.lastSelectedValue !== null && sameCellClicked) {
-        this.setCellEditing(ref);
-      }
-    }
+  get parentWindow() {
+    return elementWindow(this.$el as HTMLElement);
+  }
+
+  private checkWindow() {
+    return this.activeWindow === this.parentWindow;
   }
 
   private closeCellContextMenu() {
     this.cellContextMenu = null;
   }
 
-  private async openCellContextMenu(ref: ValueRef, element: HTMLElement, event: any) {
-    const tableRef = (this.$refs["tableContainer"] as HTMLElement | undefined);
-    if (!tableRef) throw new Error("Can't find `tableContainer` ref");
-
-    this.selectCell(ref);
-    this.closeCellContextMenu();
-
-    await this.$nextTick();
+  private openCellContextMenu(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    const ref = this.getValueRefByVisualPosition(pos);
+    this.setCursorCell(ref);
 
     this.cellContextMenu = {
       reference: {
@@ -2389,11 +2261,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
         getBoundingClientRect: () => new DOMRect(event.clientX, event.clientY, 1, 1),
         removeEventListener: () => {},
       },
-      buttons: this.getButtonsForContextMenu(ref),
+      buttons: this.getButtonsForContextMenu(pos),
     };
   }
 
-  private getButtonsForContextMenu(ref: ValueRef): Button[] {
+  private getButtonsForContextMenu(pos: IVisualPosition): Button[] {
     return [
       {
         type: "callback",
@@ -2434,113 +2306,100 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     ];
   }
 
-  private getCellsInRectangle(corner1: ValueRef, corner2: ValueRef): ValueRef[] {
-    const pos1 = this.getCellVisualPosition(corner1);
-    const pos2 = this.getCellVisualPosition(corner2);
-    if (!pos1 || !pos2) return [];
-
-    const top = Math.min(pos1.row, pos2.row);
-    const bottom = Math.max(pos1.row, pos2.row);
-    const left = Math.min(pos1.column, pos2.column);
-    const right = Math.max(pos1.column, pos2.column);
+  private getCellsInRectangle(corner1: IVisualPosition, corner2: IVisualPosition): IVisualPosition[] {
+    const top = Math.min(corner1.row, corner2.row);
+    const bottom = Math.max(corner1.row, corner2.row);
+    const left = Math.min(corner1.column, corner2.column);
+    const right = Math.max(corner1.column, corner2.column);
 
     const range = (start: number, end: number) =>
       Array(end - start + 1).fill(0).map((_, idx) => start + idx);
 
     const rows = this.shownRows.slice(top, bottom + 1);
-    const visualPositions = rows.flatMap(
+    return rows.flatMap(
       (_, rowI) => range(left, right).map(i => ({ column: i, row: top + rowI })),
     );
-
-    return visualPositions.map(pos => this.getValueRefByVisualPosition(pos));
   }
 
-  private startCellSelection(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
+  private cellMouseDown(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (event.shiftKey || event.ctrlKey) return;
 
+    const ref = this.getValueRefByVisualPosition(pos);
     this.deselectAllCells();
-
-    this.cellSelectionStartCell = ref;
-    /* this.selectValue(ref); */
     this.setCursorCell(ref);
-  }
 
-  private continueCellSelection(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
-    if (!this.cellSelectionStartCell) return;
-
-    this.deselectAllCells({ clearCursor: false });
-
-    const cells = this.getCellsInRectangle(this.cellSelectionStartCell, ref);
-    for (const cell of cells) {
-      this.selectValue(cell);
-    }
-  }
-
-  private endCellSelection(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
-    this.cellSelectionStartCell = null;
-  }
-
-  private clickCell(ref: ValueRef, element: HTMLElement, event: MouseEvent) {
-    this.columnDelta = 0;
+    // FIXME: `v-click-outside` somehow doesn't trigger on cell clicks, so close context menu there too.
     this.removeCellEditing();
-    this.updateClickTimer(ref);
-
-    if (event.ctrlKey) {
-      this.selectValue(ref);
-    } else if (event.shiftKey && this.uv.extra.cursorValue) {
-      const cells = this.getCellsInRectangle(this.uv.extra.cursorValue, ref);
-      this.deselectAllCells({ clearCursor: false });
-      for (const cell of cells) {
-        this.selectValue(cell);
-      }
-    } else {
-      this.handleCellEdit(ref, element);
-    }
-
-    // `v-click-outside` somehow doesn't triggers on cell clicks, so close context menu there too.
     this.closeCellContextMenu();
 
     // We capture click-events from cells so we need to manually close popups here.
-    if (this.uv.extra.columns[ref.column].type !== "buttons") {
+    if (this.columns[pos.column].type !== "buttons") {
       eventBus.emit("close-all-button-groups");
     }
   }
 
-  private editCellByTarget(ref: ValueRef, target: HTMLElement) {
-    this.setCellEditing(ref);
-    this.handleCellEdit(ref, target);
-  }
+  private continueCellSelection(cursorPosition: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    if (!(event.buttons & 1) || !this.uv.extra.oldCursorValue) return;
+    const oldCursorPosition = this.getCellVisualPosition(this.uv.extra.oldCursorValue);
+    if (!oldCursorPosition) {
+      this.uv.extra.oldCursorValue = null;
+      return;
+    }
 
-  private handleCellEdit(ref: ValueRef, target: HTMLElement) {
-    this.editParams.width = target.offsetWidth;
-    this.editParams.height = target.offsetHeight;
-    this.editParams.minHeight = target.offsetHeight;
+    this.deselectAllCells({ clearCursor: false });
+    const cursorValue = this.getValueRefByVisualPosition(cursorPosition);
+    this.setCursorCell(cursorValue, { keepOldCursor: true });
 
-    this.selectCell(ref);
-
-    if (this.lastSelectedValue
-     && !deepEquals(this.lastSelectedValue, ref)
-     && this.lastSelectedValue.type === "added") {
-      const row = this.uv.newRows[this.lastSelectedValue.id];
-      if (!row) {
-        this.lastSelectedValue = null;
-      } else if (isEmptyRow(row)) {
-        const entity = this.uv.info.mainEntity;
-        if (!entity) {
-          throw new Error("View doesn't have a main entity");
-        }
-
-        void this.resetAddedEntry({
-          entityRef: entity,
-          id: this.lastSelectedValue.id,
-        });
-      }
+    const positions = this.getCellsInRectangle(oldCursorPosition, cursorPosition);
+    for (const pos of positions) {
+      this.selectValue(this.getValueRefByVisualPosition(pos), true);
     }
   }
 
-  private selectValue(ref: ValueRef, selectedStatus = true) {
+  private endCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    this.uv.extra.oldCursorValue = this.uv.extra.cursorValue;
+  }
+
+  private shiftSelectCells(pos: IVisualPosition) {
+    const ref = this.getValueRefByVisualPosition(pos);
+    this.deselectAllCells({ clearCursor: false });
+    this.setCursorCell(ref, { keepOldCursor: true });
+
+    if (!this.uv.extra.oldCursorValue) {
+      return;
+    }
+    const prevValue = this.getCellVisualPosition(this.uv.extra.oldCursorValue);
+    if (!prevValue) {
+      this.uv.extra.oldCursorValue = null;
+      return;
+    }
+
+    const cells = this.getCellsInRectangle(prevValue, pos);
+    for (const cell of cells) {
+      this.selectValue(this.getValueRefByVisualPosition(cell), true);
+    }
+  }
+
+  private clickCell(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+    if (event.ctrlKey) {
+      this.removeCellEditing();
+      if (this.uv.extra.cursorValue) {
+        this.selectValue(this.uv.extra.cursorValue, true);
+      }
+      const ref = this.getValueRefByVisualPosition(pos);
+      this.setCursorCell(ref);
+    } else if (event.shiftKey) {
+      this.removeCellEditing();
+      this.shiftSelectCells(pos);
+    } else {
+      const ref = this.getValueRefByVisualPosition(pos);
+      this.updateClickTimer(ref);
+    }
+  }
+
+  private selectValue(ref: ValueRef, selectedStatus: boolean) {
     const cell = this.uv.getValueByRef(ref);
-    if (!cell || cell.value.extra.selected === "cursor") return;
+    if (!cell) return;
 
     if (cell.value.extra.selected !== selectedStatus) {
       cell.value.extra.selected = selectedStatus;
@@ -2551,39 +2410,55 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       }
     }
 
-    // Deselect another cells.
+    // Deselect other cells.
     /* this.$root.$emit("cell-click", this.uid); */
   }
 
-  // More high-level than `selectValue`: deselects other cells and
-  // remembers last selected cell.
-  private selectCell(ref: ValueRef) {
-    this.deselectAllCells({ clearCursor: false });
-    this.selectValue(ref, true);
-    this.setCursorCell(ref);
-    this.lastSelectedValue = ref;
-  }
-
-  private setCursorCell(ref: ValueRef) {
+  private setCursorCell(ref: ValueRef, opts?: { keepOldCursor?: boolean }) {
     const cell = this.uv.getValueByRef(ref);
     if (!cell) return;
 
-    this.clearCursorCell();
+    this.clearCursorCell(opts);
 
     this.uv.extra.cursorValue = ref;
-    cell.value.extra.selected = "cursor";
+    cell.value.extra.cursor = true;
+
+    if (!opts?.keepOldCursor) {
+      this.uv.extra.oldCursorValue = ref;
+    }
 
     this.$root.$emit("cell-click", this.uid);
   }
 
-  private clearCursorCell() {
+  private clearCursorCell(opts?: { keepOldCursor?: boolean }) {
     if (!this.uv.extra.cursorValue) return;
 
     const cell = this.uv.getValueByRef(this.uv.extra.cursorValue);
     if (cell) {
-      cell.value.extra.selected = false;
+      cell.value.extra.cursor = false;
     }
     this.uv.extra.cursorValue = null;
+    if (!opts?.keepOldCursor) {
+      const oldCursorValue = this.uv.extra.oldCursorValue;
+      this.uv.extra.oldCursorValue = null;
+
+      if (oldCursorValue) {
+        if (oldCursorValue.type === "added") {
+          const row = this.uv.newRows[oldCursorValue.id];
+          if (row && isEmptyRow(row)) {
+            const entity = this.uv.info.mainEntity;
+            if (!entity) {
+              throw new Error("View doesn't have a main entity");
+            }
+
+            void this.resetAddedEntry({
+              entityRef: entity,
+              id: oldCursorValue.id,
+            });
+          }
+        }
+      }
+    }
   }
 
   @Watch("allRows")
@@ -2664,7 +2539,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.releaseEntries();
 
     if (this.isTopLevel) {
-      this.$emit("update:bodyStyle", `
+      this.$emit("update:body-style", `
                 @media print {
                     @page {
                         size: landscape;
@@ -2673,7 +2548,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    this.$emit("update:enableFilter", this.uv.rows !== null && !this.uv.extra.dirtyHackPreventEntireReloads);
+    this.$emit("update:enable-filter", this.uv.rows !== null && !this.dirtyHackPreventEntireReloads);
 
     this.updateRows();
   }
@@ -2683,7 +2558,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private loadAllRowsAndUpdateSort(sortColumn: number) {
-    if (this.uv.extra.dirtyHackPreventEntireReloads) return;
+    if (this.dirtyHackPreventEntireReloads) return;
 
     if (!this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => this.updateSort(sortColumn));
@@ -2699,7 +2574,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     string: ascending
   */
   private updateSort(sortColumn: number) {
-    const type = this.uv.extra.columns[sortColumn].columnInfo.valueType.type;
+    const type = this.columns[sortColumn].columnInfo.valueType.type;
     if (this.uv.extra.sortColumn !== sortColumn) {
       this.uv.extra.sortColumn = sortColumn;
       switch (type) {
@@ -2807,7 +2682,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
-    this.$emit("update:statusLine", this.statusLine);
+    this.$emit("update:status-line", this.statusLine);
   }
 
   get allRows() {
@@ -2840,7 +2715,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     const newRef = await this.updateValue(ref, rawValue);
     if (ref.type === "new") {
       editing.ref = newRef;
-      this.selectCell(newRef);
+      this.setCursorCell(ref);
       // FIXME: we shouldn't implement this logic purely for barcodes. Instead, react to keyboard <RET> event!
       if (this.uv.columnAttributes[newRef.column].text_type === "barcode") {
         void this.addNewRowOnPosition("bottom_back");
@@ -2870,10 +2745,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     display: flex;
     padding: 0.25rem;
     transition: opacity 0.2s;
-
-    ::v-deep > button {
-      width: 100%;
-    }
   }
 
   .context-menu-wrapper {
@@ -2975,7 +2846,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     z-index: 20; /* при скроле таблицы чтобы шапка была видна */
     border-right: 1px solid var(--table-backgroundDarker1Color);
 
-    /* Instead of `0` to fix Safari's bug gap, doesn't needed in normal browsers, but easier to set same for all */
+    /* Instead of `0` to fix Safari's gap bug, not needed in normal browsers, but easier to set same for all. */
     top: -1px;
     cursor: pointer;
     color: var(--MainTextColorLight);
@@ -3224,5 +3095,14 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .fade-2-move {
     transition: transform 0.2s;
+  }
+
+  .empty-userview {
+    margin: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    opacity: 0.7;
+    border: 1px solid var(--MainBorderColor);
+    border-radius: 0.2rem;
+    color: var(--MainTextColor);
   }
 </style>

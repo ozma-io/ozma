@@ -34,15 +34,14 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 @Component({
   components: {
     ButtonItem,
-    ButtonGroup: () => import("@/components/buttons/ButtonGroup.vue"), // Cyclic reference, therefore async import.
   },
 })
 export default class ButtonList extends Vue {
   @Prop({ type: Array, required: true }) buttons!: IButton[];
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
 
-  private onClick() {
-    this.$emit("button-click");
+  private onClick(button: IButton) {
+    this.$emit("button-click", button);
   }
 
   private get someButtonHasIcon() {

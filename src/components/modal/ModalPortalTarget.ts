@@ -2,31 +2,26 @@ import { mixins } from "vue-class-component";
 import { Component, Watch } from "vue-property-decorator";
 import { PortalTarget } from "portal-vue";
 
-import { IModalTab } from "@/components/modal/types";
-import Modal from "@/components/modal/Modal.vue";
-
-interface IInternalModalTab extends IModalTab {
-  tab: any;
-  autofocus: boolean;
-  header: any;
-}
+import type { IModalTab } from "@/components/modal/TabbedModal.vue";
+import TabbedModal from "@/components/modal/TabbedModal.vue";
+import ModalPortal from "./ModalPortal";
 
 @Component
 export default class ModalPortalTarget extends mixins(PortalTarget) {
   private startingTab = 0;
 
   render(createElement: any) {
-    return createElement(Modal, {
+    return createElement(TabbedModal, {
       props: {
         modalTabs: this.modalTabs,
         show: this.showModal,
-        width: "85%",
+        width: "1140px",
         height: "95%",
         startingTab: this.startingTab,
       },
       on: {
         /* eslint-disable @typescript-eslint/unbound-method */
-        close: this.closeAll,
+        "close": this.closeAll,
         "tab-close": this.close,
         "go-back-window": this.goBackWindow,
         /* eslint-enable @typescript-eslint/unbound-method */
@@ -34,36 +29,30 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
     });
   }
 
-  private get modalTabs(): IInternalModalTab[] {
+  private get modalTabs(): IModalTab[] {
     return this.passengers.map((node, index) => {
-      const modalPortal: any = node.context!.$children[0];
+      const modalPortal = node.context!.$children[0] as ModalPortal;
       const order: number = modalPortal.order;
       const autofocus: boolean = modalPortal.autofocus;
-      const modalHeader: any = ("header" in modalPortal.$slots)
-        ? modalPortal.$slots["header"][0]
-        : undefined;
+      const modalHeader = modalPortal.$slots["header"]?.[0] ?? null;
       return {
+        key: modalPortal.uid,
+        order,
         header: modalHeader,
         content: node,
-        order,
-        tab: modalPortal,
         autofocus,
       };
     }).sort((a, b) => a.order - b.order);
   }
 
   @Watch("modalTabs")
-  private modalTabsChanged(tabs: IInternalModalTab[], prevTabs: IInternalModalTab[]) {
-    const existingTabs = new Set(prevTabs.map(t => t.tab));
-    this.startingTab = -1;
+  private modalTabsChanged(tabs: IModalTab[], prevTabs: IModalTab[]) {
+    const existingTabs = new Set(prevTabs.map(t => t.key));
     tabs.forEach((t, i) => {
-      if (!existingTabs.has(t.tab) && t.autofocus) {
+      if (!existingTabs.has(t.key) && t.autofocus) {
         this.startingTab = i;
       }
     });
-    if (this.startingTab < 0) {
-      this.startingTab = tabs.length - 1;
-    }
   }
 
   private get showModal(): boolean {

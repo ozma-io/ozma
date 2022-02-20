@@ -25,7 +25,7 @@
       },
     ]"
   >
-    <Modal
+    <TabbedModal
       v-if="modal"
       :show="isModalOpen"
       fullscreen
@@ -58,7 +58,7 @@
           </div>
         </div>
       </div>
-    </Modal>
+    </TabbedModal>
     <template v-if="!(modalOnly && modal)">
       <b-col
         v-if="label"
@@ -147,12 +147,12 @@
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
 
-import Modal from "@/components/modal/Modal.vue";
+import TabbedModal from "@/components/modal/TabbedModal.vue";
 import Input from "@/components/form/Input.vue";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
 
-@Component({ components: { Modal, Input } })
+@Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ type: String }) label!: string;
   @Prop({ type: Boolean, default: false }) smallerLabel!: boolean;
@@ -163,6 +163,9 @@ export default class InputSlot extends Vue {
   /* @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null; */
   @Prop({ type: Object }) colorVariantAttribute!: ColorVariantAttribute;
   @Prop({ type: String, default: "left" }) textAlign!: string;
+  // FIXME:
+  // Хм, странно, что у нас теперь модал управляется из InputSlotа - это прямо неправильно.
+  // https://bitbucket.org/myprocessx/funwithflags/pull-requests/1097
   @Prop({ type: Boolean, default: false }) modal!: boolean;
   @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
   @Prop({ type: Boolean, default: false }) required!: boolean;
@@ -279,7 +282,7 @@ export default class InputSlot extends Vue {
     border-radius: 0.2rem;
 
     .indicator-container {
-      $indicator-size: (18px / 14px) * 1rem; /* 14px is preferred font size and 18px is like in `.md-18` */
+      $indicator-size: calc((18 / 12) * 1rem); /* 12px is preferred font size and 18px is like in `.md-18` */
       $indicator-padding: 0.2rem;
 
       position: absolute;
@@ -292,7 +295,7 @@ export default class InputSlot extends Vue {
 
       &.inline {
         left: -1 * ($indicator-size  + 2 * $indicator-padding);
-        top: $indicator-size / 4;
+        top: calc($indicator-size / 6);
 
         &.cell-edit {
           /* False-positive */
@@ -369,9 +372,5 @@ export default class InputSlot extends Vue {
     width: 100%;
     border-radius: 0;
     margin-top: 5px;
-  }
-
-  .v--modal-overlay {
-    z-index: 1000;
   }
 </style>

@@ -63,7 +63,7 @@ export default class AlertBanner extends Vue {
       caption: this.$t("invite_user").toString(),
       variant: bootstrapVariantAttribute("success"),
       type: "callback",
-      callback: () => eventBus.emit("showInviteUserModal"),
+      callback: () => eventBus.emit("show-invite-user-modal"),
     };
   }
 }
@@ -74,6 +74,7 @@ export default class AlertBanner extends Vue {
     background-color: var(--banner-backgroundColor, #bee5eb);
     color: var(--banner-foregroundColor, #0c5460);
     border-color: var(--banner-borderColor, #bee5eb);
+    border-radius: 0;
   }
 
   .content-wrapper {
@@ -83,6 +84,7 @@ export default class AlertBanner extends Vue {
   }
 
   .invite-button {
+    margin: -1rem 0.5rem;
     padding: 0.25rem 1.25rem;
     align-self: center;
   }

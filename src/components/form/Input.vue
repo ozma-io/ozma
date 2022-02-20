@@ -40,7 +40,7 @@
         rows="1"
         class="input-textarea"
         @input="updateInput"
-        @focus="onFocus"
+        @focus.native="onFocus"
         @blur.native="$emit('blur', $event)"
         @keydown.escape.native.prevent="$emit('blur', $event)"
         @keydown.enter.native.prevent.stop="onPressEnter"
@@ -48,9 +48,9 @@
       />
       <ButtonItem v-if="isCellEdit && qrcodeInput" :button="qrCodeButton" />
     </div>
-    <QRCodeScanner
+    <QRCodeScannerModal
+      ref="scanner"
       raw
-      :open-scanner="openQRCodeScanner"
       @select="updateInput"
     />
   </fragment>
@@ -58,20 +58,20 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Debounce } from "vue-debounce-decorator";
 import Textarea from "@/components/form/Textarea.vue";
-import QRCodeScanner from "@/components/qrcode/QRCodeScanner.vue";
+import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "@/components/buttons/buttons";
 import { findLink } from "@/utils";
 import type { TextLink } from "@/utils";
 import { bootstrapVariantAttribute } from "@/utils_colors";
-import { Debounce } from "vue-debounce-decorator";
 
 @Component({
-  components: { Textarea, QRCodeScanner, ButtonItem },
+  components: { Textarea, QRCodeScannerModal, ButtonItem },
 })
 export default class Input extends Vue {
-  @Prop() value!: any;
+  @Prop() value!: unknown;
   @Prop({ type: Boolean }) disabled!: boolean;
   @Prop({ type: String, default: "text" }) type!: string;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
@@ -82,7 +82,6 @@ export default class Input extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
 
-  private openQRCodeScanner = false;
   private textLink: TextLink | null = null;
 
   private get qrCodeButton(): Button {
@@ -90,9 +89,7 @@ export default class Input extends Vue {
       type: "callback",
       icon: "qr_code_2",
       variant: bootstrapVariantAttribute("outline-info"),
-      callback: () => {
-        this.openQRCodeScanner = !this.openQRCodeScanner;
-      },
+      callback: () => (this.$refs.scanner as QRCodeScannerModal).scan(),
     };
   }
 
@@ -101,11 +98,11 @@ export default class Input extends Vue {
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    this.$emit("move-selection-next-row", event);
+    this.$emit("enter-pressed", event);
   }
 
   private onPressTab(event: KeyboardEvent) {
-    this.$emit("move-selection-next-column", event);
+    this.$emit("tab-pressed", event);
   }
 
   @Debounce(1000)
@@ -114,7 +111,7 @@ export default class Input extends Vue {
   }
 
   private recalculateTextLink() {
-    this.textLink = this.isCellEdit ? null : findLink(this.value);
+    this.textLink = this.isCellEdit ? null : findLink(String(this.value));
   }
 
   private get textLinkIcon(): string | null {
@@ -148,11 +145,11 @@ export default class Input extends Vue {
     if (this.autofocus) {
       void Vue.nextTick().then(() => {
         if (this.isCellEdit) {
-          const controlTextareaElement = this.$refs.controlTextarea as any;
-          controlTextareaElement.$el.focus();
-          this.setCursorPositionEnd(controlTextareaElement.$el);
+          const controlTextareaElement = (this.$refs.controlTextarea as Vue).$el as HTMLInputElement;
+          controlTextareaElement.focus();
+          this.setCursorPositionEnd(controlTextareaElement);
         } else {
-          (this.$refs.control as HTMLInputElement | undefined)?.focus();
+          (this.$refs.control as any)?.focus();
         }
       });
     }

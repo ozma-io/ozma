@@ -1,22 +1,20 @@
 <i18n>
   {
     "en": {
-        "qrcode_scanner": "Code scanner",
         "scan_result": "Scan result",
         "clear": "Clear",
         "paste_data": "Paste data",
-        "error_qrcode_is_inappropriate" : "ERROR: QRCode is inappropriate",
+        "qrcode_from_different_entity" : "Error: QR code points to an inappropriate entity",
         "no_record_found":"No record found with this id",
         "unknown_code": "Unknown code",
         "error": "Error",
         "entity_not_initialized": "Entity not initialized"
     },
     "ru": {
-        "qrcode_scanner": "Code сканер",
         "scan_result": "Результат сканирования",
         "clear": "Очистить",
         "paste_data": "Вставить данные",
-        "error_qrcode_is_inappropriate" : "ОШИБКА: QRCode не соответствует назначению",
+        "qrcode_from_different_entity" : "Ошибка: QR-код указывает на неподходящую сущность",
         "no_record_found":"Не найдена запись с данным id",
         "unknown_code": "Неизвестный код",
         "error": "Ошибка",
@@ -25,17 +23,12 @@
   }
 </i18n>
 <template>
-  <b-modal
-    id="qrcode-scanner-modal"
-    v-model="modalShow"
-    hide-footer
-    :title="$t('qrcode_scanner')"
-  >
-    <bar-code
+  <span>
+    <BarCode
       v-if="textInput"
       @scanned="onDecode"
     />
-    <stream-barcode-reader
+    <StreamBarcodeReader
       v-else
       @decode="onDecode"
     />
@@ -58,12 +51,11 @@
         </li>
       </ol>
     </div>
-  </b-modal>
+  </span>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch } from "vue-property-decorator";
-import { StreamBarcodeReader } from "vue-barcode-reader";
+import { Component, Prop } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import type { IEntity, IEntityRef } from "ozma-api";
@@ -73,11 +65,10 @@ import { linkHandler, ILinkHandlerParams } from "@/links";
 import { inheritedFromEntity } from "@/values";
 import { IQuery } from "@/state/query";
 import BaseEntriesView from "@/components/BaseEntriesView";
-import BarCode from "@/components/barcode/BarCode.vue";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
 import { EntriesRef } from "@/state/entries";
 
-const beep = require("@/resources/beep.mp3");
+const beepSrc = require("@/resources/beep.mp3") as string;
 
 export interface IQRResultContent extends IQRCode {
   value: string;
@@ -88,15 +79,14 @@ const entities = namespace("entities");
 
 @Component({
   components: {
-    StreamBarcodeReader,
-    BarCode,
+    StreamBarcodeReader: () => import("vue-barcode-reader"),
+    BarCode: () => import("@/components/barcode/BarCode.vue"),
   },
 })
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
 
-  @Prop({ type: Boolean, default: false }) openScanner!: boolean;
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
   @Prop({ type: Boolean, default: false }) textInput!: boolean;
   @Prop({ type: Boolean, default: false }) raw!: boolean;
@@ -104,17 +94,14 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) entries!: EntriesRef | undefined;
   @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined;
 
-  modalShow = false;
-  result: Array<IQRResultContent> = [];
-  audio = new Audio(beep);
+  private audio = new Audio(beepSrc);
+  private result: Array<IQRResultContent> = [];
 
   currentContent = "";
   timer = false;
   timerDuration = 3000;
 
-  @Watch("openScanner")
-  private toggleOpenScanner() {
-    this.modalShow = !this.modalShow;
+  private clear() {
     this.result = [];
     this.timer = false;
     this.currentContent = "";
@@ -124,14 +111,14 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     if (this.isScanned(content)) return;
 
     try {
-      await this.audio.play();
+      void this.audio.play();
     } catch (err) {
       console.error(err);
     }
 
     if (this.raw) {
       this.$emit("select", content);
-      this.toggleOpenScanner();
+      this.clear();
       return;
     }
 
@@ -180,7 +167,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
 
     const currentEntity = await this.getEntity(this.referenceEntity);
     if (!inheritedFromEntity(this.referenceEntity, currentEntity, currentContent.entity)) {
-      this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
+      this.makeToast(this.$t("qrcode_from_different_entity").toString());
       return;
     }
 
@@ -189,13 +176,13 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       this.result.push(rusultContent);
     } else {
       this.$emit("select", currentContent);
-      this.toggleOpenScanner();
+      this.clear();
     }
   }
 
   private sendList() {
     this.$emit("select", this.result);
-    this.toggleOpenScanner();
+    this.clear();
   }
 
   private async dispatchByContent(currentContent: IQRCode) {
@@ -219,7 +206,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     }
 
     if (!link) {
-      this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
+      this.makeToast(this.$t("qrcode_from_different_entity").toString());
       return;
     }
 
@@ -232,11 +219,12 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
     }
 
     const emit = (target: IQuery) => {
+      this.$emit("before-push-root", target);
       void this.pushRoot(target);
     };
 
-    const openQRCodeScanner = (name: string, qrLink: Link) => {
-      this.$root.$emit(name, qrLink);
+    const openQRCodeScanner = (qrLink: Link) => {
+      this.$root.$emit("open-qrcode-scanner", qrLink);
     };
 
     const linkHandlerParams: ILinkHandlerParams = {
@@ -251,7 +239,7 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       void handler();
     }
 
-    this.toggleOpenScanner();
+    this.clear();
   }
 
   private async startTimer() {

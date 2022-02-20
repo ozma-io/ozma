@@ -1,32 +1,43 @@
 <template>
   <div class="all-days">
     <div class="select-panel">
-      <span class="select_panel_year">{{ startValue.format("YYYY") }}</span>
-      <span
-        v-if="mode === 'days'"
-        class="select_panel_month"
-        @click="mode = 'months'"
-      >{{ startValue.format("MMM") }}</span>
-      <div class="actions">
+      <div class="year-control">
         <span
-          class="arrows"
+          :class="['select_panel_year', {'material-button': mode === 'days'}, { 'current-year': startValue.isSame(today, 'year') }]"
+          @click="mode = 'months'"
+        >{{ startValue.format("YYYY") }}</span>
+      </div>
+
+      <span class="delimiter" />
+
+      <div class="month-control">
+        <span
+          class="material-button material-icons md-18 month-arrow"
           @click="changeDate(-1)"
-        >◀</span>
+        >arrow_left</span>
+
         <span
-          class="arrows"
+          v-if="mode === 'days'"
+          :class="['select_panel_month material-button', { 'current-month': startValue.isSame(today, 'month') }]"
+          @click="mode = 'months'"
+        >{{ startValue.format("MMM") }}</span>
+
+        <span
+          class="material-button material-icons md-18 month-arrow"
           @click="changeDate(1)"
-        >▶</span>
+        >arrow_right</span>
       </div>
     </div>
     <MonthsInYear
       v-if="mode === 'months'"
+      :is-current-year="startValue.isSame(today, 'year')"
       @click="setMonth"
     />
     <DaysInMonth
       v-else-if="mode === 'days'"
       :selected-value="value"
       :start-value="startValue"
-      @update:selectedValue="$emit('update:value', $event)"
+      @update:selected-value="$emit('update:value', $event)"
     />
   </div>
 </template>
@@ -44,15 +55,21 @@ type Mode = "days" | "months";
   components: { DaysInMonth, MonthsInYear },
 })
 export default class DatePicker extends Vue {
-  @Prop({ type: moment }) value!: Moment;
+  @Prop({ type: moment, required: true }) value!: Moment;
 
-  private startValue: Moment = this.value.isValid()
-    ? this.value
-    : moment.utc();
+  private startValue: Moment = moment.invalid();
   private mode: Mode = "days";
+
+  created() {
+    this.startValue = this.value.isValid() ? this.value : moment.utc();
+  }
 
   get shownValue() {
     return this.value.isValid() ? this.value : moment.utc();
+  }
+
+  get today() {
+    return moment();
   }
 
   @Watch("shownValue")
@@ -75,27 +92,57 @@ export default class DatePicker extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .select-panel {
     padding: 0 0.5rem;
+    display: flex;
   }
 
-  .actions {
-    float: right;
+  .year-control {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  .actions > span {
-    margin-left: 5px;
-    cursor: pointer;
+  .month-control {
+    width: 50%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .month-arrow {
+    border: none;
+    border-radius: 3px;
   }
 
   .select_panel_year {
-    margin-right: 5px;
+    margin-right: 10px;
+    padding-left: 5px;
     padding-right: 5px;
-    border-right: 1px solid var(--MainBorderColor);
+
+    &.current-year {
+      border-radius: 3px;
+      border: solid silver;
+      border-width: 0.5px;
+    }
+  }
+
+  .delimiter {
+    width: 1px;
+    border-right: 1px solid var(--default-foregroundDarkerColor);
   }
 
   .select_panel_month {
-    cursor: pointer;
+    border: none;
+    border-radius: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+
+    &.current-month {
+      border: solid silver;
+      border-width: 0.5px;
+    }
   }
 </style>

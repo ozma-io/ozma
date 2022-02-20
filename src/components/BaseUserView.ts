@@ -17,7 +17,8 @@ import { attrToLink } from "@/links";
 import { attrToButtons } from "@/components/buttons/buttons";
 import { emptyUserViewHandlerFunctions } from "@/user_views/trivial";
 import { eventBus } from "@/main";
-import { isReadonlyDemoInstance } from "@/api";
+import { CurrentSettings } from "@/state/settings";
+import { CurrentAuth, INoAuth } from "@/state/auth";
 
 export interface ISelectionRef {
   entity: IEntityRef;
@@ -36,9 +37,7 @@ export const userViewTitle = (uv: ICombinedUserViewAny): string | null => {
 
 // Common extra data for every user view, and its handler.
 
-export interface IBaseValueExtra {
-  softDisabled: boolean; // UI-only edit disabling.
-}
+export interface IBaseValueExtra { }
 
 export interface IBaseRowExtra {
   selected: boolean;
@@ -48,7 +47,6 @@ export interface IBaseRowExtra {
 export interface IBaseViewExtra {
   rowCount: number;
   selectedRows: ObjectSet<RowRef>;
-  softDisabled: boolean;
 }
 
 export type IBaseCombinedUserView = ICombinedUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>;
@@ -56,34 +54,34 @@ export type IBaseExtendedRow = IExtendedRow<IBaseValueExtra, IBaseRowExtra>;
 export type IBaseExtendedRowInfo = IExtendedRowInfo<IBaseRowExtra>;
 export type IBaseExtendedAddedRow = IExtendedAddedRow<IBaseValueExtra, IBaseRowExtra>;
 
+// How to determine whether to add an attribute to local object or just use a computed property:
+// 1. If you need to use correlated values from old handler (say, selected values), add it to a local object;
+// 2. If you need to use loops on (possibly updated) user view values, add it to a local object and update it manually;
+// 3. Otherwise, use computed properties.
 export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra> = {
   ...emptyUserViewHandlerFunctions,
 
   createLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue): IBaseValueExtra {
-    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
+    const columnAttrs = uv.columnAttributes[columnIndex];
+    const getValueAttr = (key: string) => tryDicts(key, value.attributes, columnAttrs, row.attributes, uv.attributes);
     if (value.info && getValueAttr("selectable")) {
       row.extra.selectionEntry = {
         entity: value.info.fieldRef.entity,
         id: value.info.id!,
       };
     }
-    const softDisabled = Boolean(getValueAttr("soft_disabled"));
-    return { softDisabled };
+    return { };
   },
 
   createAddedLocalValue(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue) {
-    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
-    const softDisabled = Boolean(getValueAttr("soft_disabled"));
-    return { softDisabled };
+    return { };
   },
 
   createEmptyLocalValue(uv: IBaseCombinedUserView, row: ICombinedRow & IBaseExtendedRowInfo, columnIndex: number, value: ICombinedValue) {
-    const getValueAttr = (key: string) => tryDicts(key, value.attributes, row.attributes, uv.columnAttributes[columnIndex], uv.attributes);
-    const softDisabled = Boolean(getValueAttr("soft_disabled"));
-    return { softDisabled };
+    return { };
   },
 
-  createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
+  createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView?: IBaseViewExtra, oldRow?: IBaseRowExtra) {
     const selectionEntry = uv.info.mainEntity ? {
       entity: uv.info.mainEntity,
       id: row.mainId!,
@@ -98,7 +96,7 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     };
   },
 
-  createAddedLocalRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView: IBaseViewExtra | null, oldRow: IBaseRowExtra | null) {
+  createAddedLocalRow(uv: IBaseCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView?: IBaseViewExtra, oldRow?: IBaseRowExtra) {
     const selected = oldRow?.selected ?? false;
     if (selected) {
       uv.extra.selectedRows.insert({ type: "added", id: rowId });
@@ -116,13 +114,10 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
     };
   },
 
-  createLocalUserView(uv: IBaseCombinedUserView, oldView: IBaseViewExtra | null) {
-    const softDisabled = oldView?.softDisabled ?? Boolean(uv.attributes["soft_disabled"]);
-
+  createLocalUserView(uv: IBaseCombinedUserView, oldView?: IBaseViewExtra) {
     return {
       rowCount: 0,
       selectedRows: new ObjectSet<RowRef>(),
-      softDisabled,
     };
   },
 
@@ -165,6 +160,8 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
 
 const staging = namespace("staging");
 const errors = namespace("errors");
+const settings = namespace("settings");
+const auth = namespace("auth");
 
 // Base class for all user views.
 @Component
@@ -177,6 +174,8 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   @staging.Action("updateField") updateField!: (args: { fieldRef: IFieldRef; id: RowId; value: unknown }) => Promise<void>;
   @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
   @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
+  @settings.State("current") settings!: CurrentSettings;
+  @auth.State("current") auth!: CurrentAuth | INoAuth | null;
 
   @Prop({ type: CombinedUserView, required: true }) uv!: ICombinedUserView<ValueT, RowT, ViewT>;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -186,6 +185,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   @Prop({ type: String, required: true }) scope!: ScopeName;
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, unknown>;
+  @Prop({ type: Boolean, default: false }) autoSaved!: boolean;
 
   get addedLocked() {
     return this.currentSubmit !== null;
@@ -259,9 +259,13 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     return this.uv.extra.selectedRows.length;
   }
 
+  private get isReadonlyDemoInstance() {
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.auth?.token;
+  }
+
   deleteRow(ref: RowRef) {
-    if (isReadonlyDemoInstance) {
-      eventBus.emit("showReadonlyDemoModal");
+    if (this.isReadonlyDemoInstance) {
+      eventBus.emit("show-readonly-demo-modal");
       return;
     }
 
@@ -326,8 +330,8 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   async addNewRow(meta?: unknown): Promise<number> {
-    if (isReadonlyDemoInstance) {
-      eventBus.emit("showReadonlyDemoModal");
+    if (this.isReadonlyDemoInstance) {
+      eventBus.emit("show-readonly-demo-modal");
       return -1;
     }
 
@@ -361,8 +365,8 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   async updateValue(ref: ValueRef, rawValue: unknown): Promise<ValueRef> {
-    if (isReadonlyDemoInstance) {
-      eventBus.emit("showReadonlyDemoModal");
+    if (this.isReadonlyDemoInstance) {
+      eventBus.emit("show-readonly-demo-modal");
       return ref;
     }
 

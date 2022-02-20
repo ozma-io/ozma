@@ -814,10 +814,14 @@ const entriesModule: Module<IEntriesState, {}> = {
             limit: ret.complete ? null : limit,
           };
         } catch (error) {
-          update = {
-            status: "error",
-            error,
-          };
+          if (error instanceof Error) {
+            update = {
+              status: "error",
+              error,
+            };
+          } else {
+            throw error;
+          }
         }
 
         const currNode = state.current.entries.get(ref)?.get(search);

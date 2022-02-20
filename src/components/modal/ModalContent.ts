@@ -1,11 +1,13 @@
-import Vue from "vue";
-import { Component, Prop } from "vue-property-decorator";
+import Vue, { VNode } from "vue";
 
-@Component({ functional: true } as any)
-export default class ModalContent extends Vue {
-  @Prop() nodes!: any;
-
-  render(_: any, ctx: any) {
-    return ctx.props.nodes;
-  }
-}
+export default Vue.extend({
+  name: "ModalContent",
+  functional: true,
+  props: {
+    // eslint-disable-next-line vue/require-prop-types
+    content: { },
+  },
+  render: (createElement, ctx) => {
+    return ctx.props.content as VNode | VNode[];
+  },
+});

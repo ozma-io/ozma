@@ -6,5 +6,6 @@
   "__DOCUMENT_GENERATOR_URL__": "'https://report-generator.ozma.io'",
   "__INVITES_SERVICE_URL__": "'https://invite.ozma.io'",
   "__READ_ONLY_INSTANCE_NAME__": "'x'",
+  "__IS_READ_ONLY_INSTANCE__": "['x', 'x-crm'].includes(instanceName)",
   "__DEVELOPMENT_MODE__": "instancesHost === 'ozma-dev.org'"
 }

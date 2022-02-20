@@ -19,7 +19,7 @@
       :link-attr="linkAttr"
       :entries="entriesRef"
       :reference-entity="reference.referenceEntity"
-      :uv-args="uv.args"
+      :home-schema="uv.homeSchema"
       @add-value="addValue"
       @remove-index="removeIndex"
       @goto="$emit('goto', $event)"
@@ -83,7 +83,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
 
     const optionsView = attrObjectToQuery(this.uv.attributes["options_view"]);
     if (optionsView) {
-      return { ...entriesRef, optionsView };
+      return { ...entriesRef, fetchBy: "options_view", optionsView };
     } else {
       return entriesRef;
     }
@@ -95,7 +95,8 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   }
 
   get linkAttr() {
-    const getColumnAttr = (name: string) => tryDicts(name, this.uv.columnAttributes[this.selectedValueColumn], this.uv.attributes);
+    const columnAttrs = this.uv.columnAttributes[this.selectedValueColumn];
+    const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, this.uv.attributes);
     return getColumnAttr("row_link");
   }
 

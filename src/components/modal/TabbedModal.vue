@@ -1,34 +1,30 @@
 <i18n>
-    {
-        "en": {
-            "click_anywhere": "You can click anywhere outside of modal window to close it"
-        },
-        "ru": {
-            "click_anywhere": "Для закрытия модального окна можно нажать в любое место за его пределами"
-        }
+  {
+    "en": {
+      "click_anywhere": "You can click anywhere outside of modal window to close it"
+    },
+    "ru": {
+      "click_anywhere": "Для закрытия модального окна можно нажать в любое место за его пределами"
     }
+  }
 </i18n>
 
 <template>
   <VueModal
+    adaptive
+    class="tabbed-modal"
     :width="modalWidth"
     :height="modalHeight"
     :min-width="200"
     :min-height="100"
     :pivot-y="0.8"
     :name="uid"
-    :classes="[
-      'v--modal',
-      {
-        'is-mobile': $isMobile,
-        'is-nested': isNestedModal,
-      }
-    ]"
-    transition="fade-move"
+    transition="tabbed-modal-transiton"
     :resizable="!$isMobile"
-    :draggable="$isMobile ? false : '.modal__tab_headers'"
+    :draggable="$isMobile ? false : '.tab-headers'"
     @before-close="beforeClose"
-    @opened="$emit('opened')"
+    @opened="onOpened"
+    @closed="onClosed"
   >
     <div v-if="$isMobile" class="mobile-close-button-wrapper">
       <span class="material-icons">close</span>
@@ -59,21 +55,22 @@
       <div
         v-if="hasTabs"
         :class="[
-          'modal__tab_headers',
+          'tab-headers',
           { 'is-mobile': $isMobile },
         ]"
       >
         <ModalTabHeader
           v-for="(tab, index) in modalTabs"
-          :key="index"
+          :key="tab.key"
           :is-active="index === selectedTab"
+          :window-key="tab.key"
           :title="tab.title"
           :only-tab="modalTabs.length === 1"
           @tab-click="switchTab(index)"
           @tab-close="$emit('tab-close', index)"
         >
           <template #header>
-            <ModalContent :nodes="tab.header" />
+            <ModalContent v-if="tab.header" :content="tab.header" />
           </template>
         </ModalTabHeader>
       </div>
@@ -82,9 +79,9 @@
     <div
       v-if="hasTabs"
       :class="[
-        'modal__content',
+        'content',
         {
-          'modal__content__fullscreen': fullscreen || $isMobile,
+          'fullscreen': fullscreen || $isMobile,
           'is-mobile': $isMobile,
         }
       ]"
@@ -92,21 +89,23 @@
       <div
         v-for="(tab, index) in modalTabs"
         v-show="index === selectedTab"
-        :key="index"
+        :key="tab.key"
+        :data-window="tab.key"
         :class="[
-          'modal__tab-content',
+          'tab-content',
           { 'is-mobile': $isMobile },
         ]"
       >
-        <ModalContent :nodes="tab.content" />
+        <ModalContent :content="tab.content" />
       </div>
     </div>
     <div
-      v-if="!hasTabs"
+      v-else
+      :data-window="uid"
       :class="[
-        'modal__content',
+        'content',
         {
-          'modal__content__fullscreen': fullscreen || $isMobile,
+          'fullscreen': fullscreen || $isMobile,
           'is-mobile': $isMobile,
         }
       ]"
@@ -117,18 +116,31 @@
 </template>
 
 <script lang="ts">
-import * as R from "ramda";
-import { Component, InjectReactive, Prop, ProvideReactive, Vue, Watch } from "vue-property-decorator";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+import { VNode } from "vue";
 
+import { WindowKey } from "@/state/windows";
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
-import { IModalTab } from "@/components/modal/types";
-import { homeLink } from "@/utils";
 import { interfaceButtonVariant } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 
+const windows = namespace("windows");
+
+export interface IModalTab {
+  key: string;
+  autofocus: boolean;
+  header: VNode | VNode[] | null;
+  content: VNode | VNode[];
+}
+
 @Component({ components: { ModalContent, ModalTabHeader } })
-export default class Modal extends Vue {
+export default class TabbedModal extends Vue {
+  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
+  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
+  @windows.Mutation("activateWindow") activateWindow!: (_: WindowKey) => void;
+
   @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
   @Prop({ type: Boolean, default: true }) show!: boolean;
   @Prop({ type: Boolean, default: false }) fullscreen!: boolean;
@@ -136,19 +148,19 @@ export default class Modal extends Vue {
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
 
-  // `isNestedModal` is undefined in root modal and `true` in nested.
-  @InjectReactive() isNestedModal!: true | undefined;
-  @ProvideReactive("isNestedModal") provideIsNestedModal = true;
-
   private selectedTab = 0;
 
   private mounted() {
-    this.watchIsOpen();
+    if (this.show) {
+      this.$modal.show(this.uid);
+    }
   }
 
   @Watch("show")
-  private watchIsOpen() {
-    if (this.show) {
+  private watchIsOpen(show: boolean, oldShow: boolean) {
+    if (show === oldShow) return;
+
+    if (show) {
       this.$modal.show(this.uid);
     } else {
       this.$modal.hide(this.uid);
@@ -167,10 +179,31 @@ export default class Modal extends Vue {
   }
 
   private fixupTab() {
-    if (this.modalTabs &&
-        this.modalTabs.length > 0 &&
-        this.selectedTab >= this.modalTabs.length) {
-      this.selectedTab = this.modalTabs.length - 1;
+    const maxLength = this.modalTabs?.length ?? 0;
+    if (maxLength === 0 || this.selectedTab < 0) {
+      this.selectedTab = 0;
+    } else if (this.selectedTab >= maxLength) {
+      this.selectedTab = maxLength - 1;
+    }
+  }
+
+  get hasTabs() {
+    return this.modalTabs !== undefined;
+  }
+
+  @Watch("selectedTab", { immediate: true })
+  private notifyOnChange() {
+    if (!this.modalTabs) {
+      return;
+    }
+
+    if (this.selectedTab !== this.startingTab) {
+      this.$emit("tab-changed", this.selectedTab);
+    }
+
+    if (this.modalTabs.length > 0) {
+      const tab = this.modalTabs[this.selectedTab];
+      this.activateWindow(tab.key);
     }
   }
 
@@ -182,32 +215,19 @@ export default class Modal extends Vue {
         variant: interfaceButtonVariant,
         callback: () => this.$emit("go-back-window"),
       },
-      {
-        type: "link",
-        icon: "home",
-        variant: interfaceButtonVariant,
-        link: homeLink,
-      },
     ];
   }
 
   // Event is not typed for vue-js-modal
   private beforeClose(ev: any) {
     if (this.show) {
-      ev.stop();
+      ev.cancel();
+      this.$emit("close");
     }
-    this.$emit("close");
   }
 
   private switchTab(index: number) {
-    if (index < this.modalTabs!.length) {
-      this.selectedTab = index;
-    }
-  }
-
-  // Used on mobile to display editing inputs
-  private get hasTabs(): boolean {
-    return this.modalTabs !== undefined;
+    this.selectedTab = index;
   }
 
   private get modalWidth(): string {
@@ -224,8 +244,16 @@ export default class Modal extends Vue {
       : this.height;
   }
 
-  private get currentTabContent(): Vue | string {
-    return R.pathOr("No Content", [this.selectedTab, "content"], this.modalTabs);
+  private onOpened() {
+    if (!this.modalTabs) {
+      this.createWindow(this.uid);
+    }
+  }
+
+  private onClosed() {
+    if (!this.modalTabs) {
+      this.destroyWindow(this.uid);
+    }
   }
 }
 </script>
@@ -255,7 +283,7 @@ export default class Modal extends Vue {
     border-radius: 10rem;
   }
 
-  .modal__tab_headers {
+  .tab-headers {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -266,69 +294,30 @@ export default class Modal extends Vue {
     }
   }
 
-  .modal__content {
+  .content {
     overflow: auto;
     height: 100%;
   }
 
-  .modal__content ::v-deep .view-form {
-    width: 100%;
-  }
-
-  .modal__content__fullscreen {
+  .fullscreen {
     width: 100%;
     height: 100%;
     padding: 0;
     overflow: hidden;
   }
-</style>
 
-<style lang="scss">
-  /* styles for vue-js-modal.
-    It's their naming so don't touch this
-    if you refactor styles */
-  .v--modal-box.v--modal {
+  .tabbed-modal ::v-deep > .vm--modal {
     background-color: var(--default-backgroundDarker1Color);
     color: var(--MainTextColor);
     border-radius: 1rem;
     display: flex;
     flex-flow: column nowrap;
     flex-grow: 1;
-
-    &.is-mobile {
-      position: absolute;
-
-      /* VueModal writes these styles in element's inline style,
-        so !important is required */
-      top: auto !important;
-      bottom: 0 !important;
-      height: calc(100% - 3rem) !important;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-
-      &.is-nested {
-        height: calc(100% - 6rem) !important;
-      }
-    }
+    margin-top: 38px;
+    max-height: 95% !important;
   }
 
-  .v--modal-top-right {
-    top: 2rem !important;
-    right: 2rem !important;
-  }
-
-  .v--modal-overlay {
-    height: 100% !important;
-  }
-
-  .v--modal-background-click {
-    &,
-    .v--modal-overlay {
-      height: 100% !important;
-    }
-  }
-
-  .modal__tab-content {
+  .tab-content {
     height: 100%;
 
     &.is-mobile {
@@ -336,14 +325,16 @@ export default class Modal extends Vue {
     }
   }
 
-  .fade-move-enter-active,
-  .fade-move-leave-active {
-    transition: opacity 0.4s, transform 0.4s;
-  }
+  ::v-deep {
+    .tabbed-modal-transition-enter-active,
+    .tabbed-modal-transition-leave-active {
+      transition: opacity 0.4s, transform 0.4s;
+    }
 
-  .fade-move-enter,
-  .fade-move-leave-to {
-    opacity: 0;
-    transform: translateY(5rem);
+    .tabbed-modal-transition-enter,
+    .tabbed-modal-transition-leave-to {
+      opacity: 0;
+      transform: translateY(5rem);
+    }
   }
 </style>

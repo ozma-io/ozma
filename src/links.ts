@@ -1,12 +1,14 @@
+import { IActionRef } from "ozma-api";
+import { Store } from "vuex";
+import { z } from "zod";
+
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
-import { IActionRef } from "ozma-api";
-import { gotoHref, httpStatusTexts, randomId, shortLanguage } from "@/utils";
+import { gotoHref, randomId, shortLanguage, waitTimeout } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
-import { Store } from "vuex";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
-import { documentGeneratorUrl, instanceName } from "@/api";
+import { documentGeneratorUrl, IDocumentRef, instanceName } from "@/api";
 
 export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
@@ -42,7 +44,7 @@ export interface IQRCodeLink {
 
 export interface IDocumentLink {
   type: "document";
-  template: { schema: string; name: string };
+  template: IDocumentRef;
   filename: string;
   args: Record<string, unknown>;
 }
@@ -75,6 +77,11 @@ export const addLinkDefaultArgs = (link: Link, args: Record<string, unknown>) =>
     link.query.args.args = { ...args, ...link.query.args.args };
   }
 };
+
+export const EntityRef = z.object({
+  schema: z.string(),
+  name: z.string(),
+});
 
 const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQueryLink | null => {
   const query = attrObjectToQuery(linkedAttr, opts);
@@ -162,23 +169,19 @@ export const attrToDocumentLink = (linkedAttr: Record<string, unknown>, opts?: I
   const templateRaw = linkedAttr["document_template"];
   if (typeof templateRaw !== "object" || templateRaw === null) return null;
   const templateObj = templateRaw as Record<string, unknown>;
-  const schema = templateObj["schema"];
-  const name = templateObj["name"];
+  const ref = EntityRef.safeParse(templateObj);
   const filenameRaw = linkedAttr["filename"];
   const args = attrToRecord(linkedAttr["args"]);
-  if (typeof schema !== "string"
+  if (!ref.success
    || (filenameRaw !== undefined && typeof filenameRaw !== "string")
-   || typeof name !== "string"
    || args === null) {
     return null;
   }
-  const template = { schema, name };
-
   const filename = filenameRaw === undefined
     ? `${name}.pdf`
     : filenameRaw + (filenameHasExtension(filenameRaw) ? "" : ".pdf");
 
-  return { template, filename, args, type: "document" };
+  return { template: ref.data, filename, args, type: "document" };
 };
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
@@ -195,7 +198,7 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
   const href = linkedAttrObj["href"];
   if (typeof href === "string") {
     const targetRaw = "_" + linkedAttrObj["target"];
-    const target = hrefTargetTypes.includes(targetRaw as any) ? targetRaw as HrefTargetType : "_self";
+    const target = hrefTargetTypes.includes(targetRaw as HrefTargetType) ? targetRaw as HrefTargetType : "_self";
     return { href, type: "href", target };
   }
 
@@ -252,12 +255,11 @@ export interface ILinkHandler {
   href: string | null;
 }
 
-// TODO: Messy typing, maybe refactor this?
 export interface ILinkHandlerParams {
   store: Store<any>;
   goto: (query: IQuery) => void;
   link: Link;
-  openQRCodeScanner: (name: string, link: Link) => void;
+  openQRCodeScanner: (link: Link) => void;
   replaceInsteadPush?: boolean;
 }
 
@@ -324,9 +326,9 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       }
     };
   } else if (params.link.type === "qrcode") {
-    // eslint-disable-next-line @typescript-eslint/require-await
-    handler = async () => {
-      params.openQRCodeScanner("open-qrcode-scanner", params.link);
+    handler = () => {
+      params.openQRCodeScanner(params.link);
+      return Promise.resolve();
     };
   } else if (params.link.type === "document") {
     const { template, filename, args } = params.link;
@@ -342,7 +344,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       const token = params.store.state.auth.current.token;
       const escapedFilename = encodeURIComponent(filename);
       const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${escapedFilename}`);
-      url.search = new URLSearchParams(args as any).toString();
+      url.search = new URLSearchParams(args as Record<string, string>).toString();
 
       try {
         const res = await fetch(url.toString(), {
@@ -360,15 +362,8 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           a.setAttribute("download", filename);
           a.click();
         } else {
-          const body = await res.text();
-          const status = String(res.status);
-          const statusText: string = httpStatusTexts[status]; // HTTP/2 doesn't have meaningful `res.statusText`.
-          const errorTooltip =
-            status === "500" ? "Maybe something is wrong with arguments"
-              : status === "404" ? body
-                : "";
-          const error = `${statusText} (${errorTooltip})`;
-          app.$bvToast.toast(error, {
+          const body = await res.json();
+          app.$bvToast.toast(String(body.message), {
             title: funI18n("generation_fail"),
             variant: "danger",
             solid: true,
@@ -376,13 +371,14 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           return;
         }
       } catch (e) {
-        app.$bvToast.toast(e, {
+        app.$bvToast.toast(String(e), {
           title: funI18n("generation_fail"),
           variant: "danger",
           solid: true,
         });
       } finally {
-        await new Promise(resolve => setTimeout(resolve, 100)); // Don't know why it's needed there, but without it toast won't close.
+        // Don't know why it's needed there, but without it toast won't close.
+        await waitTimeout(100);
         app.$bvToast.hide(id);
       }
     };

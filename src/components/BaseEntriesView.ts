@@ -1,9 +1,9 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
+import { RowId } from "ozma-api";
 import { ReferenceName, deepClone, deepEquals, waitTimeout } from "@/utils";
 import { CurrentEntries, Entries, EntriesRef } from "@/state/entries";
-import { RowId } from "ozma-api";
 
 const entries = namespace("entries");
 

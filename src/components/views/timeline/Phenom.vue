@@ -53,13 +53,13 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import moment, { Moment } from "moment";
 import Avatar from "@/components/Avatar.vue";
 import { IRowPhenom } from "@/components/views/Timeline.vue";
-import moment, { Moment } from "moment";
 
 export const phenomTypes = ["message", "event"] as const;
 export type PhenomType = typeof phenomTypes[number];
-export const isPhenomType = (str: any): str is PhenomType => phenomTypes.includes(str);
+export const isPhenomType = (str: string): str is PhenomType => phenomTypes.includes(str as PhenomType);
 export interface IPhenom<PhenomT> {
   key: unknown;
   type: PhenomType;

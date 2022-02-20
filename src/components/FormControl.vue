@@ -5,7 +5,7 @@
             "no": "No",
             "boolean_null": "Empty",
             "invalid_uv": "Nested user view rows should be JSON objects with 'ref' and 'args' defined",
-            "iframe_no_markup": "Iframe requires `iframe_markup_name`, `iframe_src` or `iframe_srcdoc` attribute",
+            "iframe_no_markup": "Iframe requires `iframe_markup`, `iframe_src` or `iframe_srcdoc` attribute",
             "data_will_load_after_save": "Data will load after save",
             "select_view": "Add in modal window"
         },
@@ -14,7 +14,7 @@
             "no": "Нет",
             "boolean_null": "Пусто",
             "invalid_uv": "Столбцы со вложенными представлениями должны быть JSON-объектами с заданными полями 'ref' и 'args'",
-            "iframe_no_markup": "Для Iframe необходим атрибут `iframe_markup_name`, `iframe_src` или `iframe_srcdoc`",
+            "iframe_no_markup": "Для Iframe необходим атрибут `iframe_markup`, `iframe_src` или `iframe_srcdoc`",
             "data_will_load_after_save": "Данные загрузятся после сохранения",
             "select_view": "Создать во вложенном окне"
         }
@@ -22,21 +22,21 @@
 </i18n>
 
 <template>
-  <fragment>
+  <div>
     <InputSlot
-      v-if="inputType.name !== 'userview' && inputType.name !== 'empty_userview'"
+      v-if="inputType.name !== 'user_view' && inputType.name !== 'empty_user_view'"
       :inline="!isMultiline && !forceMultiline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
       :label="usedCaption"
       :smaller-label="forceMultiline"
       :background-color="cellColor"
-      :color-variant-attribute="colorVarinatAttribute"
+      :color-variant-attribute="colorVariantAttribute"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
       :disabled="isDisabled"
-      :empty="currentValueIsNull"
+      :empty="valueIsNull"
       @close-modal-input="$emit('close-modal-input')"
       @focus="onFocus"
     >
@@ -47,7 +47,7 @@
         />
         <Input
           v-else-if="inputType.name === 'text'"
-          :value="valueFormatted ? valueFormatted : currentValue"
+          :value="valueFormatted ? valueFormatted : value"
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
@@ -57,13 +57,13 @@
           :background-color="cellColor"
           @input="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
-          @move-selection-next-row="$emit('move-selection-next-row', $event)"
-          @move-selection-next-column="$emit('move-selection-next-column', $event)"
+          @blur="onBlur"
+          @enter-pressed="$emit('close-modal-input', $event)"
+          @tab-pressed="$emit('close-modal-input', $event)"
         />
         <Textarea
           v-else-if="inputType.name === 'textarea'"
-          :value="currentValue"
+          :value="value"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :height="customHeight"
@@ -73,7 +73,7 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <Input
           v-else-if="inputType.name === 'array'"
@@ -85,14 +85,14 @@
           :background-color="cellColor"
           @input="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
-          @move-selection-next-row="$emit('move-selection-next-row', $event)"
-          @move-selection-next-column="$emit('move-selection-next-column', $event)"
+          @blur="onBlur"
+          @enter-pressed="$emit('close-modal-input', $event)"
+          @tab-pressed="$emit('close-modal-input', $event)"
         />
         <Calendar
           v-else-if="inputType.name === 'calendar'"
           ref="control"
-          :value="currentValue"
+          :value="value"
           :text-value="textValue"
           :autofocus="autofocus || iSlot.autofocus"
           :is-cell-edit="isCellEdit"
@@ -103,15 +103,15 @@
           :disabled="isDisabled"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
-          @move-selection-next-row="$emit('move-selection-next-row', $event)"
-          @move-selection-next-column="$emit('move-selection-next-column', $event)"
+          @blur="onBlur"
+          @enter-pressed="$emit('close-modal-input', $event)"
+          @tab-pressed="$emit('close-modal-input', $event)"
           @update:value="updateValue"
         />
         <ValueSelect
           v-else-if="inputType.name === 'select'"
           ref="control"
-          :value="currentValue"
+          :value="value"
           :label="usedCaption"
           :options="inputType.options"
           :height="customHeight"
@@ -122,12 +122,12 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <ArrayReferenceField
           v-else-if="inputType.name === 'array_select'"
           ref="control"
-          :value="currentValue"
+          :value="value"
           :label="usedCaption"
           :options-view="inputType.optionsView"
           :reference-entity="inputType.entity"
@@ -136,11 +136,11 @@
           :required="!isNullable"
           :disabled="isDisabled"
           :background-color="cellColor"
-          :uv-args="uvArgs"
+          :home-schema="homeSchema"
           :compact-mode="compactMode"
           @update:value="updateValue"
-          @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @popup-opened="iSlot.onFocus"
+          @blur="onBlur"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
@@ -154,7 +154,7 @@
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <MarkdownEditor
           v-else-if="inputType.name === 'markdown'"
@@ -167,13 +167,13 @@
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         />
         <input
           v-else-if="inputType.name === 'check'"
           ref="control"
           type="checkbox"
-          :value="currentValue"
+          :value="value"
           :autofocus="autofocus || iSlot.autofocus"
           :class="['form-control-panel_checkbox',
                    {'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
@@ -181,11 +181,11 @@
           :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @blur="onBlur"
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
-          :id="typeof currentValue === 'number' ? currentValue : undefined"
+          :id="typeof value === 'number' ? value : undefined"
           :entity="inputType.ref"
           :height="customHeight"
         />
@@ -202,10 +202,10 @@
         />
         <IframeControl
           v-else-if="inputType.name === 'iframe'"
+          :iframe-ref="inputType.ref"
           :src="inputType.src"
           :srcdoc="inputType.srcdoc"
-          :markup-name="inputType.markupName"
-          :value="currentValue"
+          :value="value"
           :height="customHeight"
         />
         <div v-else-if="inputType.name === 'static_text'">
@@ -217,13 +217,16 @@
           ref="control"
           :is-cell-edit="isCellEdit"
           :value="value"
+          :pun="pun"
+          :referencing-field="fieldRef"
+          :referencing-row-id="rowId"
           :label="usedCaption"
           :select-views="inputType.selectViews"
           :height="customHeight"
           :reference-entity="fieldType.entity"
           :options-view="inputType.optionsView"
           :link-attr="inputType.linkAttr"
-          :uv-args="uvArgs"
+          :home-schema="homeSchema"
           :autofocus="autofocus || iSlot.autofocus"
           :nullable="isNullable"
           :disabled="isDisabled"
@@ -233,94 +236,75 @@
           :compact-mode="compactMode"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
-          @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
-          @update:value="updateValue($event)"
-          @goto="$emit('goto', $event)"
-        />
-        <ArgumentReferenceField
-          v-else-if="inputType.name === 'argument_reference'"
-          ref="control"
-          :value="value"
-          :label="usedCaption"
-          :height="customHeight"
-          :reference-entity="fieldType.entity"
-          :options-view="inputType.optionsView"
-          :uv-args="uvArgs"
-          :autofocus="autofocus || iSlot.autofocus"
-          :nullable="isNullable"
-          :disabled="isDisabled"
-          :compact-mode="compactMode"
-          @focus="iSlot.onFocus"
-          @blur="$emit('blur', $event)"
+          @popup-opened="iSlot.onFocus"
+          @popup-closed="onBlur"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
       </template>
     </InputSlot>
-    <template v-if="inputType.name === 'userview' || inputType.name == 'empty_userview'">
-      <div :class="['nested-userview', { 'mobile': $isMobile }]">
-        <div v-if="inputType.name == 'empty_userview'">
-          <div class="nested-menu">
-            <!-- `tabindex` is required for closing tooltip on blur -->
-            <label
-              v-b-tooltip.click.blur.bottom.noninteractive
-              tabindex="0"
-              class="input_label not-loaded"
-              :title="usedCaption"
-            >
-              {{ usedCaption }}
-            </label>
-          </div>
-          <div class="empty_userview_text">
-            {{ $t("data_will_load_after_save") }}
-          </div>
+    <div v-else :class="['nested-userview', { 'mobile': $isMobile }]">
+      <div v-if="inputType.name == 'empty_user_view'">
+        <div class="nested-menu">
+          <!-- `tabindex` is required for closing tooltip on blur -->
+          <label
+            v-b-tooltip.click.blur.bottom.noninteractive
+            tabindex="0"
+            class="input_label not-loaded"
+            :title="usedCaption"
+          >
+            {{ usedCaption }}
+          </label>
         </div>
-        <HeaderPanel
-          v-else-if="inputType.name === 'userview'"
-          :title="usedCaption"
-          :buttons="buttons"
-          :is-enable-filter="enableFilter"
-          :view="inputType"
-          :filter-string="filterString"
-          :is-loading="isUserViewLoading"
-          @update:filterString="filterString = $event"
-          @goto="$emit('goto', $event)"
-        />
-        <div
-          v-if="inputType.name === 'userview'"
-          :style="{ backgroundColor: cellColor }"
-        >
-          <NestedUserView
-            ref="control"
-            :args="inputType.args"
-            :default-values="inputType.defaultValues"
-            :scope="scope"
-            :level="level + 1"
-            :filter-string="filterString"
-            @update:buttons="buttons = $event"
-            @update:enableFilter="enableFilter = $event"
-            @update:isLoading="isUserViewLoading = $event"
-            @update:title="updateTitle"
-            @goto="$emit('goto', $event)"
-          />
+        <div class="empty_userview_text">
+          {{ $t("data_will_load_after_save") }}
         </div>
       </div>
-    </template>
-  </fragment>
+      <HeaderPanel
+        v-else-if="inputType.name === 'user_view'"
+        :title="usedCaption"
+        :buttons="buttons"
+        :is-enable-filter="enableFilter"
+        :view="inputType"
+        :filter-string="filterString"
+        :is-loading="isUserViewLoading"
+        :type="'component'"
+        @update:filter-string="filterString = $event"
+        @goto="$emit('goto', $event)"
+      />
+      <div
+        v-if="inputType.name === 'user_view'"
+        :style="{ backgroundColor: cellColor, height: `${customHeight}px` }"
+      >
+        <NestedUserView
+          ref="control"
+          :args="inputType.args"
+          :default-values="inputType.defaultValues"
+          :scope="scope"
+          :level="level + 1"
+          :filter-string="filterString"
+          @update:buttons="buttons = $event"
+          @update:enable-filter="enableFilter = $event"
+          @update:is-loading="isUserViewLoading = $event"
+          @update:title="updateTitle"
+          @goto="$emit('goto', $event)"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import type { AttributesMap, FieldType, IFieldRef, ValueType } from "ozma-api";
+import type { AttributesMap, FieldType, IFieldRef, RowId, ValueType } from "ozma-api";
 import { z } from "zod";
+import { namespace } from "vuex-class";
 
+import { IEntityRef } from "ozma-api";
 import { valueToText, valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
-import type { ICombinedValue, IUserViewArguments } from "@/user_views/combined";
-import { currentValue, homeSchema } from "@/user_views/combined";
-import { IEntityRef } from "ozma-api";
+import { AutoSaveLock } from "@/state/staging_changes";
 
 import { colorVariantFromAttribute } from "@/utils_colors";
 import type { ColorVariantAttribute } from "@/utils_colors";
@@ -329,7 +313,9 @@ import { attrToButtons } from "@/components/buttons/buttons";
 import FormInputPlaceholder from "@/components/FormInputPlaceholder.vue";
 import type { MarkdownEditType } from "@/components/editors/MarkdownEditor.vue";
 import { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
-import { ITime } from "@/components/calendar/TimePicker.vue";
+import { EntityRef } from "@/links";
+import { IIframeRef } from "@/api";
+import { ITime } from "@/components/Calendar.vue";
 
 interface ITextType {
   name: "text";
@@ -369,7 +355,7 @@ type IIframeType =
   }
   | {
     name: "iframe";
-    markupName: string;
+    ref: IIframeRef;
   };
 
 interface IMarkdownEditorType {
@@ -395,16 +381,10 @@ interface IArrayReferenceFieldType {
 
 interface IReferenceType {
   name: "reference";
-  ref: IFieldRef;
   optionsView: IQuery | null;
   linkAttr?: unknown;
   selectViews: IReferenceSelectAction[];
   style?: Record<string, unknown>;
-}
-
-interface IArgumentReferenceType {
-  name: "argument_reference";
-  optionsView: IQuery | null;
 }
 
 interface ICheckType {
@@ -412,11 +392,11 @@ interface ICheckType {
 }
 
 export interface IUserViewType extends IQuery {
-  name: "userview";
+  name: "user_view";
 }
 
 interface IEmptyUserViewType {
-  name: "empty_userview";
+  name: "empty_user_view";
 }
 
 interface IErrorType {
@@ -444,6 +424,8 @@ interface IButtonsType {
   buttons: Button[];
 }
 
+const staging = namespace("staging");
+
 export type IType =
   | ITextType
   | ITextAreaType
@@ -453,7 +435,6 @@ export type IType =
   | ISelectType
   | IArrayReferenceFieldType
   | IReferenceType
-  | IArgumentReferenceType
   | ICheckType
   | IUserViewType
   | IEmptyUserViewType
@@ -467,13 +448,9 @@ export type IType =
   | IButtonsType;
 
 const multilineTypes: Set<IType["name"]> =
-  new Set(["markdown", "codeeditor", "textarea", "userview", "empty_userview", "static_image", "iframe"]);
-const disableableTypes: Set<IType["name"]> =
-  new Set(["text", "textarea", "markdown", "codeeditor", "reference", "select", "check", "calendar"]);
+  new Set(["markdown", "codeeditor", "textarea", "user_view", "empty_user_view", "static_image", "iframe"]);
 const closeAfterUpdate: Set<IType["name"]> =
   new Set(["select", "reference"]);
-const autofocusableTypes: Set<IType["name"]> =
-  new Set(["text", "textarea", "check"]);
 
 const parseTime = (raw: string): ITime | null => {
   const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
@@ -523,10 +500,6 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
       component: import("@/components/ReferenceField.vue") as any,
       loading: FormInputPlaceholder,
     }),
-    ArgumentReferenceField: () => ({
-      component: import("@/components/ArgumentReferenceField.vue") as any,
-      loading: FormInputPlaceholder,
-    }),
     InputSlot: () => ({
       component: import("@/components/form/InputSlot.vue") as any,
       // InputSlot require different placeholder, otherwise it looks bad, but I don't want to clutter it.
@@ -570,17 +543,25 @@ type IEntityRefSchema = z.infer<typeof entityRefSchema>;
   },
 })
 export default class FormControl extends Vue {
+  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
+  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
+
   @Prop({ type: Object, required: true }) type!: ValueType; // this.uv.info.columns[x].valueType
-  @Prop({ type: Object, required: true }) value!: ICombinedValue; // this.local.getValueByRef, or other value
-  @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...this.uv.columnAttributes[x], ...row.attributes, ...value.attributes}
+  @Prop() value!: unknown;
+  @Prop({ type: String }) pun!: string | undefined;
+  @Prop({ type: Boolean, default: false }) isNullable!: boolean;
+  @Prop({ type: Object }) fieldRef!: IFieldRef | undefined;
+  @Prop({ type: Object }) fieldType!: FieldType | undefined;
+  @Prop({ type: Number }) rowId!: RowId | undefined;
+  @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...row.attributes, ...this.uv.columnAttributes[x], ...value.attributes}
   @Prop({ type: Boolean, default: false }) locked!: boolean;
-  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments; // this.uv.args
+  @Prop({ type: String }) homeSchema!: string | undefined;
   @Prop({ type: String, default: "" }) caption!: string;
   @Prop({ type: Boolean, default: false }) forceCaption!: boolean;
   @Prop({ type: Boolean, default: false }) forceMultiline!: boolean;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
-  @Prop({ type: String, required: true }) scope!: string; // this.scope
+  @Prop({ type: String }) scope!: string | undefined; // this.scope
   @Prop({ type: Number, required: true }) level!: number; // this.level
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   // Whether to only use modal, if applicable.
@@ -589,44 +570,32 @@ export default class FormControl extends Vue {
   // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
-  @Prop({ type: Object, required: false }) forcedFieldType!: FieldType | undefined;
-  @Prop({ type: Boolean, default: null }) forcedIsNullable!: boolean | null;
-  @Prop() valueFormatted!: string | undefined; // Bigger priority than `currentValue` if defined.
+  @Prop({ type: String }) valueFormatted!: string | undefined; // Bigger priority than `value` if defined.
 
   private buttons: Button[] = [];
   private filterString = "";
   private title = "";
   private enableFilter = false;
   private isUserViewLoading = false;
+  private autoSaveLock: AutoSaveLock | null = null;
 
-  get isNullable() {
-    return this.forcedIsNullable ?? (this.value.info === undefined || this.value.info.field === null ? true : this.value.info.field.isNullable);
-  }
-
-  // Current value, can be a raw value (e.g., a string for a `datetime` value) or a validated value.
-  get currentValue() {
-    return currentValue(this.value);
-  }
-
-  get currentValueIsNull() {
-    return valueIsNull(this.currentValue);
+  get valueIsNull() {
+    return valueIsNull(this.value);
   }
 
   get isAwaited() {
     // We use `value.value` here to highlight unvalidated values.
-    return !this.isNullable && valueIsNull(this.value.value);
+    return !this.isNullable && valueIsNull(this.value);
   }
 
   get isDisabled() {
-    const disableable = disableableTypes.has(this.inputType.name);
-    return !this.forcedFieldType
-      && disableable
-      && (this.locked || this.value.info === undefined || this.value.info.field === null);
+    const softDisabled = Boolean(this.attributes["soft_disabled"]);
+    return softDisabled || this.locked;
   }
 
-  // Textual representation of `currentValue`.
+  // Textual representation of `value`.
   get textValue() {
-    return valueToText(this.type, this.currentValue);
+    return valueToText(this.type, this.value);
   }
 
   get isMultiline() {
@@ -672,7 +641,7 @@ export default class FormControl extends Vue {
     else return null;
   }
 
-  private get colorVarinatAttribute(): ColorVariantAttribute {
+  private get colorVariantAttribute(): ColorVariantAttribute {
     if (this.attributes["cell_variant"]) {
       return colorVariantFromAttribute(this.attributes["cell_variant"]);
     } else if (this.cellColor) {
@@ -696,33 +665,30 @@ export default class FormControl extends Vue {
     return { height };
   }
 
-  get fieldType() {
-    return this.forcedFieldType ?? this.value.info?.field?.fieldType ?? null;
-  }
-
   get inputType(): IType {
-    const home = homeSchema(this.uvArgs);
-    const linkOpts = home !== null ? { homeSchema: home } : undefined;
+    const linkOpts = this.homeSchema ? { homeSchema: this.homeSchema } : undefined;
+
+    const idInfo = this.rowId ? { id: this.rowId } : undefined;
 
     const controlAttr = String(this.attributes["control"]);
     if (controlAttr === "user_view") {
-      if (this.currentValue === null || this.currentValue === undefined) {
-        return { name: "empty_userview" };
+      if (valueIsNull(this.value)) {
+        return { name: "empty_user_view" };
       }
 
-      const nestedRef = attrToQuerySelf(this.currentValue, this.value.info, linkOpts);
+      const nestedRef = attrToQuerySelf(this.value, idInfo, linkOpts);
 
       if (nestedRef === null) {
         return { name: "error", text: this.$t("invalid_uv").toString() };
       } else {
-        return { name: "userview", ...nestedRef };
+        return { name: "user_view", ...nestedRef };
       }
     } else if (controlAttr === "static_text") {
       return { name: "static_text" };
     } else if (controlAttr === "static_image") {
       return { name: "static_image" };
     } else if (controlAttr === "buttons") {
-      const buttons = attrToButtons(this.currentValue);
+      const buttons = attrToButtons(this.value);
       return { name: "buttons", buttons };
     }
     // `calc` is needed because sizes should be relative to base font size.
@@ -730,9 +696,9 @@ export default class FormControl extends Vue {
     const heightCodeEditor = "var(--editor-height, 10rem)";
 
     // FIXME: return proper type from backend instead.
-    if (this.value.info?.fieldRef.name === "id") {
+    if (this.fieldRef?.name === "id") {
       if (controlAttr === "qrcode") {
-        return { name: "qrcode", ref: this.value.info.fieldRef.entity };
+        return { name: "qrcode", ref: this.fieldRef.entity };
       }
 
       if (controlAttr === "barcode") {
@@ -741,11 +707,15 @@ export default class FormControl extends Vue {
     }
 
     if (controlAttr === "iframe") {
-      const markupName = this.attributes["iframe_markup_name"];
-      const srcdoc = this.attributes["iframe_markup"] ?? this.attributes["iframe_srcdoc"];
+      const markupRef = EntityRef.safeParse(this.attributes["iframe_markup"]);
+      const oldMarkupName = this.attributes["iframe_markup_name"];
+      const srcdoc = this.attributes["iframe_srcdoc"];
       const src = this.attributes["iframe_src"];
-      if (typeof markupName === "string") {
-        return { name: "iframe", markupName };
+      if (markupRef.success) {
+        return { name: "iframe", ref: markupRef.data };
+      } else if (typeof oldMarkupName === "string") {
+        console.error("Attribute iframe_markup_name is deprecated, use iframe_markup");
+        return { name: "iframe", ref: { schema: "user", name: oldMarkupName } };
       } else if (typeof srcdoc === "string") {
         return { name: "iframe", srcdoc };
       } else if (typeof src === "string") {
@@ -758,7 +728,7 @@ export default class FormControl extends Vue {
     const booleanOptions = [{ label: this.$t("yes").toString(), value: true }, { label: this.$t("no").toString(), value: false }];
     const booleanNullableOptions = [...booleanOptions, { label: this.$t("boolean_null").toString(), value: null }];
 
-    if (this.fieldType !== null) {
+    if (this.fieldType) {
       switch (this.fieldType.type) {
         case "reference": {
           if (controlAttr === "qrcode") {
@@ -773,20 +743,16 @@ export default class FormControl extends Vue {
           const optionsView = attrObjectToQuery(this.attributes["options_view"])
             ?? attrObjectToQuery(this.attributes["entries_view"])
             ?? attrObjectToQuery(this.attributes["constraint_view"]);
-          if (this.value.info === undefined) {
-            return { name: "argument_reference", optionsView };
-          }
 
           const refEntry: IReferenceType = {
             name: "reference",
-            ref: this.value.info.fieldRef,
             optionsView,
             selectViews: [],
           };
           refEntry.linkAttr = this.attributes["link"];
           refEntry.style = this.controlStyle();
 
-          const selectView = attrToQuerySelf(this.attributes["select_view"], this.value.info, linkOpts);
+          const selectView = attrToQuerySelf(this.attributes["select_view"], idInfo, linkOpts);
           if (selectView !== null) {
             refEntry.selectViews.push({
               name: this.$t("select_view").toString(),
@@ -797,7 +763,7 @@ export default class FormControl extends Vue {
           if (Array.isArray(extraActions)) {
             extraActions.forEach(action => {
               if (typeof action === "object" && action.name) {
-                const querySelf = attrToQuerySelf(action, this.value.info, linkOpts);
+                const querySelf = attrToQuerySelf(action, idInfo, linkOpts);
                 if (querySelf) {
                   refEntry.selectViews.push({
                     name: String(action.name),
@@ -927,16 +893,12 @@ export default class FormControl extends Vue {
   private mounted() {
     if (this.autofocus) {
       const control = this.$refs["control"] as HTMLElement | undefined;
-      if (control) {
-        if (autofocusableTypes.has(this.inputType.name)) {
-          control.focus();
-        }
-      }
+      control?.focus?.();
     }
   }
 
   private updateValue(newValue: unknown) {
-    if (this.currentValue !== newValue) {
+    if (this.value !== newValue) {
       this.$emit("update", newValue);
     }
 
@@ -945,10 +907,32 @@ export default class FormControl extends Vue {
     }
   }
 
-  private onFocus() {
+  private removeAutoSaveLockFormControl() {
+    if (this.autoSaveLock === null) return;
+
+    void this.removeAutoSaveLock(this.autoSaveLock);
+    this.autoSaveLock = null;
+  }
+
+  private async onFocus() {
     if (!this.isCellEdit) {
       this.$root.$emit("form-input-focused");
     }
+
+    if (this.autoSaveLock === null) {
+      const lock = await this.addAutoSaveLock();
+      this.autoSaveLock = lock;
+    }
+  }
+
+  private onBlur() {
+    this.removeAutoSaveLockFormControl();
+    this.$emit("blur");
+  }
+
+  protected beforeDestroy() {
+    this.removeAutoSaveLockFormControl();
+    this.$emit("blur");
   }
 }
 </script>
@@ -987,7 +971,7 @@ export default class FormControl extends Vue {
   }
 
   .nested-userview {
-    margin: 0.25rem 0;
+    margin-bottom: 0.25rem;
     border: 1px solid var(--default-borderColor);
     border-radius: 0.5rem;
     overflow: hidden;

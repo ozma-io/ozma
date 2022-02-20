@@ -12,7 +12,8 @@
 <template>
   <div
     id="app"
-    :style="[styleSettings, colorVariables]"
+    :data-window="uid"
+    :style="styleSettings"
     class="default-variant default-local-variant"
   >
     <AlertBanner
@@ -24,12 +25,8 @@
     />
 
     <div class="app-container">
-      <div v-if="!bannerMessage && authErrors.length === 0" class="main-buttons-wrapper">
-        <ButtonsPanel
-          class="main-buttons"
-          :buttons="mainButtons"
-          @goto="$emit('goto', $event)"
-        />
+      <div v-if="!bannerMessage" class="main-buttons-wrapper">
+        <portal-target name="main-buttons" />
       </div>
 
       <ModalPortalTarget
@@ -48,6 +45,15 @@
         :auth-token="authToken"
       />
 
+      <HelpModal
+        v-if="helpPageInfo"
+        ref="helpModal"
+        :markup="helpPageInfo.markup"
+        @closed="onHelpModalClose"
+        @dismiss="dismissHelpPage"
+        @dismiss-all="dismissAllHelpPages"
+      />
+
       <template v-if="authErrors.length > 0">
         <span
           v-for="error in authErrors"
@@ -63,57 +69,68 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { namespace, Action } from "vuex-class";
+import { IViewExprResult } from "ozma-api";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
+import type { WindowKey } from "@/state/windows";
 import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
-import FabCluster from "@/components/FabCluster/FabCluster.vue";
 import { ErrorKey } from "@/state/errors";
-import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant } from "@/utils_colors";
-import type { ThemeName } from "@/utils_colors";
-import { eventBus } from "@/main";
-import { isReadonlyDemoInstance } from "@/api";
-import { Button } from "./components/buttons/buttons";
+import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
+import { eventBus, IShowHelpModalArgs } from "@/main";
+import Api, { IEmbeddedPageRef } from "@/api";
 import InviteUserModal from "./components/InviteUserModal.vue";
+import { EntityRef } from "./links";
+import { safeJsonParse } from "./utils";
+import { equalEntityRef } from "./values";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
+const windows = namespace("windows");
 
-@Component({ components: {
-  ModalPortalTarget,
-  FabCluster,
-  InviteUserModal,
-  AlertBanner: () => ({
-    component: import("@/components/AlertBanner.vue") as any,
-  }),
-  ReadonlyDemoInstanceModal: () => ({
-    component: import("@/components/ReadonlyDemoInstanceModal.vue") as any,
-  }),
-} })
+@Component({
+  components: {
+    ModalPortalTarget,
+    InviteUserModal,
+    AlertBanner: () => import("@/components/AlertBanner.vue"),
+    ReadonlyDemoInstanceModal: () => import("@/components/ReadonlyDemoInstanceModal.vue"),
+    HelpModal: () => import("@/components/HelpModal.vue"),
+  },
+})
 export default class App extends Vue {
   @settings.State("current") settings!: CurrentSettings;
-  @settings.State("currentTheme") currentTheme!: ThemeName;
+  @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
+  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
+  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
+  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
 
-  private colorVariables: any = null;
+  private helpPageInfo: {
+    key: string | null;
+    ref: IEmbeddedPageRef;
+    markup: string;
+  } | null = null;
 
   created() {
     void this.startAuth();
+
+    this.createWindow(this.uid);
 
     /* eslint-disable @typescript-eslint/unbound-method */
     document.addEventListener("copy", this.onCopy);
     document.addEventListener("cut", this.onCut);
     document.addEventListener("paste", this.onPaste);
 
-    eventBus.on("showReadonlyDemoModal", this.showDemoModal);
-    eventBus.on("showInviteUserModal", this.showInviteUserModal);
-    eventBus.on("updateMainButtons", this.updateMainButtons);
+    eventBus.on("show-readonly-demo-modal", this.showDemoModal);
+    eventBus.on("show-invite-user-modal", this.showInviteUserModal);
+    eventBus.on("show-help-modal", this.showHelpModal);
+    eventBus.on("close-all-toasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -123,10 +140,13 @@ export default class App extends Vue {
     document.removeEventListener("cut", this.onCut);
     document.removeEventListener("paste", this.onPaste);
 
-    eventBus.off("showReadonlyDemoModal", this.showDemoModal);
-    eventBus.off("showInviteUserModal", this.showInviteUserModal);
-    eventBus.off("updateMainButtons", this.updateMainButtons);
+    eventBus.off("show-readonly-demo-modal", this.showDemoModal);
+    eventBus.off("show-invite-user-modal", this.showInviteUserModal);
+    eventBus.off("show-help-modal", this.showHelpModal);
+    eventBus.off("close-all-toasts", this.closeAllToasts);
     /* eslint-enable @typescript-eslint/unbound-method */
+
+    this.destroyWindow(this.uid);
   }
 
   private onCopy(event: ClipboardEvent) {
@@ -141,15 +161,8 @@ export default class App extends Vue {
     this.$root.$emit("paste", event);
   }
 
-  private mainButtons: Button[] = [];
-  private updateMainButtons(mainButtons?: Button[]) {
-    if (!mainButtons) return;
-
-    this.mainButtons = mainButtons;
-  }
-
   private get isReadonlyDemoInstance() {
-    return isReadonlyDemoInstance;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.currentAuth?.token;
   }
 
   private get authToken(): string | null {
@@ -168,9 +181,61 @@ export default class App extends Vue {
     (this.$refs?.inviteUserModal as any)?.show();
   }
 
+  private showHelpModal(args: IShowHelpModalArgs) {
+    void (async () => {
+      if (this.helpPageInfo) return;
+
+      if (args.skipIfShown) {
+        const dismissHelpPages = Boolean(localStorage.getItem("dismissHelpPages"));
+        if (dismissHelpPages) {
+          return;
+        }
+
+        if (args.key !== null) {
+          const watchedRef = EntityRef.safeParse(safeJsonParse(localStorage.getItem(`watchedHelpPage_${args.key}`)));
+          const alreadyWatched = watchedRef.success ? equalEntityRef(args.ref, watchedRef.data) : false;
+          if (alreadyWatched) {
+            return;
+          }
+        }
+      }
+
+      const uvRef = { schema: "funapp", name: "embedded_page_by_name" };
+      const res: IViewExprResult = await this.callProtectedApi({
+        func: Api.getNamedUserView.bind(Api),
+        args: [uvRef, args.ref],
+      });
+
+      const markupRaw = (res.result.rows[0]?.values[0].value as string | undefined) ?? null;
+      const markup = markupRaw ?? `Help page markup with name "${args.ref.schema}"."${args.ref.name}" not found.`;
+      this.helpPageInfo = { key: args.key, ref: args.ref, markup };
+    })();
+  }
+
+  private onHelpModalClose() {
+    this.helpPageInfo = null;
+  }
+
+  private dismissHelpPage() {
+    if (!this.helpPageInfo) return;
+
+    localStorage.setItem(`watchedHelpPage_${this.helpPageInfo.key}`, JSON.stringify(this.helpPageInfo.ref));
+
+    this.helpPageInfo = null;
+  }
+
+  private dismissAllHelpPages() {
+    localStorage.setItem("dismissHelpPages", "true");
+    this.helpPageInfo = null;
+  }
+
+  private closeAllToasts() {
+    this.$bvToast.hide();
+  }
+
   @Watch("settings")
   private updateSettings() {
-    const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "3"));
+    const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "1"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
 
@@ -180,12 +245,48 @@ export default class App extends Vue {
       html.style.fontSize = `${this.fontSize}px`;
     }
 
+    const gtmId = this.settings.getEntry("google_tag_manager_container_id", String, null);
+    if (gtmId) {
+      const gtmScript = document.createElement("script");
+      gtmScript.type = "text/javascript";
+      gtmScript.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${gtmId}');`;
+      document.head.appendChild(gtmScript);
+    }
+
     this.loadColors();
   }
 
-  @Watch("currentTheme", { immediate: true })
+  /* So, about themeing:
+   * 1. We use color variants to theme components.
+   *    Color variant is set of colors: several shades of background color, several shades of foreground color, border color, etc.
+   *    We need to define at least main background-color and others will be generated based on it.
+   * 2. Color varaints can be static and custom.
+   *    Static ones are defined in system table funapp.color_variants, custom ones are defined right in attributes.
+   * 3. Variants are bound to specific color theme.
+   *    We have two "magic" themes, "ligth" and "dark", and custom ones can be created.
+   * 4. We have hard-coded variants with colors from Bootstrap-variants and some others not so hard-coded, like "interfaceButton".
+   *    For example, variant "default" is used for almost everything if not otherwise specified.
+   * 5. After loading tables with themes and variants we generate text of CSS-stylesheet (yep) with class for each variant for current theme.
+   *    Each class (with names like `.default-variant`) contains CSS-variable definition for each color in variant with format `--{color name}Color`, like `--backgroundColor`.
+   *    And we inject this stylesheet into DOM.
+   * 6. So now we need to get variables for some components.
+   *    For this we need to use SCSS-mixin `variant-to-local`, for example `@include variant-to-local('componentName')`,
+   *    which creates CSS-class `componentName-local-variant`, which translates variables to format `--{componentName}-{color name}Color`,
+   *    so we can "just" apply to our component our desired varaint-class and local-variant-class (like `class="primary-variant button-local-variant"` for button and variant "primary")
+   *    and we can use variables like `--button-backgroundColor` in styles.
+   *    And it supports CSS-cascading and doesn't affected by scoping, so we have `class="default-variant default-local-variant"` in <App /> and we use this variables in many places.
+   * 7. Custom/inline variants works similar but a little simpler, but I'm too tired to explain, sorry.
+   */
+  @Watch("currentThemeRef", { immediate: true })
   private loadColors() {
-    const currentTheme = this.settings.themes.find(theme => theme.themeName.name === this.currentTheme);
+    let currentTheme: ITheme | undefined;
+    if (this.currentThemeRef !== null) {
+      currentTheme = this.settings.themes[this.currentThemeRef.schema][this.currentThemeRef.name];
+    }
 
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];
@@ -217,7 +318,6 @@ export default class App extends Vue {
         sheet.insertRule(rule);
       }
     }
-    /* console.log(sheet); */
   }
 
   private get showInviteButtonInBanner() {
@@ -225,9 +325,9 @@ export default class App extends Vue {
   }
 
   private get fontSize(): number {
-    const defaultSize = 14;
+    const defaultSize = 12;
     const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
-    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 0);
+    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 14);
     return this.$isMobile && mobileSize !== 0
       ? mobileSize
       : normalSize;

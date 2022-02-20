@@ -68,7 +68,7 @@ import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Phenom, { IPhenom, PhenomType, isPhenomType } from "@/components/views/timeline/Phenom.vue";
 import { mapMaybe, tryDicts } from "@/utils";
 import { ICombinedValue, IRowCommon, RowRef, valueToPunnedText } from "@/user_views/combined";
-import type { ScopeName, CombinedTransactionResult } from "@/state/staging_changes";
+import type { ScopeName, ISubmitResult } from "@/state/staging_changes";
 import { CurrentAuth, INoAuth } from "@/state/auth";
 
 interface IPhenomColumn {
@@ -93,7 +93,7 @@ const staging = namespace("staging");
 @Component({ components: { Phenom, Errorbox } })
 export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUserView) {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<CombinedTransactionResult[]>;
+  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   private message = "";
 
   private get phenoms() {
@@ -111,7 +111,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
       const info = this.uv.info.columns[colI];
       const columnAttrs = this.uv.columnAttributes[colI];
       const cellAttrs = value.attributes;
-      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, rowAttrs, columnAttrs, viewAttrs);
+      const getCellAttr = (name: string) => tryDicts(name, cellAttrs, columnAttrs, rowAttrs, viewAttrs);
 
       const visible = getCellAttr("visible") ?? !this.metadataIndexes.includes(colI);
       if (!visible) {
@@ -125,7 +125,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
       };
     }, row.values);
 
-    const typeRaw = this.typeIndex === null ? "messgae" : row.values[this.typeIndex].value;
+    const typeRaw = this.typeIndex === null ? "message" : String(row.values[this.typeIndex].value);
     const type = isPhenomType(typeRaw) ? typeRaw : "message";
 
     const username = this.usernameIndex === null ? null : this.getPunnedValueByIndex(row, this.usernameIndex);

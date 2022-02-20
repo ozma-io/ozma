@@ -3,6 +3,7 @@
     <div
       v-for="(weekName, weekNameI) in weekdays"
       :key="weekNameI"
+      class="week-day"
     >
       {{ weekName }}
     </div>
@@ -14,7 +15,7 @@
                {'curr-day': day.isSame(selectedValue, 'day')},
                {'today': day.isSame(today, 'day')}]"
       :style="{ gridColumn: day.weekday() + 1 }"
-      @click="$emit('update:selectedValue', day)"
+      @click="$emit('update:selected-value', day)"
     >
       {{ day.date() }}
     </div>
@@ -49,7 +50,7 @@ export default class DaysInMonth extends Vue {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .cal-day {
     display: grid;
     grid-template-columns: repeat(7, 30px);
@@ -62,24 +63,35 @@ export default class DaysInMonth extends Vue {
     margin: 1px;
   }
 
+  .week-day {
+    color: var(--default-foregroundDarkerColor);
+  }
+
   .date-cell {
     cursor: pointer;
-    color: var(--MainTextColorLight);
+    color: var(--default-foregroundColor);
     margin: 1px;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: var(--default-backgroundDarker1Color);
+    }
   }
 
   .diff-month {
-    color: var(--MainBorderColor);
+    color: var(--default-foregroundDarkerColor);
+
+    &.curr-day {
+      color: var(--default-foregroundColor);
+    }
   }
 
   .curr-day {
-    background-color: var(--MainBorderColor);
-    border-radius: 3px;
-    color: var(--MainTextColor);
+    background-color: var(--default-backgroundDarker2Color);
   }
 
   .today {
-    border: 1px solid var(--MainBorderColor);
-    border-radius: 3px;
+    border: solid silver;
+    border-width: 0.5px;
   }
 </style>

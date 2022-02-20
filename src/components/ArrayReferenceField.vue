@@ -17,8 +17,8 @@
     :label="label"
     load-pun-on-mount
     :entries="entriesRef"
-    :reference-entity="{}"
-    :uv-args="uvArgs"
+    :reference-entity="referenceEntity"
+    :home-schema="homeSchema"
     :required="required"
     :disabled="disabled"
     :height="height"
@@ -28,19 +28,19 @@
     @add-value="addValue"
     @remove-index="removeIndex"
     @clear-values="clearValues"
-    @focus="$emit('focus')"
+    @popup-opened="$emit('popup-opened')"
+    @popup-closed="$emit('popup-closed')"
   />
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import type { IEntityRef, SchemaName } from "ozma-api";
 
 import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
 import { valueIsNull } from "@/values";
 import { EntriesRef } from "@/state/entries";
 import type { IQuery } from "@/state/query";
-import type { IUserViewArguments } from "@/user_views/combined";
-import { IEntityRef } from "ozma-api";
 
 @Component({
   components: {
@@ -49,23 +49,30 @@ import { IEntityRef } from "ozma-api";
 })
 export default class ArrayReferenceField extends Vue {
   @Prop({ required: true }) value!: unknown[] | null;
-  @Prop({ type: Object, default: null }) optionsView!: IQuery;
-  @Prop({ type: Object, default: null }) referenceEntity!: IEntityRef | null;
+  @Prop({ type: Object }) optionsView!: IQuery | undefined;
+  @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Object, required: true }) uvArgs!: IUserViewArguments;
-  @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: String }) homeSchema!: SchemaName | undefined;
+  @Prop({ type: String }) label!: string | undefined;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
 
-  private get entriesRef(): EntriesRef {
-    return {
-      fetchBy: "options_view",
-      optionsView: this.optionsView,
-      referencedTo: this.referenceEntity,
-    };
+  get entriesRef(): EntriesRef {
+    if (this.optionsView) {
+      return {
+        fetchBy: "options_view",
+        optionsView: this.optionsView,
+        referencedTo: this.referenceEntity,
+      };
+    } else {
+      return {
+        fetchBy: "entity",
+        entity: this.referenceEntity,
+      };
+    }
   }
 
   private get values() {

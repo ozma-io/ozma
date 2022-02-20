@@ -3,7 +3,7 @@
     <div
       v-for="(month, monthI) in months"
       :key="monthI"
-      class="date-cell"
+      :class="['material-button date-cell', { 'current-month': isCurrentYear && (month === currentMonth) }]"
       @click="$emit('click', monthI)"
     >
       {{ month }}
@@ -12,21 +12,23 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
 
 @Component
 export default class MonthsInYear extends Vue {
-  get months() {
-    return moment.monthsShort();
-  }
+  @Prop({ type: Boolean }) isCurrentYear!: boolean;
+
+  private months = moment.monthsShort();
+  private currentMonth = moment().format("MMM");
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
   .cal-month {
     display: grid;
     grid-template-columns: repeat(4, 40px);
+    padding: 5px;
   }
 
   .cal-month > div {
@@ -36,6 +38,13 @@ export default class MonthsInYear extends Vue {
   .date-cell {
     cursor: pointer;
     color: var(--MainTextColor);
-    margin: 1px;
+    margin: 3px;
+    border: none;
+    border-radius: 3px;
+
+    &.current-month {
+      border: solid silver;
+      border-width: 0.5px;
+    }
   }
 </style>

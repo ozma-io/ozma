@@ -40,12 +40,12 @@
 <script lang="ts">
 import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-
-import { tryDicts, mapMaybe } from "@/utils";
-import { UserView } from "@/components";
-import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import * as R from "ramda";
 
+import { tryDicts, mapMaybe } from "@/utils";
+import { colorVariantFromAttribute, bootstrapVariantAttribute } from "@/utils_colors";
+import { UserView } from "@/components";
+import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import MenuEntry, { MenuValue, IMenuLink, Badge } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 import { currentValue, valueToPunnedText } from "@/user_views/combined";
@@ -102,41 +102,21 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       return { ...base, content };
     } else {
       const ref = attrToLink(entry, this.linkOpts);
+      if (ref === null) return null;
 
       let icon;
       if (typeof entry.icon === "string") {
         icon = entry.icon;
       }
 
-      const hasBadgeObject = typeof entry.badge === "object" && entry.badge !== null && "value" in entry.badge;
-      const hasBadge = hasBadgeObject || entry["badge_value"] !== undefined;
-      let badge: any;
+      const hasBadge = typeof entry.badge === "object" && entry.badge !== null && "value" in entry.badge;
+      let badge: Badge | undefined;
       if (hasBadge) {
-        if (hasBadgeObject) {
-          badge = entry.badge as Badge;
-          const badgeVariant = entry.variant as any;
-          if (badge.variant) {
-            delete badge.variant;
-          }
-        } else {
-          badge = {
-            value: undefined,
-            variant: null,
-            colorVariables: null,
-          };
-          const badgeValue = entry["badge_value"];
-          if (badgeValue !== undefined) {
-            badge.value = badgeValue;
-          }
-          const badgeVariant = entry["badge_variant"];
-          if (badgeVariant) {
-            // TODO FIXME
-          }
-        }
-      }
-
-      if (ref === null) {
-        return null;
+        const badgeRaw = entry.badge as { value?: unknown; variant?: unknown };
+        badge = {
+          value: badgeRaw.value,
+          variant: colorVariantFromAttribute(badgeRaw?.variant, bootstrapVariantAttribute("danger")),
+        };
       }
 
       return { ...base, icon, badge, link: ref };
@@ -195,7 +175,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       const buttonCell = row.values[1];
       const buttonName = valueToPunnedText(buttonColumnInfo.valueType, buttonCell);
       const buttonAttrs = buttonCell.attributes || {};
-      const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, rowAttrs, buttonsAttrs, viewAttrs);
+      const getButtonAttr = (name: string) => tryDicts(name, buttonAttrs, buttonsAttrs, rowAttrs, viewAttrs);
 
       const toQuery = attrToLink(getButtonAttr("link"), this.linkOpts);
       if (toQuery === null) {
@@ -231,7 +211,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
 </script>
 
 <style lang="scss" scoped>
-
   .menu_container {
     max-height: 100%;
     overflow-y: auto;

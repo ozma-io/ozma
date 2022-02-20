@@ -15,6 +15,8 @@
       @keydown.enter.prevent
       @keydown.escape.native.prevent="$emit('blur', $event)"
       @input="updateInput"
+      @focus.native="$emit('focus', $event)"
+      @blur.native="$emit('blur', $event)"
     />
     <div
       v-else
@@ -34,6 +36,7 @@
         :disabled="disabled"
         :rows="textareaRows"
         @focus="onFocus"
+        @blur="$emit('blur')"
         @input="$emit('update:value', $event)"
       />
     </div>
@@ -64,10 +67,10 @@ export default class Textarea extends Vue {
   private updateAutofocus() {
     if (this.autofocus) {
       if (this.isCellEdit) {
-        const controlTextareaElement = this.$refs.controlTextarea as any;
+        const controlTextareaElement = (this.$refs.controlTextarea as Vue | undefined)?.$el as HTMLInputElement | undefined;
         if (!controlTextareaElement) return;
-        controlTextareaElement.$el.focus();
-        this.setCursorPositionEnd(controlTextareaElement.$el);
+        controlTextareaElement.focus();
+        this.setCursorPositionEnd(controlTextareaElement);
       } else {
         const control = this.$refs.control as HTMLInputElement | undefined;
         control?.focus();
@@ -150,8 +153,12 @@ export default class Textarea extends Vue {
   }
 
   .textarea_field:focus {
-    outline: none;
     width: 100%;
+    outline: none;
+  }
+
+  .textarea-field:focus {
+    border-color: #80bdff !important;
   }
 
   .textarea_field__desktop:focus {

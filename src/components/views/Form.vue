@@ -71,13 +71,15 @@
            dynamically_. This is as to not lose focus when user starts editing empty row. -->
       <FormEntry
         v-if="firstRow !== null"
+        ref="firstFormEntry"
         :uv="uv"
         :blocks="gridBlocks"
         :row="firstRow.row"
         :locked="addedLocked"
         :scope="scope"
         :level="level"
-        :show-delete="useDeleteAction === null"
+        :is-top-level="isTopLevel"
+        :show-delete="useDeleteAction.type === 'show'"
         @update="updateValue({ ...firstRow.ref, column: arguments[0] }, arguments[1])"
         @delete="confirmDelete(firstRow.ref)"
         @goto="$emit('goto', $event)"
@@ -91,7 +93,8 @@
         :locked="addedLocked"
         :scope="scope"
         :level="level"
-        :show-delete="useDeleteAction === null"
+        :is-top-level="isTopLevel"
+        :show-delete="useDeleteAction.type === 'show'"
         @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
         @delete="confirmDelete({ type: 'added', id: rowId })"
         @goto="$emit('goto', $event)"
@@ -105,8 +108,9 @@
         :row="uv.rows[rowI]"
         :scope="scope"
         :level="level"
+        :is-top-level="isTopLevel"
         :selection-mode="selectionMode"
-        :show-delete="useDeleteAction === null"
+        :show-delete="useDeleteAction.type === 'show'"
         @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
         @delete="confirmDelete({ type: 'existing', position: rowI })"
         @goto="$emit('goto', $event)"
@@ -136,25 +140,23 @@
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
-import { AttributesMap, IResultColumnInfo, ValueType } from "ozma-api";
-import { z } from "zod";
+import { IResultColumnInfo, ValueType } from "ozma-api";
 import { namespace } from "vuex-class";
+import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 
-import { tryDicts, mapMaybe, validNumberFormats, getNumberFormatter, ValidNumberFormat } from "@/utils";
+import { tryDicts, mapMaybe } from "@/utils";
 import { interfaceButtonVariant, bootstrapVariantAttribute } from "@/utils_colors";
-import { AddedRowId } from "@/state/staging_changes";
 import { UserView } from "@/components";
 import Errorbox from "@/components/Errorbox.vue";
 import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
 import FormEntry from "@/components/views/form/FormEntry.vue";
 import { attrToLink, Link } from "@/links";
 import { ICurrentQueryHistory } from "@/state/query";
-import { IAddedRow, ICombinedRow, ICombinedUserView, ICombinedValue, IExtendedRowCommon, IExtendedRowInfo, IRowCommon, IUserViewHandler, RowRef } from "@/user_views/combined";
+import { ICombinedUserView, IExtendedRowCommon, IExtendedRowInfo, IUserViewHandler, RowRef } from "@/user_views/combined";
 import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
 import type { Button } from "@/components/buttons/buttons";
-import { lazyLoadSchema } from "@/components/views/Table.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
+import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
 
 export interface IButtonAction {
   name: string;
@@ -168,6 +170,7 @@ export interface IElementField {
   columnInfo: IResultColumnInfo;
   caption: string;
   forceCaption: boolean;
+  autofocus: boolean;
 }
 
 export interface IElementButtons {
@@ -180,14 +183,13 @@ export type FormElement = IElementField | IElementButtons;
 export type FormGridElement = GridElement<FormElement>;
 
 export interface IFormValueExtra extends IBaseValueExtra {
-  attributes: AttributesMap;
-  visible: boolean;
   valueFormatted?: string; // Used at least for read-only number inputs.
 }
 
 export type IFormRowExtra = IBaseRowExtra;
 
-type IFormLazyLoad = z.infer<typeof lazyLoadSchema>;
+export const FormLazyLoad = TableLazyLoad;
+type IFormLazyLoad = ITableLazyLoad;
 
 const showStep = 3;
 
@@ -200,96 +202,23 @@ export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
 export type IFormExtendedRowCommon = IExtendedRowCommon<IFormValueExtra, IFormRowExtra>;
 export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
 
-const createCommonLocalValue = (uv: IFormCombinedUserView, row: IRowCommon & IFormExtendedRowInfo, columnIndex: number, value: ICombinedValue) => {
-  const columnAttrs = uv.columnAttributes[columnIndex];
-  const attributes: Record<string, unknown> = {
-    ...uv.attributes,
-    ...columnAttrs,
-    ...row.attributes,
-    ...value.attributes,
-  };
-  const visible = Boolean(attributes["visible"] ?? true);
-
-  let valueFormatted: string | undefined;
-  const numberFormat = attributes["number_format"];
-  const isValidFormat = (format: unknown) : format is ValidNumberFormat =>
-    typeof format === "string" && validNumberFormats.includes(format.toLowerCase() as any);
-  // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
-  const isReadOnly = value.info === undefined || attributes["soft_disabled"];
-  const isNumber = numberTypes.includes(uv.info.columns[columnIndex].valueType.type);
-  if (isReadOnly && isNumber && isValidFormat(numberFormat)) {
-    const fractionDigitsRaw = attributes["fraction_digits"];
-    const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-    valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(value.value as any);
-  }
-
-  return {
-    attributes,
-    visible,
-    valueFormatted,
-  };
-};
-
 export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtra, IFormViewExtra> = {
   ...baseUserViewHandler,
 
-  createLocalUserView(uv: IFormCombinedUserView, oldView: IFormViewExtra | null) {
+  createLocalUserView(uv: IFormCombinedUserView, oldView?: IFormViewExtra) {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
 
-    const lazyLoad = oldView?.lazyLoad ?? lazyLoadSchema.parse(uv.attributes["lazy_load"]);
+    const lazyLoad = oldView?.lazyLoad ?? FormLazyLoad.parse(uv.attributes["lazy_load"]);
 
     return {
       ...baseExtra,
       lazyLoad,
     };
   },
-
-  createLocalValue(
-    uv: IFormCombinedUserView,
-    rowIndex: number,
-    row: ICombinedRow & IFormExtendedRowInfo,
-    columnIndex: number,
-    value: ICombinedValue,
-    oldView: IFormViewExtra | null,
-    oldRow: IFormRowExtra | null,
-    oldValue: IFormValueExtra | null,
-  ) {
-    const baseExtra = baseUserViewHandler.createLocalValue(uv, rowIndex, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
-    return { ...baseExtra, ...commonExtra };
-  },
-
-  createAddedLocalValue(
-    uv: IFormCombinedUserView,
-    rowId: AddedRowId,
-    row: IAddedRow & IFormExtendedRowInfo,
-    columnIndex: number,
-    value: ICombinedValue,
-    oldView: IFormViewExtra | null,
-    oldRow: IFormRowExtra | null,
-    oldValue: IFormValueExtra | null,
-  ) {
-    const baseExtra = baseUserViewHandler.createAddedLocalValue(uv, rowId, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
-    return { ...baseExtra, ...commonExtra };
-  },
-
-  createEmptyLocalValue(
-    uv: IFormCombinedUserView,
-    row: IRowCommon & IFormExtendedRowInfo,
-    columnIndex: number,
-    value: ICombinedValue,
-    oldView: IFormViewExtra | null,
-    oldRow: IFormRowExtra | null,
-    oldValue: IFormValueExtra | null,
-  ) {
-    const baseExtra = baseUserViewHandler.createEmptyLocalValue(uv, row, columnIndex, value, oldView, oldRow, oldValue);
-    const commonExtra = createCommonLocalValue(uv, row, columnIndex, value);
-    return { ...baseExtra, ...commonExtra };
-  },
 };
 
 const query = namespace("query");
+const settings = namespace("settings");
 
 @UserView({
   handler: formUserViewHandler,
@@ -305,6 +234,7 @@ const query = namespace("query");
 })
 export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
   @query.State("current") query!: ICurrentQueryHistory | null;
+  @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
   private deletedOne = false;
   private toBeDeletedRef: RowRef | null = null;
 
@@ -398,7 +328,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
-    return String(this.uv.extra.lazyLoad.pagination?.currentPage + 1);
+    return String(this.uv.extra.lazyLoad.pagination?.currentPage ?? 0 + 1);
   }
 
   @Watch("currentVisualPage")
@@ -406,7 +336,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
     if (!this.isTopLevel) return;
 
-    this.$emit("update:currentPage", this.uv.extra.lazyLoad.pagination.currentPage);
+    this.$emit("update:current-page", this.uv.extra.lazyLoad.pagination.currentPage);
   }
 
   private get onLastPage() {
@@ -490,13 +420,15 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   }
 
   // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
-  get useDeleteAction(): RowRef | null {
-    if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
-      return { type: "added", id: this.newRowsPositions[0] };
+  get useDeleteAction(): { type: "show_with_ref"; ref: RowRef } | { type: "show" } | { type: "hide" } {
+    if (this.businessModeEnabled && this.uv.attributes["business_mode_disable_delete"]) {
+      return { type: "hide" };
+    } else if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
+      return { type: "show_with_ref", ref: { type: "added", id: this.newRowsPositions[0] } };
     } else if (this.rowPositions.length === 1 && this.newRowsPositions.length === 0) {
-      return { type: "existing", position: this.rowPositions[0] };
+      return { type: "show_with_ref", ref: { type: "existing", position: this.rowPositions[0] } };
     } else {
-      return null;
+      return { type: "show" };
     }
   }
 
@@ -541,6 +473,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const captionAttr = getColumnAttr("caption");
       const caption = String(captionAttr ?? columnInfo.name);
 
+      const autofocus = columnInfo?.name === this.autofocusElementName;
+
       const element: IGridInput<IElementField> = {
         type: "element",
         size: inputWidth,
@@ -550,6 +484,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
           columnInfo,
           caption,
           forceCaption: Boolean(captionAttr),
+          autofocus,
         },
       };
       blocks[block].content.push(element);
@@ -599,7 +534,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
   private async init() {
     if (this.isTopLevel) {
-      this.$emit("update:bodyStyle", `
+      this.$emit("update:body-style", `
         @media print {
             @page {
                 size: portrait;
@@ -625,14 +560,35 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     }
   }
 
+  private get autofocusElementName(): string | null {
+    if (!this.firstRow) return null;
+    const isNewEntry = this.uv.args.args === null;
+    if (!isNewEntry) return null;
+
+    const columnRequiredAndEmpty =
+      (column: IResultColumnInfo) =>
+        column.mainField
+        && !column.mainField.field.isNullable
+        && column.mainField.field.defaultValue === undefined
+        && !(column.name in this.defaultValues);
+    const columnNotRequiredAndEmpty =
+      (column: IResultColumnInfo) =>
+        column.mainField
+        && column.mainField.field.defaultValue === undefined
+        && !(column.name in this.defaultValues);
+    const firstRequiredColumn = this.uv.info.columns.find(columnRequiredAndEmpty);
+    const columnToFocus = firstRequiredColumn ?? this.uv.info.columns.find(columnNotRequiredAndEmpty);
+    return columnToFocus?.name ?? null;
+  }
+
   get buttons() {
     const buttons: Button[] = [];
     const deleteRef = this.useDeleteAction;
-    if (deleteRef !== null) {
+    if (deleteRef.type === "show_with_ref") {
       buttons.push({
         icon: "delete_outline",
         caption: this.$t("delete").toString(),
-        callback: () => this.confirmDelete(deleteRef),
+        callback: () => this.confirmDelete(deleteRef.ref),
         variant: bootstrapVariantAttribute("danger"),
         type: "callback",
       });
@@ -662,9 +618,13 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   @Watch("uv")
   private uvChanged() {
     void this.init();
-    // FIXME: Entry selection somehow worked without this before.
-    if (this.selectionMode && this.uv.rows?.length === 1) {
-      this.$emit("select", this.uv.rows[0].extra.selectionEntry);
+
+    // Select row automatically if saved with a button.
+    if (this.selectionMode && !this.autoSaved && this.uv.rows?.length === 1) {
+      const row = this.uv.rows[0];
+      if (row.oldAddedId !== undefined) {
+        this.$emit("select", this.uv.rows[0].extra.selectionEntry);
+      }
     }
   }
 

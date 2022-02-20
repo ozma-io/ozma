@@ -5,7 +5,7 @@ Vue.config.performance = process.env["NODE_ENV"] !== "production";
 
 import Vuex from "vuex";
 import mitt from "mitt";
-import VueGmt from "@gtm-support/vue2-gtm"; // TODO: make it load dynamically!
+import TextareaAutosize from "vue-textarea-autosize";
 
 import * as Modules from "@/modules";
 import { setHeadTitle } from "@/elements";
@@ -18,8 +18,6 @@ import FormControl from "@/components/FormControl.vue";
 import { VueIsMobile } from "@/components";
 import App from "@/App.vue";
 
-import TextareaAutosize from "vue-textarea-autosize";
-
 import authModule from "@/state/auth";
 import settingsModule from "@/state/settings";
 import entitiesModule from "@/state/entities";
@@ -28,11 +26,27 @@ import stagingChangesModule from "@/state/staging_changes";
 import queryModule from "@/state/query";
 import errorsModule from "@/state/errors";
 import reloadModule from "@/state/reload";
+import windowsModule from "@/state/windows";
 
 import "@/styles/style.scss";
-import { isReadonlyDemoInstance } from "./api";
+import { IEmbeddedPageRef } from "@/api";
 
-export const eventBus = mitt();
+export interface IShowHelpModalArgs {
+  // `null` when we don't store "page is read" state.
+  key: string | null;
+  skipIfShown?: boolean;
+  ref: IEmbeddedPageRef;
+}
+
+type Events = {
+  ["show-readonly-demo-modal"]?: string;
+  ["show-invite-user-modal"]?: string;
+  ["show-help-modal"]: IShowHelpModalArgs;
+  ["close-all-toasts"]?: string;
+  ["close-all-button-groups"]?: string;
+};
+
+export const eventBus = mitt<Events>();
 
 export const store = new Vuex.Store({
   // Big performance hog on dev!
@@ -46,14 +60,11 @@ export const store = new Vuex.Store({
     query: queryModule,
     errors: errorsModule,
     reload: reloadModule,
+    windows: windowsModule,
   },
 });
 
-if (isReadonlyDemoInstance) {
-  Vue.use(VueGmt, {
-    id: "GTM-5WW7SDT",
-  });
-}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(TextareaAutosize);
 Vue.use(VueIsMobile);
 

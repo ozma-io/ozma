@@ -1,30 +1,52 @@
+<i18n>
+    {
+        "en": {
+            "header_1": "Sign up",
+            "header_2": "to continue",
+            "description_1": "It's read-only example. To start make changes,",
+            "description_2": "sign up and we will create personal instance for you.",
+            "sign_up": "Sign up",
+            "later": "Later"
+        },
+        "ru": {
+            "header_1": "Зарегистрируйтесь",
+            "header_2": "чтобы продолжить",
+            "description_1": "Это демо-пример. Чтобы начать вносить изменения,",
+            "description_2": "зарегистрируйтесь и мы создадим вам персональную копию.",
+            "sign_up": "Зарегистрироваться",
+            "later": "Посмотреть ещё"
+        }
+    }
+</i18n>
+
 <template>
-  <VueModal
+  <ModalWindow
     adaptive
+    class="demo-modal"
     :min-width="300"
     :min-height="200"
     height="auto"
     :name="uid"
-    transition="modal"
+    transition="demo-modal-transition"
     @opened="showOverlay = true"
     @closed="showOverlay = false"
   >
     <div class="demo-message-container">
       <i class="material-icons demo-icon">waving_hand</i>
       <h1 class="demo-header">
-        Зарегистрируйтесь,<br>чтобы продолжить
+        {{ $t("header_1") }}<br>{{ $t("header_2") }}
       </h1>
       <span class="demo-message">
-        Это демо-пример. Чтобы начать вносить изменения,<br>зарегистрируйтесь и мы создадим вам персональную копию.
+        {{ $t("description_1") }}<br>{{ $t("description_2") }}
       </span>
       <div class="buttons-container">
         <b-button
           class="ok-button"
           variant="primary"
-          href="https://onboard.ozma.io/register?locale=ru&lp=demo-x"
+          :href="signUpLink"
           target="_blank"
         >
-          Зарегистрироваться
+          {{ $t("sign_up") }}
         </b-button>
 
         <b-button
@@ -33,19 +55,27 @@
           @click="hide"
         >
           <a>
-            Посмотреть ещё
+            {{ $t("later") }}
           </a>
         </b-button>
       </div>
     </div>
-  </VueModal>
+  </ModalWindow>
 </template>
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
 
-@Component
+import { CurrentSettings } from "@/state/settings";
+import ModalWindow from "@/components/modal/ModalWindow.vue";
+
+const settings = namespace("settings");
+
+@Component({ components: { ModalWindow } })
 export default class ReadonlyDemoInstanceModal extends Vue {
+  @settings.State("current") settings!: CurrentSettings;
+
   private showOverlay = false;
   private show() {
     this.$modal.show(this.uid);
@@ -54,32 +84,36 @@ export default class ReadonlyDemoInstanceModal extends Vue {
   private hide() {
     this.$modal.hide(this.uid);
   }
+
+  private get signUpLink() {
+    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, "https://onboard.ozma.io/register?locale=ru&lp=demo-x");
+  }
 }
 </script>
 
 <style lang="scss" scoped>
-  .v--modal-overlay {
+  .demo-modal ::v-deep > .vm--overlay {
     background: rgba(0, 0, 0, 0.8) !important;
   }
 
-  ::v-deep {
-    .v--modal-box {
-      max-height: 80% !important;
-    }
+  .demo-modal ::v-deep > .vm--modal {
+    max-height: 80% !important;
+  }
 
-    .modal-enter-active,
-    .modal-leave-active {
+  ::v-deep {
+    .demo-modal-transition-enter-active,
+    .demo-modal-transition-leave-active {
       transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
     }
 
-    .modal-enter,
-    .modal-leave-to {
+    .demo-modal-transition-enter,
+    .demo-modal-transition-leave-to {
       transform: translateY(100%);
       opacity: 0;
     }
 
-    .modal-enter-to,
-    .modal-leave {
+    .demo-modal-transition-enter-to,
+    .demo-modal-transition-leave {
       opacity: 1;
     }
   }
