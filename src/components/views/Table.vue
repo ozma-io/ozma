@@ -1856,6 +1856,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  private onFormInputFocused() {
+    this.deselectAllCells({ clearCursor: true });
+  }
+
   private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
     const handlers = [
@@ -1864,7 +1868,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       ["paste", this.pasteClipboardToSelectedCells],
       ["cell-click", this.onOtherTableClicked],
       ["row-select", this.onRowInOtherTableSelected],
-      ["form-input-focused", this.deselectAllCells],
+      ["form-input-focused", this.onFormInputFocused],
     ] as [name: string, callback: (event: any) => void][];
     /* eslint-enable @typescript-eslint/unbound-method */
 
