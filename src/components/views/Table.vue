@@ -1845,7 +1845,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private onOtherTableClicked(uid: any) {
     if (this.uid !== uid) {
-      this.deselectAllCells();
+      this.deselectAllCells({ clearCursor: true });
       this.removeCellEditing();
     }
   }
