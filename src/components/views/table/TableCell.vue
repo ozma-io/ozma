@@ -325,7 +325,7 @@ export default class TableCell extends Vue {
       flex-shrink: 0;
       border: none;
       display: flex;
-      opacity: 0.3;
+      opacity: 0.5;
       overflow: visible;
     }
 
