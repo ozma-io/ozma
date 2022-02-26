@@ -2740,7 +2740,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   ::v-deep .table-td {
-    padding: 0.15rem;
+    padding: 0.3rem 0.15rem;
   }
 
   .button-container {
