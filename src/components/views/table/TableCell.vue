@@ -30,10 +30,10 @@
         'disabled-cell': value.info === undefined && from !== 'existing'
       }
     ]"
-    @click.stop="$emit('cell-click', $refs.cell, $event)"
-    @mousedown.stop="$emit('cell-mousedown', $refs.cell, $event)"
-    @mouseover.stop="$emit('cell-mouseover', $refs.cell, $event)"
-    @mouseup.stop="$emit('cell-mouseup', $refs.cell, $event)"
+    @click="$emit('cell-click', $refs.cell, $event)"
+    @mousedown="$emit('cell-mousedown', $refs.cell, $event)"
+    @mouseover="$emit('cell-mouseover', $refs.cell, $event)"
+    @mouseup="$emit('cell-mouseup', $refs.cell, $event)"
     @contextmenu.prevent="$emit('cell-contextmenu', $refs.cell, $event)"
   >
     <div v-if="value.extra.selected" class="selection-overlay" />
