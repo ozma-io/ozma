@@ -20,8 +20,8 @@
       :scope="scope"
       :compact-mode="compactMode"
       @update:value="$emit('update:value', $event)"
-      @focus="$emit('focus')"
-      @blur="$emit('blur')"
+      @popup-opened="$emit('popup-opened')"
+      @popup-closed="$emit('popup-closed')"
       @goto="$emit('goto', $event)"
     />
   </div>

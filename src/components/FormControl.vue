@@ -140,7 +140,7 @@
           :compact-mode="compactMode"
           @update:value="updateValue"
           @popup-opened="iSlot.onFocus"
-          @blur="onBlur"
+          @popup-closed="onBlur"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"

@@ -22,6 +22,7 @@
       :home-schema="uv.homeSchema"
       @add-value="addValue"
       @remove-index="removeIndex"
+      @popup-opened="onFocus"
       @goto="$emit('goto', $event)"
     />
     <Errorbox
@@ -162,6 +163,10 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
     } else {
       throw new Error("Impossible");
     }
+  }
+
+  private onFocus() {
+    this.$root.$emit("form-input-focused");
   }
 }
 </script>

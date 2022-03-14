@@ -52,7 +52,7 @@
         :options="popperOptions"
         :disabled="!show"
         :force-show="show"
-        @documentClick="$emit('update:show', false)"
+        @documentClick="onDocumentClick"
       >
         <!-- eslint-disable vue/no-deprecated-slot-attribute -->
         <!-- TODO: Find or make not deprecated popper.js wrapper -->
@@ -81,8 +81,9 @@
 import Popper from "vue-popperjs";
 import { Portal } from "portal-vue";
 
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import TabbedModal from "@/components/modal/TabbedModal.vue";
+import { nextRender } from "@/utils";
 
 type Mode = "popup" | "modal";
 
@@ -99,6 +100,26 @@ export default class InputPopup extends Vue {
   updatePopper() {
     if (this.mode === "popup") {
       (this.$refs.popup as any).updatePopper();
+    }
+  }
+
+  // FIXME: ugly fix for Popper emitting a document click event at the same time `show` is set.
+  // Upgrade to Popper 2.x and drop this.
+  private isVisible = false;
+
+  @Watch("show", { immediate: true })
+  async onShow(newValue: boolean) {
+    if (newValue === this.isVisible) {
+      return;
+    }
+
+    await nextRender();
+    this.isVisible = newValue;
+  }
+
+  onDocumentClick() {
+    if (this.isVisible) {
+      this.$emit("update:show", false);
     }
   }
 }
