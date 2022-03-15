@@ -325,7 +325,7 @@ export default class TableCell extends Vue {
       flex-shrink: 0;
       border: none;
       display: flex;
-      opacity: 0.3;
+      opacity: 0.5;
       overflow: visible;
     }
 
@@ -431,7 +431,7 @@ export default class TableCell extends Vue {
     pointer-events: auto !important;
     transition: transform 0.2s;
     line-height: 1rem;
-    opacity: 0.3;
+    opacity: 0.5;
   }
 
   .tree-toggle-expand.material-icons:hover {

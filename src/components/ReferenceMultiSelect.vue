@@ -437,7 +437,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     padding: 0;
 
     &:not(:hover) {
-      opacity: 0.3;
+      opacity: 0.5;
     }
   }
 
