@@ -5,7 +5,6 @@
         <TabbedModal
           :show="show"
           fullscreen
-          @opened="onOpen"
           @close="onClose"
         >
           <div class="modal-slots">
@@ -121,6 +120,10 @@ export default class InputPopup extends Vue {
     if (this.isVisible) {
       this.$emit("update:show", false);
     }
+  }
+
+  onClose() {
+    this.$emit("update:show", false);
   }
 }
 </script>

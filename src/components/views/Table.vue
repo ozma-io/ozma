@@ -2902,7 +2902,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     .active-editing {
-      position: sticky !important;
       justify-content: flex-start;
       z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице */
     }
