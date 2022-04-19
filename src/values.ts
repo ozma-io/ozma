@@ -113,9 +113,7 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
   const value = typeof rawValue === "string" ? rawValue.trim() : rawValue;
 
   if (valueIsNull(value)) {
-    return fieldType.type === "array"
-      ? []
-      : isNullable ? null : undefined;
+    return isNullable ? null : undefined;
   }
 
   switch (fieldType.type) {
