@@ -640,15 +640,15 @@ export default class UserView extends Vue {
       if (uv.args.args === null) {
         return null;
       } else {
-        return Object.fromEntries(mapMaybe(([name, rawValue]) => {
-          const argInfo = uv.info.arguments[name];
-          if (argInfo === undefined) {
-            return undefined;
+        return Object.fromEntries(mapMaybe(([name, argInfo]) => {
+          const rawValue = uv.args.args![name];
+          if (rawValue === undefined) {
+            return [name, argInfo.defaultValue];
           } else {
             const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, rawValue);
             return [name, value];
           }
-        }, Object.entries(uv.args.args)));
+        }, Object.entries(uv.info.arguments)));
       }
     }
   }
