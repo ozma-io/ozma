@@ -68,6 +68,7 @@ export default class MarkdownEditor extends Vue {
       hideModeSwitch: false,
       language: this.$root.$i18n.locale,
       placeholder: this.$t("input_placeholder"),
+      autofocus: false,
     };
   }
 
