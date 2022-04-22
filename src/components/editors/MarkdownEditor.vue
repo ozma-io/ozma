@@ -98,9 +98,7 @@ export default class MarkdownEditor extends Vue {
   @Watch("content")
   private updateContent(content: string) {
     if (this.currentContent === content) return;
-    this.currentContent = content;
     const editor = this.$refs.editor as EditorType;
-    if (!editor) return;
     editor.invoke("setMarkdown", content, false);
   }
 }
