@@ -1,13 +1,11 @@
 <i18n>
   {
     "en": {
-      "view_error": "There are following errors in user view",
       "no_datetime": "The query is lacking timeline_datetime attribute",
       "datetime_wrong_type": "timeline_datetime attribute is not on value with datetime type",
       "send": "Send"
     },
     "ru": {
-      "view_error": "В отображении следующие ошибки",
       "no_datetime": "В запросе отсутствует атрибут timeline_datetime",
       "datetime_wrong_type": "Атрибут timeline_datetime должен быть указан для значения с типом datetime",
       "send": "Отправить"
@@ -231,18 +229,15 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
   }
 
   get errors() {
-    const noDatetime = this.datetimeIndex === null;
-    const datetimeHasWrongType = !noDatetime && this.uv.info.columns[this.datetimeIndex!].valueType.type !== "datetime";
-    const messagesArray = [
-      noDatetime && this.$t("no_datetime"),
-      datetimeHasWrongType && this.$t("datetime_wrong_type"),
-    ].filter(v => v);
-
-    const hasErrors = messagesArray.length > 0;
-
-    const errorMessage = this.$t("view_error");
-    const errorString = `${errorMessage}:\n${messagesArray.join("\n")}.`;
-    return hasErrors ? errorString : null;
+    if (this.datetimeIndex === null) {
+      return this.$t("no_datetime");
+    }
+    const column = this.uv.info.columns[this.datetimeIndex];
+    const columnType = this.uv.info.columns[this.datetimeIndex].valueType.type;
+    if (columnType !== "datetime" && columnType !== "localdatetime") {
+      return this.$t("datetime_wrong_type");
+    }
+    return null;
   }
 }
 

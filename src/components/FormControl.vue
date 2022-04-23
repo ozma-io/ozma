@@ -47,7 +47,7 @@
         />
         <Input
           v-else-if="inputType.name === 'text'"
-          :value="valueFormatted ? valueFormatted : value"
+          :value="valueFormatted ? valueFormatted : textValue"
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
@@ -831,6 +831,7 @@ export default class FormControl extends Vue {
           return { name: "text", type: "number", style: this.controlStyle() };
         case "date":
           return { name: "calendar", showTime: false, timeStep: null, timeDefault: null };
+        case "localdatetime":
         case "datetime": {
           const timeStepRaw = Number(this.attributes["time_step"]);
           const timeStep = Number.isNaN(timeStepRaw) ? null : timeStepRaw;

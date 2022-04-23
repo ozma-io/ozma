@@ -1,5 +1,5 @@
 import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow, IResultViewInfo, ScalarFieldType, IScalarSimpleType } from "ozma-api";
-import moment, { Moment, MomentInput } from "moment";
+import moment, { Moment, Duration, MomentInput, DurationInputArg1 } from "moment";
 
 import { deepEquals } from "@/utils";
 
@@ -44,8 +44,10 @@ export const valueToText = (valueType: ValueType, value: unknown, options?: { da
     return "";
   } else if (valueType.type === "date") {
     return (value as Moment).format(options?.dateFormat ?? localDateFormat);
-  } else if (valueType.type === "datetime") {
+  } else if (valueType.type === "datetime" || valueType.type === "localdatetime") {
     return (value as Moment).local().format(localDateTimeFormat);
+  } else if (valueType.type === "interval") {
+    return (value as Duration).asMilliseconds().toString();
   } else if (valueType.type === "json") {
     return JSON.stringify(value);
   } else {
@@ -58,9 +60,15 @@ export const valueEquals = (valueType: ValueType, a: unknown, b: unknown) : bool
     return false;
   }
 
-  if (valueType.type === "date" || valueType.type === "datetime") {
+  if (valueType.type === "date" || valueType.type === "datetime" || valueType.type === "localdatetime") {
     if (moment.isMoment(a)) {
       return a.isSame(b as MomentInput);
+    } else {
+      return a === b;
+    }
+  } else if (valueType.type === "interval") {
+    if (moment.isDuration(a)) {
+      return a.asMilliseconds() === moment.duration(b as DurationInputArg1).asMilliseconds();
     } else {
       return a === b;
     }
@@ -119,7 +127,6 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
   switch (fieldType.type) {
     case "string":
     case "enum":
-    case "interval":
     case "uuid":
       // Remove whitespaces.
       return typeof value === "string" ? value : undefined;
@@ -153,6 +160,13 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
         if (date.isValid()) {
           return date;
         }
+      }
+      return undefined;
+    }
+    case "interval": {
+      const duration = moment.duration(value as DurationInputArg1, "milliseconds");
+      if (duration.isValid()) {
+        return duration;
       }
       return undefined;
     }
@@ -193,11 +207,26 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
 
 export const convertParsedRows = (info: IResultViewInfo, rows: IExecutedRow[]) => {
   info.columns.forEach((columnInfo, colI) => {
-    if (columnInfo.valueType.type === "datetime" || columnInfo.valueType.type === "date") {
+    const columnType = columnInfo.valueType.type;
+    if (columnType === "datetime") {
       rows.forEach(row => {
         const cell = row.values[colI];
         if (cell.value) {
           cell.value = moment.utc(cell.value as MomentInput);
+        }
+      });
+    } else if (columnType === "localdatetime" || columnType === "date") {
+      rows.forEach(row => {
+        const cell = row.values[colI];
+        if (cell.value) {
+          cell.value = moment(cell.value as MomentInput);
+        }
+      });
+    } else if (columnType === "interval") {
+      rows.forEach(row => {
+        const cell = row.values[colI];
+        if (cell.value) {
+          cell.value = moment.duration(cell.value as DurationInputArg1);
         }
       });
     }
@@ -213,6 +242,8 @@ export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, und
     return (value as Moment).format(dateFormat);
   } else if (fieldType.type === "datetime") {
     return (value as Moment).format(); // ISO 8601
+  } else if (fieldType.type === "interval") {
+    return (value as Duration).toISOString();
   } else {
     return value;
   }
