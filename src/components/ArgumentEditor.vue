@@ -66,26 +66,31 @@ interface IArgumentInfo {
   valueType: ValueType;
   isOptional: boolean;
   attributes: AttributesMap;
-  dirtyHackOrder: number; // Arguments come alphabet-sorted from backend.
+  dirtyHackOrder: number;
 }
 
 @Component({ components: { FormControl } })
 export default class ArgumentEditor extends Vue {
-  @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
+  @Prop({ type: Array, required: true }) argumentParams!: IArgument[];
   @Prop({ type: Object, required: true }) argumentValues!: Record<ArgumentName, unknown>;
   @Prop({ type: String }) homeSchema!: string | undefined;
 
   private get args(): IArgumentInfo[] {
-    const unsortedArgs: IArgumentInfo[] = Object.entries(this.argumentParams).map(([name, parameter]) => {
+    const unsortedArgs: IArgumentInfo[] = this.argumentParams.map((parameter, parI) => {
       const hasCaption = parameter.attributes["caption"] !== undefined;
-      const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : name;
+      const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
+
+      let dirtyHackOrder = parI;
       const dirtyHackOrderRaw = parameter.attributes["dirty_hack_order"];
-      const dirtyHackOrder = typeof dirtyHackOrderRaw === "number" ? dirtyHackOrderRaw : 0;
+      if (typeof dirtyHackOrderRaw === "number") {
+        console.error("Deprecated attribute `dirty_hack_order`. Arguments order is now preserved as-is.");
+        dirtyHackOrder = dirtyHackOrderRaw;
+      }
 
       return {
-        name,
+        name: parameter.name,
         defaultValue: parameter.defaultValue,
         caption,
         fieldType: type,
@@ -94,7 +99,7 @@ export default class ArgumentEditor extends Vue {
         dirtyHackOrder,
         attributes: parameter.attributes,
       };
-    }, this.argumentParams);
+    });
 
     return unsortedArgs.sort((a, b) => a.dirtyHackOrder - b.dirtyHackOrder);
   }

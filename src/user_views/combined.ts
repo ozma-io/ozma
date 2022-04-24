@@ -1,7 +1,10 @@
 import Vue from "vue";
 import { Store } from "vuex";
-import { IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName, FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
-  ValueType } from "ozma-api";
+import {
+  IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName,
+  FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
+  ValueType, ArgumentName, IArgument,
+} from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
 import { convertParsedRows, equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
@@ -279,6 +282,7 @@ export interface ICommonUserViewData {
 export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHandler, ICommonUserViewData {
   readonly homeSchema: SchemaName | null;
   readonly rows: IExtendedRow<ValueT, RowT>[] | null;
+  readonly argumentsMap: Record<ArgumentName, IArgument>;
   // Rows added by user, not yet committed to the database.
   readonly newRows: Record<AddedRowId, IExtendedAddedRow<ValueT, RowT>>;
   readonly newRowsOrder: AddedRowId[];
@@ -394,6 +398,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   args: IUserViewArguments;
   homeSchema: SchemaName | null;
   info: IResultViewInfo;
+  argumentsMap: Record<ArgumentName, IArgument>;
   attributes: Record<AttributeName, unknown>;
   columnAttributes: Record<AttributeName, unknown>[];
   rows: IExtendedRow<ValueT, RowT>[] | null;
@@ -436,6 +441,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       params.info.mainEntity = undefined;
     }
     this.info = params.info;
+    this.argumentsMap = Object.fromEntries(params.info.arguments.map(arg => [arg.name, arg]));
 
     this.entries = {};
     if (oldLocal) {

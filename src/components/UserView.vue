@@ -673,7 +673,7 @@ export default class UserView extends Vue {
         if (this.state.state !== "show") {
           throw new Error("Unexpected state");
         }
-        const argInfo = this.state.uv.info.arguments[name];
+        const argInfo = this.state.uv.argumentsMap[name];
         const serialized = serializeValue(argInfo.argType, value);
         return [name, serialized];
       }
