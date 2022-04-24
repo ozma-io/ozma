@@ -65,8 +65,16 @@ export class FetchError extends Error {
   }
 }
 
+export class NetworkError extends Error {
+}
+
 export const fetchSuccess = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
-  const response = await fetch(input, init);
+  let response;
+  try {
+    response = await fetch(input, init);
+  } catch (e) {
+    throw new NetworkError(String(e));
+  }
   if (!response.ok) {
     const rawBody = await response.text();
     throw new FetchError(rawBody, response);
