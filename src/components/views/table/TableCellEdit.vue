@@ -12,6 +12,7 @@
       left: `${cellCoords.x}px`,
       '--editor-height': height ? `${height}px` : 'auto',
       minHeight: minHeight ? `${minHeight}px` : 'auto',
+      maxHeight: `${maxHeight}px`,
       minWidth: width ? `${width}px` : '200px',
     }"
   >
@@ -36,6 +37,13 @@ export default class TableCellEdit extends Vue {
   @Prop() minHeight!: number;
 
   private movedCellCoords: ICellCoords | null = null;
+  private maxHeight = 0;
+  private resizeObserver: ResizeObserver | null = null;
+
+  private updateMaxHeight() {
+    const viewportRect = document.querySelector(".userview-div")?.getBoundingClientRect();
+    this.maxHeight = viewportRect?.height ?? this.height;
+  }
 
   private updateMovedCoords() {
     const cellRect = (this.$refs["cellEdit"] as HTMLElement | undefined)?.getBoundingClientRect();
@@ -49,8 +57,10 @@ export default class TableCellEdit extends Vue {
       throw Error("Can't find `.userview-div` selector");
     }
 
-    const offsetX = cellRect.right > viewportRect.right ? cellRect.right - viewportRect.right : 0;
-    const offsetY = cellRect.bottom > viewportRect.bottom ? cellRect.bottom - viewportRect.bottom : 0;
+    const cellRight = this.sourceCoords.x + cellRect.width;
+    const cellBottom = this.sourceCoords.y + cellRect.height;
+    const offsetX = cellRight > viewportRect.right ? cellRight - viewportRect.right : 0;
+    const offsetY = cellBottom > viewportRect.bottom ? cellBottom - viewportRect.bottom : 0;
 
     this.movedCellCoords = {
       x: this.sourceCoords.x - offsetX,
@@ -59,7 +69,25 @@ export default class TableCellEdit extends Vue {
   }
 
   private mounted() {
+    const cellRef = this.$refs["cellEdit"] as HTMLElement | undefined;
+    if (!cellRef) {
+      throw Error("Can't find `cellEdit` ref");
+    }
+    this.resizeObserver = new ResizeObserver(() => this.updateMovedCoords());
+    this.resizeObserver.observe(cellRef);
     this.updateMovedCoords();
+    this.updateMaxHeight();
+
+    /* eslint-disable @typescript-eslint/unbound-method */
+    window.addEventListener("resize", this.updateMaxHeight);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private beforeDestroy() {
+    this.resizeObserver?.disconnect();
+    /* eslint-disable @typescript-eslint/unbound-method */
+    window.removeEventListener("resize", this.updateMaxHeight);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   @Watch("sourceCoords")
@@ -86,6 +114,7 @@ export default class TableCellEdit extends Vue {
     width: auto;
     position: fixed;
     top: 0;
+    overflow: auto;
     z-index: 9999;
 
     /* First shadow is as `shadow-lg` */
