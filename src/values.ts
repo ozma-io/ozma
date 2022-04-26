@@ -241,7 +241,7 @@ export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, und
   if (fieldType.type === "date") {
     return (value as Moment).format(dateFormat);
   } else if (fieldType.type === "datetime") {
-    return (value as Moment).format(); // ISO 8601
+    return (value as Moment).toISOString();
   } else if (fieldType.type === "interval") {
     return (value as Duration).toISOString();
   } else {
