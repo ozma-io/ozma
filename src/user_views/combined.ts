@@ -2,8 +2,7 @@ import Vue from "vue";
 import { Store } from "vuex";
 import {
   IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName,
-  FieldName, UserViewSource, IResultViewInfo, AttributeName, FieldType, IEntityRef,
-  ValueType, ArgumentName, IArgument,
+  FieldName, UserViewSource, IResultViewInfo, FieldType, IEntityRef, ValueType, ArgumentName, IArgument,
 } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
@@ -274,8 +273,9 @@ export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): 
 export interface ICommonUserViewData {
   args: IUserViewArguments;
   info: IResultViewInfo;
-  attributes: Record<AttributeName, unknown>;
-  columnAttributes: Record<AttributeName, unknown>[];
+  attributes: AttributesMap;
+  columnAttributes: AttributesMap[];
+  argumentAttributes: Record<ArgumentName, AttributesMap>;
   rows: IExecutedRow[] | null;
 }
 
@@ -399,8 +399,9 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   homeSchema: SchemaName | null;
   info: IResultViewInfo;
   argumentsMap: Record<ArgumentName, IArgument>;
-  attributes: Record<AttributeName, unknown>;
-  columnAttributes: Record<AttributeName, unknown>[];
+  attributes: AttributesMap;
+  columnAttributes: AttributesMap[];
+  argumentAttributes: Record<string, AttributesMap>;
   rows: IExtendedRow<ValueT, RowT>[] | null;
   // Rows added by user, not yet commited to the database.
   newRows: Record<AddedRowId, IExtendedAddedRow<ValueT, RowT>>;
@@ -432,6 +433,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.args = params.args;
     this.attributes = params.attributes;
     this.columnAttributes = params.columnAttributes;
+    this.argumentAttributes = params.argumentAttributes;
     this.homeSchema = homeSchema(this.args);
     this.oldCommittedRows = {};
     this.rowLoadState = params.rowLoadState;

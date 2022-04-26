@@ -39,6 +39,7 @@ async (
           info: res.info,
           attributes: res.pureAttributes,
           columnAttributes: res.pureColumnAttributes,
+          argumentAttributes: res.pureArgumentAttributes,
           rows: null,
           complete: true,
         };
@@ -64,6 +65,7 @@ async (
           info: res.info,
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
+          argumentAttributes: res.result.argumentAttributes,
           rows: complete ? res.result.rows : res.result.rows,
           complete,
         };
@@ -81,6 +83,7 @@ async (
           info: res.info,
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
+          argumentAttributes: res.result.argumentAttributes,
           rows: res.result.rows,
           complete: opts.chunk?.limit !== undefined && res.result.rows.length < opts.chunk.limit,
         };

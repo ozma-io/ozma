@@ -73,17 +73,19 @@ interface IArgumentInfo {
 export default class ArgumentEditor extends Vue {
   @Prop({ type: Array, required: true }) argumentParams!: IArgument[];
   @Prop({ type: Object, required: true }) argumentValues!: Record<ArgumentName, unknown>;
+  @Prop({ type: Object, required: true }) argumentAttributes!: Record<ArgumentName, AttributesMap>;
   @Prop({ type: String }) homeSchema!: string | undefined;
 
   private get args(): IArgumentInfo[] {
     const unsortedArgs: IArgumentInfo[] = this.argumentParams.map((parameter, parI) => {
-      const hasCaption = parameter.attributes["caption"] !== undefined;
-      const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : parameter.name;
+      const attributes = this.argumentAttributes[parameter.name] ?? {};
+      const rawCaption = attributes["caption"];
+      const caption = rawCaption ? valueToText(parameter.attributeTypes["caption"].type, rawCaption) : parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
 
       let dirtyHackOrder = parI;
-      const dirtyHackOrderRaw = parameter.attributes["dirty_hack_order"];
+      const dirtyHackOrderRaw = attributes["dirty_hack_order"];
       if (typeof dirtyHackOrderRaw === "number") {
         console.error("Deprecated attribute `dirty_hack_order`. Arguments order is now preserved as-is.");
         dirtyHackOrder = dirtyHackOrderRaw;
@@ -97,7 +99,7 @@ export default class ArgumentEditor extends Vue {
         valueType: fieldToValueType(type),
         isOptional,
         dirtyHackOrder,
-        attributes: parameter.attributes,
+        attributes,
       };
     });
 

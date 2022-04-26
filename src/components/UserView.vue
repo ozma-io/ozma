@@ -166,6 +166,7 @@
           :home-schema="state.uv.homeSchema"
           :argument-params="state.uv.info.arguments"
           :argument-values="currentArguments"
+          :argument-attributes="state.uv.argumentAttributes"
           @reset="resetUpdatedArguments"
           @update="updateArgument"
           @apply="applyUpdatedArguments"
