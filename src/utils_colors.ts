@@ -3,7 +3,6 @@ import { z } from "zod";
 import { IViewExprResult, SchemaName, RowId } from "ozma-api";
 import { store } from "@/main";
 import { default as Api } from "@/api";
-// import type { ISettingsState } from "@/state/settings";
 import { mapMaybe, objectMap, safeJsonParse } from "@/utils";
 
 const ThemeRef = z.object({
