@@ -40,7 +40,7 @@
         </div>
 
         <div class="input_modal__input_group">
-          <div class="input_modal__input">
+          <div>
             <slot
               :onFocus="onModalFocus"
               modal
@@ -221,7 +221,6 @@ export default class InputSlot extends Vue {
   @include variant-to-local("cell");
 
   .modal-content {
-    height: 100%;
     background-color: var(--default-backgroundDarker1Color);
   }
 
@@ -354,14 +353,24 @@ export default class InputSlot extends Vue {
   }
 
   .input_modal__input_group {
-    height: 100%;
     display: flex;
     flex-direction: column;
+    height: auto;
     padding: 0 1rem;
     background-color: var(--table-backgroundDarker1Color);
   }
 
-  .input_modal__input {
-    overflow: auto;
+  .input_modal__button__ok {
+    outline: none;
+    border: 0;
+    padding: 10px 18px;
+    cursor: pointer;
+    color: var(--MainTextColor);
+    box-shadow: 0 4px 8px var(--MainBorderColor);
+    background-color: var(--SuccessColor);
+    font-weight: 600;
+    width: 100%;
+    border-radius: 0;
+    margin-top: 5px;
   }
 </style>
