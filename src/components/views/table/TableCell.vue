@@ -1,9 +1,11 @@
 <i18n>
     {
         "en": {
+            "ellipsis": "... (Open cell to view full)",
             "add_child_tooplip": "Add child row"
         },
         "ru": {
+            "ellipsis": "... (Откройте ячейку, чтобы читать дальше)",
             "add_child_tooplip": "Добавить подстроку"
         }
     }
@@ -204,7 +206,7 @@ export default class TableCell extends Vue {
     let valueHtml = valueToPunnedText(columnInfo.valueType, this.value);
     if (typeof value === "string") {
       if (valueHtml.length > 1000) {
-        valueHtml = valueHtml.slice(0, 1000) + "...";
+        valueHtml = valueHtml.slice(0, 1000) + this.$t("ellipsis");
       }
       valueHtml = replaceHtmlLinks(valueHtml);
     }
