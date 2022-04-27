@@ -490,9 +490,14 @@ export default class UserView extends Vue {
   }
 
   get title() {
-    if (this.state.state === "show" && "title" in this.state.uv.attributes) {
-      return String(this.state.uv.attributes["title"]);
-    } else if (this.args.source.type === "named") {
+    if (this.state.state === "show") {
+      const titleAttr = this.state.uv.attributes["title"];
+      if (titleAttr) {
+        return String(titleAttr);
+      }
+    }
+
+    if (this.args.source.type === "named") {
       return this.args.source.ref.name;
     } else {
       return this.$t("anonymous_query").toString();
