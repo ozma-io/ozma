@@ -78,6 +78,7 @@
       <FormValueControl
         :value="editingValue.value"
         :attributes="editingValue.attributes"
+        :attribute-mappings="uv.columnAttributeMappings[editing.ref.column]"
         :type="editingValue.type"
         :locked="editingLocked"
         :disable-color="editing.ref.type === 'new'"

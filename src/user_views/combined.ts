@@ -2,7 +2,7 @@ import Vue from "vue";
 import { Store } from "vuex";
 import {
   IExecutedValue, IColumnField, IFieldRef, RowId, AttributesMap, IExecutedRow, SchemaName, EntityName,
-  FieldName, UserViewSource, IResultViewInfo, FieldType, IEntityRef, ValueType, ArgumentName, IArgument,
+  FieldName, UserViewSource, IResultViewInfo, FieldType, IEntityRef, ValueType, ArgumentName, IArgument, AttributeName, IBoundMapping,
 } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
@@ -279,6 +279,13 @@ export interface ICommonUserViewData {
   rows: IExecutedRow[] | null;
 }
 
+export interface IConvertedBoundMapping {
+  entries: Record<string | number, unknown>;
+  default: unknown;
+}
+
+export type ConvertedBoundAttributesMap = Record<AttributeName, IConvertedBoundMapping>;
+
 export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHandler, ICommonUserViewData {
   readonly homeSchema: SchemaName | null;
   readonly rows: IExtendedRow<ValueT, RowT>[] | null;
@@ -294,6 +301,8 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   readonly emptyRow: IEmptyRow<ValueT, RowT> | null;
   readonly oldCommittedRows: Record<AddedRowId, RowPosition>;
   readonly entries: Record<SchemaName, Record<EntityName, Entries>>;
+  readonly columnAttributeMappings: ConvertedBoundAttributesMap[];
+  readonly argumentAttributeMappings: Record<ArgumentName, ConvertedBoundAttributesMap>;
   readonly rowLoadState: IRowLoadState;
 
   trackAddedEntry(id: AddedRowId, meta?: unknown): void;
@@ -390,6 +399,17 @@ export interface IRowLoadState {
   complete: boolean;
 }
 
+const convertAttributeMapping = (typeName: string, mapping: IBoundMapping): IConvertedBoundMapping | null => {
+  if (typeName !== "string" && typeName !== "bool" && typeName !== "int" && typeName !== "uuid") {
+    return null;
+  }
+
+  return {
+    entries: Object.fromEntries(mapping.entries.map(entry => [entry.when, entry.value])),
+    default: mapping.default,
+  };
+};
+
 // This is a class which maintains separate local extra data for each cell, row and instance of a user view.
 // After creating register its `handler` with `userView.registerHandler`.
 // When no longer needed, unregister its `handler` with `userView.unregisterHandler`.
@@ -422,6 +442,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   // Cache of entries records. We get old cache from a previous user view and use it if no entries
   // are available yet during initialization.
   entries: Record<SchemaName, Record<EntityName, Entries>>;
+  columnAttributeMappings: ConvertedBoundAttributesMap[];
+  argumentAttributeMappings: Record<ArgumentName, ConvertedBoundAttributesMap>;
   handler: T;
   rowLoadState: IRowLoadState;
 
@@ -455,6 +477,28 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         }
       }
     }
+
+    this.columnAttributeMappings = this.info.columns.map(col => Object.fromEntries(mapMaybe(([attrName, attrInfo]) => {
+      if (!attrInfo.mapping) {
+        return undefined;
+      }
+
+      const newMapping = convertAttributeMapping(attrInfo.type.type, attrInfo.mapping);
+      return newMapping ? [attrName, newMapping] : undefined;
+    }, [...Object.entries(col.attributeTypes), ...Object.entries(col.cellAttributeTypes)])));
+
+    this.argumentAttributeMappings = Object.fromEntries(this.info.arguments.map(arg => {
+      const attrs = Object.fromEntries(mapMaybe(([attrName, attrInfo]) => {
+        if (!attrInfo.mapping) {
+          return undefined;
+        }
+
+        const typeName = arg.attributeTypes[attrName].type.type;
+        const newMapping = convertAttributeMapping(attrInfo.type.type, attrInfo.mapping);
+        return newMapping ? [attrName, newMapping] : undefined;
+      }, Object.entries(arg.attributeTypes)));
+      return [arg.name, attrs];
+    }));
 
     this.mainColumnMapping = this.makeMainColumnMapping();
     // We pretend these are extended rows already and assign them in.

@@ -301,7 +301,7 @@ import { z } from "zod";
 import { namespace } from "vuex-class";
 
 import { IEntityRef } from "ozma-api";
-import { valueToText, valueIsNull } from "@/values";
+import { valueIsNull } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { AutoSaveLock } from "@/state/staging_changes";
@@ -316,6 +316,8 @@ import { IReferenceSelectAction } from "@/components/ReferenceMultiSelect.vue";
 import { EntityRef } from "@/links";
 import { IIframeRef } from "@/api";
 import { ITime } from "@/components/Calendar.vue";
+import type { ConvertedBoundAttributesMap } from "@/user_views/combined";
+import { formatRawValue } from "@/user_views/format";
 
 interface ITextType {
   name: "text";
@@ -554,6 +556,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Object }) fieldType!: FieldType | undefined;
   @Prop({ type: Number }) rowId!: RowId | undefined;
   @Prop({ type: Object, default: () => ({}) }) attributes!: AttributesMap; // {...this.uv.attributes, ...row.attributes, ...this.uv.columnAttributes[x], ...value.attributes}
+  @Prop({ type: Object, default: () => ({}) }) attributeMappings!: ConvertedBoundAttributesMap;
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: String }) homeSchema!: string | undefined;
   @Prop({ type: String, default: "" }) caption!: string;
@@ -595,7 +598,10 @@ export default class FormControl extends Vue {
 
   // Textual representation of `value`.
   get textValue() {
-    return valueToText(this.type, this.value);
+    return formatRawValue(this.type, this.value, {
+      getCellAttr: name => this.attributes[name],
+      columnAttributeMappings: this.attributeMappings,
+    });
   }
 
   get isMultiline() {
@@ -775,11 +781,25 @@ export default class FormControl extends Vue {
           }
           return refEntry;
         }
-        case "enum":
+        case "enum": {
+          const textMapping = this.attributeMappings["text"];
+          const options = this.fieldType.values.map(x => {
+            let label = x;
+            if (textMapping) {
+              const mappedLabel = textMapping.entries[x];
+              if (mappedLabel) {
+                label = String(mappedLabel);
+              } else if (textMapping.default) {
+                label = String(textMapping.default);
+              }
+            }
+            return { label, value: x };
+          });
           return {
             name: "select",
-            options: this.fieldType.values.map(x => ({ label: x, value: x })),
+            options,
           };
+        }
         case "bool":
           return {
             name: "select",
