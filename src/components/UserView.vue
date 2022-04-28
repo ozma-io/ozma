@@ -11,6 +11,7 @@
             "edit_user_view": "Edit user view",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
+            "creation_not_available": "Main entity is not specified, so creation mode is not available.",
             "no_instance": "Instance not found.",
             "not_found": "User view not found.",
             "bad_request": "User view request error: {msg}",
@@ -41,6 +42,7 @@
             "edit_user_view": "Редактировать пользовательское представление",
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
+            "creation_not_available": "Главная сущность не задана, поэтому режим создания не доступен.",
             "no_instance": "База не найдена.",
             "not_found": "Представление не найдено.",
             "bad_request": "Неверный запрос для этого представления: {msg}",
@@ -804,8 +806,18 @@ export default class UserView extends Vue {
         }
         const newType = userViewType(uvData.attributes);
         if (newType.type === "component") {
+          if (uvData.rows === null && !uvData.info.mainEntity) {
+            this.setState({
+              state: "error",
+              args,
+              message: this.$t("creation_not_available").toString(),
+            });
+            this.nextUv = null;
+          }
+
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
+          if (pending.ref !== this.nextUv) return;
 
           const handler = component.handler ?? baseUserViewHandler;
 
