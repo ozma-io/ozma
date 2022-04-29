@@ -97,6 +97,10 @@ export default class MarkdownEditor extends Vue {
   private updateContent(content: string) {
     const editor = this.$refs.editor as EditorType | undefined;
     if (!editor) return;
+
+    const oldContent = (editor.invoke("getMarkdown") as string).trim();
+    if (oldContent === content) return;
+
     this.suppressOnChange = true;
     editor.invoke("setMarkdown", content, false);
     this.suppressOnChange = false;
