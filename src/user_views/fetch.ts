@@ -37,9 +37,9 @@ async (
         return {
           args,
           info: res.info,
-          attributes: res.pureAttributes,
-          columnAttributes: res.pureColumnAttributes,
-          argumentAttributes: res.pureArgumentAttributes,
+          attributes: res.constAttributes,
+          columnAttributes: res.constColumnAttributes,
+          argumentAttributes: res.constArgumentAttributes,
           rows: null,
           complete: true,
         };
