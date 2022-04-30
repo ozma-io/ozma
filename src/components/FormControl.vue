@@ -693,7 +693,7 @@ export default class FormControl extends Vue {
     }
     // `calc` is needed because sizes should be relative to base font size.
     const heightMultilineText = "calc(4em + 12px)";
-    const heightCodeEditor = "var(--editor-height, 10rem)";
+    const heightCodeEditor = "var(--table-cell-edit-height, 10rem)";
 
     // FIXME: return proper type from backend instead.
     if (this.fieldRef?.name === "id") {

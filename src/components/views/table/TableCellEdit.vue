@@ -10,7 +10,7 @@
     :style="{
       top: `${cellCoords.y}px`,
       left: `${cellCoords.x}px`,
-      '--editor-height': height ? `${height}px` : 'auto',
+      '--table-cell-edit-height': height ? `${height}px` : 'auto',
       minHeight: minHeight ? `${minHeight}px` : 'auto',
       maxHeight: `${maxHeight}px`,
       minWidth: width ? `${width}px` : '200px',
@@ -114,7 +114,6 @@ export default class TableCellEdit extends Vue {
     width: auto;
     position: fixed;
     top: 0;
-    overflow: auto;
     z-index: 9999;
 
     /* First shadow is as `shadow-lg` */

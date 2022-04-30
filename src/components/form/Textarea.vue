@@ -7,6 +7,7 @@
       :value="value"
       :readonly="disabled"
       rows="1"
+      :max-height="maxHeight"
       :class="['textarea_field', {
         'textarea_field__disabled': disabled,
         'textarea-field_cell-edit': isCellEdit,
@@ -60,8 +61,27 @@ export default class Textarea extends Vue {
   // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
+  private maxHeight = 0;
+
+  private updateMaxHeight() {
+    const viewportRect = document.querySelector(".userview-div")?.getBoundingClientRect();
+    this.maxHeight = viewportRect?.height ?? this.height;
+  }
+
   private mounted() {
     void Vue.nextTick().then(() => this.updateAutofocus());
+
+    this.updateMaxHeight();
+
+    /* eslint-disable @typescript-eslint/unbound-method */
+    window.addEventListener("resize", this.updateMaxHeight);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private beforeDestroy() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    window.removeEventListener("resize", this.updateMaxHeight);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   private updateAutofocus() {
