@@ -11,6 +11,7 @@
             "edit_user_view": "Edit user view",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
+            "creation_not_available": "Main entity is not specified, so creation mode is not available.",
             "no_instance": "Instance not found.",
             "not_found": "User view not found.",
             "bad_request": "User view request error: {msg}",
@@ -41,6 +42,7 @@
             "edit_user_view": "Редактировать пользовательское представление",
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
+            "creation_not_available": "Главная сущность не задана, поэтому режим создания не доступен.",
             "no_instance": "База не найдена.",
             "not_found": "Представление не найдено.",
             "bad_request": "Неверный запрос для этого представления: {msg}",
@@ -162,8 +164,10 @@
           v-if="argumentEditorVisible"
           class="userview-argument-editor"
           :home-schema="state.uv.homeSchema"
-          :argument-params="state.uv.info.arguments"
-          :argument-values="currentArguments"
+          :params="state.uv.info.arguments"
+          :values="currentArguments"
+          :attributes="state.uv.argumentAttributes"
+          :attribute-mappings="state.uv.argumentAttributeMappings"
           @reset="resetUpdatedArguments"
           @update="updateArgument"
           @apply="applyUpdatedArguments"
@@ -488,9 +492,14 @@ export default class UserView extends Vue {
   }
 
   get title() {
-    if (this.state.state === "show" && "title" in this.state.uv.attributes) {
-      return String(this.state.uv.attributes["title"]);
-    } else if (this.args.source.type === "named") {
+    if (this.state.state === "show") {
+      const titleAttr = this.state.uv.attributes["title"];
+      if (titleAttr) {
+        return String(titleAttr);
+      }
+    }
+
+    if (this.args.source.type === "named") {
       return this.args.source.ref.name;
     } else {
       return this.$t("anonymous_query").toString();
@@ -804,8 +813,18 @@ export default class UserView extends Vue {
         }
         const newType = userViewType(uvData.attributes);
         if (newType.type === "component") {
+          if (uvData.rows === null && !uvData.info.mainEntity) {
+            this.setState({
+              state: "error",
+              args,
+              message: this.$t("creation_not_available").toString(),
+            });
+            this.nextUv = null;
+          }
+
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
+          if (pending.ref !== this.nextUv) return;
 
           const handler = component.handler ?? baseUserViewHandler;
 

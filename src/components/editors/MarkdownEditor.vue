@@ -19,7 +19,7 @@
       v-else
       :key="key"
       ref="editor"
-      :initial-value="currentContent"
+      :initial-value="content"
       :initial-edit-type="editType"
       :options="editorOptions"
       :height="`${height}px`"
@@ -54,12 +54,11 @@ export default class MarkdownEditor extends Vue {
   // TODO: implement.
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
-  private currentContent = "";
+  private suppressOnChange = false;
   private key = 0;
   private editorOptions: Record<string, unknown> = {};
 
   created() {
-    this.currentContent = this.content;
     this.editorOptions = {
       minHeight: "205px",
       useCommandShortcut: true,
@@ -82,12 +81,11 @@ export default class MarkdownEditor extends Vue {
   }
 
   private onChange() {
+    if (this.suppressOnChange) return;
+
     const editor = this.$refs.editor as EditorType;
     const newValue = (editor.invoke("getMarkdown") as string).trim();
-    if (this.currentContent !== newValue) {
-      this.currentContent = newValue;
-      this.$emit("update:content", newValue);
-    }
+    this.$emit("update:content", newValue);
   }
 
   @Watch("editType")
@@ -97,11 +95,15 @@ export default class MarkdownEditor extends Vue {
 
   @Watch("content")
   private updateContent(content: string) {
-    if (this.currentContent === content) return;
-    this.currentContent = content;
-    const editor = this.$refs.editor as EditorType;
+    const editor = this.$refs.editor as EditorType | undefined;
     if (!editor) return;
+
+    const oldContent = (editor.invoke("getMarkdown") as string).trim();
+    if (oldContent === content) return;
+
+    this.suppressOnChange = true;
     editor.invoke("setMarkdown", content, false);
+    this.suppressOnChange = false;
   }
 }
 </script>
