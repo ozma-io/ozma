@@ -37,7 +37,13 @@ export default class TableCellEdit extends Vue {
   @Prop() minHeight!: number;
 
   private movedCellCoords: ICellCoords | null = null;
+
+  /* TableCellEdit can be bigger than cell it represents, but we need to constrain it's max-height by screen height.
+   * We can't do it by CSS, so we update it in JS */
   private maxHeight = 0;
+
+  /* TableCellEdit's height can be changed by editing
+   * and to keep it's position updated we need to observe it by ResizeObserver */
   private resizeObserver: ResizeObserver | null = null;
 
   private updateMaxHeight() {

@@ -61,6 +61,8 @@ export default class Textarea extends Vue {
   // Perhaps we need "autosize" prop instead?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
 
+  /* Used only for editing in tables, we need it to make content scrollable when it's can't fit to screen.
+   * CSS-only solution doesn't work in Safari */
   private maxHeight = 0;
 
   private updateMaxHeight() {
