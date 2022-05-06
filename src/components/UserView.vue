@@ -1053,12 +1053,12 @@ export default class UserView extends Vue {
           return;
         }
 
-        const createOp = ret.results.find(x => x.type === "insert" && equalEntityRef(x.entity, uv.info.mainEntity!));
-        if (createOp === undefined) {
+        const createOps = ret.results.filter(x => x.type === "insert" && equalEntityRef(x.entity, uv.info.mainEntity!));
+        if (createOps.length !== 1) {
           await this.reloadIfRoot(ret.autoSave);
           return;
         }
-        const id = (createOp as ICombinedInsertEntityResult).id;
+        const id = (createOps[0] as ICombinedInsertEntityResult).id;
         const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
         let link: Link;
         if (customLink === null) {

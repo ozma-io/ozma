@@ -197,14 +197,14 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   private loadPun() {
     if (this.single) {
       const value = this.value as ICombinedValue;
-      if (value.pun || typeof value.value !== "number") return;
-
-      void this.processId(value.value);
+      const rawValue = currentValue(value);
+      if (value.pun || typeof rawValue !== "number") return;
+      void this.fetchEntriesByIds(this.entries, [rawValue]);
     } else {
       const values = this.value as ICombinedValue[];
-      if (values.every(v => v.pun)) return;
-
-      void this.processIds(values.map(v => v.value as number));
+      const neededValues = mapMaybe(v => v.pun ? undefined : currentValue(v) as number, values);
+      if (neededValues.length === 0) return;
+      void this.fetchEntriesByIds(this.entries, neededValues);
     }
   }
 
@@ -294,7 +294,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     }
   }
 
-  private async processId(id: number): Promise<boolean> {
+  private async setRawId(id: number): Promise<boolean> {
     const puns = await this.fetchEntriesByIds(this.entries, [id]);
     if (!(id in puns)) {
       return false;
@@ -304,12 +304,8 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     return true;
   }
 
-  private async processIds(ids: number[]): Promise<void> {
-    const puns = await this.fetchEntriesByIds(this.entries, ids);
-  }
-
   private async selectFromScanner(content: IQRCode): Promise<boolean> {
-    return this.processId(content.id);
+    return this.setRawId(content.id);
   }
 
   private async processQRCode(filterValue: string): Promise<boolean> {
@@ -323,7 +319,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
       return false;
     }
 
-    return this.processId(qrcode.id);
+    return this.setRawId(qrcode.id);
   }
 
   private async processRawId(filterValue: string): Promise<boolean> {
@@ -332,7 +328,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
       return false;
     }
 
-    return this.processId(id);
+    return this.setRawId(id);
   }
 
   private async processFilter(filterValue: string): Promise<boolean> {
