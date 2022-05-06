@@ -1,4 +1,4 @@
-import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IEntriesRequestOpts } from "ozma-api";
+import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts } from "ozma-api";
 import { Store } from "vuex";
 
 import Api, { developmentMode } from "@/api";
@@ -31,14 +31,14 @@ async (
     if (args.source.type === "named") {
       if (args.args === null) {
         // Always recompile user views if development mode is enabled.
-        opts = {};
+        let reqOpts: IInfoRequestOpts = {};
         if (developmentMode) {
           // Hack `chunk` to pass undocumented call argument.
-          opts = { ...opts, forceRecompile: true };
+          reqOpts = { ...reqOpts, forceRecompile: true } as any;
         }
         const res: IViewInfoResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserViewInfo.bind(Api),
-          args: [args.source.ref, opts],
+          args: [args.source.ref, reqOpts],
         }, { root: true });
         return {
           args,
@@ -50,18 +50,19 @@ async (
           complete: true,
         };
       } else {
+        let reqOpts = opts;
         const realLimit = opts.chunk?.limit;
         // Increasing `limit` to compute `complete`.
         if (realLimit !== undefined) {
-          opts = { ...opts, chunk: { ...opts.chunk, limit: realLimit + 1 } };
+          reqOpts = { ...reqOpts, chunk: { ...opts.chunk, limit: realLimit + 1 } };
         }
         // Always recompile user views if development mode is enabled.
         if (developmentMode) {
-          opts = { ...opts, forceRecompile: true };
+          reqOpts = { ...reqOpts, forceRecompile: true } as any;
         }
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args, opts],
+          args: [args.source.ref, args.args, reqOpts],
         }, { root: true });
 
         const complete = realLimit === undefined || res.result.rows.length <= realLimit;
