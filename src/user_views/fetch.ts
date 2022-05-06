@@ -30,9 +30,15 @@ async (
   try {
     if (args.source.type === "named") {
       if (args.args === null) {
+        // Always recompile user views if development mode is enabled.
+        opts = {};
+        if (developmentMode) {
+          // Hack `chunk` to pass undocumented call argument.
+          opts = { ...opts, forceRecompile: true };
+        }
         const res: IViewInfoResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserViewInfo.bind(Api),
-          args: [args.source.ref],
+          args: [args.source.ref, opts],
         }, { root: true });
         return {
           args,
@@ -51,8 +57,7 @@ async (
         }
         // Always recompile user views if development mode is enabled.
         if (developmentMode) {
-          // Hack `chunk` to pass undocumented call argument.
-          opts = { ...opts, chunk: { ...opts.chunk, forceRecompile: true } as any };
+          opts = { ...opts, forceRecompile: true };
         }
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
