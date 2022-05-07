@@ -183,11 +183,13 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
               if (description) {
                 void dispatch("setError", `Error when getting token: ${description}`);
               }
-            } else {
+            } else if (e instanceof Utils.NetworkError) {
               // Most likely there are no internet connection now, so wait and try again.
               networkError = true;
               // eslint-disable-next-line no-await-in-loop
               await Utils.waitTimeout(10000);
+            } else {
+              void dispatch("setError", `Error when getting token: ${e}`);
             }
           }
         }
