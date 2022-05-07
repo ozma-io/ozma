@@ -11,6 +11,7 @@ export default Vue.extend({
     locked: { type: Boolean },
     type: { type: Object, required: true },
     attributes: { type: Object },
+    attributeMappings: { type: Object },
     homeSchema: { type: String },
     caption: { type: String },
     forceCaption: { type: Boolean },

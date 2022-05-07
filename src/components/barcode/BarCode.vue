@@ -13,7 +13,6 @@
   <b-form-input
     v-model="currentCode"
     :placeholder="$t('scan')"
-    autofocus
     @change="onScanned"
   />
 </template>

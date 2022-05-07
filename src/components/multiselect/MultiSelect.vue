@@ -918,7 +918,7 @@ export default class MultiSelect extends Vue {
     border: none;
 
     &:not(:hover) {
-      opacity: 0.3;
+      opacity: 0.5;
     }
   }
 

@@ -78,6 +78,7 @@
       <FormValueControl
         :value="editingValue.value"
         :attributes="editingValue.attributes"
+        :attribute-mappings="uv.columnAttributeMappings[editing.ref.column]"
         :type="editingValue.type"
         :locked="editingLocked"
         :disable-color="editing.ref.type === 'new'"
@@ -1845,7 +1846,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private onOtherTableClicked(uid: any) {
     if (this.uid !== uid) {
-      this.deselectAllCells();
+      this.deselectAllCells({ clearCursor: true });
       this.removeCellEditing();
     }
   }
@@ -1856,6 +1857,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  private onFormInputFocused() {
+    this.deselectAllCells({ clearCursor: true });
+  }
+
   private get rootEvents(): [name: string, callback: (event: any) => void][] {
     /* eslint-disable @typescript-eslint/unbound-method */
     const handlers = [
@@ -1864,7 +1869,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       ["paste", this.pasteClipboardToSelectedCells],
       ["cell-click", this.onOtherTableClicked],
       ["row-select", this.onRowInOtherTableSelected],
-      ["form-input-focused", this.deselectAllCells],
+      ["form-input-focused", this.onFormInputFocused],
     ] as [name: string, callback: (event: any) => void][];
     /* eslint-enable @typescript-eslint/unbound-method */
 
@@ -2736,7 +2741,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   ::v-deep .table-td {
-    padding: 0.15rem;
+    padding: 0.3rem 0.15rem;
   }
 
   .button-container {
@@ -2898,7 +2903,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
 
     .active-editing {
-      position: sticky !important;
       justify-content: flex-start;
       z-index: 100000; /* чтобы FormControl был поверх других таблиц, когда их несколько на странице */
     }

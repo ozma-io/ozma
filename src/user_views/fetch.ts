@@ -1,4 +1,4 @@
-import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IEntriesRequestOpts } from "ozma-api";
+import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts } from "ozma-api";
 import { Store } from "vuex";
 
 import Api, { developmentMode } from "@/api";
@@ -30,32 +30,39 @@ async (
   try {
     if (args.source.type === "named") {
       if (args.args === null) {
+        // Always recompile user views if development mode is enabled.
+        let reqOpts: IInfoRequestOpts = {};
+        if (developmentMode) {
+          // Hack `chunk` to pass undocumented call argument.
+          reqOpts = { ...reqOpts, forceRecompile: true } as any;
+        }
         const res: IViewInfoResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserViewInfo.bind(Api),
-          args: [args.source.ref],
+          args: [args.source.ref, reqOpts],
         }, { root: true });
         return {
           args,
           info: res.info,
-          attributes: res.pureAttributes,
-          columnAttributes: res.pureColumnAttributes,
+          attributes: res.constAttributes,
+          columnAttributes: res.constColumnAttributes,
+          argumentAttributes: res.constArgumentAttributes,
           rows: null,
           complete: true,
         };
       } else {
+        let reqOpts = opts;
         const realLimit = opts.chunk?.limit;
         // Increasing `limit` to compute `complete`.
         if (realLimit !== undefined) {
-          opts = { ...opts, chunk: { ...opts.chunk, limit: realLimit + 1 } };
+          reqOpts = { ...reqOpts, chunk: { ...opts.chunk, limit: realLimit + 1 } };
         }
         // Always recompile user views if development mode is enabled.
         if (developmentMode) {
-          // Hack `chunk` to pass undocumented call argument.
-          opts = { ...opts, chunk: { ...opts.chunk, forceRecompile: true } as any };
+          reqOpts = { ...reqOpts, forceRecompile: true } as any;
         }
         const res: IViewExprResult = await store.dispatch("callProtectedApi", {
           func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args, opts],
+          args: [args.source.ref, args.args, reqOpts],
         }, { root: true });
 
         const complete = realLimit === undefined || res.result.rows.length <= realLimit;
@@ -64,6 +71,7 @@ async (
           info: res.info,
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
+          argumentAttributes: res.result.argumentAttributes,
           rows: complete ? res.result.rows : res.result.rows,
           complete,
         };
@@ -81,6 +89,7 @@ async (
           info: res.info,
           attributes: res.result.attributes,
           columnAttributes: res.result.columnAttributes,
+          argumentAttributes: res.result.argumentAttributes,
           rows: res.result.rows,
           complete: opts.chunk?.limit !== undefined && res.result.rows.length < opts.chunk.limit,
         };

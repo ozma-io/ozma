@@ -30,10 +30,10 @@
         'disabled-cell': value.info === undefined && from !== 'existing'
       }
     ]"
-    @click.stop="$emit('cell-click', $refs.cell, $event)"
-    @mousedown.stop="$emit('cell-mousedown', $refs.cell, $event)"
-    @mouseover.stop="$emit('cell-mouseover', $refs.cell, $event)"
-    @mouseup.stop="$emit('cell-mouseup', $refs.cell, $event)"
+    @click="$emit('cell-click', $refs.cell, $event)"
+    @mousedown="$emit('cell-mousedown', $refs.cell, $event)"
+    @mouseover="$emit('cell-mouseover', $refs.cell, $event)"
+    @mouseup="$emit('cell-mouseup', $refs.cell, $event)"
     @contextmenu.prevent="$emit('cell-contextmenu', $refs.cell, $event)"
   >
     <div v-if="value.extra.selected" class="selection-overlay" />
@@ -62,7 +62,7 @@
         </div>
       </template>
       <template v-else>
-        <template v-if="valueType === 'bool'">
+        <template v-if="valueType.type === 'bool'">
           <Checkbox
             v-if="!isNull"
             class="checkbox_click-none"
@@ -76,7 +76,7 @@
             'option-variant',
             'option-local-variant',
             {
-              'option': (fieldType == 'enum' || fieldType == 'reference') && valueHtml.length > 0,
+              'option': (fieldTypeName == 'enum' || fieldTypeName == 'reference') && valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
@@ -118,7 +118,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import moment from "moment";
+import { ValueType } from "ozma-api";
 
 import { valueIsNull } from "@/values";
 import Checkbox from "@/components/checkbox/Checkbox.vue";
@@ -126,9 +126,9 @@ import { attrToButtons, Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { IColumn, ITableCombinedUserView, ITableExtendedRow, ITableExtendedValue, ITableRowTree } from "@/components/views/Table.vue";
 import { ColorVariantAttribute, colorVariantFromAttribute, defaultVariantAttribute, getColorVariantAttributeClassName, getColorVariantAttributeVariables, interfaceButtonVariant } from "@/utils_colors";
-import { currentValue, valueToPunnedText } from "@/user_views/combined";
-import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinks } from "@/utils";
+import { currentValue } from "@/user_views/combined";
 import { attrToLinkRef } from "@/links";
+import { formatValueToHtml } from "@/user_views/format";
 
 @Component({
   components: {
@@ -154,11 +154,11 @@ export default class TableCell extends Vue {
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
   @Prop({ type: Number }) height!: number | undefined;
 
-  get valueType(): string | null {
-    return this.value.info?.field?.valueType.type ?? null;
+  get valueType(): ValueType {
+    return this.uv.info.columns[this.columnIndex].valueType;
   }
 
-  get fieldType(): string | null {
+  get fieldTypeName(): string | null {
     return this.value.info?.field?.fieldType?.type ?? null;
   }
 
@@ -183,32 +183,10 @@ export default class TableCell extends Vue {
   }
 
   get valueHtml() {
-    const value = currentValue(this.value);
-    if (typeof value === "number") {
-      const numberFormatRaw = this.getCellAttr("number_format");
-      if (typeof numberFormatRaw === "string") {
-        const numberFormat = numberFormatRaw.toLowerCase();
-        if (isValidNumberFormat(numberFormat)) {
-          const fractionDigitsRaw = this.getCellAttr("fraction_digits");
-          const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-          return getNumberFormatter(numberFormat, fractionDigits).format(value);
-        }
-      }
-    }
-
-    if (moment.isMoment(value) && this.getCellAttr("show_seconds") === true) {
-      return value.local().format("L LTS");
-    }
-
-    const columnInfo = this.uv.info.columns[this.columnIndex];
-    let valueHtml = valueToPunnedText(columnInfo.valueType, this.value);
-    if (typeof value === "string") {
-      if (valueHtml.length > 1000) {
-        valueHtml = valueHtml.slice(0, 1000) + "...";
-      }
-      valueHtml = replaceHtmlLinks(valueHtml);
-    }
-    return valueHtml;
+    return formatValueToHtml(this.valueType, this.value, {
+      getCellAttr: name => this.getCellAttr(name),
+      columnAttributeMappings: this.uv.columnAttributeMappings[this.columnIndex],
+    });
   }
 
   get link() {
@@ -325,7 +303,7 @@ export default class TableCell extends Vue {
       flex-shrink: 0;
       border: none;
       display: flex;
-      opacity: 0.3;
+      opacity: 0.5;
       overflow: visible;
     }
 
@@ -431,7 +409,7 @@ export default class TableCell extends Vue {
     pointer-events: auto !important;
     transition: transform 0.2s;
     line-height: 1rem;
-    opacity: 0.3;
+    opacity: 0.5;
   }
 
   .tree-toggle-expand.material-icons:hover {

@@ -5,7 +5,7 @@ import R from "ramda";
 
 import { app } from "@/main";
 import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout, shortLanguage } from "@/utils";
-import Api from "@/api";
+import Api, { developmentMode } from "@/api";
 import { valueToText } from "@/values";
 import { CancelledError } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
@@ -393,6 +393,11 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
     limit: limit + 1,
     where,
   };
+  // Always recompile domains if development mode is enabled.
+  if (developmentMode) {
+    // Hack `chunk` to pass undocumented call argument.
+    (chunk as any).forceRecompile = true;
+  }
   const opts: IEntriesRequestOpts = {
     chunk,
   };

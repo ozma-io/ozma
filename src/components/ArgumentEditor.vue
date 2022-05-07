@@ -32,11 +32,12 @@
             xl="2"
           >
             <FormControl
-              :value="argumentValues[argument.name] ?? null"
+              :value="values[argument.name] ?? null"
               :is-nullable="argument.isOptional"
               :field-type="argument.fieldType"
               :type="argument.valueType"
               :attributes="argument.attributes"
+              :attribute-mappings="argument.attributeMappings"
               :caption="argument.caption"
               force-multiline
               compact-mode
@@ -57,6 +58,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
 import { fieldToValueType, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import FormControl from "@/components/FormControl.vue";
+import { ConvertedBoundAttributesMap } from "@/user_views/combined";
 
 interface IArgumentInfo {
   name: ArgumentName;
@@ -66,35 +68,46 @@ interface IArgumentInfo {
   valueType: ValueType;
   isOptional: boolean;
   attributes: AttributesMap;
-  dirtyHackOrder: number; // Arguments come alphabet-sorted from backend.
+  attributeMappings: ConvertedBoundAttributesMap;
+  dirtyHackOrder: number;
 }
 
 @Component({ components: { FormControl } })
 export default class ArgumentEditor extends Vue {
-  @Prop({ type: Object, required: true }) argumentParams!: Record<ArgumentName, IArgument>;
-  @Prop({ type: Object, required: true }) argumentValues!: Record<ArgumentName, unknown>;
+  @Prop({ type: Array, required: true }) params!: IArgument[];
+  @Prop({ type: Object, required: true }) values!: Record<ArgumentName, unknown>;
+  @Prop({ type: Object, required: true }) attributes!: Record<ArgumentName, AttributesMap>;
+  @Prop({ type: Object, required: true }) attributeMappings!: Record<ArgumentName, ConvertedBoundAttributesMap>;
   @Prop({ type: String }) homeSchema!: string | undefined;
 
   private get args(): IArgumentInfo[] {
-    const unsortedArgs: IArgumentInfo[] = Object.entries(this.argumentParams).map(([name, parameter]) => {
-      const hasCaption = parameter.attributes["caption"] !== undefined;
-      const caption = hasCaption ? valueToText(parameter.attributeTypes["caption"], parameter.attributes["caption"]) : name;
+    const unsortedArgs: IArgumentInfo[] = this.params.map((parameter, parI) => {
+      const attributes = this.attributes[parameter.name] ?? {};
+      const attributeMappings = this.attributeMappings[parameter.name] ?? {};
+      const rawCaption = attributes["caption"];
+      const caption = rawCaption ? valueToText(parameter.attributeTypes["caption"].type, rawCaption) : parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
-      const dirtyHackOrderRaw = parameter.attributes["dirty_hack_order"];
-      const dirtyHackOrder = typeof dirtyHackOrderRaw === "number" ? dirtyHackOrderRaw : 0;
+
+      let dirtyHackOrder = parI;
+      const dirtyHackOrderRaw = attributes["dirty_hack_order"];
+      if (typeof dirtyHackOrderRaw === "number") {
+        console.error("Deprecated attribute `dirty_hack_order`. Arguments order is now preserved as-is.");
+        dirtyHackOrder = dirtyHackOrderRaw;
+      }
 
       return {
-        name,
+        name: parameter.name,
         defaultValue: parameter.defaultValue,
         caption,
         fieldType: type,
         valueType: fieldToValueType(type),
         isOptional,
         dirtyHackOrder,
-        attributes: parameter.attributes,
+        attributes,
+        attributeMappings,
       };
-    }, this.argumentParams);
+    });
 
     return unsortedArgs.sort((a, b) => a.dirtyHackOrder - b.dirtyHackOrder);
   }

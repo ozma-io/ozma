@@ -3,4 +3,5 @@
 
 . ./prepare.sh
 yarn lint --no-fix --max-warnings 0
-yarn lint:style --no-fix --max-warnings 0
+# Disable stylelint, as it often segfaults in CI.
+# yarn lint:style --no-fix --max-warnings 0

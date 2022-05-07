@@ -100,7 +100,7 @@ export default class SaveRestoreSchema extends Vue {
   schema = "";
   fileForRestore: File | null = null;
   dropOthers = false;
-  skipPreloaded = false;
+  skipPreloaded = true;
 
   async saveSchema() {
     try {

@@ -8,6 +8,7 @@
       :value="value"
       :value-formatted="valueFormatted"
       :attributes="attributes"
+      :attribute-mappings="uv.columnAttributeMappings[element.index]"
       :type="element.columnInfo.valueType"
       :locked="locked || softDisabled"
       :home-schema="uv.homeSchema"
