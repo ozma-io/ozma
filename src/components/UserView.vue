@@ -189,8 +189,8 @@
 
       <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <b-overlay
-        class="userview-overlay"
         ref="overlayRef"
+        class="userview-overlay"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues"
         variant="dark"
         opacity="0.4"
