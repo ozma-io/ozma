@@ -199,10 +199,7 @@ export default class TableCell extends Vue {
   }
 
   get optionColorVariantAttribute(): ColorVariantAttribute {
-    const optionColorVariantAttribute = this.getCellAttr("option_variant");
-    return optionColorVariantAttribute
-      ? colorVariantFromAttribute(optionColorVariantAttribute)
-      : defaultVariantAttribute;
+    return colorVariantFromAttribute(this.getCellAttr("option_variant"), { type: "existing", className: "option" });
   }
 
   get valueHtml() {

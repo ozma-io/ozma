@@ -661,11 +661,7 @@ export default class FormControl extends Vue {
   }
 
   private get optionColorVariantAttribute(): ColorVariantAttribute {
-    if (this.attributes["option_variant"]) {
-      return colorVariantFromAttribute(this.attributes["option_variant"]);
-    } else {
-      return { type: "existing", className: "option" };
-    }
+    return colorVariantFromAttribute(this.attributes["option_variant"], { type: "existing", className: "option" });
   }
 
   get customHeight() {
