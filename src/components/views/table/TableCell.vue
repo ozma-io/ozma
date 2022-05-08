@@ -46,7 +46,14 @@
         />
       </template>
       <template v-else-if="link !== null && valueHtml.length > 0">
-        <div class="option option-variant option-local-variant">
+        <div
+          :class="[
+            'option',
+            optionVariantClassName,
+            'option-local-variant',
+          ]"
+          :style="optionVariantVariables"
+        >
           <FunLink
             class="option-link rounded-circle"
             :link="link"
@@ -73,13 +80,14 @@
           v-else
           :class="[
             'cell-text',
-            'option-variant',
+            optionVariantClassName,
             'option-local-variant',
             {
               'option': (fieldTypeName == 'enum' || fieldTypeName == 'reference') && valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
+          :style="optionVariantVariables"
         >
           <ButtonItem
             v-if="addChildButton"
@@ -177,6 +185,23 @@ export default class TableCell extends Vue {
       return colorVariantFromAttribute(colorVariantAttribute);
     } else if (typeof cellColor === "string") {
       return colorVariantFromAttribute({ background: cellColor });
+    } else {
+      return defaultVariantAttribute;
+    }
+  }
+
+  get optionVariantClassName() {
+    return getColorVariantAttributeClassName(this.optionColorVariantAttribute);
+  }
+
+  get optionVariantVariables() {
+    return getColorVariantAttributeVariables(this.optionColorVariantAttribute);
+  }
+
+  get optionColorVariantAttribute(): ColorVariantAttribute {
+    const colorVariantAttribute = this.getCellAttr("option_variant");
+    if (colorVariantAttribute) {
+      return colorVariantFromAttribute(colorVariantAttribute);
     } else {
       return defaultVariantAttribute;
     }

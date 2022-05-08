@@ -120,6 +120,7 @@
           :disabled="isDisabled"
           :is-cell-edit="isCellEdit"
           :background-color="cellColor"
+          :option-color-variant-attribute="optionColorVariantAttribute"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
@@ -138,6 +139,7 @@
           :background-color="cellColor"
           :home-schema="homeSchema"
           :compact-mode="compactMode"
+          :option-color-variant-attribute="optionColorVariantAttribute"
           @update:value="updateValue"
           @popup-opened="iSlot.onFocus"
           @popup-closed="onBlur"
@@ -234,6 +236,7 @@
           :qrcode-input="isQRCodeInput"
           :scope="scope"
           :compact-mode="compactMode"
+          :option-color-variant-attribute="optionColorVariantAttribute"
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
           @popup-opened="iSlot.onFocus"
@@ -654,6 +657,14 @@ export default class FormControl extends Vue {
       return colorVariantFromAttribute({ background: this.cellColor });
     } else {
       return { type: "existing", className: "cell" };
+    }
+  }
+
+  private get optionColorVariantAttribute(): ColorVariantAttribute {
+    if (this.attributes["option_variant"]) {
+      return colorVariantFromAttribute(this.attributes["option_variant"]);
+    } else {
+      return { type: "existing", className: "option" };
     }
   }
 

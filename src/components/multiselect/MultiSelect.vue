@@ -60,7 +60,7 @@
           @keydown.space.prevent="openPopup"
         >
           <div
-            class="default-variant values-container"
+            class="values-container"
           >
             <!-- eslint-disable vue/no-v-html -->
             <span
@@ -80,7 +80,7 @@
                 v-for="(option, index) in selectedOptions"
                 :key="index"
                 :class="[
-                  'option-variant',
+                  optionVariantClassName,
                   'option-local-variant',
                   single ? 'single-value' : 'one-of-many-value',
                 ]"
@@ -174,7 +174,12 @@
               <div
                 v-for="(option, index) in selectedOptions"
                 :key="index"
-                class="option-variant option-local-variant option-wrapper"
+                :class="[
+                  optionVariantClassName,
+                  'option-local-variant',
+                  'option-wrapper'
+                ]"
+                :style="optionVariantVariables"
                 @click.stop="unselectOption(index, false)"
               >
                 <button
@@ -219,17 +224,24 @@
                 :key="selectedOptions.length + index"
                 :class="[
                   'option-wrapper',
-                  'option-variant',
+                  optionVariantClassName,
                   'option-local-variant',
                   {
                     'hovered-value': hoveredOptionIndex === index,
                   },
                 ]"
-                :style="listValueStyle"
+                :style="{ ...listValueStyle, ...optionVariantVariables }"
                 @mouseover="hoveredOptionIndex = index"
                 @click.stop="selectOption(option.index)"
               >
-                <div class="option-variant option-local-variant single-value">
+                <div
+                  :class="[
+                    optionVariantClassName,
+                    'option-local-variant',
+                    'single-value',
+                  ]"
+                  :style="optionVariantVariables"
+                >
                   <slot
                     name="option"
                     :option="option"
@@ -286,6 +298,8 @@ import Popper from "vue-popperjs";
 
 import { deepClone, deepEquals, NeverError, nextRender, replaceHtmlLinks } from "@/utils";
 import InputPopup from "@/components/InputPopup.vue";
+import type { ColorVariantAttribute } from "@/utils_colors";
+import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
 
 export interface ISelectOption<T> {
   label: string;
@@ -331,6 +345,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
   private filterValue = "";
   private hoveredOptionIndex: number | null = null;
@@ -367,6 +382,14 @@ export default class MultiSelect extends Vue {
     } else {
       return visible;
     }
+  }
+
+  private get optionVariantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.optionColorVariantAttribute);
+  }
+
+  private get optionVariantVariables(): Record<string, string> | null {
+    return getColorVariantAttributeVariables(this.optionColorVariantAttribute);
   }
 
   @Watch("loadingState", { immediate: true })
