@@ -18,7 +18,7 @@
     :style="style"
     :class="[
       'table-td',
-      variantClassName,
+      cellVariantClassName,
       'cell-local-variant',
       {
         'fixed-column': column.fixed,
@@ -174,15 +174,15 @@ export default class TableCell extends Vue {
     return this.isNull && this.value.info?.field?.isNullable === false;
   }
 
-  get variantClassName(): string | null {
-    return getColorVariantAttributeClassName(this.colorVariant);
+  get cellVariantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.cellColorVariantAttribute);
   }
 
-  get colorVariant(): ColorVariantAttribute {
-    const colorVariantAttribute = this.getCellAttr("cell_variant");
+  get cellColorVariantAttribute(): ColorVariantAttribute {
+    const cellColorVariantAttribute = this.getCellAttr("cell_variant");
     const cellColor = this.getCellAttr("cell_color");
-    if (colorVariantAttribute) {
-      return colorVariantFromAttribute(colorVariantAttribute);
+    if (cellColorVariantAttribute) {
+      return colorVariantFromAttribute(cellColorVariantAttribute);
     } else if (typeof cellColor === "string") {
       return colorVariantFromAttribute({ background: cellColor });
     } else {
@@ -199,12 +199,10 @@ export default class TableCell extends Vue {
   }
 
   get optionColorVariantAttribute(): ColorVariantAttribute {
-    const colorVariantAttribute = this.getCellAttr("option_variant");
-    if (colorVariantAttribute) {
-      return colorVariantFromAttribute(colorVariantAttribute);
-    } else {
-      return defaultVariantAttribute;
-    }
+    const optionColorVariantAttribute = this.getCellAttr("option_variant");
+    return optionColorVariantAttribute
+      ? colorVariantFromAttribute(optionColorVariantAttribute)
+      : defaultVariantAttribute;
   }
 
   get valueHtml() {
@@ -297,7 +295,7 @@ export default class TableCell extends Vue {
       style["font-family"] = "monospace";
     }
 
-    const variantAttrs = getColorVariantAttributeVariables(this.colorVariant);
+    const variantAttrs = getColorVariantAttributeVariables(this.cellColorVariantAttribute);
     if (variantAttrs !== null) {
       Object.assign(style, variantAttrs);
     }
