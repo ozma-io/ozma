@@ -25,6 +25,7 @@
     :options-list-height="optionsListHeight"
     :autofocus="autofocus"
     :compact-mode="compactMode"
+    :option-color-variant-attribute="optionColorVariantAttribute"
     @add-value="addValue"
     @remove-index="removeIndex"
     @clear-values="clearValues"
@@ -41,6 +42,7 @@ import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
 import { valueIsNull } from "@/values";
 import { EntriesRef } from "@/state/entries";
 import type { IQuery } from "@/state/query";
+import type { ColorVariantAttribute } from "@/utils_colors";
 
 @Component({
   components: {
@@ -59,6 +61,7 @@ export default class ArrayReferenceField extends Vue {
   @Prop({ type: String }) homeSchema!: SchemaName | undefined;
   @Prop({ type: String }) label!: string | undefined;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
   get entriesRef(): EntriesRef {
     if (this.optionsView) {

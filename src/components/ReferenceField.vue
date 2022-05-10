@@ -19,6 +19,7 @@
       :qrcode-input="qrcodeInput"
       :scope="scope"
       :compact-mode="compactMode"
+      :option-color-variant-attribute="optionColorVariantAttribute"
       @update:value="$emit('update:value', $event)"
       @popup-opened="$emit('popup-opened')"
       @popup-closed="$emit('popup-closed')"
@@ -37,6 +38,7 @@ import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
 import { EntriesRef } from "@/state/entries";
 import { IQuery } from "@/state/query";
 import type { ScopeName } from "@/state/staging_changes";
+import type { ColorVariantAttribute } from "@/utils_colors";
 
 const query = namespace("query");
 
@@ -65,6 +67,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: String }) scope!: ScopeName;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
   get referenceValue(): IReferenceValue {
     return {

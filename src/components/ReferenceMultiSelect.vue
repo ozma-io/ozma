@@ -37,6 +37,7 @@
       :loading-state="loadingState"
       :process-filter="f => processFilter(f)"
       :compact-mode="compactMode"
+      :option-color-variant-attribute="optionColorVariantAttribute"
       @update:value="updateValue"
       @add-value="addValue"
       @remove-value="removeValue"
@@ -135,6 +136,7 @@ import { CancelledError } from "@/modules";
 import type { EntriesRef } from "@/state/entries";
 import type { ScopeName } from "@/state/staging_changes";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
+import type { ColorVariantAttribute } from "@/utils_colors";
 
 export interface ICombinedReferenceValue {
   id: RowId;
@@ -185,6 +187,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
   @Prop({ type: String, default: null }) label!: string | null;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
   private selectedView: IQuery | null = null;
 

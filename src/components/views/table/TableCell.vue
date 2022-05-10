@@ -18,7 +18,7 @@
     :style="style"
     :class="[
       'table-td',
-      variantClassName,
+      cellVariantClassName,
       'cell-local-variant',
       {
         'fixed-column': column.fixed,
@@ -46,7 +46,14 @@
         />
       </template>
       <template v-else-if="link !== null && valueHtml.length > 0">
-        <div class="option option-variant option-local-variant">
+        <div
+          :class="[
+            'option',
+            optionVariantClassName,
+            'option-local-variant',
+          ]"
+          :style="optionVariantVariables"
+        >
           <FunLink
             class="option-link rounded-circle"
             :link="link"
@@ -73,13 +80,14 @@
           v-else
           :class="[
             'cell-text',
-            'option-variant',
+            optionVariantClassName,
             'option-local-variant',
             {
               'option': (fieldTypeName == 'enum' || fieldTypeName == 'reference') && valueHtml.length > 0,
               'tree': showTree && column.treeUnfoldColumn && !notExisting,
             }
           ]"
+          :style="optionVariantVariables"
         >
           <ButtonItem
             v-if="addChildButton"
@@ -166,20 +174,32 @@ export default class TableCell extends Vue {
     return this.isNull && this.value.info?.field?.isNullable === false;
   }
 
-  get variantClassName(): string | null {
-    return getColorVariantAttributeClassName(this.colorVariant);
+  get cellVariantClassName(): string | null {
+    return getColorVariantAttributeClassName(this.cellColorVariantAttribute);
   }
 
-  get colorVariant(): ColorVariantAttribute {
-    const colorVariantAttribute = this.getCellAttr("cell_variant");
+  get cellColorVariantAttribute(): ColorVariantAttribute {
+    const cellColorVariantAttribute = this.getCellAttr("cell_variant");
     const cellColor = this.getCellAttr("cell_color");
-    if (colorVariantAttribute) {
-      return colorVariantFromAttribute(colorVariantAttribute);
+    if (cellColorVariantAttribute) {
+      return colorVariantFromAttribute(cellColorVariantAttribute);
     } else if (typeof cellColor === "string") {
       return colorVariantFromAttribute({ background: cellColor });
     } else {
       return defaultVariantAttribute;
     }
+  }
+
+  get optionVariantClassName() {
+    return getColorVariantAttributeClassName(this.optionColorVariantAttribute);
+  }
+
+  get optionVariantVariables() {
+    return getColorVariantAttributeVariables(this.optionColorVariantAttribute);
+  }
+
+  get optionColorVariantAttribute(): ColorVariantAttribute {
+    return colorVariantFromAttribute(this.getCellAttr("option_variant"), { type: "existing", className: "option" });
   }
 
   get valueHtml() {
@@ -272,7 +292,7 @@ export default class TableCell extends Vue {
       style["font-family"] = "monospace";
     }
 
-    const variantAttrs = getColorVariantAttributeVariables(this.colorVariant);
+    const variantAttrs = getColorVariantAttributeVariables(this.cellColorVariantAttribute);
     if (variantAttrs !== null) {
       Object.assign(style, variantAttrs);
     }
