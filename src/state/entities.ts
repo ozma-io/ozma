@@ -53,7 +53,7 @@ const entitiesModule: Module<IEntitiesState, {}> = {
     },
   },
   actions: {
-    removeAuth: {
+    onAuthRemoved: {
       root: true,
       handler: ({ commit }) => {
         commit("clear");

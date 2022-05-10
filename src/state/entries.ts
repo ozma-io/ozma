@@ -670,7 +670,7 @@ const entriesModule: Module<IEntriesState, {}> = {
     },
   },
   actions: {
-    removeAuth: {
+    onAuthRemoved: {
       root: true,
       handler: ({ commit }) => {
         commit("clear");

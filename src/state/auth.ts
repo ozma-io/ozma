@@ -150,36 +150,50 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
       }
     }
     try {
-      const auth = await requestToken(params);
-      if (state.pending !== pending.ref) {
-        throw new CancelledError();
-      }
-      updateAuth(context, auth);
-      startTimeouts(context);
-    } catch (e) {
-      if (state.pending === pending.ref) {
-        let description: string | null = String(e);
-        if (e instanceof Utils.FetchError && typeof e.body === "object") {
-          // try setting a better error
-          try {
-            if (e.body.error === "invalid_grant") {
-              // token got revoked, not an error condition
-              description = null;
-            } else if ("error_description" in e.body) {
-              description = e.body.error_description;
+      let networkError = false;
+      do {
+        networkError = false;
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const auth = await requestToken(params);
+          if (state.pending !== pending.ref) {
+            throw new CancelledError();
+          }
+          updateAuth(context, auth);
+          startTimeouts(context);
+        } catch (e) {
+          if (state.pending === pending.ref) {
+            // eslint-disable-next-line no-await-in-loop
+            await dispatch("removeAuth");
+
+            let description: string | null = String(e);
+            if (e instanceof Utils.FetchError && typeof e.body === "object") {
+              // try setting a better error
+              try {
+                if (e.body.error === "invalid_grant") {
+                  // token got revoked, not an error condition
+                  description = null;
+                } else if ("error_description" in e.body) {
+                  description = e.body.error_description;
+                }
+              } catch (_) {
+                // just don't try.
+              }
+
+              if (description) {
+                void dispatch("setError", `Error when getting token: ${description}`);
+              }
+            } else if (e instanceof Utils.NetworkError) {
+              // Most likely there are no internet connection now, so wait and try again.
+              networkError = true;
+              // eslint-disable-next-line no-await-in-loop
+              await Utils.waitTimeout(10000);
+            } else {
+              void dispatch("setError", `Error when getting token: ${e}`);
             }
-          } catch (_) {
-            // just don't try.
           }
         }
-
-        await dispatch("removeAuth", undefined, { root: true });
-        if (description !== null) {
-          void dispatch("setError", `Error when getting token: ${description}`);
-        }
-        void requestLogin(context, false);
-      }
-      throw e;
+      } while (networkError);
     } finally {
       if (state.pending === pending.ref) {
         commit("setPending", null);
@@ -190,8 +204,7 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
   return pending.ref;
 };
 
-const updateAuth = ({ state, commit, dispatch }: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth) => {
-  const oldAuth = state.current;
+const updateAuth = ({ commit }: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth) => {
   commit("setAuth", auth);
   if (auth.token) {
     persistCurrentAuth(auth);
@@ -284,7 +297,7 @@ const runProtectedCall = async <Args extends unknown[], Ret>({ state, commit, di
         if (state.current === null) {
           await dispatch("login", undefined);
         } else {
-          await dispatch("removeAuth", undefined, { root: true });
+          await dispatch("removeAuth");
           await dispatch("setError", `Authentication error during request: ${e.message}`);
         }
       }
@@ -337,8 +350,7 @@ export const authModule: Module<IAuthState, {}> = {
   },
   actions: {
     removeAuth: {
-      root: true,
-      handler: ({ state, commit }) => {
+      handler: ({ state, commit, dispatch }) => {
         if (state.renewalTimeoutId !== null) {
           clearTimeout(state.renewalTimeoutId);
         }
@@ -346,6 +358,7 @@ export const authModule: Module<IAuthState, {}> = {
           commit("clearAuth");
           dropCurrentAuth();
         }
+        void dispatch("onAuthRemoved", undefined, { root: true });
       },
     },
     setAuth: {
@@ -374,9 +387,7 @@ export const authModule: Module<IAuthState, {}> = {
             router.onReady(resolve);
           }); // Await till router is ready.
 
-          let tryExisting = true;
           if (router.currentRoute.name === "auth_response") {
-            tryExisting = false;
             dropCurrentAuth();
 
             const stateString = getQueryValue("state");
@@ -445,7 +456,7 @@ export const authModule: Module<IAuthState, {}> = {
             }
 
             if (e.newValue === null) {
-              await dispatch("removeAuth", undefined, { root: true });
+              await dispatch("removeAuth");
             } else {
               const newAuth = loadCurrentAuth();
               if (newAuth !== null && (state.current === null || newAuth.token !== state.current.token)) {
