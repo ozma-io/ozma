@@ -26,7 +26,7 @@ export default class BarCode extends Vue {
 
   private currentCode = "";
 
-  private mounted() {
+  private created() {
     this.currentCode = this.content;
   }
 
