@@ -1,9 +1,19 @@
 import moment from "moment";
 import { AttributeName, ValueType } from "ozma-api";
 
-import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinks } from "@/utils";
+import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinks, shortLanguage } from "@/utils";
 import { ConvertedBoundAttributesMap, currentValue, ICombinedValue, valueToPunnedText } from "./combined";
 import { valueToText } from "@/values";
+
+const messages: Record<string, Record<string, string>> = {
+  en: {
+    "ellipsis": "... (Open cell to view full)",
+  },
+  ru: {
+    "ellipsis": "... (Откройте ячейку, чтобы читать дальше)",
+  },
+};
+const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 export interface IFormatValueOpts {
   columnAttributeMappings?: ConvertedBoundAttributesMap;
@@ -64,7 +74,7 @@ export const formatValueToHtml = (valueType: ValueType, value: ICombinedValue, o
   let valueHtml = formatValue(valueType, value, opts);
   if (typeof value === "string") {
     if (valueHtml.length > 1000) {
-      valueHtml = valueHtml.slice(0, 1000) + "...";
+      valueHtml = valueHtml.slice(0, 1000) + funI18n("ellipsis");
     }
     valueHtml = replaceHtmlLinks(valueHtml);
   }

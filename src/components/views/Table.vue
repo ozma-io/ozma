@@ -2169,7 +2169,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private removeCellEditing() {
-    // return;
     this.editing = null;
   }
 
