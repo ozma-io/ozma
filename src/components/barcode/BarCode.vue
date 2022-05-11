@@ -24,7 +24,11 @@ import { Component, Vue, Prop } from "vue-property-decorator";
 export default class BarCode extends Vue {
   @Prop({ type: String, default: "" }) content!: string;
 
-  currentCode = this.content;
+  private currentCode = "";
+
+  private created() {
+    this.currentCode = this.content;
+  }
 
   private onScanned(code: string) {
     this.$emit("scanned", code);

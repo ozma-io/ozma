@@ -189,6 +189,7 @@
 
       <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <b-overlay
+        ref="overlayRef"
         class="userview-overlay"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues"
         variant="dark"
@@ -923,7 +924,7 @@ export default class UserView extends Vue {
   }
 
   private scrollToTop() {
-    (this.$refs.userViewRef as Vue)?.$el.scrollTo(0, 0);
+    (this.$refs.overlayRef as Vue)?.$el.scrollTo(0, 0);
   }
 
   private get showArgumentEditorButton() {
