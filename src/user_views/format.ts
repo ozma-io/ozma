@@ -72,7 +72,7 @@ export const formatValue = (valueType: ValueType, value: ICombinedValue, opts?: 
 
 export const formatValueToHtml = (valueType: ValueType, value: ICombinedValue, opts?: IFormatValueOpts): string => {
   let valueHtml = formatValue(valueType, value, opts);
-  if (typeof value === "string") {
+  if (typeof value.value === "string") {
     if (valueHtml.length > 1000) {
       valueHtml = valueHtml.slice(0, 1000) + funI18n("ellipsis");
     }
