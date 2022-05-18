@@ -24,6 +24,7 @@
     :height="height"
     :options-list-height="optionsListHeight"
     :autofocus="autofocus"
+    :option-color-variant-attribute="optionColorVariantAttribute"
     @update:value="updateValue"
     @popup-opened="$emit('focus')"
     @popup-closed="$emit('blur')"
@@ -36,6 +37,7 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import { ISelectOption, default as MultiSelect } from "@/components/multiselect/MultiSelect.vue";
 
 import { valueIsNull } from "@/values";
+import type { ColorVariantAttribute } from "@/utils_colors";
 
 @Component({
   components: {
@@ -52,6 +54,7 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
   get selectedValue() {
     if (valueIsNull(this.value)) {
