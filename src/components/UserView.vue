@@ -168,8 +168,9 @@
           :values="currentArguments"
           :attributes="state.uv.argumentAttributes"
           :attribute-mappings="state.uv.argumentAttributeMappings"
-          @reset="resetUpdatedArguments"
+          @clear="clearUpdatedArguments"
           @update="updateArgument"
+          @delete="deleteArgument"
           @apply="applyUpdatedArguments"
         />
       </transition>
@@ -209,7 +210,7 @@
               <b-button
                 class="mr-3"
                 variant="light"
-                @click="resetUpdatedArguments"
+                @click="clearUpdatedArguments"
               >
                 {{ $t("reset_updated_arguments") }}
               </b-button>
@@ -671,23 +672,28 @@ export default class UserView extends Vue {
     }
   }
 
-  private resetUpdatedArguments() {
+  private clearUpdatedArguments() {
     this.updatedArguments = {};
   }
 
   private applyUpdatedArguments() {
-    const args = Object.fromEntries(mapMaybe(([name, value]) => {
+    if (this.state.state !== "show") {
+      throw new Error("Unexpected state");
+    }
+    const argumentsMap = this.state.uv.argumentsMap;
+
+    const args = Object.fromEntries(Object.entries(this.currentArguments!).map(([name, rawValue]) => {
+      const argInfo = argumentsMap[name];
+      const isOptional = argInfo.optional || argInfo.defaultValue !== undefined;
+      const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: isOptional }, rawValue);
+  
       if (value === undefined) {
-        return undefined;
-      } else {
-        if (this.state.state !== "show") {
-          throw new Error("Unexpected state");
-        }
-        const argInfo = this.state.uv.argumentsMap[name];
-        const serialized = serializeValue(argInfo.argType, value);
-        return [name, serialized];
+        throw new Error(`Invalid value for argument "${name}"`);
       }
-    }, Object.entries(this.currentArguments!)));
+
+      const serialized = serializeValue(argInfo.argType, value);
+      return [name, serialized];
+    }));
     // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
     const linkQuery: IQuery = {
       args: {
@@ -703,6 +709,10 @@ export default class UserView extends Vue {
 
   private updateArgument(name: ArgumentName, value: unknown) {
     Vue.set(this.updatedArguments, name, value);
+  }
+
+  private deleteArgument(name: ArgumentName) {
+    Vue.delete(this.updatedArguments, name);
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {

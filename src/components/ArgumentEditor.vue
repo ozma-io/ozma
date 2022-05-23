@@ -17,7 +17,7 @@
   <div
     class="arguments-editor"
     @keyup.enter="$emit('apply')"
-    @keyup.escape="$emit('reset')"
+    @keyup.escape="$emit('clear')"
   >
     <div class="arguments-editor-container">
       <b-container fluid>
@@ -113,13 +113,11 @@ export default class ArgumentEditor extends Vue {
   }
 
   private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
-    const value = valueFromRaw({ fieldType: argument.fieldType, isNullable: argument.isOptional }, rawValue);
-    if (value === undefined) {
-      return;
+    if (argument.isOptional && valueIsNull(rawValue)) {
+      this.$emit("reset", argument.name);
+    } else {
+      this.$emit("update", argument.name, rawValue);
     }
-    // Allow to reset arguments.
-    const newValue = argument.isOptional && valueIsNull(rawValue) ? undefined : rawValue;
-    this.$emit("update", argument.name, newValue);
   }
 }
 </script>
