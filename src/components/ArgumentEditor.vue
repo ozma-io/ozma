@@ -56,7 +56,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
-import { fieldToValueType, valueIsNull, valueToText } from "@/values";
+import { fieldToValueType, valueToText } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 import { ConvertedBoundAttributesMap } from "@/user_views/combined";
 
@@ -113,11 +113,7 @@ export default class ArgumentEditor extends Vue {
   }
 
   private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
-    if (argument.isOptional && valueIsNull(rawValue)) {
-      this.$emit("reset", argument.name);
-    } else {
-      this.$emit("update", argument.name, rawValue);
-    }
+    this.$emit("update", argument.name, rawValue);
   }
 }
 </script>

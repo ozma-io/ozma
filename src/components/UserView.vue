@@ -170,7 +170,6 @@
           :attribute-mappings="state.uv.argumentAttributeMappings"
           @clear="clearUpdatedArguments"
           @update="updateArgument"
-          @delete="deleteArgument"
           @apply="applyUpdatedArguments"
         />
       </transition>
@@ -298,7 +297,7 @@ import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "oz
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError, mapMaybe } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema } from "@/api";
-import { equalEntityRef, serializeValue, valueFromRaw } from "@/values";
+import { equalEntityRef, fieldToValueType, serializeValue, valueEquals, valueFromRaw } from "@/values";
 import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
@@ -643,7 +642,7 @@ export default class UserView extends Vue {
     this.$emit("update:buttons", this.allButtons);
   }
 
-  get initialArguments() {
+  get defaultArguments() {
     if (this.state.state !== "show") {
       return null;
     } else {
@@ -652,14 +651,36 @@ export default class UserView extends Vue {
         return null;
       } else {
         return Object.fromEntries(mapMaybe(argInfo => {
-          const rawValue = uv.args.args![argInfo.name];
-          if (rawValue === undefined) {
-            return [argInfo.name, argInfo.defaultValue];
-          } else {
-            const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, rawValue);
+          if (argInfo.defaultValue !== undefined) {
+            const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, argInfo.defaultValue);
+            console.assert(value !== undefined);
             return [argInfo.name, value];
+          } else if (argInfo.optional) {
+            return [argInfo.name, null];
+          } else {
+            return [argInfo.name, undefined];
           }
         }, uv.info.arguments));
+      }
+    }
+  }
+
+  get initialArguments() {
+    if (this.state.state !== "show") {
+      return null;
+    } else {
+      const uv = this.state.uv;
+      if (uv.args.args === null) {
+        return null;
+      } else {
+        return Object.fromEntries(mapMaybe(([name, argValue]) => {
+          const argInfo = uv.argumentsMap[name];
+          if (argInfo === undefined) {
+            return undefined;
+          }
+          const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, argValue);
+          return [name, argValue];
+        }, Object.entries(uv.args.args)));
       }
     }
   }
@@ -668,7 +689,7 @@ export default class UserView extends Vue {
     if (this.initialArguments === null) {
       return null;
     } else {
-      return { ...this.initialArguments, ...this.updatedArguments };
+      return { ...this.defaultArguments, ...this.initialArguments, ...this.updatedArguments };
     }
   }
 
@@ -680,20 +701,24 @@ export default class UserView extends Vue {
     if (this.state.state !== "show") {
       throw new Error("Unexpected state");
     }
-    const argumentsMap = this.state.uv.argumentsMap;
+    const uv = this.state.uv;
 
-    const args = Object.fromEntries(Object.entries(this.currentArguments!).map(([name, rawValue]) => {
-      const argInfo = argumentsMap[name];
-      const isOptional = argInfo.optional || argInfo.defaultValue !== undefined;
-      const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: isOptional }, rawValue);
+    const args = Object.fromEntries(mapMaybe(([name, rawValue]) => {
+      const argInfo = uv.argumentsMap[name];
+      const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, rawValue);
 
       if (value === undefined) {
         throw new Error(`Invalid value for argument "${name}"`);
       }
 
-      const serialized = serializeValue(argInfo.argType, value);
-      return [name, serialized];
-    }));
+      const defaultValue = this.defaultArguments![name];
+      if (valueEquals(fieldToValueType(argInfo.argType), defaultValue, value)) {
+        return undefined;
+      } else {
+        const serialized = serializeValue(argInfo.argType, value);
+        return [name, serialized];
+      }
+    }, Object.entries(this.currentArguments!)));
     // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
     const linkQuery: IQuery = {
       args: {
@@ -709,10 +734,6 @@ export default class UserView extends Vue {
 
   private updateArgument(name: ArgumentName, value: unknown) {
     Vue.set(this.updatedArguments, name, value);
-  }
-
-  private deleteArgument(name: ArgumentName) {
-    Vue.delete(this.updatedArguments, name);
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {
@@ -843,10 +864,12 @@ export default class UserView extends Vue {
             uvData = await fetchUserViewData(this.$store, args);
           }
 
+          let oldArgs: IUserViewArguments | null = null;
           let oldLocal: ICombinedUserViewAny | null = null;
           let rowLoadState: IRowLoadState;
           const fetchedRowCount = uvData.rows?.length ?? 0;
           if (this.state.state === "show") {
+            oldArgs = this.state.uv.args;
             if (argsAreCompatible(args, this.state.uv.args) && this.state.componentName === newType.component) {
               oldLocal = this.state.uv;
 
@@ -878,6 +901,7 @@ export default class UserView extends Vue {
             key: this.uid,
             handler: uv,
           });
+          const oldShowArgumentEditor = this.showArgumentEditor;
           this.setState({
             state: "show",
             uv,
@@ -887,6 +911,12 @@ export default class UserView extends Vue {
           });
           // Don't reset argument editor state if we didn't switch user views.
           if (!oldLocal) {
+            this.scrollToTop();
+          }
+
+          if (oldArgs && deepEquals(oldArgs.source, uv.args.source)) {
+            this.showArgumentEditor = oldShowArgumentEditor;
+          } else {
             this.showArgumentEditor = Boolean(uv.attributes["show_argument_editor"]);
           }
           this.nextUv = null;
@@ -951,23 +981,17 @@ export default class UserView extends Vue {
 
     this.state = loadingState;
     this.componentButtons = [];
-    this.showArgumentEditor = false;
     this.updatedArguments = {};
+    this.showArgumentEditor = false;
     this.$emit("update:status-line", "");
     this.$emit("update:enable-filter", false);
     this.$emit("update:body-style", "");
+    console.trace("destroy current");
   }
 
   private setState(state: UserViewLoadingState) {
     if (state.state !== "loading") {
       this.userViewRedirects = 0;
-    }
-
-    if (state.state === "show"
-     && this.state.state === "show"
-     && !deepEquals(this.state.uv.args, state.uv.args)
-    ) {
-      this.scrollToTop();
     }
 
     this.destroyCurrentUserView();

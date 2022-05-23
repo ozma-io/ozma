@@ -152,13 +152,13 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
       {
         const date = moment(value as MomentInput, dateFormat, true);
         if (date.isValid()) {
-          return date;
+          return date.local();
         }
       }
       {
         const date = moment(value as MomentInput, localDateFormat, true);
         if (date.isValid()) {
-          return date;
+          return date.local();
         }
       }
       return undefined;
