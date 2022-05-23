@@ -686,7 +686,7 @@ export default class UserView extends Vue {
       const argInfo = argumentsMap[name];
       const isOptional = argInfo.optional || argInfo.defaultValue !== undefined;
       const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: isOptional }, rawValue);
-  
+
       if (value === undefined) {
         throw new Error(`Invalid value for argument "${name}"`);
       }

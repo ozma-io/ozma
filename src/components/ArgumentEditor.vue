@@ -56,7 +56,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
-import { fieldToValueType, valueFromRaw, valueIsNull, valueToText } from "@/values";
+import { fieldToValueType, valueIsNull, valueToText } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 import { ConvertedBoundAttributesMap } from "@/user_views/combined";
 
