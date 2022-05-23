@@ -885,7 +885,10 @@ export default class UserView extends Vue {
             component,
             autoSaved: options?.autoSaved ?? false,
           });
-          this.showArgumentEditor = Boolean(uv.attributes["show_argument_editor"]);
+          // Don't reset argument editor state if we didn't switch user views.
+          if (!oldLocal) {
+            this.showArgumentEditor = Boolean(uv.attributes["show_argument_editor"]);
+          }
           this.nextUv = null;
         } else if (newType.type === "link") {
           if (this.userViewRedirects >= maxUserViewRedirects) {
