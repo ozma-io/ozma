@@ -178,7 +178,7 @@ export default class Calendar extends Vue {
   }
 
   get dateValue() {
-    return moment.isMoment(this.value) ? this.value : moment.invalid();
+    return moment(this.value, this.usedFormat);
   }
 
   get textValue() {
