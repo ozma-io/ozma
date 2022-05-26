@@ -2443,25 +2443,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
     this.uv.extra.cursorValue = null;
     if (!opts?.keepOldCursor) {
-      const oldCursorValue = this.uv.extra.oldCursorValue;
       this.uv.extra.oldCursorValue = null;
-
-      if (oldCursorValue) {
-        if (oldCursorValue.type === "added") {
-          const row = this.uv.newRows[oldCursorValue.id];
-          if (row && isEmptyRow(row)) {
-            const entity = this.uv.info.mainEntity;
-            if (!entity) {
-              throw new Error("View doesn't have a main entity");
-            }
-
-            void this.resetAddedEntry({
-              entityRef: entity,
-              id: oldCursorValue.id,
-            });
-          }
-        }
-      }
     }
   }
 
