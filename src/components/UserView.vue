@@ -198,6 +198,8 @@
         rounded="sm"
         :z-index="30"
         :infinite-wrapper="isRoot"
+        @shown="handleArgumentOverlayShown"
+        @hidden="handleArgumentOverlayHidden"
       >
         <template #overlay>
           <div class="overlay-content">
@@ -691,6 +693,34 @@ export default class UserView extends Vue {
     } else {
       return { ...this.defaultArguments, ...this.initialArguments, ...this.updatedArguments };
     }
+  }
+
+  private onOverlayScroll() {
+    const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
+    const left = overlayElement?.scrollLeft ?? 0;
+    const top = overlayElement?.scrollTop ?? 0;
+    // `z-index: 30` to work well with popups from ArgumentEditor.
+    (overlayElement.querySelector(".b-overlay") as HTMLElement).style.cssText =
+      `width: 100%; height: 100%; left: ${left}px; top: ${top}px; z-index: 30;`;
+  }
+
+  private handleArgumentOverlayShown() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
+    if (overlayElement) {
+      overlayElement.addEventListener("scroll", this.onOverlayScroll);
+      this.onOverlayScroll();
+    }
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private handleArgumentOverlayHidden() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
+    if (overlayElement) {
+      overlayElement.removeEventListener("scroll", this.onOverlayScroll);
+    }
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   private clearUpdatedArguments() {
