@@ -93,12 +93,12 @@
           v-else-if="inputType.name === 'calendar'"
           ref="control"
           :value="value"
-          :text-value="textValue"
           :autofocus="autofocus || iSlot.autofocus"
           :is-cell-edit="isCellEdit"
           :show-time="inputType.showTime"
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :time-default="inputType.timeDefault ? inputType.timeDefault : undefined"
+          :format="inputType.format ? inputType.format : undefined"
           :required="!isNullable"
           :disabled="isDisabled"
           :background-color="cellColor"
@@ -414,6 +414,7 @@ interface ICalendarType {
   showTime: boolean;
   timeStep: number | null;
   timeDefault: ITime | null;
+  format: string | null;
 }
 
 interface IStaticTextType {
@@ -836,13 +837,15 @@ export default class FormControl extends Vue {
           return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
         case "date":
-          return { name: "calendar", showTime: false, timeStep: null, timeDefault: null };
+          return { name: "calendar", showTime: false, timeStep: null, timeDefault: null, format: null };
         case "datetime": {
           const timeStepRaw = Number(this.attributes["time_step"]);
           const timeStep = Number.isNaN(timeStepRaw) ? null : timeStepRaw;
           const timeDefaultRaw = this.attributes["time_default"];
           const timeDefault = (typeof timeDefaultRaw === "string") ? parseTime(timeDefaultRaw) : null;
-          return { name: "calendar", showTime: true, timeStep, timeDefault };
+          const showSecondsRaw = this.attributes["show_seconds"];
+          const format = showSecondsRaw ? "L LTS" : null;
+          return { name: "calendar", showTime: true, timeStep, timeDefault, format };
         }
         case "json":
           return {
@@ -861,14 +864,16 @@ export default class FormControl extends Vue {
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
         case "date":
-          return { name: "calendar", showTime: false, timeStep: null, timeDefault: null };
+          return { name: "calendar", showTime: false, timeStep: null, timeDefault: null, format: null };
         case "localdatetime":
         case "datetime": {
           const timeStepRaw = Number(this.attributes["time_step"]);
           const timeStep = Number.isNaN(timeStepRaw) ? null : timeStepRaw;
           const timeDefaultRaw = this.attributes["time_default"];
           const timeDefault = (typeof timeDefaultRaw === "string") ? parseTime(timeDefaultRaw) : null;
-          return { name: "calendar", showTime: true, timeStep, timeDefault };
+          const showSecondsRaw = this.attributes["show_seconds"];
+          const format = showSecondsRaw ? "L LTS" : null;
+          return { name: "calendar", showTime: true, timeStep, timeDefault, format };
         }
         case "json":
           return {
