@@ -53,9 +53,10 @@ import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import { RowId } from "ozma-api";
+import { Moment } from "moment";
 
 import { mapMaybe, NeverError, replaceHtmlLinks, tryDicts } from "@/utils";
-import { valueIsNull, valueToText } from "@/values";
+import { dateFormat, valueIsNull, valueToText } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Board, { IColumn } from "@/components/kanban/Board.vue";
@@ -294,7 +295,15 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       cards.sort((a, b) => a.card.order! - b.card.order!);
     }
     const type = this.uv.info.columns[this.groupIndex!].valueType;
-    return R.groupBy(card => valueToText(type, card.card.group), cards);
+    const toGroupText = (card : ICard<IRowCard>) => {
+      // TODO: Not sure why is this needed; let's either document or remove it.
+      if (type.type === "date") {
+        return (card.card.group as Moment).format(dateFormat);
+      } else {
+        return valueToText(type, card.card.group);
+      }
+    };
+    return R.groupBy(toGroupText, cards);
   }
 
   get columns(): IColumn<IRowCard, IGroupColumn>[] | null {
