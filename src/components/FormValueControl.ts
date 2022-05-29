@@ -24,7 +24,6 @@ export default Vue.extend({
     modalOnly: { type: Boolean },
     isCellEdit: { type: Boolean },
     forceModalOnMobile: { type: Boolean },
-    valueFormatted: { type: String },
   },
   render(createElement, context) {
     const value = context.props.value as ICombinedValue;

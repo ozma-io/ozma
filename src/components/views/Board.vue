@@ -55,7 +55,7 @@ import { namespace } from "vuex-class";
 import { RowId } from "ozma-api";
 
 import { mapMaybe, NeverError, replaceHtmlLinks, tryDicts } from "@/utils";
-import { valueIsNull, valueToText, dateFormat } from "@/values";
+import { valueIsNull, valueToText } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Board, { IColumn } from "@/components/kanban/Board.vue";
@@ -294,7 +294,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       cards.sort((a, b) => a.card.order! - b.card.order!);
     }
     const type = this.uv.info.columns[this.groupIndex!].valueType;
-    return R.groupBy(card => valueToText(type, card.card.group, { dateFormat }), cards);
+    return R.groupBy(card => valueToText(type, card.card.group), cards);
   }
 
   get columns(): IColumn<IRowCard, IGroupColumn>[] | null {

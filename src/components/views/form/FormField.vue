@@ -6,7 +6,6 @@
       :force-caption="element.forceCaption"
       :column-info-name="element.columnInfo.name"
       :value="value"
-      :value-formatted="valueFormatted"
       :attributes="attributes"
       :attribute-mappings="uv.columnAttributeMappings[element.index]"
       :type="element.columnInfo.valueType"
@@ -24,7 +23,6 @@
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 
-import { getNumberFormatter, isValidNumberFormat } from "@/utils";
 import type { IElementField, IFormCombinedUserView, IFormExtendedRowCommon } from "../Form.vue";
 import type { ICombinedValue } from "@/user_views/combined";
 import FormValueControl from "@/components/FormValueControl";
@@ -38,21 +36,6 @@ export default class FormField extends Vue {
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: Object, required: true }) value!: ICombinedValue;
-
-  get valueFormatted() {
-    let valueFormatted: string | undefined;
-    // Formatting  of editable inputs (or input masking) is a huge pain and brings many troubles, so only for read-only inputs.
-    const isReadOnly = this.value.info === undefined || this.softDisabled;
-    if (isReadOnly && typeof this.value.value === "number") {
-      const numberFormat = this.attributes["number_format"];
-      if (typeof numberFormat === "string" && isValidNumberFormat(numberFormat)) {
-        const fractionDigitsRaw = this.attributes["fraction_digits"];
-        const fractionDigits = typeof fractionDigitsRaw === "number" ? fractionDigitsRaw : undefined;
-        valueFormatted = getNumberFormatter(numberFormat, fractionDigits).format(this.value.value);
-      }
-    }
-    return valueFormatted;
-  }
 
   get visible() {
     return Boolean(this.attributes["visible"] ?? true);

@@ -47,7 +47,7 @@
         />
         <Input
           v-else-if="inputType.name === 'text'"
-          :value="valueFormatted ? valueFormatted : textValue"
+          :value="textValue"
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
@@ -304,7 +304,7 @@ import { z } from "zod";
 import { namespace } from "vuex-class";
 
 import { IEntityRef } from "ozma-api";
-import { valueIsNull } from "@/values";
+import { valueIsNull, valueToText } from "@/values";
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from "@/state/query";
 import { ISelectOption } from "@/components/multiselect/MultiSelect.vue";
 import { AutoSaveLock } from "@/state/staging_changes";
@@ -576,7 +576,6 @@ export default class FormControl extends Vue {
   // FIXME: maybe we can get rid of this?
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
-  @Prop({ type: String }) valueFormatted!: string | undefined; // Bigger priority than `value` if defined.
 
   private buttons: Button[] = [];
   private filterString = "";
@@ -601,10 +600,15 @@ export default class FormControl extends Vue {
 
   // Textual representation of `value`.
   get textValue() {
-    return formatRawValue(this.type, this.value, {
-      getCellAttr: name => this.attributes[name],
-      columnAttributeMappings: this.attributeMappings,
-    });
+    // Don't format if a value is editable.
+    if (!this.isDisabled) {
+      return valueToText(this.type, this.value);
+    } else {
+      return formatRawValue(this.type, this.value, {
+        getCellAttr: name => this.attributes[name],
+        columnAttributeMappings: this.attributeMappings,
+      });
+    }
   }
 
   get isMultiline() {

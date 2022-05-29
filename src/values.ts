@@ -37,13 +37,13 @@ export interface IUpdatedValue {
 }
 
 // Should be in sync with `valueFromRaw` and be idempotent.
-export const valueToText = (valueType: ValueType, value: unknown, options?: { dateFormat?: string }): string => {
+export const valueToText = (valueType: ValueType, value: unknown): string => {
   if (typeof value === "string") {
     return value;
   } else if (value === undefined || value === null) {
     return "";
   } else if (valueType.type === "date") {
-    return (value as Moment).format(options?.dateFormat ?? localDateFormat);
+    return (value as Moment).format(localDateFormat);
   } else if (valueType.type === "datetime" || valueType.type === "localdatetime") {
     return (value as Moment).local().format(localDateTimeFormat);
   } else if (valueType.type === "interval") {
