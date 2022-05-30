@@ -992,7 +992,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   private prefetchUserViewInfo() {
     // Preload entities information.
     if (this.info.mainEntity) {
-      void this.store.dispatch("entities/getEntity", this.info.mainEntity);
+      void this.store.dispatch("entities/getEntity", this.info.mainEntity.entity);
     }
     if (this.rows !== null) {
       Object.values(this.info.domains).forEach(domain => {
