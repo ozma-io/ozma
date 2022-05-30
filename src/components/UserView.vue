@@ -11,7 +11,7 @@
             "edit_user_view": "Edit user view",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
-            "creation_not_available": "Main entity is not specified, so creation mode is not available.",
+            "creation_not_available": "FOR INSERT INTO clause is required for new entry mode.",
             "no_instance": "Instance not found.",
             "not_found": "User view not found.",
             "bad_request": "User view request error: {msg}",
@@ -23,7 +23,6 @@
             "apply_updated_arguments": "Apply",
             "show_argument_editor": "Show filters",
             "hide_argument_editor": "Hide filters",
-            "new_mode_no_main": "FOR INSERT INTO clause is required for new entry mode.",
             "invalid_user_view_link": "User view link is invalid.",
             "user_view_loop": "User view loop is detected.",
             "edit_view_modal_text_common": "To edit this view contact your integrator using links below.",
@@ -42,7 +41,7 @@
             "edit_user_view": "Редактировать пользовательское представление",
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
-            "creation_not_available": "Главная сущность не задана, поэтому режим создания не доступен.",
+            "creation_not_available": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "no_instance": "База не найдена.",
             "not_found": "Представление не найдено.",
             "bad_request": "Неверный запрос для этого представления: {msg}",
@@ -54,7 +53,6 @@
             "apply_updated_arguments": "Применить",
             "show_argument_editor": "Показать фильтры",
             "hide_argument_editor": "Скрыть фильтры",
-            "new_mode_no_main": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "invalid_user_view_link": "Неверная ссылка в представлении.",
             "user_view_loop": "Обнаружен цикл из ссылок в представлениях.",
             "edit_view_modal_text_common": "Для изменения представления, обратитесь к вашему интегратору по контактам ниже.",
@@ -743,10 +741,14 @@ export default class UserView extends Vue {
   }
 
   private async resetAllAddedEntries(uv: ICombinedUserViewAny) {
+    if (!uv.info.mainEntity) {
+      return;
+    }
+
     await Promise.all(Object.keys(uv.newRows).map(async rawAddedId => {
       const addedId = Number(rawAddedId);
       await this.resetAddedEntry({
-        entityRef: uv.info.mainEntity!,
+        entityRef: uv.info.mainEntity!.entity,
         id: addedId,
       });
     }));
@@ -845,7 +847,7 @@ export default class UserView extends Vue {
         }
         const newType = userViewType(uvData.attributes);
         if (newType.type === "component") {
-          if (uvData.rows === null && !uvData.info.mainEntity) {
+          if (uvData.rows === null && (!uvData.info.mainEntity || !uvData.info.mainEntity.forInsert)) {
             this.setState({
               state: "error",
               args,
@@ -1066,6 +1068,58 @@ export default class UserView extends Vue {
     return this.hasArguments && this.showArgumentEditor;
   }
 
+  private async redirectOnInsert(oldUv: ICombinedUserViewAny, result: ISubmitResult): Promise<boolean> {
+    if (!oldUv.info.mainEntity || !oldUv.info.mainEntity.forInsert) {
+      return false;
+    }
+
+    if (!deepEquals(this.args, oldUv.args)) {
+      // We went somewhere else meanwhile.
+      return false;
+    }
+
+    const createOps = result.results.filter(x => x.type === "insert" && equalEntityRef(x.entity, oldUv.info.mainEntity!.entity));
+    if (createOps.length !== 1) {
+      return false;
+    }
+    const id = (createOps[0] as ICombinedInsertEntityResult).id;
+    const customLink = attrToLink(oldUv.attributes["post_create_link"], { defaultTarget: "root" });
+    let link: Link;
+    if (customLink === null) {
+      link = {
+        query: {
+          defaultValues: {},
+          args: { source: oldUv.args.source, args: { id } },
+          search: "",
+          page: null,
+        },
+        target: "root",
+        type: "query",
+      };
+    } else {
+      addLinkDefaultArgs(customLink, { id });
+      link = customLink;
+    }
+
+    const oldArgs = deepClone(this.args);
+    try {
+      const linkHandlerParams: ILinkHandlerParams = {
+        store: this.$store,
+        goto: target => this.$emit("goto", target),
+        openQRCodeScanner: qrLink => this.$root.$emit("open-qrcode-scanner", qrLink),
+        link,
+      };
+      await linkHandler(linkHandlerParams).handler();
+    } catch (e) {
+      return false;
+    }
+    await this.$nextTick();
+    if (deepEquals(oldArgs, this.args)) {
+      await this.reloadIfRoot(result.autoSave);
+    }
+    return true;
+  }
+
   @Watch("submitPromise", { immediate: true })
   private changesSubmitted(submitPromise: Promise<ISubmitResult> | null) {
     if (this.state.state !== "show" || this.state.uv.rows !== null || submitPromise === null) {
@@ -1085,52 +1139,9 @@ export default class UserView extends Vue {
           return;
         }
 
-        if (!deepEquals(this.args, uv.args)) {
-          // We went somewhere else meanwhile.
+        if (!await this.redirectOnInsert(uv, ret)) {
           await this.reloadIfRoot(ret.autoSave);
           return;
-        }
-
-        const createOps = ret.results.filter(x => x.type === "insert" && equalEntityRef(x.entity, uv.info.mainEntity!));
-        if (createOps.length !== 1) {
-          await this.reloadIfRoot(ret.autoSave);
-          return;
-        }
-        const id = (createOps[0] as ICombinedInsertEntityResult).id;
-        const customLink = attrToLink(uv.attributes["post_create_link"], { defaultTarget: "root" });
-        let link: Link;
-        if (customLink === null) {
-          link = {
-            query: {
-              defaultValues: {},
-              args: { source: uv.args.source, args: { id } },
-              search: "",
-              page: null,
-            },
-            target: "root",
-            type: "query",
-          };
-        } else {
-          addLinkDefaultArgs(customLink, { id });
-          link = customLink;
-        }
-
-        const oldArgs = deepClone(this.args);
-        try {
-          const linkHandlerParams: ILinkHandlerParams = {
-            store: this.$store,
-            goto: target => this.$emit("goto", target),
-            openQRCodeScanner: qrLink => this.$root.$emit("open-qrcode-scanner", qrLink),
-            link,
-          };
-          await linkHandler(linkHandlerParams).handler();
-        } catch (e) {
-          await this.reloadIfRoot(ret.autoSave);
-          return;
-        }
-        await this.$nextTick();
-        if (deepEquals(oldArgs, this.args)) {
-          await this.reloadIfRoot(ret.autoSave);
         }
       } finally {
         this.inhibitReload = false;

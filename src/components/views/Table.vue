@@ -138,7 +138,7 @@
         }"
       >
         <div
-          :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
+          :class="['pagination', { 'ml-auto': !uv.info.mainEntity?.forInsert }]"
           :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
         >
           <b-spinner
@@ -1622,12 +1622,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // Don't reset it here to avoid button flickering.
     // this.showAddRowButtons = false;
 
-    if (!this.uv.info.mainEntity) {
+    if (!this.uv.info.mainEntity || !this.uv.info.mainEntity.forInsert) {
       this.showAddRowButtons = false;
       return;
     }
 
-    const entity = await this.getEntity(this.uv.info.mainEntity);
+    const entity = await this.getEntity(this.uv.info.mainEntity.entity);
     this.showAddRowButtons = entity?.access.insert ?? false;
   }
 

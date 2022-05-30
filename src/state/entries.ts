@@ -615,7 +615,7 @@ export const getReferenceInfo = (uv: ICombinedUserViewAny, columnI: number, rowI
         entity: mainField.field.fieldType.entity,
         referencedBy: {
           field: {
-            entity: uv.info.mainEntity!,
+            entity: uv.info.mainEntity!.entity,
             name: mainField.name,
           },
           rowId,
