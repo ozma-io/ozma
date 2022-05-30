@@ -988,7 +988,6 @@ export default class UserView extends Vue {
     this.$emit("update:status-line", "");
     this.$emit("update:enable-filter", false);
     this.$emit("update:body-style", "");
-    console.trace("destroy current");
   }
 
   private setState(state: UserViewLoadingState) {
