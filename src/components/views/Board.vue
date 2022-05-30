@@ -297,7 +297,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const type = this.uv.info.columns[this.groupIndex!].valueType;
     const toGroupText = (card : ICard<IRowCard>) => {
       // TODO: Not sure why is this needed; let's either document or remove it.
-      if (type.type === "date") {
+      if (type.type === "date" && card.card.group) {
         return (card.card.group as Moment).format(dateFormat);
       } else {
         return valueToText(type, card.card.group);
