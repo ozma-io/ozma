@@ -460,11 +460,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.oldCommittedRows = {};
     this.rowLoadState = params.rowLoadState;
 
-    if (this.attributes["disable_insert"]) {
-      console.error("Attribute `disable_insert` is deprecated, use FOR UPDATE OF");
-      if (params.info.mainEntity) {
-        params.info.mainEntity.forInsert = false;
-      }
+    if (this.attributes["disable_insert"] && params.info.mainEntity) {
+      params.info.mainEntity.forInsert = false;
     }
     this.info = params.info;
     this.argumentsMap = Object.fromEntries(params.info.arguments.map(arg => [arg.name, arg]));
