@@ -152,13 +152,13 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
       {
         const date = moment(value as MomentInput, dateFormat, true);
         if (date.isValid()) {
-          return date.local();
+          return date;
         }
       }
       {
         const date = moment(value as MomentInput, localDateFormat, true);
         if (date.isValid()) {
-          return date.local();
+          return date;
         }
       }
       return undefined;
@@ -172,15 +172,15 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
     }
     case "datetime": {
       {
-        const dateTime = moment(value as MomentInput, true);
+        const dateTime = moment.utc(value as MomentInput, true);
         if (dateTime.isValid()) {
-          return dateTime.utc();
+          return dateTime;
         }
       }
       {
-        const dateTime = moment(value as MomentInput, localDateTimeFormat, true);
+        const dateTime = moment.utc(value as MomentInput, localDateTimeFormat, true);
         if (dateTime.isValid()) {
-          return dateTime.utc();
+          return dateTime;
         }
       }
       return undefined;
