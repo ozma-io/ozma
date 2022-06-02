@@ -182,10 +182,10 @@ export default class Calendar extends Vue {
   }
 
   get textValue() {
-    if (this.dateValue.isValid()) {
-      return this.dateValue.local().format(this.usedFormat);
-    } else if (typeof this.value === "string") {
+    if (typeof this.value === "string") {
       return this.value;
+    } else if (this.dateValue.isValid()) {
+      return this.dateValue.local().format(this.usedFormat);
     } else {
       return "";
     }
