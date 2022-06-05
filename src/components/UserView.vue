@@ -189,7 +189,7 @@
       <b-overlay
         ref="overlayRef"
         class="userview-overlay"
-        :show="argumentEditorVisible && argumentEditorHasUpdatedValues"
+        :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
         variant="dark"
         opacity="0.4"
         blur="5px"
@@ -732,6 +732,10 @@ export default class UserView extends Vue {
 
   private updateArgument(name: ArgumentName, value: unknown) {
     Vue.set(this.updatedArguments, name, value);
+
+    if (this.autoApplyArguments) {
+      this.applyUpdatedArguments();
+    }
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {
@@ -1061,6 +1065,11 @@ export default class UserView extends Vue {
 
   private get argumentEditorHasUpdatedValues() {
     return Object.entries(this.updatedArguments).length > 0 && this.state.state !== "loading";
+  }
+
+  private get autoApplyArguments() {
+    if (this.state.state !== "show") return false;
+    return !this.state.uv.attributes["confirm_argument_changes"];
   }
 
   private get argumentEditorVisible() {
