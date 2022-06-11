@@ -10,7 +10,8 @@
             "error": "Error",
             "from_file": "From file",
             "drop_others": "Drop other schemas",
-            "skip_preloaded": "Skip preloaded schemas"
+            "skip_preloaded": "Skip preloaded schemas",
+            "force_allow_broken": "Mark broken objects as allow_broken"
         },
         "ru": {
             "schema_name": "Название схемы",
@@ -22,7 +23,8 @@
             "error": "Ошибка",
             "from_file": "Из файла",
             "drop_others": "Удалить другие схемы",
-            "skip_preloaded": "Пропустить системные схемы"
+            "skip_preloaded": "Пропустить системные схемы",
+            "force_allow_broken": "Помечать некорректные объекты как allow_broken"
         }
     }
 </i18n>
@@ -76,6 +78,14 @@
           {{ $t('drop_others') }}
         </b-form-checkbox>
 
+        <b-form-checkbox
+          id="force-allow-broken"
+          v-model="forceAllowBroken"
+          name="force-allow-broken"
+        >
+          {{ $t('force_allow_broken') }}
+        </b-form-checkbox>
+
         <div class="d-flex flex-row-reverse mb-3">
           <b-button variant="success" @click="restoreSchemas">
             {{ $t('restore') }}
@@ -101,6 +111,7 @@ export default class SaveRestoreSchema extends Vue {
   fileForRestore: File | null = null;
   dropOthers = false;
   skipPreloaded = true;
+  forceAllowBroken = false;
 
   async saveSchema() {
     try {
@@ -152,6 +163,7 @@ export default class SaveRestoreSchema extends Vue {
 
     const opts: IRestoreSchemasOptions = {
       dropOthers: this.dropOthers,
+      forceAllowBroken: this.forceAllowBroken,
     };
     try {
       await this.callProtectedApi({
