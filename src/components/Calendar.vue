@@ -93,7 +93,7 @@
                 type="button"
                 :disabled="value === null"
                 :class="['material-button clear-button', { 'disabled': value === null }]"
-                @click="updateValue(null)"
+                @click="selectValue(null)"
               >
                 <span class="material-icons md-18 mr-1">clear</span>
                 {{ $t("clear") }}
@@ -244,10 +244,8 @@ export default class Calendar extends Vue {
     }
   }
 
-  private updateValue(newValue: Moment | undefined | null) {
+  private selectValue(newValue: Moment | null) {
     if (moment.isMoment(newValue) && newValue.isSame(this.value)) return;
-    if (this.value === newValue) return;
-
     this.$emit("update:value", newValue);
     if (!this.showTime) {
       void this.closePopup();
@@ -256,7 +254,7 @@ export default class Calendar extends Vue {
 
   private onPressEnter(event: KeyboardEvent) {
     const target = event.target! as HTMLInputElement;
-    this.updateValue(target.value === "" ? null : moment(target.value, this.usedFormat));
+    this.$emit("update:value", target.value);
     target.blur();
     this.$emit("blur");
     this.$emit("enter-pressed", event);
@@ -293,7 +291,7 @@ export default class Calendar extends Vue {
         .seconds(0)
         .milliseconds(0);
     mutate(newValue.local());
-    this.updateValue(newValue);
+    this.selectValue(newValue);
   }
 
   private updateDate(val: Moment) {
