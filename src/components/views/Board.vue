@@ -78,9 +78,14 @@ interface IGroupColumn {
   group: unknown;
 }
 
+interface IEnumColumn {
+  id: string;
+  name: string;
+}
+
 interface IEnumColumns {
   type: "enum";
-  values: string[];
+  values: IEnumColumn[];
 }
 
 interface IReferenceColumn {
@@ -159,6 +164,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       return null;
     }
     const mainField = this.uv.info.columns[this.groupIndex].mainField;
+    const columnMappings = this.uv.columnAttributeMappings[this.groupIndex];
     const fieldType = mainField?.field.fieldType;
     if (fieldType?.type === "reference") {
       const rawColumns = this.uv.attributes["board_columns"];
@@ -213,15 +219,34 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         columns,
       };
     } else if (fieldType?.type === "enum") {
-      let values: string[];
+      let ids: string[];
       const rawColumns = this.uv.attributes["board_columns"];
-      if (!rawColumns || !(rawColumns instanceof Array)) {
-        values = fieldType.values;
+      if (!(rawColumns instanceof Array)) {
+        ids = fieldType.values;
       } else {
-        values = mapMaybe(rawCol => {
+        ids = mapMaybe(rawCol => {
           const col = String(rawCol);
           return fieldType.values.includes(col) ? col : undefined;
         }, rawColumns);
+      }
+
+      let values: IEnumColumn[];
+      const textMapping = columnMappings["text"];
+      if (textMapping) {
+        values = ids.map(id => {
+          let name: string;
+          const rawName = textMapping.entries[id];
+          if (rawName) {
+            name = String(rawName);
+          } else if (textMapping.default) {
+            name = String(textMapping.default);
+          } else {
+            name = id;
+          }
+          return { id, name };
+        });
+      } else {
+        values = ids.map(id => ({ id, name: id }));
       }
 
       return {
@@ -230,12 +255,13 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       };
     } else {
       const rawColumns = this.uv.attributes["board_columns"];
-      if (!rawColumns || !(rawColumns instanceof Array)) {
+      if (!(rawColumns instanceof Array)) {
         return null;
       } else {
+        const values = R.uniq(rawColumns.map(String)).map(id => ({ id, name: id }));
         return {
           type: "enum",
-          values: [...new Set(rawColumns.map(String))],
+          values,
         };
       }
     }
@@ -311,13 +337,13 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
     switch (this.columnsType.type) {
       case "enum":
-        return this.columnsType.values.map(name => ({
-          title: name,
-          key: name,
+        return this.columnsType.values.map(value => ({
+          title: value.name,
+          key: value.id,
           column: {
-            group: name,
+            group: value.id,
           },
-          cards: this.groupedCards[name] ?? [],
+          cards: this.groupedCards[value.id] ?? [],
         }));
       case "reference":
         return this.columnsType.columns.map(col => ({
