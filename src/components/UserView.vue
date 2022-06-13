@@ -291,6 +291,7 @@
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
+import { Debounce } from "vue-debounce-decorator";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError, mapMaybe } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
@@ -730,11 +731,16 @@ export default class UserView extends Vue {
     this.$emit("goto", linkQuery);
   }
 
+  @Debounce(500)
+  private debouncedApplyUpdatedArguments() {
+    this.applyUpdatedArguments();
+  }
+
   private updateArgument(name: ArgumentName, value: unknown) {
     Vue.set(this.updatedArguments, name, value);
 
     if (this.autoApplyArguments) {
-      this.applyUpdatedArguments();
+      this.debouncedApplyUpdatedArguments();
     }
   }
 
