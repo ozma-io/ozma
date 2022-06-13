@@ -55,14 +55,14 @@ import { namespace } from "vuex-class";
 import { RowId } from "ozma-api";
 import { Moment } from "moment";
 
-import { mapMaybe, NeverError, replaceHtmlLinks, tryDicts } from "@/utils";
+import { mapMaybe, NeverError, tryDicts } from "@/utils";
 import { dateFormat, valueIsNull, valueToText } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Board, { IColumn } from "@/components/kanban/Board.vue";
 import Errorbox from "@/components/Errorbox.vue";
 import { attrToLinkSelf, Link } from "@/links";
-import { currentValue, IRowCommon, rowKey, RowRef, valueToPunnedText } from "@/user_views/combined";
+import { currentValue, IRowCommon, rowKey, RowRef } from "@/user_views/combined";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
@@ -73,6 +73,7 @@ import {
   getColorVariantAttributeClassName,
   getColorVariantAttributeVariables,
 } from "@/utils_colors";
+import { formatValueToHtml } from "@/user_views/format";
 
 interface IGroupColumn {
   group: unknown;
@@ -442,6 +443,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const columns = mapMaybe((value, colI): CardColumn | undefined => {
       const info = this.uv.info.columns[colI];
       const columnAttrs = this.uv.columnAttributes[colI];
+      const columnMappings = this.uv.columnAttributeMappings[colI];
       const cellAttrs = value.attributes;
       const getCellAttr = (name: string) => tryDicts(name, cellAttrs, columnAttrs, rowAttrs, viewAttrs);
 
@@ -455,13 +457,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         return undefined;
       }
 
-      const punnedValue = valueToPunnedText(info.valueType, value);
+      const textHtml = formatValueToHtml(info.valueType, value, { columnAttributeMappings: columnMappings });
       const icon = getCellAttr("icon");
       const colorCellVariant = colorVariantFromAttribute(getCellAttr("cell_variant"));
       return {
         type: "text",
-        value: punnedValue,
-        valueHtml: replaceHtmlLinks(punnedValue),
+        textHtml,
         size: 12,
         icon: icon ? String(icon) : null,
         cellVariantClass: getColorVariantAttributeClassName(colorCellVariant),

@@ -31,23 +31,20 @@
         <span
           v-else
           class="card-text"
-          :title="col.value"
         >
           <!-- TODO: Remove `getIconType` method call from template -->
           <span
-            v-if="col.icon && col.value"
+            v-if="col.icon && col.textHtml"
             :class="['card-icon', { 'material-icons md-18': getIconType(col.icon) === 'material' }]"
           >
             {{ col.icon }}
           </span>
           <!-- eslint-disable vue/no-v-html -->
           <span
-            v-if="col.valueHtml !== col.value"
             class="card-text-text"
             @click.stop
-            v-html="col.valueHtml"
+            v-html="col.textHtml"
           />
-          <span v-else class="card-text-text"> {{ col.value }} </span>
           <!-- eslint-enable vue/no-v-html -->
         </span>
       </b-col>
@@ -70,8 +67,7 @@ export interface ICardColumnBase {
 export interface ITextCardColumn extends ICardColumnBase {
   type: "text";
   icon: string | null;
-  value: string;
-  valueHtml: string;
+  textHtml: string;
   cellVariantClass: ColorVariantFullClassName | null;
   cellVariantStyles: ColorVariantCssVariables | null;
 }

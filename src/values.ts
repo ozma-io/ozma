@@ -37,6 +37,7 @@ export interface IUpdatedValue {
 }
 
 // Should be in sync with `valueFromRaw` and be idempotent.
+// TODO: deprecate this in favor of customizable `formatValue`.
 export const valueToText = (valueType: ValueType, value: unknown): string => {
   if (typeof value === "string") {
     return value;

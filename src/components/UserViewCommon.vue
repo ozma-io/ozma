@@ -94,11 +94,12 @@ import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/com
 import { getReferenceInfo } from "@/state/entries";
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { EntityRef, IAttrToLinkOpts } from "@/links";
-import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
+import { convertParsedRows, serializeValue, valueFromRaw } from "@/values";
 
 import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
 import { eventBus, IShowHelpModalArgs } from "@/main";
+import { formatValue } from "@/user_views/format";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -284,8 +285,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         row.values.forEach((cell, colI) => {
           const info = this.uv.info.columns[colI];
           // This makes export non-reversible, because we don't export reference IDs. Some clients ask for main fields in these columns though.
-          const value = cell.pun !== undefined ? valueToText(info.punType!, cell.pun) : valueToText(info.valueType, cell.value);
-          output += csvCell(value);
+          const textValue = formatValue(info.valueType, cell);
+          output += csvCell(textValue);
           if (colI < row.values.length - 1) {
             output += csvSeparator;
           }

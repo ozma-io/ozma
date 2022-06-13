@@ -1,8 +1,8 @@
 import moment from "moment";
-import { AttributeName, ValueType } from "ozma-api";
+import { AttributeName, IExecutedValue, ValueType } from "ozma-api";
 
 import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinks, shortLanguage } from "@/utils";
-import { ConvertedBoundAttributesMap, currentValue, ICombinedValue, valueToPunnedText } from "./combined";
+import { ConvertedBoundAttributesMap, currentValue, valueToPunnedText } from "./combined";
 import { valueToText } from "@/values";
 
 const messages: Record<string, Record<string, string>> = {
@@ -61,7 +61,7 @@ export const formatRawValue = (valueType: ValueType, rawValue: unknown, opts?: I
   }
 };
 
-export const formatValue = (valueType: ValueType, value: ICombinedValue, opts?: IFormatValueOpts): string => {
+export const formatValue = (valueType: ValueType, value: IExecutedValue, opts?: IFormatValueOpts): string => {
   const ret = tryFormatRawValue(valueType, currentValue(value), opts);
   if (ret === null) {
     return valueToPunnedText(valueType, value);
@@ -70,7 +70,7 @@ export const formatValue = (valueType: ValueType, value: ICombinedValue, opts?: 
   }
 };
 
-export const formatValueToHtml = (valueType: ValueType, value: ICombinedValue, opts?: IFormatValueOpts): string => {
+export const formatValueToHtml = (valueType: ValueType, value: IExecutedValue, opts?: IFormatValueOpts): string => {
   let valueHtml = formatValue(valueType, value, opts);
   if (typeof value.value === "string") {
     if (valueHtml.length > 1000) {

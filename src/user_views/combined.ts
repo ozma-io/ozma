@@ -252,7 +252,7 @@ const clearUpdatedValue = (value: ICombinedValue) => {
   }
 };
 
-export const currentValue = (value: ICombinedValue) => "rawValue" in value ? value.rawValue : value.value;
+export const currentValue = (value: ICombinedValue | IExecutedValue) => "rawValue" in value ? value.rawValue : value.value;
 
 export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
   if (args.source.type === "named") {
@@ -262,9 +262,9 @@ export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
   }
 };
 
-export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): string => {
+export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue | IExecutedValue): string => {
   if (value.pun !== undefined && value.pun !== null) {
-    return value.pun;
+    return String(value.pun);
   } else {
     return valueToText(valueType, currentValue(value));
   }

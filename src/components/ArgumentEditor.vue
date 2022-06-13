@@ -56,7 +56,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
-import { fieldToValueType, valueToText } from "@/values";
+import { fieldToValueType } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 import { ConvertedBoundAttributesMap } from "@/user_views/combined";
 
@@ -85,7 +85,7 @@ export default class ArgumentEditor extends Vue {
       const attributes = this.attributes[parameter.name] ?? {};
       const attributeMappings = this.attributeMappings[parameter.name] ?? {};
       const rawCaption = attributes["caption"];
-      const caption = rawCaption ? valueToText(parameter.attributeTypes["caption"].type, rawCaption) : parameter.name;
+      const caption = rawCaption ? String(rawCaption) : parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
 

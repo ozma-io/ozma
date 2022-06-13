@@ -96,7 +96,9 @@ export default class ArrayReferenceField extends Vue {
     if (this.value.length <= 1) {
       this.$emit("update:value", null);
     } else {
-      this.$emit("update:value", this.value.filter((_, i) => i !== index));
+      const newValue = this.value.slice();
+      newValue.splice(index, 1);
+      this.$emit("update:value", newValue);
     }
   }
 
