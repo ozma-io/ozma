@@ -93,17 +93,15 @@ export default class ArrayReferenceField extends Vue {
   private removeIndex(index: number) {
     if (this.value === null) return;
 
-    if (this.value.length <= 1) {
-      this.$emit("update:value", null);
-    } else {
-      const newValue = this.value.slice();
-      newValue.splice(index, 1);
-      this.$emit("update:value", newValue);
-    }
+    const rawNewValue = this.value.slice();
+    rawNewValue.splice(index, 1);
+    const newValue = rawNewValue.length === 0 && !this.required ? null : rawNewValue;
+    this.$emit("update:value", newValue);
   }
 
   private clearValues() {
-    this.$emit("update:value", null);
+    const newValue = !this.required ? null : [];
+    this.$emit("update:value", newValue);
   }
 }
 </script>
