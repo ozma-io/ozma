@@ -94,7 +94,7 @@ import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/com
 import { getReferenceInfo } from "@/state/entries";
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { EntityRef, IAttrToLinkOpts } from "@/links";
-import { convertParsedRows, serializeValue, valueFromRaw } from "@/values";
+import { deserializeParsedRows, serializeValue, valueFromRaw } from "@/values";
 
 import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
@@ -265,7 +265,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         if (!fetched.complete) {
           throw new Error("Too many entries to export");
         }
-        convertParsedRows(fetched.info, fetched.rows!);
+        deserializeParsedRows(fetched.info, fetched.rows!);
         data = fetched;
       }
 

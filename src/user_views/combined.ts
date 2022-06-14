@@ -6,7 +6,7 @@ import {
 } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
-import { convertParsedRows, equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
+import { deserializeParsedRows, equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import { Entries, EntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
 
 import { IEntitiesState } from "../state/entities";
@@ -1048,7 +1048,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     const mainChanges = info.mainEntity ? this.storeChanges.changesForEntity(info.mainEntity.entity) : null;
 
     // First step - convert values by type.
-    convertParsedRows(info, rows);
+    deserializeParsedRows(info, rows);
 
     // Second step - massage values into expected shape.
     rows.forEach((rawRow, rowI) => {

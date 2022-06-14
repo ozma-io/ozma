@@ -14,7 +14,7 @@
       :background-color="backgroundColor"
       :create-button="createButton"
       :allow-dragging="allowDragging"
-      @add="onAdd(column, columnIndex, ...arguments)"
+      @add="onAdd(column.column, columnIndex, ...arguments)"
       @move="onMove(column.column, columnIndex, ...arguments)"
       @remove="onRemove(column.column, columnIndex, ...arguments)"
       @create="$emit('create', column.column, columnIndex)"
@@ -55,16 +55,16 @@ export default class Board extends Vue {
 
   private dragging = false;
 
-  private onAdd(column: IColumn<unknown, unknown>, columnIndex: number, card: unknown, newIndex: number) {
-    this.$emit("add", column.column, columnIndex, card, newIndex);
+  private onAdd(column: unknown, columnIndex: number, card: unknown, newIndex: number) {
+    this.$emit("add", column, columnIndex, card, newIndex);
   }
 
-  private onMove(column: IColumn<unknown, unknown>, columnIndex: number, card: unknown, oldIndex: number, newIndex: number) {
-    this.$emit("move", column.column, columnIndex, card, oldIndex, newIndex);
+  private onMove(column: unknown, columnIndex: number, card: unknown, oldIndex: number, newIndex: number) {
+    this.$emit("move", column, columnIndex, card, oldIndex, newIndex);
   }
 
-  private onRemove(column: IColumn<unknown, unknown>, columnIndex: number, card: unknown, oldIndex: number) {
-    this.$emit("remove", column.column, columnIndex, card, oldIndex);
+  private onRemove(column: unknown, columnIndex: number, card: unknown, oldIndex: number) {
+    this.$emit("remove", column, columnIndex, card, oldIndex);
   }
 }
 </script>
