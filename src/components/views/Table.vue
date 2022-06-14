@@ -361,6 +361,7 @@ import { Button } from "@/components/buttons/buttons";
 import FormValueControl from "@/components/FormValueControl";
 import type TableCell from "./table/TableCell.vue";
 import { elementWindow, WindowKey } from "@/state/windows";
+import { formatValue } from "@/user_views/format";
 
 export interface IColumn {
   caption: string;
@@ -469,13 +470,14 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
   // Needs to be performant, hence this custom loop.
   let searchText = "";
-  for (const value of row.values) {
+  row.values.forEach((value, i) => {
+    const column = uv.info.columns[i];
     if (value.pun) {
       searchText += value.pun + "\0";
-    } else if (typeof value.value === "string") {
-      searchText += value.value + "\0";
+    } else {
+      searchText += formatValue(column.valueType, value) + "\0";
     }
-  }
+  });
   row.extra.searchText = searchText.toLocaleLowerCase();
 };
 
