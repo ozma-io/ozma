@@ -400,13 +400,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   createCard(column: IGroupColumn, columnIndex: number) {
+    const groupInfo = this.uv.info.columns[this.groupIndex!];
     const modalQuery: IQuery = {
       args: {
         ...this.createView!.args,
       },
       defaultValues: {
         ...this.createView!.defaultValues,
-        [this.uv.info.columns[this.groupIndex!].name]: column.group,
+        [groupInfo.name]: serializeValue(groupInfo.valueType, column.group),
       },
       search: "",
       page: null,
