@@ -218,7 +218,7 @@ const deserializeScalarValueFunction = (scalarType: SimpleType): ((value: unknow
   }
 };
 
-const deserializeValueFunction = (valueType: ValueType): ((value: unknown) => unknown) | null => {
+export const deserializeValueFunction = (valueType: ValueType): ((value: unknown) => unknown) | null => {
   if (valueType.type === "array") {
     const deserializeItem = deserializeScalarValueFunction(valueType.subtype.type);
     if (deserializeItem) {

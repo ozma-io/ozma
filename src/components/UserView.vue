@@ -296,7 +296,7 @@ import { Debounce } from "vue-debounce-decorator";
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError, mapMaybe } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
 import { funappSchema } from "@/api";
-import { equalEntityRef, fieldToValueType, serializeValue, valueEquals, valueFromRaw } from "@/values";
+import { deserializeValueFunction, equalEntityRef, fieldToValueType, serializeValue, valueEquals, valueFromRaw } from "@/values";
 import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
@@ -651,7 +651,8 @@ export default class UserView extends Vue {
       } else {
         return Object.fromEntries(mapMaybe(argInfo => {
           if (argInfo.defaultValue !== undefined) {
-            const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, argInfo.defaultValue);
+            const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
+            const value = convertFunc ? convertFunc(argInfo.defaultValue) : argInfo.defaultValue;
             console.assert(value !== undefined);
             return [argInfo.name, value];
           } else if (argInfo.optional) {
@@ -672,13 +673,14 @@ export default class UserView extends Vue {
       if (uv.args.args === null) {
         return null;
       } else {
-        return Object.fromEntries(mapMaybe(([name, argValue]) => {
+        return Object.fromEntries(mapMaybe(([name, rawValue]) => {
           const argInfo = uv.argumentsMap[name];
           if (argInfo === undefined) {
             return undefined;
           }
-          const value = valueFromRaw({ fieldType: argInfo.argType, isNullable: argInfo.optional }, argValue);
-          return [name, argValue];
+          const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
+          const value = convertFunc ? convertFunc(rawValue) : rawValue;
+          return [name, value];
         }, Object.entries(uv.args.args)));
       }
     }
