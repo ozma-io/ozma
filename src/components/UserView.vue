@@ -652,7 +652,7 @@ export default class UserView extends Vue {
         return Object.fromEntries(mapMaybe(argInfo => {
           if (argInfo.defaultValue !== undefined) {
             const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
-            const value = convertFunc ? convertFunc(argInfo.defaultValue) : argInfo.defaultValue;
+            const value = argInfo.defaultValue && convertFunc ? convertFunc(argInfo.defaultValue) : argInfo.defaultValue;
             console.assert(value !== undefined);
             return [argInfo.name, value];
           } else if (argInfo.optional) {
@@ -679,7 +679,7 @@ export default class UserView extends Vue {
             return undefined;
           }
           const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
-          const value = convertFunc ? convertFunc(rawValue) : rawValue;
+          const value = rawValue && convertFunc ? convertFunc(rawValue) : rawValue;
           return [name, value];
         }, Object.entries(uv.args.args)));
       }
