@@ -1030,11 +1030,11 @@ export default class UserView extends Vue {
   }
 
   private uvErrorMessage(uv: UserViewError): string {
-    if (uv.type === "access_denied") {
+    if (uv.type === "accessDenied") {
       return this.$t("forbidden").toString();
-    } else if (uv.type === "no_instance") {
+    } else if (uv.type === "noInstance") {
       return this.$t("no_instance").toString();
-    } else if (uv.type === "not_found") {
+    } else if (uv.type === "notFound") {
       return this.$t("not_found").toString();
     } else if (uv.type === "arguments" || uv.type === "request") {
       return this.$t("bad_request", { msg: uv.message }).toString();
