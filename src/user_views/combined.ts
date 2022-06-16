@@ -399,8 +399,9 @@ export interface IRowLoadState {
   complete: boolean;
 }
 
-const convertAttributeMapping = (typeName: string, mapping: IBoundMapping): IConvertedBoundMapping | null => {
-  if (typeName !== "string" && typeName !== "bool" && typeName !== "int" && typeName !== "uuid") {
+const convertAttributeMapping = (valueType: ValueType, mapping: IBoundMapping): IConvertedBoundMapping | null => {
+  const scalarValue = valueType.type === "array" ? valueType.subtype.type : valueType.type;
+  if (scalarValue !== "string" && scalarValue !== "bool" && scalarValue !== "int" && scalarValue !== "uuid") {
     return null;
   }
 
@@ -482,7 +483,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         return undefined;
       }
 
-      const newMapping = convertAttributeMapping(attrInfo.type.type, attrInfo.mapping);
+      const newMapping = convertAttributeMapping(attrInfo.type, attrInfo.mapping);
       return newMapping ? [attrName, newMapping] : undefined;
     }, [...Object.entries(col.attributeTypes), ...Object.entries(col.cellAttributeTypes)])));
 
@@ -492,8 +493,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           return undefined;
         }
 
-        const typeName = arg.attributeTypes[attrName].type.type;
-        const newMapping = convertAttributeMapping(attrInfo.type.type, attrInfo.mapping);
+        const newMapping = convertAttributeMapping(attrInfo.type, attrInfo.mapping);
         return newMapping ? [attrName, newMapping] : undefined;
       }, Object.entries(arg.attributeTypes)));
       return [arg.name, attrs];
