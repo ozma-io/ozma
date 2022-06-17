@@ -210,6 +210,7 @@
           :srcdoc="inputType.srcdoc"
           :value="value"
           :height="customHeight"
+          @update:value="updateValue($event)"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}

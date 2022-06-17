@@ -24,11 +24,7 @@
     @closed="onClose"
   >
     <div class="help-container">
-      <iframe
-        ref="iframe"
-        class="iframe"
-        sandbox="allow-scripts allow-top-navigation"
-        allowfullscreen
+      <EmbeddedContainer
         :srcdoc="markup"
       />
       <div class="buttons-container">
@@ -64,8 +60,9 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import ModalWindow from "./modal/ModalWindow.vue";
+import EmbeddedContainer from "./EmbeddedContainer.vue";
 
-@Component({ components: { ModalWindow } })
+@Component({ components: { ModalWindow, EmbeddedContainer } })
 export default class HelpModal extends Vue {
   @Prop({ type: String, required: true }) markup!: string;
 
@@ -136,16 +133,6 @@ export default class HelpModal extends Vue {
     flex-flow: column;
     align-items: center;
     overflow-y: auto;
-  }
-
-  .iframe {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-    border: none;
-    border-radius: 0.75rem;
-    background-color: rgb(245, 245, 245); /* it's backgroundDarker1 color of light theme */
   }
 
   .buttons-container {

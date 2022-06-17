@@ -25,6 +25,16 @@ const isTargetType = (rawType: unknown): rawType is TargetType => {
   return rawType === "top" || rawType === "root" || rawType === "modal" || rawType === "blank" || rawType === "modal-auto";
 };
 
+const convertHrefTargetType = (rawType: unknown): HrefTargetType | null => {
+  if (rawType === "self") {
+    return "_self";
+  } else if (rawType === "blank") {
+    return "_blank";
+  } else {
+    return null;
+  }
+};
+
 export interface IQueryLink {
   query: IQuery;
   target: TargetType;
@@ -197,8 +207,7 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
 
   const href = linkedAttrObj["href"];
   if (typeof href === "string") {
-    const targetRaw = "_" + linkedAttrObj["target"];
-    const target = hrefTargetTypes.includes(targetRaw as HrefTargetType) ? targetRaw as HrefTargetType : "_self";
+    const target = convertHrefTargetType(linkedAttrObj["target"]) ?? "_self";
     return { href, type: "href", target };
   }
 

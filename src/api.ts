@@ -8,7 +8,6 @@ export const documentGeneratorUrl = String(__DOCUMENT_GENERATOR_URL__);
 export const invitesServiceUrl = typeof __INVITES_SERVICE_URL__ === "string" ? __INVITES_SERVICE_URL__ : undefined;
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
 export const disableAuth = Boolean(__DISABLE_AUTH__);
-const readonlyDemoInstanceName = typeof __READ_ONLY_INSTANCE_NAME__ === "string" ? __READ_ONLY_INSTANCE_NAME__ : undefined;
 
 export const authOrigin = String(__API_AUTH_URL__);
 export const authUrlBase = `${authOrigin}${String(__API_AUTH_URL_BASE__)}`;
