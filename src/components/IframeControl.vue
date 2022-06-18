@@ -28,8 +28,9 @@
       :src="src"
       :value="value"
       is-control
+      @goto="$emit('goto', $event)"
       @update:height="updateHeight"
-      @update:value="$emit('update:value', $value)"
+      @update:value="$emit('update:value', $event)"
     />
   </div>
 </template>

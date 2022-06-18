@@ -281,9 +281,9 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
   };
   const paramsString = new URLSearchParams(params).toString();
 
-  const waitForLoad = Utils.gotoHref(`${authUrl}/auth?${paramsString}`);
-  commit("setPending", waitForLoad);
-  return waitForLoad;
+  window.open(`${authUrl}/auth?${paramsString}`, "_self");
+  commit("setPending", Utils.never);
+  return Utils.never;
 };
 
 const runProtectedCall = async <Args extends unknown[], Ret>({ state, commit, dispatch }: ActionContext<IAuthState, {}>, func: (token: string | null, ...args: Args) => Promise<Ret>, ...args: Args) => {
@@ -524,9 +524,9 @@ export const authModule: Module<IAuthState, {}> = {
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();
-      const wait = Utils.gotoHref(`${authUrl}/logout?${paramsString}`);
-      commit("setPending", wait);
-      await wait;
+      window.open(`${authUrl}/logout?${paramsString}`, "_self");
+      commit("setPending", Utils.never);
+      await Utils.never;
     },
     login: async context => {
       await requestLogin(context, true);

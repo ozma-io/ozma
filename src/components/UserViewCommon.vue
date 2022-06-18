@@ -488,7 +488,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: "E-mail",
         icon: "email",
         type: "link",
-        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "_blank" },
+        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "blank" },
         variant: defaultVariantAttribute,
       });
     }
@@ -498,7 +498,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: "WhatsApp",
         icon: "phone",
         type: "link",
-        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "_blank" },
+        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "blank" },
         variant: defaultVariantAttribute,
       });
     }
@@ -508,7 +508,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: "Telegram",
         icon: "send",
         type: "link",
-        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "_blank" },
+        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "blank" },
         variant: defaultVariantAttribute,
       });
     }

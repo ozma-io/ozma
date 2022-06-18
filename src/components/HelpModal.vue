@@ -26,6 +26,7 @@
     <div class="help-container">
       <EmbeddedContainer
         :srcdoc="markup"
+        @goto="$emit('goto', $event)"
       />
       <div class="buttons-container">
         <b-button

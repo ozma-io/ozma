@@ -211,6 +211,7 @@
           :value="value"
           :height="customHeight"
           @update:value="updateValue($event)"
+          @goto="$emit('goto', $event)"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
