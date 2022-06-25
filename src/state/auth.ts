@@ -511,7 +511,7 @@ export const authModule: Module<IAuthState, {}> = {
       },
     },
     logout: async ({ state, commit }) => {
-      if (state.current === null) {
+      if (!(state.current instanceof CurrentAuth)) {
         throw new Error("Cannot logout without an existing token");
       }
 
@@ -519,8 +519,10 @@ export const authModule: Module<IAuthState, {}> = {
         return;
       }
 
-      const params = {
-        "redirect_uri": redirectUri(),
+      const params: Record<string, string> = {
+        "post_logout_redirect_uri": redirectUri(),
+        "client_id": authClientId,
+        "id_token_hint": state.current.idToken,
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();
