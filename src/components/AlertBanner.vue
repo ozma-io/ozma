@@ -101,7 +101,8 @@ export default class AlertBanner extends Vue {
     justify-content: space-between;
   }
 
-  .invite-button, .sign-up-button {
+  .invite-button,
+  .sign-up-button {
     margin: -1rem 0.5rem;
     padding: 0.25rem 1.25rem;
     align-self: center;
