@@ -109,9 +109,9 @@ export default class AlertBanner extends Vue {
   }
 
   ::v-deep .sign-up-button .btn {
-    padding: 0 1.25rem;
+    padding: 0.25rem 1.25rem;
     margin: 0 0.5rem;
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: normal;
   }
 </style>
