@@ -619,6 +619,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       uv.extra.hasRowLinks = true;
     }
 
+    // We need to address rows for tree views, so we require `info`.
     if (value.info) {
       if (getCellAttr("tree_parent_ids")) {
         // Init indexes by ids
