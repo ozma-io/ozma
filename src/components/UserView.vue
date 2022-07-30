@@ -185,16 +185,9 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
       <FunOverlay
         ref="overlayRef"
-        class="userview-overlay"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
-        variant="dark"
-        opacity="0.4"
-        blur="5px"
-        rounded="sm"
-        :z-index="30"
         :infinite-wrapper="isRoot"
       >
         <template #overlay>
