@@ -68,11 +68,7 @@ import type { TextLink } from "@/utils";
 import { bootstrapVariantAttribute } from "@/utils_colors";
 
 @Component({
-  components: {
-    Textarea,
-    QRCodeScannerModal,
-    ButtonItem,
-  },
+  components: { Textarea, QRCodeScannerModal, ButtonItem },
 })
 export default class Input extends Vue {
   @Prop() value!: unknown;

@@ -39,6 +39,7 @@ export default Vue.component("FunLink", {
     const handler = linkHandler(linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
+      e.stopPropagation();
       if (context.props.disabled || !redirectClick(e, handler.href === null)) {
         return;
       }

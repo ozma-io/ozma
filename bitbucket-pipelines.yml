@@ -1,0 +1,51 @@
+options:
+  max-time: 10
+pipelines:
+  default:
+    - parallel: &build_steps
+      - step:
+          name: Build FunApp
+          image: node:lts
+          size: 2x
+          caches:
+            - node-funapp
+            - yarn
+          script:
+            - git submodule update --init
+            - cd FunApp && ./build.sh
+          artifacts:
+            - FunApp/dist/**
+      - step:
+          name: Lint FunApp
+          image: node:lts
+          caches:
+            - node-funapp
+            - yarn
+          script:
+            - git submodule update --init
+            - cd FunApp && ./lint.sh
+
+  pull-requests:
+    '**':
+      - parallel: *build_steps
+  branches:
+    master:
+      - parallel: *build_steps
+      - step:
+          name: Deploy to test
+          image: atlassian/default-image:2
+          deployment: test
+          script:
+            - dev/deploy.sh bitbucket@manager.services.ozma.io development
+      - step:
+          name: Deploy to production
+          image: atlassian/default-image:2
+          deployment: production
+          trigger: manual
+          script:
+            - dev/deploy.sh bitbucket@manager.services.ozma.io production
+
+definitions:
+  caches:
+    node-funapp: FunApp/node_modules
+    yarn: /usr/local/share/.cache/yarn

@@ -53,7 +53,7 @@ export default class SelectUserView extends Vue {
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: String, required: true }) parentScope!: ScopeName;
 
-  private currentView: IQuery = null as any;
+  private currentView!: IQuery;
 
   private created() {
     this.currentView = this.initialView;

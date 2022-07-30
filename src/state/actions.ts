@@ -1,28 +1,31 @@
-import { Store } from "vuex";
+import { Dispatch } from "vuex";
 import { IActionRef, IActionResult } from "ozma-api";
 
 import Api from "@/api";
-import { app, eventBus } from "@/main";
-import { i18n } from "@/modules";
+import { app } from "@/main";
 import { ISubmitResult } from "@/state/staging_changes";
+import { shortLanguage } from "@/utils";
 
-import { CurrentSettings } from "./settings";
-import { CurrentAuth, INoAuth } from "./auth";
-
-const dirtyHackGetErrorMessage = (error: unknown): string => {
-  const errorString = String(error);
-  return /^Error: Uncaught Error: (.*)\n/.exec(errorString)?.[1] ??
-    errorString.replace(/^Error: /, "");
+const messages: Record<string, Record<string, string>> = {
+  en: {
+    "exception_in_action": "Exception in action",
+  },
+  ru: {
+    "exception_in_action": "Исключение в действии",
+  },
 };
 
+// TODO: can't access VueI18n here, but this solution looks stupid too.
+const funI18n = (key: string) => messages[shortLanguage]?.[key];
+
+const dirtyHackGetErrorMessage = (error: any): string =>
+  /Unhandled exception (Error: )?(.*):\n/g.exec(String(error))?.[2] ?? "";
+
 export const saveAndRunAction = async (
-  { dispatch, state }: Store<any>,
+  { dispatch }: { dispatch: Dispatch },
   ref: IActionRef,
   args: Record<string, unknown>,
 ): Promise<IActionResult> => {
-  const settings = state.settings.current as CurrentSettings;
-  const auth = state.auth.current as CurrentAuth | INoAuth | null;
-
   let ret: IActionResult | undefined;
   let reloaded = false;
   try {
@@ -34,15 +37,11 @@ export const saveAndRunAction = async (
         }, { root: true });
       } catch (e) {
         // TODO: Return proper messages from backend instead of using regexps.
-        if (settings.getEntry("is_read_only_demo_instance", Boolean, false) && !auth?.refreshToken) {
-          eventBus.emit("show-readonly-demo-modal");
-        } else {
-          app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
-            title: i18n.tc("exception_in_action"),
-            variant: "danger",
-            solid: true,
-          });
-        }
+        app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
+          title: funI18n("exception_in_action"),
+          variant: "danger",
+          solid: true,
+        });
 
         throw e;
       }

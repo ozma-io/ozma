@@ -157,18 +157,20 @@
         </span>
       </button>
 
-      <ArgumentEditor
-        v-if="argumentEditorVisible"
-        class="userview-argument-editor"
-        :home-schema="state.uv.homeSchema"
-        :params="state.uv.info.arguments"
-        :values="currentArguments"
-        :attributes="state.uv.argumentAttributes"
-        :attribute-mappings="state.uv.argumentAttributeMappings"
-        @clear="clearUpdatedArguments"
-        @update="updateArgument"
-        @apply="applyUpdatedArguments"
-      />
+      <transition name="fade-move">
+        <ArgumentEditor
+          v-if="argumentEditorVisible"
+          class="userview-argument-editor"
+          :home-schema="state.uv.homeSchema"
+          :params="state.uv.info.arguments"
+          :values="currentArguments"
+          :attributes="state.uv.argumentAttributes"
+          :attribute-mappings="state.uv.argumentAttributeMappings"
+          @clear="clearUpdatedArguments"
+          @update="updateArgument"
+          @apply="applyUpdatedArguments"
+        />
+      </transition>
 
       <UserViewCommon
         :uv="state.uv"
@@ -183,10 +185,17 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <FunOverlay
+      <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
+      <b-overlay
         ref="overlayRef"
+        class="userview-overlay"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
-        :infinite-wrapper="inContainer"
+        variant="dark"
+        opacity="0.4"
+        blur="5px"
+        rounded="sm"
+        :z-index="30"
+        :infinite-wrapper="isRoot"
       >
         <template #overlay>
           <div class="overlay-content">
@@ -239,17 +248,17 @@
             @load-entries="loadEntries"
           />
         </transition>
-      </FunOverlay>
+      </b-overlay>
     </template>
 
     <Errorbox
-      v-else-if="state.state === 'error' && !silentErrors"
+      v-else-if="state.state === 'error'"
       :class="isRoot ? 'm-2' : ''"
       :message="state.message"
     />
     <transition name="fade-2">
       <div
-        v-if="state.state === 'loading'|| (state.state === 'error' && silentErrors)"
+        v-if="state.state === 'loading'"
         :class="[
           'loading-container',
           {
@@ -295,7 +304,6 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import FunOverlay from "@/components/FunOverlay.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
@@ -323,7 +331,6 @@ const reload = namespace("reload");
 const staging = namespace("staging");
 const query = namespace("query");
 const settings = namespace("settings");
-const errors = namespace("errors");
 
 interface IUserViewComponent {
   type: "component";
@@ -417,7 +424,6 @@ const loadingState: IUserViewLoading = { state: "loading", args: null };
   ArgumentEditor,
   Errorbox,
   ButtonItem,
-  FunOverlay,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -432,7 +438,6 @@ export default class UserView extends Vue {
   @settings.State("userIsRoot") userIsRoot!: boolean;
   @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
   @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
-  @errors.State("silent") silentErrors!: boolean;
 
   @Prop({ type: Object, required: true }) args!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -443,7 +448,6 @@ export default class UserView extends Vue {
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, unknown>;
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
-  @Prop({ type: Boolean, default: false }) inContainer!: boolean;
 
   private uvCommonButtons: Button[] = [];
   private componentButtons: Button[] = [];
@@ -451,19 +455,20 @@ export default class UserView extends Vue {
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private nextUv: Promise<void> | null = null;
+  private inhibitReload = false;
   private updatedArguments: Record<ArgumentName, unknown> = {};
   private showArgumentEditor = false;
   private userViewRedirects = 0;
 
   protected created() {
-    if (this.isRoot) {
-      this.setReloadHandler({
-        key: this.uid,
-        handler: () => {
+    this.setReloadHandler({
+      key: this.uid,
+      handler: () => {
+        if (!this.inhibitReload) {
           void this.reload();
-        },
-      });
-    }
+        }
+      },
+    });
   }
 
   destroyed() {
@@ -553,6 +558,7 @@ export default class UserView extends Vue {
           goto: target => this.$emit("goto", target),
           openQRCodeScanner: () => {},
           link: { query: this.editViewQuery!, target: "modal-auto", type: "query" },
+          replaceInsteadPush: true,
         };
         const handler = linkHandler(linkHandlerParams);
         void handler.handler();
@@ -741,7 +747,7 @@ export default class UserView extends Vue {
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {
-    if (this.isRoot && this.args.args !== null) {
+    if (this.isRoot) {
       await this.reload({ autoSaved });
     }
   }
@@ -761,7 +767,7 @@ export default class UserView extends Vue {
   }
 
   private async loadNextChunk(next?: () => void | Promise<void>) {
-    if (this.state.state !== "show" || this.state.uv.rowLoadState === null || this.state.uv.rowLoadState.complete) return;
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ loadNextChunk: true });
     if (next) {
@@ -770,7 +776,7 @@ export default class UserView extends Vue {
   }
 
   private async loadAllChunks(next?: () => void | Promise<void>) {
-    if (this.state.state !== "show" || this.state.uv.rowLoadState === null || this.state.uv.rowLoadState.complete) return;
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ loadAllChunks: true });
     if (next) {
@@ -779,7 +785,7 @@ export default class UserView extends Vue {
   }
 
   private async loadAllChunksLimitless(next?: () => void | Promise<void>) {
-    if (this.state.state !== "show" || this.state.uv.rowLoadState === null || this.state.uv.rowLoadState.complete) return;
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ loadAllChunksLimitless: true });
     if (next) {
@@ -788,7 +794,7 @@ export default class UserView extends Vue {
   }
 
   private async loadEntries(limit: number, next?: () => void | Promise<void>) {
-    if (this.state.state !== "show" || this.state.uv.rowLoadState === null || this.state.uv.rowLoadState.complete) return;
+    if (this.state.state !== "show" || this.state.uv.rowLoadState === null) return;
 
     await this.reload({ limit });
     if (next) {
@@ -864,9 +870,7 @@ export default class UserView extends Vue {
 
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
-          if (pending.ref !== this.nextUv) {
-            return;
-          }
+          if (pending.ref !== this.nextUv) return;
 
           const handler = component.handler ?? baseUserViewHandler;
 
@@ -945,7 +949,7 @@ export default class UserView extends Vue {
             goto: target => this.$emit("goto", target),
             openQRCodeScanner: link => this.$root.$emit("open-qrcode-scanner", link),
             link: newType.link,
-            replace: true,
+            replaceInsteadPush: true,
           };
           const handler = linkHandler(linkHandlerParams);
           this.userViewRedirects++;
@@ -1041,6 +1045,17 @@ export default class UserView extends Vue {
 
   @Watch("args", { deep: true, immediate: true })
   private argsChanged() {
+    let currentArgs: IUserViewArguments | undefined;
+    if (this.state.state === "show") {
+      currentArgs = this.state.uv.args;
+    } else if (this.state.state === "loading" && this.state.args !== null) {
+      currentArgs = this.state.args;
+    } else if (this.state.state === "error") {
+      currentArgs = this.state.args;
+    }
+    if (deepEquals(currentArgs, this.args)) {
+      return;
+    }
     void this.reload({ differentComponent: true });
   }
 
@@ -1069,15 +1084,14 @@ export default class UserView extends Vue {
     return this.hasArguments && this.showArgumentEditor;
   }
 
-  // Returns whether we need to reload.
   private async redirectOnInsert(oldUv: ICombinedUserViewAny, result: ISubmitResult): Promise<boolean> {
-    if (!oldUv.info.mainEntity || !oldUv.info.mainEntity.forInsert || oldUv.args.args !== null) {
+    if (!oldUv.info.mainEntity || !oldUv.info.mainEntity.forInsert) {
       return false;
     }
 
     if (!deepEquals(this.args, oldUv.args)) {
       // We went somewhere else meanwhile.
-      return true;
+      return false;
     }
 
     const createOps = result.results.filter(x => x.type === "insert" && equalEntityRef(x.entity, oldUv.info.mainEntity!.entity));
@@ -1103,6 +1117,7 @@ export default class UserView extends Vue {
       link = customLink;
     }
 
+    const oldArgs = deepClone(this.args);
     try {
       const linkHandlerParams: ILinkHandlerParams = {
         store: this.$store,
@@ -1114,28 +1129,38 @@ export default class UserView extends Vue {
     } catch (e) {
       return false;
     }
+    await this.$nextTick();
+    if (deepEquals(oldArgs, this.args)) {
+      await this.reloadIfRoot(result.autoSave);
+    }
     return true;
   }
 
   @Watch("submitPromise", { immediate: true })
   private changesSubmitted(submitPromise: Promise<ISubmitResult> | null) {
-    if (this.state.state !== "show" || submitPromise === null) {
+    if (this.state.state !== "show" || this.state.uv.rows !== null || submitPromise === null) {
       return;
     }
+    this.inhibitReload = true;
     const uv = this.state.uv;
 
     // We detect if a redirect should happen. If not, we just reload. If it does, we
     // execute it and then reload only if `args` didn't change.
     void (async () => {
-      let ret: ISubmitResult;
       try {
-        ret = await submitPromise;
-      } catch (e) {
-        return;
-      }
+        let ret: ISubmitResult;
+        try {
+          ret = await submitPromise;
+        } catch (e) {
+          return;
+        }
 
-      if (this.isRoot && !await this.redirectOnInsert(uv, ret)) {
-        await this.reloadIfRoot(ret.autoSave);
+        if (!await this.redirectOnInsert(uv, ret)) {
+          await this.reloadIfRoot(ret.autoSave);
+          return;
+        }
+      } finally {
+        this.inhibitReload = false;
       }
     })();
   }
@@ -1152,6 +1177,12 @@ export default class UserView extends Vue {
 
   .userview-argument-editor {
     flex: 0 0 auto;
+  }
+
+  .userview-overlay {
+    flex: 1 1;
+    width: 100%;
+    overflow-x: auto;
   }
 
   .loading-container {

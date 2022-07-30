@@ -553,13 +553,9 @@ export default class MultiSelect extends Vue {
     this.$emit("focus");
   }
 
-  @Watch("showPopup", { immediate: true })
-  private async onPopupChanged(newValue: boolean, oldValue: boolean) {
-    if (newValue === oldValue) {
-      return;
-    }
-
-    if (newValue) {
+  @Watch("showPopup")
+  private async onClosePopup() {
+    if (this.showPopup) {
       this.hoveredOptionIndex = null;
       this.$emit("popup-opened");
       await nextRender();
@@ -571,9 +567,7 @@ export default class MultiSelect extends Vue {
       }
     } else {
       this.filterValue = "";
-      if (oldValue) {
-        this.$emit("popup-closed");
-      }
+      this.$emit("popup-closed");
     }
   }
 

@@ -41,8 +41,9 @@
       />
 
       <InviteUserModal
-        v-if="hasAuth"
+        v-if="authToken"
         ref="inviteUserModal"
+        :auth-token="authToken"
       />
 
       <HelpModal
@@ -72,8 +73,6 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace, Action } from "vuex-class";
 import { IViewExprResult } from "ozma-api";
-import moment from "moment";
-import "moment/locale/ru";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
@@ -109,11 +108,9 @@ export default class App extends Vue {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
-  @settings.Getter("language") language!: string;
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
-  @errors.State("silent") silentErrors!: boolean;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
   @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
   @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
@@ -170,15 +167,15 @@ export default class App extends Vue {
   }
 
   private get isReadonlyDemoInstance() {
-    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.hasAuth;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.currentAuth?.token;
   }
 
-  private get hasAuth() {
-    return Boolean(this.currentAuth?.refreshToken);
+  private get authToken(): string | null {
+    return this.currentAuth?.token ?? null;
   }
 
   get authErrors() {
-    return this.silentErrors ? [] : (this.rawErrors["auth"] ?? []);
+    return this.rawErrors["auth"] ?? [];
   }
 
   private showDemoModal() {
@@ -241,17 +238,12 @@ export default class App extends Vue {
     this.$bvToast.hide();
   }
 
-  @Watch("language", { immediate: true })
-  private updateLanguage() {
-    this.$root.$i18n.locale = this.language;
-    moment.locale(this.language);
-  }
-
-  @Watch("settings", { immediate: true })
+  @Watch("settings")
   private updateSettings() {
     const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "1"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
+
     const html = document.querySelector("html");
     if (html) {
       // `rem` in CSS is calculated only from `font-size` on `<html>`.
@@ -294,7 +286,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    *    And it supports CSS-cascading and doesn't affected by scoping, so we have `class="default-variant default-local-variant"` in <App /> and we use this variables in many places.
    * 7. Custom/inline variants works similar but a little simpler, but I'm too tired to explain, sorry.
    */
-  get themeStyleSettings() {
+  @Watch("currentThemeRef", { immediate: true })
+  private loadColors() {
     let currentTheme: ITheme | undefined;
     if (this.currentThemeRef !== null) {
       currentTheme = this.settings.themes[this.currentThemeRef.schema][this.currentThemeRef.name];
@@ -319,29 +312,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       menuEntry: interfaceButton,
     };
     const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
-    return colorVariantsToCssRules(colorVariants);
-  }
-
-  @Watch("themeStyleSettings", { immediate: true })
-  private loadColors() {
+    const rules = colorVariantsToCssRules(colorVariants);
     const sheet = (document.getElementById("theme-styles") as any)?.sheet as CSSStyleSheet | undefined;
     if (sheet) {
       while (sheet.cssRules.length > 0) {
         sheet.deleteRule(0);
       }
 
-      for (const rule of this.themeStyleSettings) {
+      for (const rule of rules) {
         sheet.insertRule(rule);
       }
     }
   }
 
   private get showInviteButtonInBanner() {
-    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.hasAuth;
+    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.authToken !== null;
   }
 
   private get showSignUpButtonInBanner() {
-    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false) && !this.hasAuth;
+    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false) && this.authToken === null;
   }
 
   private get fontSize(): number {

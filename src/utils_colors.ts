@@ -249,7 +249,7 @@ export const colorVariantsToCssRules = (colorVariants: Record<string, ColorVaria
   return rules;
 };
 
-export const getPreferredTheme = (themes: ThemesMap, defaultSchema?: SchemaName): IThemeRef | null => {
+export const getPreferredTheme = (themes: ThemesMap): IThemeRef | null => {
   const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   const storedTheme = ThemeRef.safeParse(safeJsonParse(localStorage.getItem("preferredTheme")));
@@ -262,30 +262,16 @@ export const getPreferredTheme = (themes: ThemesMap, defaultSchema?: SchemaName)
     console.error(`User theme ${storedTheme.data.schema}.${storedTheme.data.name} is not defined`);
   }
 
-  const myDefaultSchema = defaultSchema ?? "user";
-
-  const tryFindTheme = (themeName: string): IThemeRef | null => {
-    const def = themes[myDefaultSchema]?.[themeName];
-    if (def) {
-      return { schema: myDefaultSchema, name: themeName };
-    } else {
-      const fallback = Object.entries(themes).find(([schemaName, schema]) => themeName in schema);
-      if (fallback) {
-        return { schema: fallback[0], name: themeName };
-      } else {
-        return null;
-      }
-    }
-  };
-
-  if (prefersDarkTheme) {
-    const darkScheme = tryFindTheme("dark");
-    if (darkScheme) {
-      return darkScheme;
-    }
+  const themesSchema = themes["user"];
+  if (themesSchema === undefined) {
+    return null;
+  } else if (prefersDarkTheme && "dark" in themesSchema) {
+    return { schema: "user", name: "dark" };
+  } else if ("light" in themesSchema) {
+    return { schema: "user", name: "light" };
+  } else {
+    return null;
   }
-
-  return tryFindTheme("light");
 };
 
 export type ColorVariantCssVariableName = `--${VariantKey}Color`;

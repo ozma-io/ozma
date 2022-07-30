@@ -106,11 +106,11 @@ export type CommittedValueRef = IAddedValueRef | IExistingValueRef;
 export type CommittedRowRef = IAddedRowRef | IExistingRowRef;
 
 // Mapping from record ids to user view value refs.
-export type UpdateMapping = Record<SchemaName, Record<EntityName, Record<RowId, Record<FieldName, CommittedValueRef[]>>>>;
+export type IUpdateMapping = Record<SchemaName, Record<EntityName, Record<RowId, Record<FieldName, CommittedValueRef[]>>>>;
 // Mapping from fields to column indices with main field.
-export type MainColumnMapping = Record<FieldName, number[]>;
+export type IMainColumnMapping = Record<FieldName, number[]>;
 // Mapping from main entity ids to row indices.
-export type MainRowMapping = Record<RowId, CommittedRowRef[]>;
+export type IMainRowMapping = Record<RowId, CommittedRowRef[]>;
 
 export type RowRef = IAddedRowRef | IExistingRowRef | INewRowRef;
 export type ValueRef = IAddedValueRef | IExistingValueRef | INewValueRef;
@@ -147,7 +147,7 @@ export const rowKey = (ref: RowRef): unknown => {
 };
 
 // These are not expected to be run after initialization ends, hence we don't use `Vue.set`.
-const insertUpdateMapping = (updateMapping: UpdateMapping, ref: IFieldRef, id: RowId, valueRef: CommittedValueRef) => {
+const insertUpdateMapping = (updateMapping: IUpdateMapping, ref: IFieldRef, id: RowId, valueRef: CommittedValueRef) => {
   let entitiesMapping = updateMapping[ref.entity.schema];
   if (entitiesMapping === undefined) {
     entitiesMapping = {};
@@ -174,7 +174,7 @@ const insertUpdateMapping = (updateMapping: UpdateMapping, ref: IFieldRef, id: R
   valuesMapping.push(valueRef);
 };
 
-const insertMainColumnMapping = (mainColumnMapping: MainColumnMapping, name: FieldName, columnIndex: number) => {
+const insertMainColumnMapping = (mainColumnMapping: IMainColumnMapping, name: FieldName, columnIndex: number) => {
   let colsMapping = mainColumnMapping[name];
   if (colsMapping === undefined) {
     colsMapping = [];
@@ -184,7 +184,7 @@ const insertMainColumnMapping = (mainColumnMapping: MainColumnMapping, name: Fie
   colsMapping.push(columnIndex);
 };
 
-const insertMainRowMapping = (mainRowMapping: MainRowMapping, id: RowId, rowRef: CommittedRowRef) => {
+const insertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, rowRef: CommittedRowRef) => {
   let rowsMapping = mainRowMapping[id];
   if (rowsMapping === undefined) {
     rowsMapping = [];
@@ -194,7 +194,7 @@ const insertMainRowMapping = (mainRowMapping: MainRowMapping, id: RowId, rowRef:
   rowsMapping.push(rowRef);
 };
 
-const vueInsertUpdateMapping = (updateMapping: UpdateMapping, ref: IFieldRef, id: RowId, valueRef: CommittedValueRef) => {
+const vueInsertUpdateMapping = (updateMapping: IUpdateMapping, ref: IFieldRef, id: RowId, valueRef: CommittedValueRef) => {
   let entitiesMapping = updateMapping[ref.entity.schema];
   if (entitiesMapping === undefined) {
     entitiesMapping = {};
@@ -221,7 +221,7 @@ const vueInsertUpdateMapping = (updateMapping: UpdateMapping, ref: IFieldRef, id
   valuesMapping.push(valueRef);
 };
 
-const vueInsertMainRowMapping = (mainRowMapping: MainRowMapping, id: RowId, rowRef: CommittedRowRef) => {
+const vueInsertMainRowMapping = (mainRowMapping: IMainRowMapping, id: RowId, rowRef: CommittedRowRef) => {
   let rowsMapping = mainRowMapping[id];
   if (rowsMapping === undefined) {
     rowsMapping = [];
@@ -284,17 +284,6 @@ export interface IConvertedBoundMapping {
   default: unknown;
 }
 
-export interface IPunUpdate {
-  type: "pun";
-}
-
-export interface IValueUpdate {
-  type: "value";
-  previous: unknown;
-}
-
-export type ValueUpdate = IPunUpdate | IValueUpdate;
-
 export type ConvertedBoundAttributesMap = Record<AttributeName, IConvertedBoundMapping>;
 
 export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHandler, ICommonUserViewData {
@@ -304,14 +293,13 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   // Rows added by user, not yet committed to the database.
   readonly newRows: Record<AddedRowId, IExtendedAddedRow<ValueT, RowT>>;
   readonly newRowsOrder: AddedRowId[];
-  readonly updateMapping: UpdateMapping;
-  readonly mainColumnMapping: MainColumnMapping;
-  readonly mainRowMapping: MainRowMapping;
+  readonly updateMapping: IUpdateMapping;
+  readonly mainColumnMapping: IMainColumnMapping;
+  readonly mainRowMapping: IMainRowMapping;
   readonly extra: ViewT;
   // Empty (template) row with default values. Used for displaying new empty rows in table, form etc.
   readonly emptyRow: IEmptyRow<ValueT, RowT> | null;
-  readonly oldCommittedRows: Record<AddedRowId, RowPosition[]>;
-  readonly rowsCount: number;
+  readonly oldCommittedRows: Record<AddedRowId, RowPosition>;
   readonly entries: Record<SchemaName, Record<EntityName, Entries>>;
   readonly columnAttributeMappings: ConvertedBoundAttributesMap[];
   readonly argumentAttributeMappings: Record<ArgumentName, ConvertedBoundAttributesMap>;
@@ -325,8 +313,6 @@ export interface ICombinedUserView<ValueT, RowT, ViewT> extends IStagingEventHan
   mapRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => A): A[];
   forEachVisibleRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => void): void;
   mapVisibleRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: RowRef) => A): A[];
-  forEachCommittedRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: CommittedRowRef) => void): void;
-  mapCommittedRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: CommittedRowRef) => A): A[];
 }
 
 export type ICombinedUserViewT<T> = T extends IUserViewHandler<infer ValueT, infer RowT, infer ViewT> ? ICombinedUserView<ValueT, RowT, ViewT> : never;
@@ -376,9 +362,9 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
   createAddedLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IAddedRow, oldView?: ViewT, oldRow?: RowT, meta?: unknown): RowT;
   createEmptyLocalRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, row: IRowCommon, oldView?: ViewT, oldRow?: RowT): RowT;
 
-  updateValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, update: ValueUpdate, meta?: unknown): void;
-  updateAddedValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, update: ValueUpdate, meta?: unknown): void;
-  updateEmptyValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, columnIndex: number, value: IExtendedValue<ValueT>, update: ValueUpdate): void;
+  updateValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, meta?: unknown): void;
+  updateAddedValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, columnIndex: ColumnPosition, value: IExtendedValue<ValueT>, meta?: unknown): void;
+  updateEmptyValue(uv: ICombinedUserView<ValueT, RowT, ViewT>, columnIndex: number, value: IExtendedValue<ValueT>): void;
   deleteRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, meta?: unknown): void;
   undeleteRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowIndex: RowPosition, row: IExtendedRow<ValueT, RowT>, meta?: unknown): void;
   deleteAddedRow(uv: ICombinedUserView<ValueT, RowT, ViewT>, rowId: AddedRowId, row: IExtendedAddedRow<ValueT, RowT>, meta?: unknown): void;
@@ -425,8 +411,6 @@ const convertAttributeMapping = (valueType: ValueType, mapping: IBoundMapping): 
   };
 };
 
-const punUpdateEvent: IPunUpdate = { type: "pun" };
-
 // This is a class which maintains separate local extra data for each cell, row and instance of a user view.
 // After creating register its `handler` with `userView.registerHandler`.
 // When no longer needed, unregister its `handler` with `userView.unregisterHandler`.
@@ -448,15 +432,13 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   // User views should maintain their own specific data structures for other ordering.
   newRowsOrder: AddedRowId[];
   // oldAddedId => row position.
-  oldCommittedRows: Record<AddedRowId, RowPosition[]>;
-  updateMapping: UpdateMapping;
-  mainColumnMapping: MainColumnMapping;
-  mainRowMapping: MainRowMapping;
+  oldCommittedRows: Record<AddedRowId, RowPosition>;
+  updateMapping: IUpdateMapping;
+  mainColumnMapping: IMainColumnMapping;
+  mainRowMapping: IMainRowMapping;
   extra: ViewT;
   // Empty (template) row with default values. Used for displaying new empty rows in table, form etc.
   emptyRow: IEmptyRow<ValueT, RowT> | null;
-  // Visible (non-deleted) rows count.
-  rowsCount: number;
   store: Store<any>;
   // Cache of entries records. We get old cache from a previous user view and use it if no entries
   // are available yet during initialization.
@@ -464,7 +446,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   columnAttributeMappings: ConvertedBoundAttributesMap[];
   argumentAttributeMappings: Record<ArgumentName, ConvertedBoundAttributesMap>;
   handler: T;
-  // FIXME: check if this is necessary
   rowLoadState: IRowLoadState;
 
   // Warning: it takes ownership of all params and mutates!
@@ -554,7 +535,9 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         for (const newRow of newRows) {
           // Set old added ids.
           this.rows![newRow.position].oldAddedId = addedId;
-          this.addOldCommitted(addedId, newRow.position);
+          if (!(addedId in this.oldCommittedRows)) {
+            this.oldCommittedRows[addedId] = newRow.position;
+          }
         }
       }
     }
@@ -564,11 +547,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
     if (this.rows) {
       const mainRowOffsets: Record<RowId, number> | null = (this.info.mainEntity && oldLocal?.info.mainEntity && equalEntityRef(this.info.mainEntity.entity, oldLocal.info.mainEntity.entity)) ? {} : null;
-      let rowsCount = 0;
       this.rows.forEach((row, rowI) => {
-        if (!row.deleted) {
-          rowsCount++;
-        }
         let oldRow: IExtendedRowCommon<ValueT, RowT> | undefined;
         if (row.oldAddedId !== undefined) {
           oldRow = oldLocal!.newRows[row.oldAddedId];
@@ -594,9 +573,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         });
         this.handler.postInitRow(this, rowI, row, oldViewExtra, oldRowExtra);
       });
-      this.rowsCount = rowsCount;
-    } else {
-      this.rowsCount = 0;
     }
 
     for (const addedId of this.newRowsOrder) {
@@ -637,15 +613,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     return (this.store.state.staging as IStagingState).current;
   }
 
-  private addOldCommitted(addedId: AddedRowId, position: RowPosition) {
-    const positions = this.oldCommittedRows[addedId];
-    if (positions === undefined) {
-      this.oldCommittedRows[addedId] = [position];
-    } else {
-      positions.push(position);
-    }
-  }
-
   updateField(fieldRef: IFieldRef, id: RowId, updatedValue: IUpdatedValue, meta?: unknown) {
     const fieldType = this.storeEntities.getEntity(fieldRef.entity)?.columnFields[fieldRef.name].fieldType;
 
@@ -657,35 +624,25 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     updatedValues.forEach(valueRef => {
       if (valueRef.type === "existing") {
         const row = this.rows![valueRef.position];
-        const oldValue = row.values[valueRef.column];
-        const event: IValueUpdate = {
-          type: "value",
-          previous: currentValue(oldValue),
-        };
         // New object because otherwise Vue won't detect changes.
-        const value: IExtendedValue<ValueT> = { ...oldValue, ...updatedValue };
+        const value: IExtendedValue<ValueT> = { ...row.values[valueRef.column], ...updatedValue };
         Vue.set(row.values, valueRef.column, value);
         if (fieldType) {
           this.setOrRequestUpdatedPun(value, fieldType, newValue => {
-            this.handler.updateValue(this, valueRef.position, row, valueRef.column, newValue, punUpdateEvent, meta);
+            this.handler.updateValue(this, valueRef.position, row, valueRef.column, newValue, meta);
           });
         }
-        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value, event, meta);
+        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value, meta);
       } else if (valueRef.type === "added") {
         const row = this.newRows[valueRef.id];
-        const oldValue = row.values[valueRef.column];
-        const event: IValueUpdate = {
-          type: "value",
-          previous: currentValue(oldValue),
-        };
-        const value: IExtendedValue<ValueT> = { ...oldValue, ...updatedValue };
+        const value: IExtendedValue<ValueT> = { ...row.values[valueRef.column], ...updatedValue };
         Vue.set(row.values, valueRef.column, value);
         if (fieldType) {
           this.setOrRequestUpdatedPun(value, fieldType, newValue => {
-            this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, newValue, punUpdateEvent, meta);
+            this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, newValue, meta);
           });
         }
-        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value, event, meta);
+        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value, meta);
       } else {
         throw new Error("Impossible");
       }
@@ -732,7 +689,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
             info: updateInfo,
           };
           this.setOrRequestUpdatedPun(result, updateInfo.field.fieldType, newValue => {
-            this.handler.updateAddedValue(this, id, row as IExtendedAddedRow<ValueT, RowT>, colI, newValue as IExtendedValue<ValueT>, punUpdateEvent, meta);
+            this.handler.updateAddedValue(this, id, row as IExtendedAddedRow<ValueT, RowT>, colI, newValue as IExtendedValue<ValueT>, meta);
           });
           return result;
         }
@@ -803,19 +760,14 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     const fieldType = this.storeEntities.getEntity(fieldRef.entity)?.columnFields[fieldRef.name].fieldType;
     this.mainColumnMapping[fieldRef.name].forEach(colI => {
       // New object because otherwise Vue won't detect changes.
-      const oldValue = newRow.values[colI];
-      const event: IValueUpdate = {
-        type: "value",
-        previous: currentValue(oldValue),
-      };
-      const value: IExtendedValue<ValueT> = { ...oldValue, ...updatedValue };
+      const value: IExtendedValue<ValueT> = { ...newRow.values[colI], ...updatedValue };
       Vue.set(newRow.values, colI, value);
       if (fieldType) {
         this.setOrRequestUpdatedPun(value, fieldType, newValue => {
-          this.handler.updateAddedValue(this, id, newRow, colI, newValue, punUpdateEvent, meta);
+          this.handler.updateAddedValue(this, id, newRow, colI, newValue, meta);
         });
       }
-      this.handler.updateAddedValue(this, id, newRow, colI, value, event, meta);
+      this.handler.updateAddedValue(this, id, newRow, colI, value, meta);
     });
   }
 
@@ -832,7 +784,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       if (ref.type === "existing") {
         const row = this.rows![ref.position];
         row.deleted = true;
-        this.rowsCount--;
         this.handler.deleteRow(this, ref.position, row, meta);
       } else if (ref.type === "added") {
         // Happens when committed value got deleted.
@@ -857,21 +808,13 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       if (valueRef.type === "existing") {
         const row = this.rows![valueRef.position];
         const value = row.values[valueRef.column];
-        const event: IValueUpdate = {
-          type: "value",
-          previous: currentValue(value),
-        };
         clearUpdatedValue(value);
-        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value, event, meta);
+        this.handler.updateValue(this, valueRef.position, row, valueRef.column, value, meta);
       } else if (valueRef.type === "added") {
         const row = this.newRows[valueRef.id];
         const value = row.values[valueRef.column];
-        const event: IValueUpdate = {
-          type: "value",
-          previous: currentValue(value),
-        };
         clearUpdatedValue(value);
-        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value, event, meta);
+        this.handler.updateAddedValue(this, valueRef.id, row, valueRef.column, value, meta);
       } else {
         throw new Error("Impossible");
       }
@@ -907,7 +850,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
       if (ref.type === "existing") {
         const row = this.rows![ref.position];
         row.deleted = false;
-        this.rowsCount++;
         this.handler.undeleteRow(this, ref.position, row, meta);
       } else if (ref.type === "added") {
         // Happens when committed value got undeleted.
@@ -1016,7 +958,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           info: updateInfo,
         };
         this.setOrRequestUpdatedPun(value, info.mainField.field.fieldType, nextValue => {
-          this.handler.updateEmptyValue(this, colI, nextValue as IExtendedValue<ValueT>, punUpdateEvent);
+          this.handler.updateEmptyValue(this, colI, nextValue as IExtendedValue<ValueT>);
         });
         return value;
       } else {
@@ -1029,12 +971,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     return { values } as IRowCommon;
   }
 
-  private makeMainColumnMapping(): MainColumnMapping {
+  private makeMainColumnMapping(): IMainColumnMapping {
     if (!this.info.mainEntity) {
       return {};
     }
 
-    const mainColumnMapping: MainColumnMapping = {};
+    const mainColumnMapping: IMainColumnMapping = {};
     this.info.columns.forEach((columnInfo, colI) => {
       const mainField = columnInfo.mainField;
       if (mainField) {
@@ -1060,12 +1002,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
   // This only creates mapping for existing rows.
   // It can be extended by committed rows later.
-  private makeMainRowMapping(): MainRowMapping {
+  private makeMainRowMapping(): IMainRowMapping {
     if (!this.rows || !this.info.mainEntity) {
       return {};
     }
 
-    const mainRowMapping: MainRowMapping = {};
+    const mainRowMapping: IMainRowMapping = {};
     this.rows.forEach((row, rowI) => {
       const ref: IExistingRowRef = {
         type: "existing",
@@ -1078,12 +1020,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
 
   // This only creates mapping for existing rows.
   // It can be extended by committed rows later.
-  private makeUpdateMapping(): UpdateMapping {
+  private makeUpdateMapping(): IUpdateMapping {
     if (!this.rows) {
       return {};
     }
 
-    const updateMapping: UpdateMapping = {};
+    const updateMapping: IUpdateMapping = {};
     this.rows.forEach((row, rowI) => {
       row.values.forEach((value, colI) => {
         if (!value.info) return;
@@ -1120,7 +1062,9 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         const oldAddedId = oldExistingRow?.oldAddedId;
         if (oldAddedId !== undefined) {
           row.oldAddedId = oldAddedId;
-          this.addOldCommitted(oldAddedId, rowI);
+          if (!(oldAddedId in this.oldCommittedRows)) {
+            this.oldCommittedRows[oldAddedId] = rowI;
+          }
         }
       } else {
         row.deleted = false;
@@ -1146,7 +1090,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           return;
         }
         const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
-        const updateInfo : IValueInfo = {
+        const updateInfo = {
           field: field.field || null,
           fieldRef,
           id: id.id,
@@ -1170,7 +1114,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
             Object.assign(value, updated);
             const fieldType = field.field!.fieldType;
             this.setOrRequestUpdatedPun(value, fieldType, nextValue => {
-              this.handler.updateValue(this, rowI, row as IExtendedRow<ValueT, RowT>, colI, nextValue as IExtendedValue<ValueT>, punUpdateEvent);
+              this.handler.updateValue(this, rowI, row as IExtendedRow<ValueT, RowT>, colI, nextValue as IExtendedValue<ValueT>);
             });
           }
         }
@@ -1198,8 +1142,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     if (ref.type === "added") {
       return this.newRows[ref.id];
     } else if (ref.type === "existing") {
-      const row = this.rows?.[ref.position];
-      return !row || row.deleted ? undefined : row;
+      const row = this.rows![ref.position];
+      return row.deleted ? undefined : row;
     } else if (ref.type === "new") {
       return this.emptyRow ?? undefined;
     } else {
@@ -1297,45 +1241,6 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         return func(row, ref);
       }
     }, this.newRowsOrder);
-    return [...rows, ...newRows];
-  }
-
-  forEachCommittedRow(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: CommittedRowRef) => void) {
-    if (this.rows) {
-      this.rows.forEach((row, rowI) => {
-        const ref: IExistingRowRef = {
-          type: "existing",
-          position: rowI,
-        };
-        func(row, ref);
-      });
-    }
-    for (const id of this.newRowsOrder) {
-      const row = this.newRows[id];
-      const ref: IAddedRowRef = {
-        type: "added",
-        id,
-      };
-      func(row, ref);
-    }
-  }
-
-  mapCommittedRows<A>(func: (row: IExtendedRowCommon<ValueT, RowT>, ref: CommittedRowRef) => A): A[] {
-    const rows = this.rows ? this.rows.map((row, rowI) => {
-      const ref: IExistingRowRef = {
-        type: "existing",
-        position: rowI,
-      };
-      return func(row, ref);
-    }) : [];
-    const newRows = this.newRowsOrder.map(id => {
-      const row = this.newRows[id];
-      const ref: IAddedRowRef = {
-        type: "added",
-        id,
-      };
-      return func(row, ref);
-    });
     return [...rows, ...newRows];
   }
 }

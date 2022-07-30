@@ -38,19 +38,19 @@
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
-    <QRCodeScannerModal
+    <QRCodeScanner
       v-if="selectedQRCodeReference !== null"
-      ref="qrcodeScanner"
+      :open-scanner="openQRCodeScanner"
       :reference-entity="selectedQRCodeReference.referenceEntity"
       :entries="selectedQRCodeReference.entries"
       multi-scan
       @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
-    <QRCodeScannerModal
+    <QRCodeScanner
       v-if="selectedBarCodeReference !== null"
-      ref="barcodeScanner"
-      :reference-entity="selectedBarCodeReference.referenceEntity"
-      :entries="selectedBarCodeReference.entries"
+      :open-scanner="openBarCodeScanner"
+      :reference-entity="openBarCodeScanner.referenceEntity"
+      :entries="openBarCodeScanner.entries"
       multi-scan
       text-input
       @select="selectFromScanner(barCodeColumnIndex, $event)"
@@ -100,7 +100,6 @@ import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
 import { eventBus, IShowHelpModalArgs } from "@/main";
 import { formatValue } from "@/user_views/format";
-import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -124,7 +123,7 @@ const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
 @Component({
   components: {
     SelectUserView,
-    QRCodeScannerModal,
+    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
   },
 })
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
@@ -136,6 +135,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
 
   private modalView: IQuery | null = null;
+  private openQRCodeScanner = false;
+  private openBarCodeScanner = false;
   private showDeleteEntiesButton = false;
   private autoSaveLock: AutoSaveLock | null = null;
 
@@ -203,7 +204,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       disableAutoSave = false;
       if ("post_create_link" in uv.attributes) {
         disableAutoSave = true;
-      } else if (uv.rows === null && uv.info.mainEntity) {
+      } else if (uv.info.mainEntity) {
         const entity = await this.getEntity(uv.info.mainEntity.entity);
         if (entity.hasInsertTriggers) {
           disableAutoSave = true;
@@ -315,7 +316,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       }
       const col = this.uv.info.columns[colI];
       return [col.mainField!.name, value.value];
-    }, this.uv.emptyRow!.values)) as Record<string, unknown>;
+    }, this.uv.emptyRow!.values));
     const columnNames = Object.fromEntries(mapMaybe((info, colI) => {
       if (!info.mainField) {
         return undefined;
@@ -417,7 +418,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           void submitOperations();
         }
       },
-      complete: () => void submitOperations().then(this.reload),
+      complete: async () => {
+        await submitOperations();
+        await this.reload();
+      },
     });
   }
 
@@ -592,7 +596,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push({
         icon: "file_upload",
         caption: this.$t("import_from_csv").toString(),
-        uploadFile: file => void this.importFromCsv(file),
+        uploadFile: file => this.importFromCsv(file),
         type: "upload-file",
         variant: defaultVariantAttribute,
       });
@@ -603,7 +607,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push({
         icon: "file_download",
         caption: this.$t("export_to_csv").toString(),
-        callback: () => void this.exportToCsv(),
+        callback: () => this.exportToCsv(),
         type: "callback",
         variant: defaultVariantAttribute,
       });
@@ -617,7 +621,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         tooltip: this.qrCodeButton.tooltip,
         variant: this.qrCodeButton.variant,
         callback: () => {
-          (this.$refs.qrcodeScanner as QRCodeScannerModal).scan();
+          this.openQRCodeScanner = !this.openQRCodeScanner;
         },
         type: "callback",
       });
@@ -631,7 +635,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         tooltip: this.barCodeButton.tooltip,
         variant: this.barCodeButton.variant,
         callback: () => {
-          (this.$refs.barcodeScanner as QRCodeScannerModal).scan();
+          this.openBarCodeScanner = !this.openBarCodeScanner;
         },
         type: "callback",
       });

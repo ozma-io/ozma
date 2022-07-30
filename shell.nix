@@ -4,7 +4,7 @@ let
   env = pkgs.buildFHSUserEnv {
     name = "funapp";
     targetPkgs = pkgs: with pkgs; [
-      nodejs nodePackages.tern nodePackages.yarn nodePackages."@vue/cli" nodePackages.vue-language-server
+      nodejs nodePackages.tern yarn nodePackages."@vue/cli" nodePackages.vue-language-server
     ];
     runScript = pkgs.writeScript "env-shell" ''
       #!${pkgs.stdenv.shell}

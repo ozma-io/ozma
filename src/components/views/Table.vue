@@ -332,9 +332,10 @@ import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { z } from "zod";
-import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef, AttributeName } from "ozma-api";
+import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } from "ozma-api";
 import Popper from "vue-popperjs";
 
+import { eventBus } from "@/main";
 import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
@@ -350,11 +351,8 @@ import {
   IAddedRow, IAddedRowRef, ICombinedRow, ICombinedUserView, ICombinedValue, IExistingRowRef, IExtendedAddedRow,
   IExtendedRow, IExtendedRowCommon, IExtendedRowInfo, IExtendedValue, IRowCommon, IUserViewHandler, RowRef, ValueRef,
   CommittedRowRef,
-  ValueUpdate,
   valueToPunnedText,
   equalValueRef,
-  currentValue,
-  equalRowRef,
 } from "@/user_views/combined";
 import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
@@ -383,22 +381,23 @@ export interface ITableValueExtra extends IBaseValueExtra {
 }
 
 export interface ITableRowTree {
+  parent: number | null;
   level: number;
   arrowDown: boolean;
-  addedChildren: NewRowRef[];
   children: CommittedRowRef[];
 }
 
 export interface ITableRowExtra extends IBaseRowExtra {
   searchText: string;
   shownAsNewRow: boolean;
-  tree: ITableRowTree | null;
+  tree: ITableRowTree;
   link: Link | null;
 }
 
 export interface IAddedNewRowRef {
   type: "added";
-  id: AddedRowId;
+  addedId: AddedRowId;
+  parent?: number;
 }
 
 export interface ICommittedNewRowRef {
@@ -408,22 +407,19 @@ export interface ICommittedNewRowRef {
 
 export type NewRowRef = IAddedNewRowRef | ICommittedNewRowRef;
 
-type TreeId = number;
-
 export interface ITableViewExtra extends IBaseViewExtra {
   hasRowLinks: boolean;
   selectedValues: ObjectSet<ValueRef>;
   cursorValue: ValueRef | null;
   oldCursorValue: ValueRef | null;
+  rowsParentPositions: Record<number, number>;
+  treeParentColumnIndex: number;
   linkOpts?: IAttrToQueryOpts;
   lazyLoad: ITableLazyLoad;
 
-  treeParentColumnIndex: number | null;
-  treeIdColumnIndex: number | null;
-  treeRowMapping: Record<TreeId, CommittedRowRef>;
-
   newRowTopSidePositions: NewRowRef[];
   newRowBottomSidePositions: NewRowRef[];
+  addedRowRefs: NewRowRef[];
 
   sortColumn: number | null;
   sortAsc: boolean;
@@ -451,71 +447,22 @@ export type ITableExtendedRow = IExtendedRow<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedRowCommon = IExtendedRowCommon<ITableValueExtra, ITableRowExtra>;
 export type ITableExtendedAddedRow = IExtendedAddedRow<ITableValueExtra, ITableRowExtra>;
 
-const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): NewRowRef | null => {
-  if (pos.type === "added") {
-    const newRow = uv.newRows[pos.id];
-    if (newRow) {
-      return pos;
-    } else {
-      const rowIndices = uv.oldCommittedRows[pos.id];
-      if (!rowIndices) {
-        return null;
-      }
-      let id: number | undefined;
-      for (const rowI of rowIndices) {
-        const row = uv.rows![rowI];
-        id = row.mainId!;
-      }
-      if (id === undefined) {
-        return null;
-      }
-      return { type: "committed", id };
-    }
-  } else if (pos.type === "committed") {
-    if (pos.id in uv.mainRowMapping) {
-      return { type: "committed", id: pos.id };
-    } else {
-      return null;
-    }
-  } else {
-    throw new Error("Impossible");
-  }
-};
-
-const inheritOldRowsPositions = (uv: ITableCombinedUserView, positions: NewRowRef[]): NewRowRef[] => {
-  const ret = mapMaybe(pos => inheritOldRowsPosition(uv, pos) ?? undefined, positions);
-  return ret;
-};
-
-const getRowTreeId = (uv: ITableCombinedUserView, row: IRowCommon): TreeId | null => {
-  if (uv.extra.treeParentColumnIndex === null) return null;
-
-  const rawValue = uv.extra.treeIdColumnIndex !== null ?
-    currentValue(row.values[uv.extra.treeIdColumnIndex]) as TreeId | null | undefined :
-    row.values[uv.extra.treeParentColumnIndex].info?.id;
-  return rawValue ?? null;
-};
-
-const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, rowRef?: CommittedRowRef, oldLocal?: ITableRowExtra) => {
+const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLocal?: ITableRowExtra) => {
   const getRowAttr = (name: string) => tryDicts(name, row.attributes, uv.attributes);
 
-  const defaultArrow = Boolean(getRowAttr("tree_expand_children") || getRowAttr("tree_all_open"));
+  const defaultArrow = Boolean(getRowAttr("tree_all_open"));
 
-  const tree: ITableRowTree | null = uv.extra.treeParentColumnIndex === null ? null : {
-    addedChildren: oldLocal?.tree?.addedChildren ? inheritOldRowsPositions(uv, oldLocal.tree.addedChildren) : [],
+  const tree: ITableRowTree = {
     children: [],
     level: 0,
-    arrowDown: oldLocal?.tree?.arrowDown ?? defaultArrow,
+    parent: null,
+    arrowDown: oldLocal?.tree!.arrowDown ?? defaultArrow,
   };
-
-  const rowTreeId = getRowTreeId(uv, row);
-  if (rowRef && rowTreeId !== null) {
-    uv.extra.treeRowMapping[rowTreeId] = rowRef;
-  }
 
   return {
     searchText: "",
     link: null,
+    shownAsNewRow: false,
     tree,
   };
 };
@@ -534,104 +481,78 @@ const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCom
   row.extra.searchText = searchText.toLocaleLowerCase();
 };
 
-const updateCommittedValue = (uv: ITableCombinedUserView, rowRef: CommittedRowRef, row: ITableExtendedRowCommon, columnIndex: number, value: ITableExtendedValue, update: ValueUpdate) => {
-  if (uv.extra.treeParentColumnIndex === columnIndex && update.type === "value") {
-    const current = currentValue(value) as number | null | undefined;
-    if (current !== update.previous) {
-      let newRef: NewRowRef | undefined;
-      if (row.extra.shownAsNewRow) {
-        newRef = rowRef.type === "existing" ? { type: "committed", id: (row as ITableExtendedRow).mainId! } : { type: "added", id: rowRef.id };
-      }
-      const previousParentRef = uv.extra.treeRowMapping[update.previous as any];
-      const previousParent = previousParentRef ? uv.getRowByRef(previousParentRef) : undefined;
-      if (previousParent) {
-        if (row.extra.shownAsNewRow) {
-          previousParent.extra.tree!.addedChildren = previousParent.extra.tree!.addedChildren.filter(ref => equalNewRowRef(ref, newRef!));
-        } else {
-          previousParent.extra.tree!.children = previousParent.extra.tree!.children.filter(ref => equalRowRef(ref, rowRef));
-        }
-      }
-
-      const newParentRef = uv.extra.treeRowMapping[current as any];
-      const newParent = newParentRef ? uv.getRowByRef(newParentRef) : undefined;
-      if (newParent) {
-        if (row.extra.shownAsNewRow) {
-          newParent.extra.tree!.addedChildren.push(newRef!);
-        } else {
-          newParent.extra.tree!.children.push(rowRef);
-        }
-        row.extra.tree!.level = newParent.extra.tree!.level + 1;
-      }
-    }
-  }
-};
-
-const getRowParentRef = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon): CommittedRowRef | undefined => {
-  if (uv.extra.treeParentColumnIndex === null) {
-    return undefined;
-  }
-  const parentId = currentValue(row.values[uv.extra.treeParentColumnIndex]) as number | null | undefined;
-  if (typeof parentId !== "number") {
-    return undefined;
-  }
-  return uv.extra.treeRowMapping[parentId];
-};
-
-const getRowParent = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon): ITableExtendedRowCommon | undefined => {
-  const parentRef = getRowParentRef(uv, row);
-  return parentRef === undefined ? undefined : uv.getRowByRef(parentRef);
-};
-
-const markNewRows = (uv: ITableCombinedUserView, rows: NewRowRef[]) => {
-  for (const addedRef of rows) {
-    const addedRow = getNewRow(uv, addedRef);
-    addedRow.row.extra.shownAsNewRow = true;
-  }
-};
-
 const initTreeChildren = (uv: ITableCombinedUserView) => {
-  uv.forEachCommittedRow(row => {
-    markNewRows(uv, row.extra.tree!.addedChildren);
-  });
+  uv.rows!.forEach((row, i) => {
+    const addedChildRow = uv.extra.addedRowRefs.find(r => r.type === "added" && r.parent === i);
+    if (addedChildRow && addedChildRow.type === "added") {
+      const child: IAddedRowRef = {
+        type: "added",
+        id: addedChildRow.addedId,
+      };
+      uv.rows![i].extra.tree.children.push(child);
+    }
 
-  uv.forEachCommittedRow((row, rowRef) => {
-    const parentRef = getRowParentRef(uv, row);
-    const parent = parentRef === undefined ? undefined : uv.getRowByRef(parentRef);
-    if (parent !== undefined) {
+    if (row.extra.tree.parent) {
+      const parentIndex = uv.extra.rowsParentPositions[row.extra.tree.parent];
+      if (!uv.rows![parentIndex]) return;
+
+      const child: IExistingRowRef = {
+        type: "existing",
+        position: i,
+      };
+      uv.rows![parentIndex].extra.tree.children.push(child);
+
       let level = 0;
-      let currentRow: ITableExtendedRowCommon | undefined = parent;
-      do {
+      let parent: number | undefined = parentIndex;
+      while (parent !== undefined && uv.rows![parent] !== undefined) {
+        const index: number | undefined = uv.rows![parent].extra.tree.parent ?? undefined;
+        parent = index !== undefined ? uv.extra.rowsParentPositions[index] : undefined;
         level++;
-        const currentParentRef = getRowParentRef(uv, currentRow);
-        if (!currentParentRef) {
-          break;
-        }
-        if (equalRowRef(currentParentRef, parentRef!)) {
-          // Cycle detected; break it by exiting.
-          return;
-        }
-        currentRow = uv.getRowByRef(currentParentRef);
-      } while (currentRow !== undefined);
-
-      row.extra.tree!.level = level;
-      if (!row.extra.shownAsNewRow) {
-        parent.extra.tree!.children.push(rowRef);
       }
+      uv.rows![i].extra.tree.level = level;
     }
   });
+
+  return uv;
 };
 
 const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
-  return a.type === b.type && a.id === b.id;
+  return a.type === b.type && (
+    (a.type === "added" && a.addedId === (b as IAddedNewRowRef).addedId) ||
+    (a.type === "committed" && a.id === (b as ICommittedNewRowRef).id));
 };
 
-const deleteFromPositions = (uv: ITableCombinedUserView, ref: NewRowRef, row: ITableExtendedRowCommon) => {
-  uv.extra.newRowTopSidePositions = uv.extra.newRowTopSidePositions.filter(r => !equalNewRowRef(ref, r));
-  uv.extra.newRowBottomSidePositions = uv.extra.newRowBottomSidePositions.filter(r => !equalNewRowRef(ref, r));
-  const parent = getRowParent(uv, row);
-  if (parent !== undefined) {
-    parent.extra.tree?.addedChildren.filter(r => !equalNewRowRef(ref, r));
+const deleteFromPositions = (ref: NewRowRef, extra: ITableViewExtra) => {
+  extra.newRowTopSidePositions = extra.newRowTopSidePositions.filter(r => !equalNewRowRef(ref, r));
+  extra.newRowBottomSidePositions = extra.newRowBottomSidePositions.filter(r => !equalNewRowRef(ref, r));
+  extra.addedRowRefs = extra.addedRowRefs.filter(r => !equalNewRowRef(ref, r));
+};
+
+const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): NewRowRef | null => {
+  if (pos.type === "added") {
+    const newRow = uv.newRows[pos.addedId];
+    if (newRow) {
+      return pos;
+    } else {
+      const rowIndex = uv.oldCommittedRows[pos.addedId];
+      if (rowIndex === undefined) {
+        return null;
+      }
+      const row = uv.rows![rowIndex];
+      return { type: "committed", id: row.mainId! };
+    }
+  } else if (pos.type === "committed") {
+    if (!(pos.id in uv.mainRowMapping)) {
+      return null;
+    }
+    return { type: "committed", id: pos.id };
+  } else {
+    throw new Error("Impossible");
   }
+};
+
+const inheritOldRowsPositions = (uv: ITableCombinedUserView, positions: NewRowRef[]): NewRowRef[] => {
+  return mapMaybe(pos => inheritOldRowsPosition(uv, pos) ?? undefined, positions);
 };
 
 interface INewRow {
@@ -644,9 +565,9 @@ const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
     return {
       ref: {
         type: "added",
-        id: pos.id,
+        id: pos.addedId,
       },
-      row: uv.newRows[pos.id],
+      row: uv.newRows[pos.addedId],
     };
   } else {
     // We are sure this row ref is to an existing value.
@@ -658,16 +579,17 @@ const getNewRow = (uv: ITableCombinedUserView, pos: NewRowRef): INewRow => {
   }
 };
 
-interface IAddedRowMeta {
-  side: "top_front" | "top_back" | "bottom_back" | "hidden";
+interface IAddedValueMeta {
+  side: "top_front" | "top_back" | "bottom_back" | "position";
+  parent?: number;
 }
 
-const isAddedValueMeta = (obj: unknown): obj is IAddedRowMeta => {
+const isAddedValueMeta = (obj: unknown): obj is IAddedValueMeta => {
   if (typeof obj !== "object" || obj === null) {
     return false;
   }
   const side = (obj as any).side;
-  return side === "top_front" || side === "top_back" || side === "bottom_back" || side === "hidden";
+  return side === "top_front" || side === "top_back" || side === "bottom_back" || side === "position";
 };
 
 export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowExtra, ITableViewExtra> = {
@@ -695,6 +617,21 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     if (currLinkForRow && !hasRowLinkWithId) {
       row.extra.link = currLinkForRow;
       uv.extra.hasRowLinks = true;
+    }
+
+    // We need to address rows for tree views, so we require `info`.
+    if (value.info) {
+      if (getCellAttr("tree_parent_ids")) {
+        // Init indexes by ids
+        uv.extra.rowsParentPositions[value.info.id!] = rowIndex;
+
+        // Init parent
+        if (value.value !== null) {
+          row.extra.tree.parent = Number(value.value);
+        }
+
+        uv.extra.treeParentColumnIndex = columnIndex;
+      }
     }
 
     const valueRef: ValueRef = {
@@ -768,53 +705,36 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     };
   },
 
-  updateValue(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow, columnIndex: number, value: ITableExtendedValue, update: ValueUpdate) {
-    baseUserViewHandler.updateValue(uv, rowIndex, row, columnIndex, value, update);
-    const rowRef: IExistingRowRef = {
-      type: "existing",
-      position: rowIndex,
-    };
-    updateCommittedValue(uv, rowRef, row, columnIndex, value, update);
+  updateValue(uv: ITableCombinedUserView, rowIndex: number, row: ITableExtendedRow, columnIndex: number, value: ITableExtendedValue) {
+    baseUserViewHandler.updateValue(uv, rowIndex, row, columnIndex, value);
   },
 
-  updateAddedValue(uv: ITableCombinedUserView, rowId: number, row: ITableExtendedAddedRow, columnIndex: number, value: ITableExtendedValue, update: ValueUpdate) {
-    baseUserViewHandler.updateAddedValue(uv, rowId, row, columnIndex, value, update);
-    const rowRef: IAddedRowRef = {
-      type: "added",
-      id: rowId,
-    };
-    updateCommittedValue(uv, rowRef, row, columnIndex, value, update);
+  updateAddedValue(uv: ITableCombinedUserView, rowId: number, row: ITableExtendedAddedRow, columnIndex: number, value: ITableExtendedValue) {
+    baseUserViewHandler.updateAddedValue(uv, rowId, row, columnIndex, value);
   },
 
-  updateEmptyValue(uv: ITableCombinedUserView, columnIndex: number, value: ITableExtendedValue, update: ValueUpdate) {
-    baseUserViewHandler.updateEmptyValue(uv, columnIndex, value, update);
+  updateEmptyValue(uv: ITableCombinedUserView, columnIndex: number, value: ITableExtendedValue) {
+    baseUserViewHandler.updateEmptyValue(uv, columnIndex, value);
   },
 
   createLocalRow(uv: ITableCombinedUserView, rowIndex: number, row: ICombinedRow, oldView?: ITableViewExtra, oldRow?: ITableRowExtra) {
     const baseExtra = baseUserViewHandler.createLocalRow(uv, rowIndex, row, oldView, oldRow);
-    const rowRef: IExistingRowRef = {
-      type: "existing",
-      position: rowIndex,
-    };
-    const commonExtra = createCommonLocalRow(uv, row, rowRef, oldRow);
+    const commonExtra = createCommonLocalRow(uv, row, oldRow);
     return {
       ...commonExtra,
       ...baseExtra,
-      shownAsNewRow: false,
     };
   },
 
   createAddedLocalRow(uv: ITableCombinedUserView, rowId: AddedRowId, row: IAddedRow, oldView?: ITableViewExtra, oldRow?: ITableRowExtra, meta?: unknown) {
     const baseExtra = baseUserViewHandler.createAddedLocalRow(uv, rowId, row, oldView, oldRow);
-    const rowRef: IAddedRowRef = {
-      type: "added",
-      id: rowId,
-    };
-    const commonExtra = createCommonLocalRow(uv, row, rowRef, oldRow);
+    const commonExtra = createCommonLocalRow(uv, row, oldRow);
 
+    const parent = isAddedValueMeta(meta) ? meta.parent : undefined;
     const newRef: NewRowRef = {
       type: "added",
-      id: rowId,
+      addedId: rowId,
+      parent,
     };
 
     if (!uv.extra.newRowTopSidePositions.find(ref => equalNewRowRef(newRef, ref))
@@ -827,23 +747,23 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
         uv.extra.newRowTopSidePositions.push(newRef);
       } else if (side === "bottom_back") {
         uv.extra.newRowBottomSidePositions.push(newRef);
+      } else if (side === "position") {
+        uv.extra.addedRowRefs.push(newRef);
       }
     }
 
     return {
       ...commonExtra,
       ...baseExtra,
-      shownAsNewRow: true,
     };
   },
 
   createEmptyLocalRow(uv: ITableCombinedUserView, row: IRowCommon, oldView?: ITableViewExtra, oldRow?: ITableRowExtra) {
     const baseExtra = baseUserViewHandler.createEmptyLocalRow(uv, row, oldView, oldRow);
-    const commonExtra = createCommonLocalRow(uv, row, undefined, oldRow);
+    const commonExtra = createCommonLocalRow(uv, row, oldRow);
     return {
       ...commonExtra,
       ...baseExtra,
-      shownAsNewRow: true,
     };
   },
 
@@ -884,30 +804,18 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       }
     });
     if (row.newId === undefined) {
-      deleteFromPositions(uv, { type: "added", id: rowId }, row);
+      deleteFromPositions({ type: "added", addedId: rowId }, uv.extra);
     }
   },
 
   createLocalUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra): ITableViewExtra {
     const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
 
+    const lazyLoad = oldView?.lazyLoad ?? TableLazyLoad.parse(uv.attributes["lazy_load"]);
+
     const newRowTopSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowTopSidePositions) : [];
     const newRowBottomSidePositions = oldView ? inheritOldRowsPositions(uv, oldView.newRowBottomSidePositions) : [];
-
-    const rawTreeParentIds = uv.columnAttributes.findIndex(attrs => attrs["tree_parent_ids"]);
-    const hasTree = rawTreeParentIds >= 0 && uv.info.columns[rawTreeParentIds].valueType.type === "int";
-
-    const rawTreeIds = uv.columnAttributes.findIndex(attrs => attrs["tree_ids"]);
-
-    let lazyLoad = oldView?.lazyLoad ?? TableLazyLoad.parse(uv.attributes["lazy_load"]);
-    if (hasTree) {
-      lazyLoad = {
-        type: "infinite_scroll",
-        infiniteScroll: {
-          shownRowsLength: oldView?.lazyLoad.type === "infinite_scroll" ? oldView?.lazyLoad.infiniteScroll.shownRowsLength : 0,
-        },
-      };
-    }
+    const addedRowRefs = oldView ? inheritOldRowsPositions(uv, oldView.addedRowRefs) : [];
 
     return {
       ...baseExtra,
@@ -915,25 +823,30 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       selectedValues: new ObjectSet<ValueRef>(),
       cursorValue: null,
       oldCursorValue: null,
-      treeParentColumnIndex: hasTree ? rawTreeParentIds : null,
-      treeIdColumnIndex: hasTree && rawTreeIds >= 0 ? rawTreeIds : null,
-      treeRowMapping: {},
+      rowsParentPositions: {},
+      treeParentColumnIndex: 0,
       newRowTopSidePositions,
       newRowBottomSidePositions,
       linkOpts: uv.homeSchema ? { homeSchema: uv.homeSchema } : {},
       sortAsc: oldView?.sortAsc ?? true,
       sortColumn: oldView?.sortColumn ?? null,
       sortOptions: oldView?.sortOptions ?? {},
+      addedRowRefs,
       lazyLoad,
     };
   },
 
   postInitUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra) {
-    markNewRows(uv, uv.extra.newRowTopSidePositions);
-    markNewRows(uv, uv.extra.newRowBottomSidePositions);
+    if (!R.isEmpty(uv.extra.rowsParentPositions)) {
+      uv = initTreeChildren(uv);
+    }
 
-    if (uv.extra.treeParentColumnIndex !== null) {
-      initTreeChildren(uv);
+    for (const pos of [...uv.extra.newRowTopSidePositions, ...uv.extra.newRowBottomSidePositions]) {
+      if (pos.type === "committed") {
+        // `index.type === "existing"` here; "added" may only appear after a commit.
+        const index = uv.mainRowMapping[pos.id][0] as IExistingRowRef;
+        uv.rows![index.position].extra.shownAsNewRow = true;
+      }
     }
 
     const cursorValue = oldView?.cursorValue ?? null;
@@ -1016,7 +929,7 @@ interface IShownRow {
 }
 
 const defaultPageSize = 5;
-// Just look at `ITableLazyLoad` to see which type this mess makes.
+// Just look at `ITableLazyLoad` to see which type this mess make.
 export const TableLazyLoad =
   z.union([
     z.object({
@@ -1082,24 +995,6 @@ const plainTextStringify = (table: string[][]): string => {
   });
 
   return output;
-};
-
-const refToShownRow = (ref: CommittedRowRef, row: ITableExtendedRowCommon): IShownRow => {
-  if (ref.type === "existing") {
-    return {
-      key: String(ref.position),
-      notExisting: false,
-      row,
-      ref,
-    };
-  } else {
-    return {
-      key: `${ref.type}-${ref.id}`,
-      row,
-      notExisting: true,
-      ref,
-    };
-  }
 };
 
 const entities = namespace("entities");
@@ -1419,7 +1314,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
    *   } */
 
   get infiniteIdentifier() {
-    return `${this.uv.rows?.length}${this.middleRows.length}`;
+    return `${this.uv.rows?.length}${this.existingRows}`;
   }
 
   get dirtyHackPreventEntireReloads() {
@@ -1432,13 +1327,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   private async infiniteHandler(ev: StateChanger) {
     if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
 
+    this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
+
     // FIXME: Dirty hack.
     while (this.showTree && !this.uv.rowLoadState.complete) {
       // eslint-disable-next-line no-await-in-loop
       await waitTimeout(1000);
     }
-
-    this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
 
     if (!this.uv.rowLoadState.complete
      && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
@@ -1475,7 +1370,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       icon: "add",
       variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
-      callback: () => void this.loadAllRowsAndAddNewRowOnPosition("top_front"),
+      callback: () => this.loadAllRowsAndAddNewRowOnPosition("top_front"),
     };
   }
 
@@ -1486,7 +1381,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () =>
-        void this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>
+        this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>
           (this.$refs.bottomButtonContainer as Element | undefined)?.scrollIntoView({ block: "nearest" })),
     };
   }
@@ -1826,9 +1721,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private valueIsReadOnly(valueRef: ValueRef, throwToastOnReadOnly = false): boolean {
     const value = this.uv.getValueByRef(valueRef)!;
-    const columnAttrs = this.uv.columnAttributes[valueRef.column];
-    const getCellAttr = (name: AttributeName) => value.value.attributes?.[name] || value.row.attributes?.[name] || columnAttrs[name] || this.uv.attributes[name];
-    if (!value.value.info?.field || getCellAttr("soft_disabled")) {
+    const rowSoftDisabled = Boolean(value.row.attributes?.["soft_disabled"]);
+    const valueSoftDisabled = Boolean(value.value.attributes?.["soft_disabled"]);
+    if (!value.value.info?.field || this.softDisabled || rowSoftDisabled || valueSoftDisabled) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
           title: this.$t("edit_error").toString(),
@@ -1865,10 +1760,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private async updateValueWithParseValue(ref: ValueRef, parseValue: ClipboardParseValue) {
-    if (this.valueIsReadOnly(ref, true)) {
-      return false;
-    }
-
     const value = this.uv.getValueByRef(ref)!.value;
     const fieldType = value.info?.field?.fieldType.type;
     if (parseValue.type === "reference") {
@@ -1884,7 +1775,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     } else {
       await this.updateValue(ref, parseValue.value);
     }
-    return true;
   }
 
   private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ClipboardParseValue[][]) {
@@ -1897,6 +1787,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       let counter = 0;
       for (const [cellIndex, cell] of row.entries()) {
         valueRef = this.uv.extra.cursorValue as ValueRef;
+
+        if (this.valueIsReadOnly(valueRef, true)) return;
 
         // eslint-disable-next-line no-await-in-loop
         await this.updateValueWithParseValue(valueRef, cell);
@@ -2083,11 +1975,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.$emit("load-all-chunks");
     }
 
-    // Check if current filter contained this one
-    const contained = !this.showTree && this.currentFilter.every(oldWord => this.filter.some(newWord => newWord.startsWith(oldWord)));
-
     const oldFilter = this.currentFilter;
     this.currentFilter = this.filter;
+
+    // Check if current filter contained this one
+    const contained = oldFilter.every(oldWord => this.currentFilter.some(newWord => newWord.startsWith(oldWord)));
 
     if (!contained) {
       this.buildRowPositions();
@@ -2138,7 +2030,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   // TODO: Load all rows is temporary until we can't load rows by ids.
-  private async loadAllRowsAndAddNewRowOnPosition(side: IAddedRowMeta["side"]): Promise<void> {
+  private async loadAllRowsAndAddNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
     if (!this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => this.addNewRowOnPosition(side));
       return Promise.resolve();
@@ -2147,9 +2039,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  private async addNewRowOnPosition(side: IAddedRowMeta["side"]): Promise<void> {
-    const meta: IAddedRowMeta = { side };
-    const rowId = await this.addNewRow(meta);
+  private async addNewRowOnPosition(side: IAddedValueMeta["side"]): Promise<void> {
+    const rowId = await this.addNewRow({ side });
 
     void nextRender().then(() => {
       const row = this.getVisualIndexOfAddedRow(rowId);
@@ -2171,36 +2062,50 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private showTreeChildren(parentRef: CommittedRowRef) {
     if (parentRef.type !== "existing") return;
-    const row = this.uv.rows![parentRef.position];
-    if (row.extra.tree!.arrowDown) return;
+    const children = this.uv.rows![parentRef.position].extra.tree.children;
 
-    row.extra.tree!.arrowDown = true;
+    this.uv.rows![parentRef.position].extra.tree.arrowDown = true;
+
+    const parentPosition = this.rowPositions.indexOf(parentRef);
+    const leftChunk = this.rowPositions.splice(0, parentPosition + 1);
+    this.rowPositions = [...leftChunk, ...children, ...this.rowPositions];
   }
 
-  private hideTreeChildren(parentRef: CommittedRowRef) {
-    if (parentRef.type !== "existing") return;
-    const row = this.uv.rows![parentRef.position];
-    if (!row.extra.tree!.arrowDown) return;
+  private hideTreeChildren(parent: CommittedRowRef) {
+    if (parent.type !== "existing") return;
+    const children = this.uv.rows![parent.position].extra.tree.children;
+    this.uv.rows![parent.position].extra.tree.arrowDown = false;
 
-    row.extra.tree!.arrowDown = false;
-
-    row.extra.tree!.children.forEach(ref => this.hideTreeChildren(ref));
+    children.forEach(child => {
+      const childPosition = this.rowPositions.indexOf(child);
+      this.rowPositions.splice(childPosition, 1);
+      if (child.type === "existing" && this.uv.rows![child.position].extra.tree.arrowDown) {
+        this.hideTreeChildren(child);
+      }
+    });
   }
 
   private async addChild(parentRef: CommittedRowRef) {
-    if (this.uv.extra.treeParentColumnIndex === null) {
-      throw new Error("Impossible");
-    }
     if (parentRef.type !== "existing") return;
-    this.showTreeChildren(parentRef);
 
-    const row = this.uv.rows![parentRef.position];
-    const meta: IAddedRowMeta = { side: "hidden" };
-    const rowId = await this.addNewRow(meta);
-    const newRow = this.uv.newRows[rowId];
+    if (!this.uv.rows![parentRef.position].extra.tree.arrowDown) {
+      this.showTreeChildren(parentRef);
+    }
+    const rowId = await this.addNewRow({ side: "position", parent: parentRef.position });
+    const columnIndex = this.uv.extra.treeParentColumnIndex;
+
+    this.uv.newRows[rowId].extra.tree.level = this.uv.rows![parentRef.position].extra.tree.level + 1;
+    this.uv.newRows[rowId].extra.tree.parent = parentRef.position;
 
     const newRef: IAddedRowRef = { type: "added", id: rowId };
-    await this.updateValue({ ...newRef, column: this.uv.extra.treeParentColumnIndex }, this.uv.rows![parentRef.position].mainId);
+    await this.updateValue({ type: "added", id: rowId, column: columnIndex }, this.uv.rows![parentRef.position].mainId);
+
+    const parentPosition = this.rowPositions.indexOf(parentRef);
+    const leftChunk = this.rowPositions.splice(0, parentPosition + 1);
+    this.rowPositions = [...leftChunk, newRef, ...this.rowPositions];
+
+    const children = this.uv.rows![parentRef.position].extra.tree.children;
+    this.uv.rows![parentRef.position].extra.tree.children = [newRef, ...children];
   }
 
   private toggleChildren(ref: CommittedRowRef, visible: boolean) {
@@ -2212,46 +2117,58 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get showTree() {
-    return this.uv.extra.treeParentColumnIndex !== null && this.currentFilter.length === 0;
+    return Object.keys(this.uv.extra.rowsParentPositions).length !== 0 && this.filter.length === 0;
   }
 
-  // Update `this.rowsPositions` when `this.uv.rows` has changed.
+  private pushTreeChildrenPositions(parentRef: CommittedRowRef, children: CommittedRowRef[]) {
+    let newRowPositions: CommittedRowRef[] = [parentRef];
+
+    children.forEach(child => {
+      if (child.type === "existing" && this.uv.rows![child.position].extra.tree.arrowDown) {
+        const row = this.uv.rows![child.position].extra.tree;
+        newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(child, row.children));
+      } else {
+        newRowPositions.push(child);
+      }
+    });
+    return newRowPositions;
+  }
+
+  get initialRowPositions() {
+    const rowPositions = this.uv.rows!.map((row, rowI) => rowI);
+    const topLevelRows = rowPositions.filter(rowI => this.uv.rows![rowI].extra.tree.parent === null);
+    let newRowPositions: CommittedRowRef[] = [];
+    topLevelRows.forEach(rowI => {
+      const row = this.uv.rows![rowI].extra.tree;
+      const rowRef: IExistingRowRef = { type: "existing", position: rowI };
+      if (row.arrowDown) {
+        newRowPositions = newRowPositions.concat(this.pushTreeChildrenPositions(rowRef, row.children));
+      } else {
+        newRowPositions.push(rowRef);
+      }
+    });
+    return newRowPositions;
+  }
+
+  // Update this.rowsPositions when this.uv.rows has changed.
   private buildRowPositions() {
     const rows = this.uv.rows;
-    let rowPositions: CommittedRowRef[];
     if (rows === null) {
-      rowPositions = [];
-    } else if (this.showTree) {
-      rowPositions = mapMaybe((row, rowI) => {
-        if (row.extra.tree!.level !== 0 || row.extra.shownAsNewRow) {
-          return undefined;
-        } else {
-          return {
-            type: "existing",
-            position: rowI,
-          };
-        }
-      }, rows);
-    } else if (this.filter.length !== 0) {
-      rowPositions = mapMaybe((row, rowI) => {
-        if (row.extra.shownAsNewRow || !rowContains(row, this.filter)) {
-          return undefined;
-        } else {
-          return {
-            type: "existing",
-            position: rowI,
-          };
-        }
-      }, rows);
+      this.rowPositions = [];
     } else {
-      rowPositions = rows.map((row, rowI) => ({
-        type: "existing",
-        position: rowI,
-      }));
+      this.rowPositions = rows.map((row, rowI) => {
+        return {
+          type: "existing",
+          position: rowI,
+        };
+      });
+      if (this.filter.length !== 0) {
+        this.rowPositions = this.rowPositions.filter(rowI => rowI.type === "existing" && rowContains(rows[rowI.position], this.filter));
+      } else if (this.showTree) {
+        this.rowPositions = this.initialRowPositions;
+      }
+      this.sortRows();
     }
-
-    this.rowPositions = rowPositions;
-    this.sortRows();
   }
 
   private removeCellEditing() {
@@ -2421,6 +2338,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // FIXME: `v-click-outside` somehow doesn't trigger on cell clicks, so close context menu there too.
     this.removeCellEditing();
     this.closeCellContextMenu();
+
+    // We capture click-events from cells so we need to manually close popups here.
+    if (this.columns[pos.column].type !== "buttons") {
+      eventBus.emit("close-all-button-groups");
+    }
   }
 
   private continueCellSelection(cursorPosition: IVisualPosition, element: HTMLElement, event: MouseEvent) {
@@ -2560,9 +2482,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private selectChildrenRows(row: ITableExtendedRowCommon, selected: boolean) {
-    row.extra.tree?.children.forEach(child => {
+    row.extra.tree.children.forEach(child => {
       const childRow = this.uv.getRowByRef(child);
-      if (childRow && childRow.extra.tree!.children.length > 0) {
+      if (childRow && childRow.extra.tree.children.length > 0) {
         this.selectChildrenRows(childRow, selected);
       }
       this.selectRow(child, selected);
@@ -2672,86 +2594,51 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private sortRows() {
-    if (this.uv.extra.sortColumn === null) {
-      return;
-    }
+    if (this.uv.extra.sortColumn !== null) {
+      const sortColumn = this.uv.extra.sortColumn;
+      const collator = new Intl.Collator(["en", "ru"], this.uv.extra.sortOptions);
+      const sortFunction: (a: CommittedRowRef, b: CommittedRowRef) => number =
+        this.uv.extra.sortAsc ?
+          (a, b) => rowIndicesCompare(a, b, this.uv, sortColumn, collator) :
+          (a, b) => rowIndicesCompare(b, a, this.uv, sortColumn, collator);
 
-    const sortColumn = this.uv.extra.sortColumn;
-    const collator = new Intl.Collator(["en", "ru"], this.uv.extra.sortOptions);
-    const sortFunction: (a: CommittedRowRef, b: CommittedRowRef) => number =
-      this.uv.extra.sortAsc ?
-        (a, b) => rowIndicesCompare(a, b, this.uv, sortColumn, collator) :
-        (a, b) => rowIndicesCompare(b, a, this.uv, sortColumn, collator);
+      const sortNewFunction: (a: NewRowRef, b: NewRowRef) => number =
+        this.uv.extra.sortAsc ?
+          (a, b) => newRowIndicesCompare(a, b, this.uv, sortColumn, collator) :
+          (a, b) => newRowIndicesCompare(b, a, this.uv, sortColumn, collator);
 
-    const sortNewFunction: (a: NewRowRef, b: NewRowRef) => number =
-      this.uv.extra.sortAsc ?
-        (a, b) => newRowIndicesCompare(a, b, this.uv, sortColumn, collator) :
-        (a, b) => newRowIndicesCompare(b, a, this.uv, sortColumn, collator);
-
-    this.rowPositions.sort(sortFunction);
-    this.uv.extra.newRowTopSidePositions.sort(sortNewFunction);
-    this.uv.extra.newRowBottomSidePositions.sort(sortNewFunction);
-    if (this.showTree && this.uv.rows) {
-      for (const row of this.uv.rows) {
-        row.extra.tree!.addedChildren.sort(sortNewFunction);
-        row.extra.tree!.children.sort(sortFunction);
-      }
+      this.rowPositions.sort(sortFunction);
+      this.uv.extra.newRowTopSidePositions.sort(sortNewFunction);
+      this.uv.extra.newRowBottomSidePositions.sort(sortNewFunction);
     }
   }
 
-  get middleRows(): IShownRow[] {
-    if (this.showTree) {
-      const rowPositions: IShownRow[] = [];
-      const addRowAndChildren = (rowRef: CommittedRowRef) => {
-        let row: ITableExtendedRowCommon;
-        if (rowRef.type === "existing") {
-          const existingRow = this.uv.rows![rowRef.position];
-          if (existingRow.deleted) {
-            return;
-          }
-          row = existingRow;
-        } else if (rowRef.type === "added") {
-          const addedRow = this.uv.newRows[rowRef.id];
-          if (!addedRow) {
-            return;
-          }
-          row = addedRow;
-        } else {
-          throw new Error("Impossible");
-        }
-
-        rowPositions.push(refToShownRow(rowRef, row));
-
-        if (row.extra.tree!.arrowDown) {
-          for (const ref of row.extra.tree!.addedChildren) {
-            addRowAndChildren(getNewRow(this.uv, ref).ref);
-          }
-          for (const ref of row.extra.tree!.children) {
-            addRowAndChildren(ref);
-          }
-        }
-      };
-      for (const ref of this.rowPositions) {
-        addRowAndChildren(ref);
-      }
-      return rowPositions;
+  get existingRows(): IShownRow[] {
+    const rows = this.uv.rows;
+    if (rows === null) {
+      return [];
     } else {
-      return mapMaybe(rowRef => {
-        let row: ITableExtendedRowCommon;
-        if (rowRef.type === "existing") {
-          const existingRow = this.uv.rows![rowRef.position];
-          if (existingRow.deleted || existingRow.extra.shownAsNewRow) {
+      return mapMaybe(rowI => {
+        if (rowI.type === "existing") {
+          const row = rows[rowI.position];
+          if (row.deleted || row.extra.shownAsNewRow) {
             return undefined;
           }
-          row = existingRow;
+          return {
+            key: String(rowI.position),
+            notExisting: false,
+            row,
+            ref: rowI,
+          };
         } else {
-          const addedRow = this.uv.newRows[rowRef.id];
-          if (!addedRow) {
-            return undefined;
-          }
-          row = addedRow;
+          const row = this.uv.newRows[rowI.id];
+          return !row ? undefined : {
+            key: `${rowI.type}-${rowI.id}`,
+            row,
+            notExisting: true,
+            ref: rowI,
+          };
         }
-        return refToShownRow(rowRef, row);
       }, this.rowPositions);
     }
   }
@@ -2760,7 +2647,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return mapMaybe(ref => {
       const row = getNewRow(this.uv, ref);
       return row.row.deleted ? undefined : {
-        key: `${ref.type}-${ref.id}`,
+        key: `${ref.type}-${ref.type === "added" ? ref.addedId : ref.id}`,
         row: row.row,
         notExisting: true,
         ref: row.ref,
@@ -2776,15 +2663,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.getNewRows(this.uv.extra.newRowBottomSidePositions);
   }
 
+  // FIXME: Broken for trees.
   get statusLine() {
-    const totalAdded = this.uv.newRowsOrder.length;
-    let middleRowsLength: number;
-    if (!this.showTree) {
-      middleRowsLength = this.middleRows.length;
-    } else {
-      middleRowsLength = this.uv.rowsCount;
-    }
-    return this.uv.rowLoadState.complete ? `${totalAdded + middleRowsLength}` : "";
+    const totalAdded = this.topRows.length + this.bottomRows.length;
+    return this.uv.rowLoadState.complete ? `${totalAdded + this.existingRows.length}` : "";
   }
 
   @Watch("statusLine", { immediate: true })
@@ -2796,10 +2678,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     if (this.uv.extra.lazyLoad.type === "pagination") {
       const start = this.uv.extra.lazyLoad.pagination.currentPage * this.uv.extra.lazyLoad.pagination.perPage;
       const end = start + this.uv.extra.lazyLoad.pagination.perPage;
-      const sliced = this.middleRows.slice(start, end);
+      const sliced = this.existingRows.slice(start, end);
       return [...this.topRows, ...sliced, ...this.bottomRows];
     } else {
-      return [...this.topRows, ...this.middleRows, ...this.bottomRows];
+      return [...this.topRows, ...this.existingRows, ...this.bottomRows];
     }
   }
 
@@ -3074,18 +2956,20 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  /* Second selctor is for system columns */
-  ::v-deep .table-tr.last-top-new td,
-  .table-tr.last-top-new td ~ td {
-    border-bottom: 2px solid var(--table-backgroundDarker2Color);
-  }
+  ::v-deep {
+    /* Second selctor is for system columns */
+    .table-tr.last-top-new td,
+    .table-tr.last-top-new td ~ td {
+      border-bottom: 2px solid var(--table-backgroundDarker2Color);
+    }
 
-  /* stylelint-disable no-descending-specificity */
-  ::v-deep .table-tr.first-bottom-new td,
-  .table-tr.first-bottom-new td ~ td {
-    border-top: 2px solid var(--table-backgroundDarker2Color);
+    /* stylelint-disable no-descending-specificity */
+    .table-tr.first-bottom-new td,
+    .table-tr.first-bottom-new td ~ td {
+      border-top: 2px solid var(--table-backgroundDarker2Color);
+    }
+    /* stylelint-enable no-descending-specificity */
   }
-  /* stylelint-enable no-descending-specificity */
 
   ::v-deep .button-element > button {
     width: 100%;

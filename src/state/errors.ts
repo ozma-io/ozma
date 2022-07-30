@@ -5,14 +5,12 @@ export type ErrorKey = string;
 
 export interface IErrorsState {
   errors: Record<ErrorKey, string[]>;
-  silent: boolean;
 }
 
 const errorsModule: Module<IErrorsState, {}> = {
   namespaced: true,
   state: {
     errors: {},
-    silent: false,
   },
   mutations: {
     reset: state => {
@@ -39,8 +37,18 @@ const errorsModule: Module<IErrorsState, {}> = {
     resetErrors: (state, key: ErrorKey) => {
       Vue.delete(state.errors, key);
     },
-    setSilent: (state, silent: boolean) => {
-      state.silent = silent;
+  },
+  actions: {
+    onAuthRemoved: {
+      root: true,
+      handler: ({ state, commit }) => {
+        Object.keys(state.errors).forEach(key => {
+          // Clear all errors _except_ auth.
+          if (key !== "auth") {
+            commit("resetErrors", key);
+          }
+        });
+      },
     },
   },
 };

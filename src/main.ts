@@ -43,6 +43,7 @@ type Events = {
   ["show-invite-user-modal"]?: string;
   ["show-help-modal"]: IShowHelpModalArgs;
   ["close-all-toasts"]?: string;
+  ["close-all-button-groups"]?: string;
 };
 
 export const eventBus = mitt<Events>();

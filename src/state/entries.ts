@@ -4,10 +4,10 @@ import Vue from "vue";
 import R from "ramda";
 
 import { app } from "@/main";
-import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
+import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout, shortLanguage } from "@/utils";
 import Api, { developmentMode } from "@/api";
 import { valueToText } from "@/values";
-import { CancelledError, i18n } from "@/modules";
+import { CancelledError } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
 import { IQuery } from "./query";
 
@@ -53,6 +53,18 @@ export type SearchNode = ISearchNodeOK | ISearchNodeError | ISearchNodePending;
 export type Entries = Record<RowId, string>;
 
 const punToText = (pun: unknown, id: unknown, punType: ValueType) => pun === null ? `${id}` : valueToText(punType, pun);
+
+const messages: Record<string, Record<string, string>> = {
+  en: {
+    "not_all_values_found_in_options": "Not all references were found in `options_view` or `referenced_entity`",
+    "not_found": "Not found",
+  },
+  ru: {
+    "not_all_values_found_in_options": "Не все значения-отношения были найдены в `options_view` или `referenced_entity`",
+    "not_found": "Не найдены",
+  },
+};
+const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 // Add new node to the search tree.
 const insertSearchNode = (node: SearchNode, search: string, limit: number, pending: Promise<boolean>): boolean => {
@@ -208,18 +220,6 @@ export class PartialEntries {
     this.searchTree = null;
     this.entries = {};
     this.pendingSingleEntries = {};
-  }
-
-  getMainField(id: RowId): string | null | undefined {
-    const pun = this.entries[id];
-    if (pun !== undefined) {
-      return pun;
-    }
-    const pending = this.pendingSingleEntries[id];
-    if (pending === null) {
-      return null;
-    }
-    return undefined;
   }
 
   insert(search: string, limit: number, pending: Promise<boolean>) {
@@ -555,9 +555,9 @@ const fetchEntriesByOptionsViewByIds = async (context: ActionContext<IEntriesSta
 };
 
 const showNotFoundIdsError = (notFoundIds: number[]) => {
-  const message = `${i18n.tc("not_found")}: ${notFoundIds}`;
+  const message = `${funI18n("not_found")}: ${notFoundIds}`;
   app.$bvToast.toast(message, {
-    title: i18n.tc("not_all_values_found_in_options"),
+    title: funI18n("not_all_values_found_in_options"),
     variant: "danger",
     solid: true,
   });

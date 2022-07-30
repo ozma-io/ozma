@@ -2,9 +2,9 @@ import { mixins } from "vue-class-component";
 import { Component, Watch } from "vue-property-decorator";
 import { PortalTarget } from "portal-vue";
 
+import type { IModalTab } from "@/components/modal/TabbedModal.vue";
 import TabbedModal from "@/components/modal/TabbedModal.vue";
 import ModalPortal from "./ModalPortal";
-import { IModalTab } from "./types";
 
 @Component
 export default class ModalPortalTarget extends mixins(PortalTarget) {

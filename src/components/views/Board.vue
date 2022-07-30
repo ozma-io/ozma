@@ -27,11 +27,11 @@
     />
     <Board
       v-else
-      :allow-dragging="!disabled"
+      allow-dragging
       :column-width="columnWidth"
       :background-color="backgroundColor"
       :columns="columns"
-      :create-button="!disabled && createView !== null"
+      :create-button="createView !== null"
       @add="changeGroup"
       @move="changeOrder"
       @create="createCard"
@@ -72,7 +72,7 @@ import {
   getColorVariantAttributeClassName,
   getColorVariantAttributeVariables,
 } from "@/utils_colors";
-import { formatValueToHtmlWithInfo } from "@/user_views/format";
+import { formatValueToHtml } from "@/user_views/format";
 
 interface IGroupColumn {
   group: unknown;
@@ -91,7 +91,7 @@ interface IEnumColumns {
 
 interface IReferenceColumn {
   id: RowId;
-  name: string | null;
+  name: string;
 }
 
 interface IReferenceColumns {
@@ -160,10 +160,6 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     }
   }
 
-  get disabled() {
-    return Boolean(this.uv.attributes["soft_disabled"]);
-  }
-
   get columnsType(): BoardColumnsType | null {
     if (this.groupIndex === null) {
       return null;
@@ -191,19 +187,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {
         if (typeof col === "number") {
-          const mainName = this.currentEntries?.getMainField(col);
-          let name: string | null;
-          if (mainName === undefined) {
+          let name = this.currentEntries?.[col];
+          if (name === undefined) {
             requestedColumns.push(col);
-            name = null;
-          } else if (mainName === null) {
             name = String(col);
-          } else {
-            name = mainName;
           }
           return {
             id: col,
-            name,
+            name: String(name),
           };
         } else if (typeof col === "object" && col !== null) {
           const id = col["id"];
@@ -401,12 +392,11 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       this.groupIndex === null && this.$t("no_group"),
     ].filter(v => v);
 
-    if (messagesArray.length === 0) {
-      return null;
-    } else {
-      const errorMessage = this.$t("view_error");
-      return `${errorMessage}:\n${messagesArray.join("\n")}.`;
-    }
+    const hasErrors = messagesArray.length > 0;
+
+    const errorMessage = this.$t("view_error");
+    const errorString = `${errorMessage}:\n${messagesArray.join("\n")}.`;
+    return hasErrors ? errorString : null;
   }
 
   createCard(column: IGroupColumn, columnIndex: number) {
@@ -494,13 +484,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         return undefined;
       }
 
-      const { result: textHtml, hasLinks } = formatValueToHtmlWithInfo(info.valueType, value, { columnAttributeMappings: columnMappings });
+      const textHtml = formatValueToHtml(info.valueType, value, { columnAttributeMappings: columnMappings });
       const icon = getCellAttr("icon");
       const colorCellVariant = colorVariantFromAttribute(getCellAttr("cell_variant"));
       return {
         type: "text",
         textHtml,
-        hasLinks,
         size: 12,
         icon: icon ? String(icon) : null,
         cellVariantClass: getColorVariantAttributeClassName(colorCellVariant),

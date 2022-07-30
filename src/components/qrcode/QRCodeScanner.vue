@@ -79,7 +79,7 @@ const entities = namespace("entities");
 
 @Component({
   components: {
-    StreamBarcodeReader: async () => (await import("vue-barcode-reader")).StreamBarcodeReader,
+    StreamBarcodeReader: () => import("vue-barcode-reader"),
     BarCode: () => import("@/components/barcode/BarCode.vue"),
   },
 })

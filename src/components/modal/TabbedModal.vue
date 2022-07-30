@@ -118,15 +118,22 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import { VNode } from "vue";
 
 import { WindowKey } from "@/state/windows";
 import ModalContent from "@/components/modal/ModalContent";
 import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
 import { interfaceButtonVariant } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
-import { IModalTab } from "./types";
 
 const windows = namespace("windows");
+
+export interface IModalTab {
+  key: string;
+  autofocus: boolean;
+  header: VNode | VNode[] | null;
+  content: VNode | VNode[];
+}
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class TabbedModal extends Vue {

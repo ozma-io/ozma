@@ -9,9 +9,11 @@ import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
-import { Fragment } from "vue-frag";
+import { Plugin as FragmentPlugin } from "vue-fragment";
 import VueHotkey from "v-hotkey";
+// import VueClipboard from "vue-clipboard2";
 
+import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
 import AuthResponse from "@/components/AuthResponse.vue";
 import TopLevelUserView from "@/components/TopLevelUserView.vue";
@@ -29,9 +31,11 @@ Vue.use(vClickOutside);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(VueGrid);
 Vue.use(PortalVue);
-Vue.component("Fragment", Fragment as any);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+Vue.use(FragmentPlugin);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 Vue.use(VueHotkey);
+// Vue.use(VueClipboard);
 
 const routes = [
   { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },
@@ -46,28 +50,10 @@ const routes = [
 
 const globalMessages = {
   "en": {
-    "confirm_reset": "You have unsaved changes, do you want to discard them?",
-    "generation_start_title": "File generation is started",
-    "generation_start_description": "It may take few seconds",
-    "generation_fail": "Error occured while file generation. Try again.",
-    "ellipsis": "... (Open cell to view full)",
-    "exception_in_action": "Exception in action",
-    "not_all_values_found_in_options": "Not all references were found in `options_view` or `referenced_entity`",
-    "not_found": "Not found",
-    "error_button": "<Error>",
-    "computed_attributes": "Computed attributes",
+    "confirm_close": "You have unsaved changes, do you want to discard them?",
   },
   "ru": {
-    "confirm_reset": "У вас есть несохранённые изменения, отбросить их?",
-    "generation_start_title": "Началось создание файла",
-    "generation_start_description": "Это займёт несколько секунд",
-    "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
-    "ellipsis": "... (Откройте ячейку, чтобы читать дальше)",
-    "exception_in_action": "Исключение в действии",
-    "not_all_values_found_in_options": "Не все значения-отношения были найдены в `options_view` или `referenced_entity`",
-    "not_found": "Не найдены",
-    "error_button": "<Ошибка>",
-    "computed_attributes": "Вычисленные атрибуты",
+    "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
   },
 };
 
@@ -77,7 +63,7 @@ export const router = new VueRouter({
 });
 
 export const i18n = new VueI18n({
-  locale: "en",
+  locale: Utils.shortLanguage,
   messages: globalMessages,
 });
 

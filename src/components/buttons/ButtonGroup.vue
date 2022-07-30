@@ -1,5 +1,4 @@
 <template>
-  <!-- eslint-disable vue/v-on-event-hyphenation -->
   <popper
     ref="popup"
     trigger="clickToOpen"
@@ -14,9 +13,7 @@
         hide: { enabled: !listItem },
       }
     }"
-    :disabled="!show"
-    :force-show="show"
-    @documentClick="onDocumentClick"
+    @show="onShow"
   >
     <div class="popper shadow">
       <ButtonList
@@ -42,6 +39,8 @@ import Popper from "vue-popperjs";
 import type { IButton, IButtonGroup } from "@/components/buttons/buttons";
 import ButtonView from "@/components/buttons/ButtonView.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
+import { eventBus } from "@/main";
+import { waitTimeout } from "@/utils";
 
 @Component({
   components: {
@@ -54,22 +53,62 @@ export default class ButtonsPanel extends Vue {
   @Prop({ type: Object, required: true }) button!: IButtonGroup;
   @Prop({ type: Boolean, default: false }) listItem!: boolean;
 
-  private show = false;
-
-  onReferenceClick() {
-    this.show = !this.show;
+  private mounted() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    eventBus.on("close-all-button-groups", this.syncCloseGroup);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  onDocumentClick() {
-    this.show = false;
+  private beforeDestroy() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    eventBus.off("close-all-button-groups", this.syncCloseGroup);
+    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  onInnerButtonClick(button: IButton) {
+  private async onReferenceClick() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    if (!this.listItem && popupRef.showPopper) {
+      // vue-popper doesn't have trigger for behavior "toggle on click, close on click outside",
+      // so I use little hacks there and with "close-all-button-groups" instead.
+      await waitTimeout(10);
+      popupRef.doClose();
+    }
+  }
+
+  private syncCloseGroup(uid?: string) {
+    if (this.uid !== uid) {
+      void this.closeGroup();
+    }
+  }
+
+  private async closeGroup() {
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    await popupRef.doClose();
+  }
+
+  private onShow() {
+    if (!this.listItem) {
+      eventBus.emit("close-all-button-groups", this.uid);
+    }
+  }
+
+  private onInnerButtonClick(button: IButton) {
     this.$emit("button-click", button);
 
-    if (!button.keepButtonGroupOpened) {
-      this.show = false;
+    const popupRef: any = this.$refs.popup;
+    if (!popupRef) return;
+
+    if (!this.listItem && popupRef.showPopper && !button.keepButtonGroupOpened) {
+      popupRef.doClose();
     }
+  }
+
+  private get someButtonHasIcon() {
+    return this.button.buttons.some(button => button.icon);
   }
 }
 </script>

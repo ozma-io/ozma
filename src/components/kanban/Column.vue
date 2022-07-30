@@ -27,10 +27,10 @@
       >
         <span
           class="column_header__title"
-          :title="title ?? undefined"
+          :title="title"
           data-dragscroll
         >
-          {{ title ?? ". . ." }}
+          {{ title }}
         </span>
         <span class="column_controls" data-dragscroll>
           <span
@@ -134,7 +134,7 @@ const showStep = 10;
 @Component({ components: { Card, draggable, InfiniteLoading } })
 export default class KanbanColumn extends Vue {
   @Prop({ type: Array, required: true }) cards!: ICard<unknown>[];
-  @Prop({ required: true }) title!: string | null;
+  @Prop({ type: String, required: true }) title!: string;
   @Prop({ type: Boolean, default: false }) createButton!: boolean;
   @Prop({ type: Number, default: 300 }) width!: number;
   @Prop({ type: Object }) colorVariables!: Record<string, string>;
