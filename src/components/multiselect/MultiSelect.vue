@@ -639,16 +639,8 @@ export default class MultiSelect extends Vue {
 
     if (this.single) {
       this.$emit("update:value", null);
-    } else {
-      for (const [index, _] of this.selectedOptions.entries()) {
-        // Because options are removed one-by-one we need to reverse indexes there.
-        // Maybe we need to rewrite it to something index-independed.
-        this.$emit("remove-value", this.selectedOptions.length - index - 1);
-      }
     }
 
-    // In theory we can remove all values one-by-one by code above,
-    // but I faced some troubles with this approach in <ArrayReferenceField>, so for this case there are direct event.
     this.$emit("clear-values");
   }
 

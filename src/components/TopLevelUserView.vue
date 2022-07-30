@@ -75,7 +75,7 @@
       <ButtonsPanel
         class="main-buttons"
         :buttons="mainButtons"
-        @goto="$emit('goto', $event)"
+        @goto="pushRoot"
       />
     </portal>
     <template v-if="query !== null">
@@ -101,12 +101,12 @@
         :filter-string="query.root.search"
         :type="'root'"
         @update:filter-string="replaceRootSearch($event)"
-        @goto="$emit('goto', $event)"
+        @goto="pushRoot"
       >
         <template #main-buttons>
           <ButtonsPanel
             :buttons="mainButtons"
-            @goto="$emit('goto', $event)"
+            @goto="pushRoot"
           />
         </template>
       </HeaderPanel>
@@ -625,7 +625,7 @@ export default class TopLevelUserView extends Vue {
           caption: this.$t("documentation").toString(),
           variant: bootstrapVariantAttribute("info"),
           type: "link",
-          link: { type: "href", href: "https://wiki.ozma.io", target: "_blank" },
+          link: { type: "href", href: "https://wiki.ozma.io", target: "blank" },
         });
 
         buttons.push({
@@ -633,7 +633,7 @@ export default class TopLevelUserView extends Vue {
           caption: this.$t("workspaces").toString(),
           variant: bootstrapVariantAttribute("info"),
           type: "link",
-          link: { type: "href", href: "https://admin.ozma.io", target: "_blank" },
+          link: { type: "href", href: "https://admin.ozma.io", target: "blank" },
         });
 
         if (Api.developmentMode) {
@@ -668,7 +668,7 @@ export default class TopLevelUserView extends Vue {
         icon: "perm_identity",
         caption: this.$t("account").toString(),
         type: "link",
-        link: { href: Api.accountUrl, type: "href", target: "_blank" },
+        link: { href: Api.accountUrl, type: "href", target: "blank" },
         variant: defaultVariantAttribute,
       });
       buttons.push({

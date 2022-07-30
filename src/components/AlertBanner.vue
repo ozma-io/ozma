@@ -1,9 +1,11 @@
 <i18n>
     {
         "en": {
+            "sign_up": "Sign Up",
             "invite_user": "Invite"
         },
         "ru": {
+            "sign_up": "Зарегистрироваться",
             "invite_user": "Пригласить"
         }
     }
@@ -25,6 +27,11 @@
         v-if="showInviteButton"
         class="invite-button"
         :button="inviteButton"
+      />
+      <ButtonItem
+        v-if="showSignUpButton"
+        class="sign-up-button"
+        :button="signUpButton"
       />
     </div>
   </b-alert>
@@ -52,6 +59,7 @@ export default class AlertBanner extends Vue {
   @Prop({ type: String, required: true }) message!: string;
   @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
   @Prop({ type: Boolean, default: false }) showInviteButton!: boolean;
+  @Prop({ type: Boolean, default: false }) showSignUpButton!: boolean;
 
   private get messageHtml() {
     return sanitize(this.message);
@@ -64,6 +72,16 @@ export default class AlertBanner extends Vue {
       variant: bootstrapVariantAttribute("success"),
       type: "callback",
       callback: () => eventBus.emit("show-invite-user-modal"),
+    };
+  }
+
+  private get signUpButton() {
+    return {
+      icon: "waving_hand",
+      caption: this.$t("sign_up").toString(),
+      variant: bootstrapVariantAttribute("success"),
+      type: "link",
+      link: { type: "href", href: "https://onboard.ozma.io/pm/ru", target: "blank" },
     };
   }
 }
@@ -83,9 +101,17 @@ export default class AlertBanner extends Vue {
     justify-content: space-between;
   }
 
-  .invite-button {
+  .invite-button,
+  .sign-up-button {
     margin: -1rem 0.5rem;
     padding: 0.25rem 1.25rem;
     align-self: center;
+  }
+
+  ::v-deep .sign-up-button .btn {
+    padding: 0.25rem 1.25rem;
+    margin: 0 0.5rem;
+    font-size: 1rem;
+    font-weight: normal;
   }
 </style>

@@ -56,7 +56,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 
 import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
-import { fieldToValueType, valueToText } from "@/values";
+import { fieldToValueType } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 import { ConvertedBoundAttributesMap } from "@/user_views/combined";
 
@@ -69,7 +69,6 @@ interface IArgumentInfo {
   isOptional: boolean;
   attributes: AttributesMap;
   attributeMappings: ConvertedBoundAttributesMap;
-  dirtyHackOrder: number;
 }
 
 @Component({ components: { FormControl } })
@@ -81,20 +80,13 @@ export default class ArgumentEditor extends Vue {
   @Prop({ type: String }) homeSchema!: string | undefined;
 
   private get args(): IArgumentInfo[] {
-    const unsortedArgs: IArgumentInfo[] = this.params.map((parameter, parI) => {
+    return this.params.map(parameter => {
       const attributes = this.attributes[parameter.name] ?? {};
       const attributeMappings = this.attributeMappings[parameter.name] ?? {};
       const rawCaption = attributes["caption"];
-      const caption = rawCaption ? valueToText(parameter.attributeTypes["caption"].type, rawCaption) : parameter.name;
+      const caption = rawCaption ? String(rawCaption) : parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
-
-      let dirtyHackOrder = parI;
-      const dirtyHackOrderRaw = attributes["dirty_hack_order"];
-      if (typeof dirtyHackOrderRaw === "number") {
-        console.error("Deprecated attribute `dirty_hack_order`. Arguments order is now preserved as-is.");
-        dirtyHackOrder = dirtyHackOrderRaw;
-      }
 
       return {
         name: parameter.name,
@@ -103,13 +95,10 @@ export default class ArgumentEditor extends Vue {
         fieldType: type,
         valueType: fieldToValueType(type),
         isOptional,
-        dirtyHackOrder,
         attributes,
         attributeMappings,
       };
     });
-
-    return unsortedArgs.sort((a, b) => a.dirtyHackOrder - b.dirtyHackOrder);
   }
 
   private updateArgument(argument: IArgumentInfo, rawValue: unknown) {

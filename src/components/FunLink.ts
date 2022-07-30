@@ -1,27 +1,9 @@
 import Vue from "vue";
+import { redirectClick } from "ozma-api";
 
 import { vueEmit } from "@/utils";
 import { Link, linkHandler, ILinkHandlerParams } from "@/links";
 import { IQuery } from "@/state/query";
-
-export const redirectClick = (e: MouseEvent, allowControlKeys?: boolean): boolean => {
-  // Copied from router-link's guardEvent
-  // don't redirect with control keys
-  if (!allowControlKeys && (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey)) {
-    return false;
-  }
-  // don't redirect when preventDefault called
-  if (e.defaultPrevented) {
-    return false;
-  }
-  // don't redirect on right click
-  if (e.button !== undefined && e.button !== 0) {
-    return false;
-  }
-
-  e.preventDefault();
-  return true;
-};
 
 export default Vue.component("FunLink", {
   functional: true,
@@ -54,28 +36,24 @@ export default Vue.component("FunLink", {
       link,
     };
 
-    const { handler, href } = linkHandler(linkHandlerParams);
+    const handler = linkHandler(linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
       e.stopPropagation();
-
-      if (context.props.link.target === "_blank") {
-        vueEmit(context, "click");
+      if (context.props.disabled || !redirectClick(e, handler.href === null)) {
         return;
       }
-      if (!redirectClick(e, href === null) || context.props.disabled) {
-        return;
-      }
+      e.preventDefault();
       vueEmit(context, "click");
-      void handler();
+      void handler.handler();
     } };
 
-    if (!context.props.noHref && href !== null) {
+    if (!context.props.noHref && handler.href !== null) {
       return createElement("a", {
         ...context.data,
         attrs: {
-          href,
-          target: context.props.link.target,
+          href: handler.href,
+          target: handler.target,
           rel: "noopener",
         },
         on: onHandlers,

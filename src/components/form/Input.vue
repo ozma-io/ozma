@@ -135,7 +135,7 @@ export default class Input extends Vue {
       link: {
         type: "href",
         href: this.textLink.href,
-        target: "_blank",
+        target: "blank",
       },
       variant: bootstrapVariantAttribute("outline-primary"),
     };

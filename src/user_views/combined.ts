@@ -6,7 +6,7 @@ import {
 } from "ozma-api";
 import { AddedRowId, IAddedEntry, IEntityChanges, IStagingEventHandler, IStagingState } from "@/state/staging_changes";
 import { mapMaybe, NeverError, tryDicts } from "@/utils";
-import { convertParsedRows, equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
+import { deserializeParsedRows, equalEntityRef, IUpdatedValue, valueFromRaw, valueIsNull, valueToText } from "@/values";
 import { Entries, EntriesRef, IEntriesState, IReferencedField } from "@/state/entries";
 
 import { IEntitiesState } from "../state/entities";
@@ -252,7 +252,7 @@ const clearUpdatedValue = (value: ICombinedValue) => {
   }
 };
 
-export const currentValue = (value: ICombinedValue) => "rawValue" in value ? value.rawValue : value.value;
+export const currentValue = (value: ICombinedValue | IExecutedValue) => "rawValue" in value ? value.rawValue : value.value;
 
 export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
   if (args.source.type === "named") {
@@ -262,9 +262,9 @@ export const homeSchema = (args: IUserViewArguments): SchemaName | null => {
   }
 };
 
-export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue): string => {
+export const valueToPunnedText = (valueType: ValueType, value: ICombinedValue | IExecutedValue): string => {
   if (value.pun !== undefined && value.pun !== null) {
-    return value.pun;
+    return String(value.pun);
   } else {
     return valueToText(valueType, currentValue(value));
   }
@@ -399,8 +399,9 @@ export interface IRowLoadState {
   complete: boolean;
 }
 
-const convertAttributeMapping = (typeName: string, mapping: IBoundMapping): IConvertedBoundMapping | null => {
-  if (typeName !== "string" && typeName !== "bool" && typeName !== "int" && typeName !== "uuid") {
+const convertAttributeMapping = (valueType: ValueType, mapping: IBoundMapping): IConvertedBoundMapping | null => {
+  const scalarValue = valueType.type === "array" ? valueType.subtype.type : valueType.type;
+  if (scalarValue !== "string" && scalarValue !== "bool" && scalarValue !== "int" && scalarValue !== "uuid") {
     return null;
   }
 
@@ -460,9 +461,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.oldCommittedRows = {};
     this.rowLoadState = params.rowLoadState;
 
-    if (this.attributes["disable_insert"]) {
-      // FIXME: when FOR UPDATE is implemented, set `insertable` to false instead.
-      params.info.mainEntity = undefined;
+    if (this.attributes["disable_insert"] && params.info.mainEntity) {
+      params.info.mainEntity.forInsert = false;
     }
     this.info = params.info;
     this.argumentsMap = Object.fromEntries(params.info.arguments.map(arg => [arg.name, arg]));
@@ -483,7 +483,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         return undefined;
       }
 
-      const newMapping = convertAttributeMapping(attrInfo.type.type, attrInfo.mapping);
+      const newMapping = convertAttributeMapping(attrInfo.type, attrInfo.mapping);
       return newMapping ? [attrName, newMapping] : undefined;
     }, [...Object.entries(col.attributeTypes), ...Object.entries(col.cellAttributeTypes)])));
 
@@ -493,8 +493,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           return undefined;
         }
 
-        const typeName = arg.attributeTypes[attrName].type.type;
-        const newMapping = convertAttributeMapping(attrInfo.type.type, attrInfo.mapping);
+        const newMapping = convertAttributeMapping(attrInfo.type, attrInfo.mapping);
         return newMapping ? [attrName, newMapping] : undefined;
       }, Object.entries(arg.attributeTypes)));
       return [arg.name, attrs];
@@ -511,7 +510,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.newRowsOrder = [];
     const mainEntity = this.info.mainEntity;
     if (oldLocal && mainEntity) {
-      const myAdded = this.storeChanges.changes[mainEntity.schema]?.[mainEntity.name]?.added;
+      const myAdded = this.storeChanges.changes[mainEntity.entity.schema]?.[mainEntity.entity.name]?.added;
       for (const addedId of oldLocal.newRowsOrder) {
         const newValues = myAdded?.[addedId];
         if (newValues) {
@@ -547,7 +546,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     this.extra = this.handler.createLocalUserView(this, oldViewExtra);
 
     if (this.rows) {
-      const mainRowOffsets: Record<RowId, number> | null = (this.info.mainEntity && oldLocal?.info.mainEntity && equalEntityRef(this.info.mainEntity, oldLocal.info.mainEntity)) ? {} : null;
+      const mainRowOffsets: Record<RowId, number> | null = (this.info.mainEntity && oldLocal?.info.mainEntity && equalEntityRef(this.info.mainEntity.entity, oldLocal.info.mainEntity.entity)) ? {} : null;
       this.rows.forEach((row, rowI) => {
         let oldRow: IExtendedRowCommon<ValueT, RowT> | undefined;
         if (row.oldAddedId !== undefined) {
@@ -655,7 +654,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   }
 
   private pushAddedEntry(id: AddedRowId, newValues: IAddedEntry, meta?: unknown): IAddedRow {
-    const eref = this.info.mainEntity!;
+    const mainEntity = this.info.mainEntity!;
 
     // We expect it to be filled with `extra` later. This is unsafe!
     const row = {
@@ -667,7 +666,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         const updateInfo = {
           field: column.mainField.field,
           fieldRef: {
-            entity: eref,
+            entity: mainEntity.entity,
             name: column.mainField.name,
           },
         };
@@ -707,12 +706,12 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   }
 
   trackAddedEntry(id: AddedRowId, meta?: unknown) {
-    const eref = this.info.mainEntity;
-    if (!eref) {
+    const mainEntity = this.info.mainEntity;
+    if (!mainEntity) {
       throw new Error("Impossible");
     }
 
-    const newValues = this.storeChanges.changes[eref.schema][eref.name].added[id];
+    const newValues = this.storeChanges.changes[mainEntity.entity.schema][mainEntity.entity.name].added[id];
     const row = this.pushAddedEntry(id, newValues, meta) as IExtendedAddedRow<ValueT, RowT>;
     Vue.set(row, "extra", this.handler.createAddedLocalRow(this, id, row, undefined, undefined, meta));
     row.values.forEach((value, colI) => {
@@ -773,7 +772,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   }
 
   deleteEntry(entityRef: IEntityRef, id: RowId, meta?: unknown) {
-    if (!this.info.mainEntity || !equalEntityRef(this.info.mainEntity, entityRef)) {
+    if (!this.info.mainEntity || !equalEntityRef(this.info.mainEntity.entity, entityRef)) {
       return;
     }
 
@@ -839,7 +838,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   }
 
   resetDeleteEntry(entityRef: IEntityRef, id: RowId, meta?: unknown) {
-    if (!this.info.mainEntity || !equalEntityRef(this.info.mainEntity, entityRef)) {
+    if (!this.info.mainEntity || !equalEntityRef(this.info.mainEntity.entity, entityRef)) {
       return;
     }
 
@@ -923,8 +922,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   }
 
   private makeEmptyRow(defaultRawValues: Record<string, unknown>): IRowCommon | null {
-    const eref = this.info.mainEntity;
-    if (!eref) return null;
+    const mainEntity = this.info.mainEntity;
+    if (!mainEntity || !mainEntity.forInsert) return null;
 
     const values = this.info.columns.map((info, colI) => {
       const columnAttrs = this.columnAttributes[colI];
@@ -948,7 +947,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
         const updateInfo = {
           field: info.mainField.field,
           fieldRef: {
-            entity: eref,
+            entity: mainEntity.entity,
             name: info.mainField.name,
           },
           id: 0,
@@ -990,7 +989,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   private prefetchUserViewInfo() {
     // Preload entities information.
     if (this.info.mainEntity) {
-      void this.store.dispatch("entities/getEntity", this.info.mainEntity);
+      void this.store.dispatch("entities/getEntity", this.info.mainEntity.entity);
     }
     if (this.rows !== null) {
       Object.values(this.info.domains).forEach(domain => {
@@ -1046,10 +1045,10 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
   private massageCurrentRows(rows: IExecutedRow[], oldLocal: ICombinedUserView<ValueT, RowT, ViewT> | null): ICombinedRow[] {
     const info = this.info;
 
-    const mainChanges = info.mainEntity ? this.storeChanges.changesForEntity(info.mainEntity) : null;
+    const mainChanges = info.mainEntity ? this.storeChanges.changesForEntity(info.mainEntity.entity) : null;
 
     // First step - convert values by type.
-    convertParsedRows(info, rows);
+    deserializeParsedRows(info, rows);
 
     // Second step - massage values into expected shape.
     rows.forEach((rawRow, rowI) => {

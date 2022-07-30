@@ -53,16 +53,15 @@ import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import { RowId } from "ozma-api";
-import { Moment } from "moment";
 
-import { mapMaybe, NeverError, replaceHtmlLinks, tryDicts } from "@/utils";
-import { dateFormat, valueIsNull, valueToText } from "@/values";
+import { mapMaybe, NeverError, tryDicts } from "@/utils";
+import { serializeValue, tryDeserializeValueFunction, valueIsNull, valueToText } from "@/values";
 import { UserView } from "@/components";
 import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import Board, { IColumn } from "@/components/kanban/Board.vue";
 import Errorbox from "@/components/Errorbox.vue";
 import { attrToLinkSelf, Link } from "@/links";
-import { currentValue, IRowCommon, rowKey, RowRef, valueToPunnedText } from "@/user_views/combined";
+import { currentValue, IRowCommon, rowKey, RowRef } from "@/user_views/combined";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { attrToQuery, IQuery } from "@/state/query";
 import type { ICard } from "@/components/kanban/Column.vue";
@@ -73,14 +72,21 @@ import {
   getColorVariantAttributeClassName,
   getColorVariantAttributeVariables,
 } from "@/utils_colors";
+import { formatValueToHtml } from "@/user_views/format";
 
 interface IGroupColumn {
   group: unknown;
 }
 
+interface IValueColumn {
+  id: unknown;
+  idKey: string;
+  name: string;
+}
+
 interface IEnumColumns {
   type: "enum";
-  values: string[];
+  values: IValueColumn[];
 }
 
 interface IReferenceColumn {
@@ -158,19 +164,21 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     if (this.groupIndex === null) {
       return null;
     }
-    const mainField = this.uv.info.columns[this.groupIndex].mainField;
+    const groupColumn = this.uv.info.columns[this.groupIndex];
+    const mainField = groupColumn.mainField;
+    const columnMappings = this.uv.columnAttributeMappings[this.groupIndex];
     const fieldType = mainField?.field.fieldType;
     if (fieldType?.type === "reference") {
       const rawColumns = this.uv.attributes["board_columns"];
-      if (!rawColumns || !(rawColumns instanceof Array)) {
+      if (!(rawColumns instanceof Array)) {
         return null;
       }
       const entriesRef: EntriesRef = {
         fetchBy: "domain",
-        entity: this.uv.info.mainEntity!,
+        entity: fieldType.entity,
         referencedBy: {
           field: {
-            entity: this.uv.info.mainEntity!,
+            entity: this.uv.info.mainEntity!.entity,
             name: mainField!.name,
           },
           rowId: null,
@@ -213,15 +221,34 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         columns,
       };
     } else if (fieldType?.type === "enum") {
-      let values: string[];
+      let ids: string[];
       const rawColumns = this.uv.attributes["board_columns"];
-      if (!rawColumns || !(rawColumns instanceof Array)) {
-        values = fieldType.values;
+      if (!(rawColumns instanceof Array)) {
+        ids = fieldType.values;
       } else {
-        values = mapMaybe(rawCol => {
+        ids = mapMaybe(rawCol => {
           const col = String(rawCol);
           return fieldType.values.includes(col) ? col : undefined;
         }, rawColumns);
+      }
+
+      let values: IValueColumn[];
+      const textMapping = columnMappings["text"];
+      if (textMapping) {
+        values = ids.map(id => {
+          let name: string;
+          const rawName = textMapping.entries[id];
+          if (rawName) {
+            name = String(rawName);
+          } else if (textMapping.default) {
+            name = String(textMapping.default);
+          } else {
+            name = id;
+          }
+          return { id, idKey: id, name };
+        });
+      } else {
+        values = ids.map(id => ({ id, idKey: id, name: id }));
       }
 
       return {
@@ -230,12 +257,43 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       };
     } else {
       const rawColumns = this.uv.attributes["board_columns"];
-      if (!rawColumns || !(rawColumns instanceof Array)) {
+      if (groupColumn.valueType.type === "array" || !(rawColumns instanceof Array)) {
         return null;
       } else {
+        // To support JSON arrays, which people use for some reason instead of regular arrays.
+        const convertFunc = tryDeserializeValueFunction(groupColumn.valueType) ?? R.identity;
+        const values = mapMaybe(val => {
+          if (val === null) {
+            return undefined;
+          } else if (typeof val === "object") {
+            const col = val as Record<string, unknown>;
+            const id = convertFunc(col["id"]);
+            const name = col["name"];
+            if (id !== undefined && name) {
+              return {
+                id,
+                idKey: String(serializeValue(groupColumn.valueType, id)),
+                name: String(name),
+              };
+            } else {
+              return undefined;
+            }
+          } else {
+            const converted = convertFunc(val);
+            if (converted !== undefined) {
+              return {
+                id: converted,
+                idKey: String(serializeValue(groupColumn.valueType, converted)),
+                name: valueToText(groupColumn.valueType, converted),
+              };
+            } else {
+              return undefined;
+            }
+          }
+        }, rawColumns);
         return {
           type: "enum",
-          values: [...new Set(rawColumns.map(String))],
+          values,
         };
       }
     }
@@ -296,12 +354,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     }
     const type = this.uv.info.columns[this.groupIndex!].valueType;
     const toGroupText = (card : ICard<IRowCard>) => {
-      // TODO: Not sure why is this needed; let's either document or remove it.
-      if (type.type === "date") {
-        return (card.card.group as Moment).format(dateFormat);
-      } else {
-        return valueToText(type, card.card.group);
-      }
+      return String(serializeValue(type, card.card.group));
     };
     return R.groupBy(toGroupText, cards);
   }
@@ -311,13 +364,13 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
     switch (this.columnsType.type) {
       case "enum":
-        return this.columnsType.values.map(name => ({
-          title: name,
-          key: name,
+        return this.columnsType.values.map(value => ({
+          title: value.name,
+          key: value.idKey,
           column: {
-            group: name,
+            group: value.id,
           },
-          cards: this.groupedCards[name] ?? [],
+          cards: this.groupedCards[value.idKey] ?? [],
         }));
       case "reference":
         return this.columnsType.columns.map(col => ({
@@ -347,13 +400,14 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   createCard(column: IGroupColumn, columnIndex: number) {
+    const groupInfo = this.uv.info.columns[this.groupIndex!];
     const modalQuery: IQuery = {
       args: {
         ...this.createView!.args,
       },
       defaultValues: {
         ...this.createView!.defaultValues,
-        [this.uv.info.columns[this.groupIndex!].name]: column.group,
+        [groupInfo.name]: serializeValue(groupInfo.valueType, column.group),
       },
       search: "",
       page: null,
@@ -367,12 +421,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     void this.addWindow(modalQuery);
   }
 
-  private async moveCard(columnIndex: number, card: IRowCard, newIndex: number) {
+  private async moveCard(card: IRowCard, newColumnIndex: number, newIndex: number) {
     if (this.orderIndex === null) {
       return;
     }
 
-    const cards = this.columns![columnIndex].cards;
+    const cards = this.columns![newColumnIndex].cards;
     let order: number;
     if (cards.length === 0) {
       order = 0;
@@ -394,7 +448,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
   }
 
   changeOrder(column: IGroupColumn, columnIndex: number, card: IRowCard, oldIndex: number, newIndex: number) {
-    void this.moveCard(columnIndex, card, newIndex > oldIndex ? newIndex + 1 : newIndex);
+    void this.moveCard(card, columnIndex, newIndex > oldIndex ? newIndex + 1 : newIndex);
   }
 
   changeGroup(newColumn: IGroupColumn, newColumnIndex: number, card: IRowCard, newIndex: number) {
@@ -402,8 +456,8 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       ...card.ref,
       column: this.groupIndex!,
     };
-    void this.moveCard(newColumnIndex, card, newIndex);
     void this.updateValue(ref, newColumn.group);
+    void this.moveCard(card, newColumnIndex, newIndex);
   }
 
   private makeCard(row: IRowCommon, rowRef: RowRef): ICard<IRowCard> {
@@ -416,6 +470,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     const columns = mapMaybe((value, colI): CardColumn | undefined => {
       const info = this.uv.info.columns[colI];
       const columnAttrs = this.uv.columnAttributes[colI];
+      const columnMappings = this.uv.columnAttributeMappings[colI];
       const cellAttrs = value.attributes;
       const getCellAttr = (name: string) => tryDicts(name, cellAttrs, columnAttrs, rowAttrs, viewAttrs);
 
@@ -429,13 +484,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         return undefined;
       }
 
-      const punnedValue = valueToPunnedText(info.valueType, value);
+      const textHtml = formatValueToHtml(info.valueType, value, { columnAttributeMappings: columnMappings });
       const icon = getCellAttr("icon");
       const colorCellVariant = colorVariantFromAttribute(getCellAttr("cell_variant"));
       return {
         type: "text",
-        value: punnedValue,
-        valueHtml: replaceHtmlLinks(punnedValue),
+        textHtml,
         size: 12,
         icon: icon ? String(icon) : null,
         cellVariantClass: getColorVariantAttributeClassName(colorCellVariant),

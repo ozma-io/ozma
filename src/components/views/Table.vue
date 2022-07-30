@@ -138,7 +138,7 @@
         }"
       >
         <div
-          :class="['pagination', { 'ml-auto': !uv.info.mainEntity }]"
+          :class="['pagination', { 'ml-auto': !uv.info.mainEntity?.forInsert }]"
           :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
         >
           <b-spinner
@@ -361,6 +361,7 @@ import { Button } from "@/components/buttons/buttons";
 import FormValueControl from "@/components/FormValueControl";
 import type TableCell from "./table/TableCell.vue";
 import { elementWindow, WindowKey } from "@/state/windows";
+import { formatValue } from "@/user_views/format";
 
 export interface IColumn {
   caption: string;
@@ -469,13 +470,14 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, oldLo
 const postInitCommonRow = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon) => {
   // Needs to be performant, hence this custom loop.
   let searchText = "";
-  for (const value of row.values) {
+  row.values.forEach((value, i) => {
+    const column = uv.info.columns[i];
     if (value.pun) {
       searchText += value.pun + "\0";
-    } else if (typeof value.value === "string") {
-      searchText += value.value + "\0";
+    } else {
+      searchText += formatValue(column.valueType, value) + "\0";
     }
-  }
+  });
   row.extra.searchText = searchText.toLocaleLowerCase();
 };
 
@@ -617,6 +619,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
       uv.extra.hasRowLinks = true;
     }
 
+    // We need to address rows for tree views, so we require `info`.
     if (value.info) {
       if (getCellAttr("tree_parent_ids")) {
         // Init indexes by ids
@@ -1622,12 +1625,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     // Don't reset it here to avoid button flickering.
     // this.showAddRowButtons = false;
 
-    if (!this.uv.info.mainEntity) {
+    if (!this.uv.info.mainEntity || !this.uv.info.mainEntity.forInsert) {
       this.showAddRowButtons = false;
       return;
     }
 
-    const entity = await this.getEntity(this.uv.info.mainEntity);
+    const entity = await this.getEntity(this.uv.info.mainEntity.entity);
     this.showAddRowButtons = entity?.access.insert ?? false;
   }
 

@@ -111,6 +111,7 @@
         <ValueSelect
           v-else-if="inputType.name === 'select'"
           ref="control"
+          :single="inputType.single"
           :value="value"
           :label="usedCaption"
           :options="inputType.options"
@@ -209,6 +210,8 @@
           :srcdoc="inputType.srcdoc"
           :value="value"
           :height="customHeight"
+          @update:value="updateValue($event)"
+          @goto="$emit('goto', $event)"
         />
         <div v-else-if="inputType.name === 'static_text'">
           {{ textValue }}
@@ -372,6 +375,7 @@ interface IMarkdownEditorType {
 interface ISelectType {
   name: "select";
   options: ISelectOption<unknown>[];
+  single: boolean;
 }
 
 interface IArrayType {
@@ -380,8 +384,8 @@ interface IArrayType {
 
 interface IArrayReferenceFieldType {
   name: "array_select";
-  optionsView: IQuery;
-  entity: IEntityRef | null;
+  optionsView: IQuery | null;
+  entity: IEntityRef;
 }
 
 interface IReferenceType {
@@ -683,6 +687,22 @@ export default class FormControl extends Vue {
     return { height };
   }
 
+  private getEnumOptions(values: string[]): ISelectOption<string>[] {
+    const textMapping = this.attributeMappings["text"];
+    return values.map(x => {
+      let label = x;
+      if (textMapping) {
+        const mappedLabel = textMapping.entries[x];
+        if (mappedLabel) {
+          label = String(mappedLabel);
+        } else if (textMapping.default) {
+          label = String(textMapping.default);
+        }
+      }
+      return { label, value: x };
+    });
+  }
+
   get inputType(): IType {
     const linkOpts = this.homeSchema ? { homeSchema: this.homeSchema } : undefined;
 
@@ -748,6 +768,28 @@ export default class FormControl extends Vue {
 
     if (this.fieldType) {
       switch (this.fieldType.type) {
+        case "array": {
+          switch (this.fieldType.subtype.type) {
+            case "reference": {
+              const optionsView = attrObjectToQuery(this.attributes["options_view"]);
+              return {
+                name: "array_select",
+                optionsView,
+                entity: this.fieldType.subtype.entity,
+              };
+            }
+            case "enum": {
+              const options = this.getEnumOptions(this.fieldType.subtype.values);
+              return {
+                name: "select",
+                single: false,
+                options,
+              };
+            }
+            default:
+              return { name: "array" };
+          }
+        }
         case "reference": {
           if (controlAttr === "qrcode") {
             return { name: "qrcode", ref: this.fieldType.entity };
@@ -794,45 +836,19 @@ export default class FormControl extends Vue {
           return refEntry;
         }
         case "enum": {
-          const textMapping = this.attributeMappings["text"];
-          const options = this.fieldType.values.map(x => {
-            let label = x;
-            if (textMapping) {
-              const mappedLabel = textMapping.entries[x];
-              if (mappedLabel) {
-                label = String(mappedLabel);
-              } else if (textMapping.default) {
-                label = String(textMapping.default);
-              }
-            }
-            return { label, value: x };
-          });
+          const options = this.getEnumOptions(this.fieldType.values);
           return {
             name: "select",
+            single: true,
             options,
           };
         }
         case "bool":
           return {
             name: "select",
+            single: true,
             options: this.isNullable ? booleanNullableOptions : booleanOptions,
           };
-        case "array": {
-          const optionsView = attrObjectToQuery(this.attributes["options_view"]);
-          // Deprecated because we have arrays of references as types now.
-          const wrappedReferencedEntity = entityRefSchema.safeParse(this.attributes["referenced_entity"]);
-          const subtypeEntity = this.fieldType.subtype.type === "reference" ? this.fieldType.subtype.entity : null;
-          const entity = wrappedReferencedEntity.success ? wrappedReferencedEntity.data : subtypeEntity;
-          if (optionsView !== null) {
-            return {
-              name: "array_select",
-              optionsView,
-              entity,
-            };
-          } else {
-            return { name: "array" };
-          }
-        }
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };
         // FIXME: Fix calendar field.
@@ -856,10 +872,15 @@ export default class FormControl extends Vue {
       }
     } else {
       switch (this.type.type) {
+        case "array":
+          return {
+            name: "array",
+          };
         case "bool":
           return {
             name: "select",
             options: this.isNullable ? booleanNullableOptions : booleanOptions,
+            single: true,
           };
         case "int":
           return { name: "text", type: "number", style: this.controlStyle() };

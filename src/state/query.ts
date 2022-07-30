@@ -77,9 +77,16 @@ export const attrObjectToQuery = (linkedAttr: unknown, opts?: IAttrToQueryOpts):
     }
   }
 
+  let rawDefaultValues: unknown;
+  if ("default_values" in linkedAttrObj) {
+    rawDefaultValues = linkedAttrObj["default_values"];
+  } else if ("defaultValues" in linkedAttrObj) {
+    rawDefaultValues = linkedAttrObj["defaultValues"];
+  }
+
   let defaultValues: Record<string, unknown>;
-  if (linkedAttrObj["default_values"]) {
-    const def = attrToRecord(linkedAttrObj["default_values"]);
+  if (rawDefaultValues) {
+    const def = attrToRecord(rawDefaultValues);
     if (def === null) {
       return null;
     }

@@ -281,9 +281,9 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
   };
   const paramsString = new URLSearchParams(params).toString();
 
-  const waitForLoad = Utils.gotoHref(`${authUrl}/auth?${paramsString}`);
-  commit("setPending", waitForLoad);
-  return waitForLoad;
+  window.open(`${authUrl}/auth?${paramsString}`, "_self");
+  commit("setPending", Utils.never);
+  return Utils.never;
 };
 
 const runProtectedCall = async <Args extends unknown[], Ret>({ state, commit, dispatch }: ActionContext<IAuthState, {}>, func: (token: string | null, ...args: Args) => Promise<Ret>, ...args: Args) => {
@@ -511,7 +511,7 @@ export const authModule: Module<IAuthState, {}> = {
       },
     },
     logout: async ({ state, commit }) => {
-      if (state.current === null) {
+      if (!(state.current instanceof CurrentAuth)) {
         throw new Error("Cannot logout without an existing token");
       }
 
@@ -519,14 +519,16 @@ export const authModule: Module<IAuthState, {}> = {
         return;
       }
 
-      const params = {
-        "redirect_uri": redirectUri(),
+      const params: Record<string, string> = {
+        "post_logout_redirect_uri": redirectUri(),
+        "client_id": authClientId,
+        "id_token_hint": state.current.idToken,
       };
       const paramsString = new URLSearchParams(params).toString();
       dropCurrentAuth();
-      const wait = Utils.gotoHref(`${authUrl}/logout?${paramsString}`);
-      commit("setPending", wait);
-      await wait;
+      window.open(`${authUrl}/logout?${paramsString}`, "_self");
+      commit("setPending", Utils.never);
+      await Utils.never;
     },
     login: async context => {
       await requestLogin(context, true);

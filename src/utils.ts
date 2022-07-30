@@ -34,6 +34,8 @@ export const waitForLoad = (): Promise<void> => new Promise((resolve, reject) =>
   addEventListener("load", ref.ref);
 });
 
+export const never: Promise<any> = new Promise(resolve => {});
+
 export const nextRender = (): Promise<void> => new Promise(resolve => {
   Vue.nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 });
@@ -731,11 +733,6 @@ export const saveToFile = (name: string, data: BlobPart[], options?: BlobPropert
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
-};
-
-export const gotoHref = (href: string): Promise<void> => {
-  window.location.href = href;
-  return waitForLoad();
 };
 
 const makeWordsRegex = () => {

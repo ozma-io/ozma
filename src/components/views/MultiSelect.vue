@@ -141,7 +141,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
   }
 
   get disabled() {
-    return !this.uv.info.mainEntity;
+    return !this.uv.info.mainEntity?.forInsert;
   }
 
   private async addValue(id: RowId) {
@@ -152,12 +152,12 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
     const row = this.selectedValuesWithPosition[index];
     if (row.type === "existing") {
       await this.deleteEntry({
-        entityRef: this.uv.info.mainEntity!,
+        entityRef: this.uv.info.mainEntity!.entity,
         id: row.id,
       });
     } else if (row.type === "added") {
       await this.resetAddedEntry({
-        entityRef: this.uv.info.mainEntity!,
+        entityRef: this.uv.info.mainEntity!.entity,
         id: row.addedId,
       });
     } else {

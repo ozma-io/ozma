@@ -94,11 +94,12 @@ import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/com
 import { getReferenceInfo } from "@/state/entries";
 import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
 import { EntityRef, IAttrToLinkOpts } from "@/links";
-import { convertParsedRows, serializeValue, valueFromRaw, valueToText } from "@/values";
+import { deserializeParsedRows, serializeValue, valueFromRaw } from "@/values";
 
 import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
 import { eventBus, IShowHelpModalArgs } from "@/main";
+import { formatValue } from "@/user_views/format";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -204,7 +205,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       if ("post_create_link" in uv.attributes) {
         disableAutoSave = true;
       } else if (uv.info.mainEntity) {
-        const entity = await this.getEntity(uv.info.mainEntity);
+        const entity = await this.getEntity(uv.info.mainEntity.entity);
         if (entity.hasInsertTriggers) {
           disableAutoSave = true;
         }
@@ -233,7 +234,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     if (this.businessModeEnabled) {
       this.showDeleteEntiesButton = !this.uv.attributes["business_mode_disable_delete"];
     } else {
-      const entity = await this.getEntity(this.uv.info.mainEntity);
+      const entity = await this.getEntity(this.uv.info.mainEntity.entity);
       this.showDeleteEntiesButton = entity?.access.delete ?? false;
     }
   }
@@ -264,7 +265,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         if (!fetched.complete) {
           throw new Error("Too many entries to export");
         }
-        convertParsedRows(fetched.info, fetched.rows!);
+        deserializeParsedRows(fetched.info, fetched.rows!);
         data = fetched;
       }
 
@@ -284,8 +285,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         row.values.forEach((cell, colI) => {
           const info = this.uv.info.columns[colI];
           // This makes export non-reversible, because we don't export reference IDs. Some clients ask for main fields in these columns though.
-          const value = cell.pun !== undefined ? valueToText(info.punType!, cell.pun) : valueToText(info.valueType, cell.value);
-          output += csvCell(value);
+          const textValue = formatValue(info.valueType, cell);
+          output += csvCell(textValue);
           if (colI < row.values.length - 1) {
             output += csvSeparator;
           }
@@ -308,7 +309,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     const streaming = Boolean(this.uv.attributes["csv_import_streaming"]);
     const skipEmptyRows = Boolean(this.uv.attributes["csv_import_skip_empty_rows"] ?? true);
 
-    const entityRef = this.uv.info.mainEntity!;
+    const entityRef = this.uv.info.mainEntity!.entity;
     const emptyRow = Object.fromEntries(mapMaybe((value, colI) => {
       if (value.value === undefined || value.value === null) {
         return undefined;
@@ -487,7 +488,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: "E-mail",
         icon: "email",
         type: "link",
-        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "_blank" },
+        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "blank" },
         variant: defaultVariantAttribute,
       });
     }
@@ -497,7 +498,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: "WhatsApp",
         icon: "phone",
         type: "link",
-        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "_blank" },
+        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "blank" },
         variant: defaultVariantAttribute,
       });
     }
@@ -507,7 +508,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         caption: "Telegram",
         icon: "send",
         type: "link",
-        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "_blank" },
+        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "blank" },
         variant: defaultVariantAttribute,
       });
     }
@@ -591,7 +592,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       });
     }
 
-    if (typeof this.uv.info.mainEntity === "object" && this.showDefaultActions) {
+    if (typeof this.uv.info.mainEntity?.forInsert && this.showDefaultActions) {
       buttons.push({
         icon: "file_upload",
         caption: this.$t("import_from_csv").toString(),

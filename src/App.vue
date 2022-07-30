@@ -20,6 +20,7 @@
       v-if="bannerMessage"
       :message="bannerMessage"
       :show-invite-button="showInviteButtonInBanner"
+      :show-sign-up-button="showSignUpButtonInBanner"
       :color-variables="bannerColorVariables"
       @banner-close="onBannerClose"
     />
@@ -52,6 +53,7 @@
         @closed="onHelpModalClose"
         @dismiss="dismissHelpPage"
         @dismiss-all="dismissAllHelpPages"
+        @goto="pushRoot"
       />
 
       <template v-if="authErrors.length > 0">
@@ -84,12 +86,14 @@ import InviteUserModal from "./components/InviteUserModal.vue";
 import { EntityRef } from "./links";
 import { safeJsonParse } from "./utils";
 import { equalEntityRef } from "./values";
+import { IQuery } from "./state/query";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
 const errors = namespace("errors");
 const staging = namespace("staging");
 const windows = namespace("windows");
+const query = namespace("query");
 
 @Component({
   components: {
@@ -101,15 +105,16 @@ const windows = namespace("windows");
   },
 })
 export default class App extends Vue {
+  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
   @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
   @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
+  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
 
   private helpPageInfo: {
     key: string | null;
@@ -322,6 +327,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   private get showInviteButtonInBanner() {
     return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.authToken !== null;
+  }
+
+  private get showSignUpButtonInBanner() {
+    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false) && this.authToken === null;
   }
 
   private get fontSize(): number {

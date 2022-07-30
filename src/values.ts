@@ -1,4 +1,4 @@
-import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow, IResultViewInfo, ScalarFieldType, IScalarSimpleType } from "ozma-api";
+import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow, IResultViewInfo, ScalarFieldType, IScalarSimpleType, SimpleType } from "ozma-api";
 import moment, { Moment, Duration, MomentInput, DurationInputArg1 } from "moment";
 
 import { deepEquals } from "@/utils";
@@ -37,6 +37,7 @@ export interface IUpdatedValue {
 }
 
 // Should be in sync with `valueFromRaw` and be idempotent.
+// TODO: deprecate this in favor of customizable `formatValue`.
 export const valueToText = (valueType: ValueType, value: unknown): string => {
   if (typeof value === "string") {
     return value;
@@ -152,13 +153,13 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
       {
         const date = moment(value as MomentInput, dateFormat, true);
         if (date.isValid()) {
-          return date.local();
+          return date;
         }
       }
       {
         const date = moment(value as MomentInput, localDateFormat, true);
         if (date.isValid()) {
-          return date.local();
+          return date;
         }
       }
       return undefined;
@@ -205,35 +206,80 @@ export const valueFromRaw = ({ fieldType, isNullable }: IFieldInfo, rawValue: un
   }
 };
 
-export const convertParsedRows = (info: IResultViewInfo, rows: IExecutedRow[]) => {
+const deserializeScalarValueFunction = (scalarType: SimpleType): ((value: unknown) => unknown) | null => {
+  if (scalarType === "datetime") {
+    return value => moment.utc(value as MomentInput, true);
+  } else if (scalarType === "localdatetime" || scalarType === "date") {
+    return value => moment(value as MomentInput, true);
+  } else if (scalarType === "interval") {
+    return value => moment.duration(value as DurationInputArg1);
+  } else {
+    return null;
+  }
+};
+
+export const deserializeValueFunction = (valueType: ValueType): ((value: unknown) => unknown) | null => {
+  if (valueType.type === "array") {
+    const deserializeItem = deserializeScalarValueFunction(valueType.subtype.type);
+    if (deserializeItem) {
+      return value => (value as unknown[]).map(deserializeItem);
+    } else {
+      return null;
+    }
+  } else {
+    return deserializeScalarValueFunction(valueType.type);
+  }
+};
+
+const tryDeserializeScalarValueFunction = (scalarType: SimpleType): ((value: unknown) => unknown | undefined) | null => {
+  if (scalarType === "datetime") {
+    return value => {
+      const conv = moment.utc(value as MomentInput, true);
+      return conv.isValid() ? conv : undefined;
+    };
+  } else if (scalarType === "localdatetime" || scalarType === "date") {
+    return value => {
+      const conv = moment(value as MomentInput, true);
+      return conv.isValid() ? conv : undefined;
+    };
+  } else if (scalarType === "interval") {
+    return value => {
+      const conv = moment.duration(value as DurationInputArg1);
+      return conv.isValid() ? conv : undefined;
+    };
+  } else {
+    return null;
+  }
+};
+
+export const tryDeserializeValueFunction = (valueType: ValueType): ((value: unknown) => unknown | undefined) | null => {
+  if (valueType.type === "array") {
+    const deserializeItem = tryDeserializeScalarValueFunction(valueType.subtype.type);
+    if (deserializeItem) {
+      return value => (value as unknown[]).map(deserializeItem);
+    } else {
+      return null;
+    }
+  } else {
+    return tryDeserializeScalarValueFunction(valueType.type);
+  }
+};
+
+export const deserializeParsedRows = (info: IResultViewInfo, rows: IExecutedRow[]) => {
   info.columns.forEach((columnInfo, colI) => {
-    const columnType = columnInfo.valueType.type;
-    if (columnType === "datetime") {
-      rows.forEach(row => {
+    const deserializeOne = deserializeValueFunction(columnInfo.valueType);
+    if (deserializeOne) {
+      for (const row of rows) {
         const cell = row.values[colI];
         if (cell.value) {
-          cell.value = moment.utc(cell.value as MomentInput);
+          cell.value = deserializeOne(cell.value);
         }
-      });
-    } else if (columnType === "localdatetime" || columnType === "date") {
-      rows.forEach(row => {
-        const cell = row.values[colI];
-        if (cell.value) {
-          cell.value = moment(cell.value as MomentInput);
-        }
-      });
-    } else if (columnType === "interval") {
-      rows.forEach(row => {
-        const cell = row.values[colI];
-        if (cell.value) {
-          cell.value = moment.duration(cell.value as DurationInputArg1);
-        }
-      });
+      }
     }
   });
 };
 
-export const serializeValue = (fieldType: FieldType, value: Exclude<unknown, undefined>): unknown => {
+export const serializeValue = (fieldType: FieldType | ValueType, value: Exclude<unknown, undefined>): unknown => {
   if (value === null) {
     return null;
   }

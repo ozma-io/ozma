@@ -48,7 +48,7 @@
       :fixed-left="fixedColumnPositions[i]"
       :show-tree="showTree"
       :height="height"
-      :show-add-child="uv.info.mainEntity !== undefined"
+      :show-add-child="Boolean(uv.emptyRow)"
       @cell-click="$emit('cell-click', tableColI, arguments[0], arguments[1])"
       @cell-mousedown="$emit('cell-mousedown', tableColI, arguments[0], arguments[1])"
       @cell-mouseover="$emit('cell-mouseover', tableColI, arguments[0], arguments[1])"

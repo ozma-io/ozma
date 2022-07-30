@@ -181,9 +181,9 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
   }
 
   private async sendMessage() {
-    const entity = this.uv.info.mainEntity;
-    if (!entity) {
-      throw new Error("View doesn't have a main entity");
+    const mainEntity = this.uv.info.mainEntity;
+    if (!mainEntity || !mainEntity.forInsert) {
+      throw new Error("View doesn't have a main entity to insert");
     }
     const id = await this.addNewRow();
     const fields = [
@@ -213,7 +213,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
       if (fieldName) {
         return this.setAddedField({
           fieldRef: {
-            entity,
+            entity: mainEntity.entity,
             name: fieldName,
           },
           id,

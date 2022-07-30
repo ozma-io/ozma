@@ -83,7 +83,7 @@ export const baseUserViewHandler: IUserViewHandler<IBaseValueExtra, IBaseRowExtr
 
   createLocalRow(uv: IBaseCombinedUserView, rowIndex: number, row: ICombinedRow, oldView?: IBaseViewExtra, oldRow?: IBaseRowExtra) {
     const selectionEntry = uv.info.mainEntity ? {
-      entity: uv.info.mainEntity,
+      entity: uv.info.mainEntity.entity,
       id: row.mainId!,
     } : null;
     const selected = (oldRow?.selected ?? false) && !row.deleted;
@@ -272,25 +272,25 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
     if (!this.uv.info.mainEntity) {
       throw new Error("View doesn't have a main entity");
     }
-    const entity = this.uv.info.mainEntity;
+    const entityRef = this.uv.info.mainEntity.entity;
 
     if (ref.type === "added") {
       const row = this.uv.newRows[ref.id];
       if (row.newId !== undefined) {
         void this.deleteEntry({
-          entityRef: entity,
+          entityRef,
           id: row.newId,
         });
       } else {
         void this.resetAddedEntry({
-          entityRef: entity,
+          entityRef,
           id: ref.id,
         });
       }
     } else if (ref.type === "existing") {
       const rows = this.uv.rows!;
       const row = rows[ref.position];
-      if (row.mainSubEntity !== undefined && !equalEntityRef(row.mainSubEntity, entity)) {
+      if (row.mainSubEntity !== undefined && !equalEntityRef(row.mainSubEntity, entityRef)) {
         const message = "Row from a child entity cannot be deleted from user view with parent main entity";
         this.setError({ key: this.uid, error: message });
         throw new Error(message);
@@ -298,7 +298,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
         this.resetErrors(this.uid);
       }
       void this.deleteEntry({
-        entityRef: entity,
+        entityRef,
         id: row.mainId!,
       });
     } else {
@@ -335,15 +335,15 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
       return -1;
     }
 
-    const entity = this.uv.info.mainEntity;
-    if (!entity) {
-      throw new Error("View doesn't have a main entity");
+    const mainEntity = this.uv.info.mainEntity;
+    if (!mainEntity?.forInsert) {
+      throw new Error("View doesn't have an insertable main entity");
     }
 
     // FIXME: Theoretical race condition with another addEntry because it's async
     const id = await this.addEntry({
       scope: this.scope,
-      entityRef: entity,
+      entityRef: mainEntity.entity,
       meta,
     });
     await Promise.all(this.uv.emptyRow!.values.map(async (cell, colI) => {
@@ -352,7 +352,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
       if (columnInfo.mainField && !valueIsNull(currValue)) {
         await this.setAddedField({
           fieldRef: {
-            entity,
+            entity: mainEntity.entity,
             name: columnInfo.mainField.name,
           },
           id,
@@ -400,8 +400,8 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
         return ref;
       }
       case "new": {
-        const entity = this.uv.info.mainEntity;
-        if (!entity) {
+        const entityRef = this.uv.info.mainEntity?.entity;
+        if (!entityRef) {
           throw new Error("View doesn't have a main entity");
         }
         if (!this.uv.info.columns[ref.column].mainField) {
@@ -419,7 +419,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
 
         await this.setAddedField({
           fieldRef: {
-            entity,
+            entity: entityRef,
             name: fieldName,
           },
           id,

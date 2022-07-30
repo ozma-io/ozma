@@ -23,12 +23,14 @@
     class="iframe-container"
     :style="style"
   >
-    <iframe
-      ref="iframe"
-      class="iframe"
-      sandbox="allow-scripts allow-top-navigation"
-      :srcdoc="markup !== null ? markup : srcdoc"
+    <EmbeddedContainer
+      :srcdoc="iframeRef ? markup : srcdoc"
       :src="src"
+      :value="value"
+      is-control
+      @goto="$emit('goto', $event)"
+      @update:height="updateHeight"
+      @update:value="$emit('update:value', $event)"
     />
   </div>
 </template>
@@ -40,23 +42,9 @@ import { IViewExprResult } from "ozma-api";
 
 import Api, { IIframeRef } from "@/api";
 import Errorbox from "@/components/Errorbox.vue";
+import EmbeddedContainer from "./EmbeddedContainer.vue";
 
-export type MessageFromIframe =
-  | {
-    name: "ready";
-  }
-  | {
-    name: "changeHeight";
-    payload: number;
-  };
-
-export type MessageToIframe =
-  | {
-    name: "updateValue";
-    payload: any;
-  };
-
-@Component({ components: { Errorbox } })
+@Component({ components: { Errorbox, EmbeddedContainer } })
 export default class IframeControl extends Vue {
   @Prop({ type: String }) src!: string | undefined;
   @Prop({ type: String }) srcdoc!: string | undefined;
@@ -69,9 +57,10 @@ export default class IframeControl extends Vue {
   private requestedHeight: number | null = null;
   private markup: string | null | undefined = null; // `undefined` here means that markup is not found.
 
-  @Watch("markupName", { immediate: true })
+  @Watch("iframeRef", { immediate: true })
   private async loadMarkup() {
     if (this.iframeRef === undefined) return;
+    this.requestedHeight = null;
 
     const uvRef = { schema: "funapp", name: "iframe_markup_by_name" };
     const res = await this.callProtectedApi({
@@ -81,48 +70,15 @@ export default class IframeControl extends Vue {
     this.markup = res.result.rows[0]?.values[0].value as string | undefined;
   }
 
+  private updateHeight(newHeight: number) {
+    this.requestedHeight = newHeight;
+  }
+
   @Watch("src")
   @Watch("srcdoc")
-  private watchValue(newValue: string | null) {
-    if (newValue !== null) {
-      this.markup = null;
-    }
-  }
-
-  private iframeEventHandler(event: MessageEvent<any>) {
-    if (event.source !== (this.$refs.iframe as HTMLIFrameElement | undefined)?.contentWindow) return;
-
-    if (event.data.name === "ready") {
-      this.sendValue();
-    }
-
-    if (event.data.name === "changeHeight" && typeof event.data?.payload === "number") {
-      /* TODO FIXME: When height is set as iframe's `document.body.clientHeight`,
-         there are overflow and scrollbar in Firefox but not in Chrome or Safari. */
-      this.requestedHeight = event.data.payload;
-    }
-  }
-
-  private created() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    window.addEventListener("message", this.iframeEventHandler);
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  private destroyed() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    window.removeEventListener("message", this.iframeEventHandler);
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  private sendMessage(message: MessageToIframe) {
-    const ref = this.$refs.iframe as HTMLIFrameElement | undefined;
-    ref?.contentWindow?.postMessage(message, "*");
-  }
-
-  @Watch("value")
-  private sendValue() {
-    this.sendMessage({ name: "updateValue", payload: this.value });
+  private watchValue() {
+    this.markup = null;
+    this.requestedHeight = null;
   }
 
   private get style() {

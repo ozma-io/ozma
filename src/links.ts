@@ -4,14 +4,18 @@ import { z } from "zod";
 
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
-import { gotoHref, randomId, shortLanguage, waitTimeout } from "@/utils";
+import { randomId, shortLanguage, waitTimeout } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
 import { router } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
 import { documentGeneratorUrl, IDocumentRef, instanceName } from "@/api";
 
-export const hrefTargetTypes = ["_top", "_blank", "_self", "_parent"] as const;
+export const hrefTargetTypes = ["blank", "self"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
+
+const isHrefTargetType = (rawType: unknown): rawType is HrefTargetType => {
+  return hrefTargetTypes.includes(rawType as any);
+};
 
 export interface IHrefLink {
   href: string;
@@ -19,10 +23,11 @@ export interface IHrefLink {
   target: HrefTargetType;
 }
 
-export type TargetType = "top" | "root" | "modal" | "blank" | "modal-auto";
+export const targetTypes = ["top", "root", "modal", "blank", "modal-auto"] as const;
+export type TargetType = typeof targetTypes[number];
 
 const isTargetType = (rawType: unknown): rawType is TargetType => {
-  return rawType === "top" || rawType === "root" || rawType === "modal" || rawType === "blank" || rawType === "modal-auto";
+  return targetTypes.includes(rawType as any);
 };
 
 export interface IQueryLink {
@@ -70,7 +75,7 @@ const messages: Record<string, Record<string, string>> = {
 };
 const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
-export const addLinkDefaultArgs = (link: Link, args: Record<string, unknown>) => {
+export const addLinkDefaultArgs = (link: Link, args: object) => {
   if ("args" in link) {
     link.args = { ...args, ...link.args };
   } else if ("query" in link && link.query.args.args) {
@@ -83,13 +88,14 @@ export const EntityRef = z.object({
   name: z.string(),
 });
 
-const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQueryLink | null => {
+export const attrToQueryLink = (linkedAttr: object, opts?: IAttrToLinkOpts): IQueryLink | null => {
   const query = attrObjectToQuery(linkedAttr, opts);
   if (query === null) {
     return null;
   }
 
-  const targetAttr = linkedAttr["target"];
+  const attrDict = linkedAttr as Record<string, unknown>;
+  const targetAttr = attrDict["target"];
   let target: TargetType;
   if (isTargetType(targetAttr)) {
     target = targetAttr;
@@ -102,19 +108,20 @@ const attrToQueryLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLink
   return { query, target, type: "query" };
 };
 
-export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IActionLink | null => {
-  const action = attrToRef(linkedAttr["action"]);
+export const attrToActionLink = (linkedAttr: object, opts?: IAttrToLinkOpts): IActionLink | null => {
+  const attrDict = linkedAttr as Record<string, unknown>;
+  const action = attrToRef(attrDict["action"]);
   if (action === null) {
     return null;
   }
 
-  let args = attrToRecord(linkedAttr["args"]);
+  let args = attrToRecord(attrDict["args"]);
   if (args === null) {
     return null;
   }
 
-  const display = linkedAttr["display"];
-  const addIds = linkedAttr["add_selected_entry_ids"]; // TODO: deprecated, delete this.
+  const display = attrDict["display"];
+  const addIds = attrDict["add_selected_entry_ids"]; // TODO: deprecated, delete this.
   if (addIds || display === "selection_panel" || display === "selectionPanel") {
     args = { ...opts?.defaultActionArgs, ...args };
   }
@@ -122,21 +129,17 @@ export const attrToActionLink = (linkedAttr: Record<string, unknown>, opts?: IAt
   return { action, args, type: "action" };
 };
 
-export const attrToQRCodeLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IQRCodeLink | null => {
+export const attrToQRCodeLink = (linkedAttr: object, opts?: IAttrToLinkOpts): IQRCodeLink | null => {
+  const attrDict = linkedAttr as Record<string, unknown>;
   const qrСodeLink: IQRCodeLink = {
     links: {},
     type: "qrcode",
   };
 
-  if (typeof linkedAttr !== "object" || linkedAttr === null) {
+  const linksObj = attrDict["qrcode"];
+  if (typeof linksObj !== "object" || linksObj === null) {
     return null;
   }
-
-  if (!("qrcode" in linkedAttr) || linkedAttr.qrcode === null) {
-    return null;
-  }
-
-  const linksObj = linkedAttr.qrcode as Record<string, unknown>;
 
   Object.entries(linksObj).forEach(([schema, sRecoreds]) => {
     if (typeof sRecoreds !== "object" || sRecoreds === null) {
@@ -185,6 +188,14 @@ export const attrToDocumentLink = (linkedAttr: Record<string, unknown>, opts?: I
 };
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
+  if (typeof linkedAttr === "string") {
+    return {
+      type: "href",
+      href: linkedAttr,
+      target: "self",
+    };
+  }
+
   if (typeof linkedAttr !== "object" || linkedAttr === null) {
     return null;
   }
@@ -197,9 +208,12 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
 
   const href = linkedAttrObj["href"];
   if (typeof href === "string") {
-    const targetRaw = "_" + linkedAttrObj["target"];
-    const target = hrefTargetTypes.includes(targetRaw as HrefTargetType) ? targetRaw as HrefTargetType : "_self";
-    return { href, type: "href", target };
+    const target = isHrefTargetType(linkedAttrObj["target"]) ? linkedAttrObj["target"] : "self";
+    return {
+      type: "href",
+      href,
+      target,
+    };
   }
 
   const action = attrToActionLink(linkedAttrObj, opts);
@@ -252,7 +266,9 @@ export const iconValue = (target: string) => {
 
 export interface ILinkHandler {
   handler: () => Promise<void>;
-  href: string | null;
+  href?: string;
+  target?: string;
+  rel?: string;
 }
 
 export interface ILinkHandlerParams {
@@ -265,10 +281,17 @@ export interface ILinkHandlerParams {
 
 export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
   let handler: () => Promise<void>;
-  let href: string | null = null;
+  let href: string | undefined;
+  // HTML <a> target, with underscores.
+  let target: string | undefined;
+  let rel: string | undefined;
 
   if (params.link.type === "query") {
     const query = params.link.query;
+    // We always point href to just the location itself, for simplicity.
+    href = router.resolve(queryLocation(query)).href;
+    rel = "noopener";
+
     if (params.link.target === "modal") {
       handler = async () => {
         await params.store.dispatch("query/addWindow", query);
@@ -284,9 +307,10 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         await params.store.dispatch("query/pushRoot", query);
       };
     } else if (params.link.target === "blank") {
+      target = "_blank";
       // eslint-disable-next-line @typescript-eslint/require-await
       handler = async () => {
-        window.open(href!, "_blank");
+        window.open(href!, target, rel);
       };
     } else if (params.link.target === "modal-auto") {
       handler = async () => {
@@ -300,15 +324,21 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
     } else {
       throw new Error("Impossible");
     }
-
-    href = router.resolve(queryLocation(query)).href;
   } else if (params.link.type === "href") {
-    const curHref = params.link.href;
+    href = params.link.href;
+    rel = "noreferrer";
 
+    if (params.link.target === "self") {
+      target = "_self";
+    } else if (params.link.target === "blank") {
+      target = "_blank";
+    } else {
+      throw new Error("Impossible");
+    }
+    // eslint-disable-next-line @typescript-eslint/require-await
     handler = async () => {
-      await gotoHref(curHref);
+      window.open(href!, target, rel);
     };
-    href = curHref;
   } else if (params.link.type === "action") {
     const { action, args } = params.link;
 
@@ -385,5 +415,5 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
   } else {
     throw new Error("Impossible");
   }
-  return { handler, href };
+  return { handler, href, target, rel };
 };
