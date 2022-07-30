@@ -186,7 +186,7 @@
       />
 
       <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
-      <b-overlay
+      <FunOverlay
         ref="overlayRef"
         class="userview-overlay"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
@@ -196,8 +196,6 @@
         rounded="sm"
         :z-index="30"
         :infinite-wrapper="isRoot"
-        @shown="handleArgumentOverlayShown"
-        @hidden="handleArgumentOverlayHidden"
       >
         <template #overlay>
           <div class="overlay-content">
@@ -250,7 +248,7 @@
             @load-entries="loadEntries"
           />
         </transition>
-      </b-overlay>
+      </FunOverlay>
     </template>
 
     <Errorbox
@@ -306,6 +304,7 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import FunOverlay from "@/components/FunOverlay.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
@@ -426,6 +425,7 @@ const loadingState: IUserViewLoading = { state: "loading", args: null };
   ArgumentEditor,
   Errorbox,
   ButtonItem,
+  FunOverlay,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -694,34 +694,6 @@ export default class UserView extends Vue {
     } else {
       return { ...this.defaultArguments, ...this.initialArguments, ...this.updatedArguments };
     }
-  }
-
-  private onOverlayScroll() {
-    const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
-    const left = overlayElement?.scrollLeft ?? 0;
-    const top = overlayElement?.scrollTop ?? 0;
-    // `z-index: 30` to work well with popups from ArgumentEditor.
-    (overlayElement.querySelector(".b-overlay") as HTMLElement).style.cssText =
-      `width: 100%; height: 100%; left: ${left}px; top: ${top}px; z-index: 30;`;
-  }
-
-  private handleArgumentOverlayShown() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
-    if (overlayElement) {
-      overlayElement.addEventListener("scroll", this.onOverlayScroll);
-      this.onOverlayScroll();
-    }
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  private handleArgumentOverlayHidden() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
-    if (overlayElement) {
-      overlayElement.removeEventListener("scroll", this.onOverlayScroll);
-    }
-    /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   private clearUpdatedArguments() {
@@ -1207,12 +1179,6 @@ export default class UserView extends Vue {
 
   .userview-argument-editor {
     flex: 0 0 auto;
-  }
-
-  .userview-overlay {
-    flex: 1 1;
-    width: 100%;
-    overflow-x: auto;
   }
 
   .loading-container {
