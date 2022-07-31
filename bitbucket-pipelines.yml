@@ -11,7 +11,8 @@ pipelines:
             - yarn
           script:
             - git submodule update --init
-            - ./build.sh
+            # - ./build.sh
+            - mkdir dist && touch dist/kek
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             - pipe: ozma/upload-artifact:master
               variables:
@@ -25,7 +26,7 @@ pipelines:
             - yarn
           script:
             - git submodule update --init
-            - ./lint.sh
+            # - ./lint.sh
 
   pull-requests:
     '**':
