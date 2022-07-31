@@ -13,7 +13,7 @@ pipelines:
           script:
             - git submodule update --init
             - ./build.sh
-            - pipe: ozma/upload-artifact
+            - pipe: ozma/upload-artifact:master
               variables:
                 LOCAL_PATH: dist
           artifacts:
@@ -39,14 +39,14 @@ pipelines:
           image: atlassian/default-image:2
           deployment: test
           script:
-            - pipe: ozma/deploy-artifact
+            - pipe: ozma/deploy-artifact:master
       - step:
           name: Deploy to production
           image: atlassian/default-image:2
           deployment: production
           trigger: manual
           script:
-            - pipe: ozma/deploy-artifact
+            - pipe: ozma/deploy-artifact:master
 
 definitions:
   caches:
