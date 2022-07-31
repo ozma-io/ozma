@@ -21,7 +21,6 @@ pipelines:
           name: Lint FunApp
           image: node:lts
           caches:
-            - node
             - yarn
           script:
             - git submodule update --init
