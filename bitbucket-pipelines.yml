@@ -14,7 +14,7 @@ pipelines:
             # - ./build.sh
             - mkdir dist && touch dist/kek
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
-            - pipe: ozma/upload-artifact:master
+            - pipe: docker://myprocessx/upload-artifact:latest # ozma/upload-artifact:master
               variables:
                 LOCAL_PATH: dist
           artifacts:
