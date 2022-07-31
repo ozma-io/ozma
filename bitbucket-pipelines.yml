@@ -9,6 +9,7 @@ pipelines:
           size: 2x
           caches:
             - node
+            - node-ozma-api
             - yarn
           script:
             - git submodule update --init
@@ -23,6 +24,7 @@ pipelines:
           image: node:lts
           caches:
             - node
+            - node-ozma-api
             - yarn
           script:
             - git submodule update --init
@@ -51,3 +53,4 @@ pipelines:
 definitions:
   caches:
     yarn: /usr/local/share/.cache/yarn
+    node-ozma-api: 3rdparty/ozma-api/node_modules
