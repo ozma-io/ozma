@@ -12,6 +12,7 @@ pipelines:
           script:
             - git submodule update --init
             - ./build.sh
+            - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             - pipe: ozma/upload-artifact:master
               variables:
                 LOCAL_PATH: dist
@@ -34,16 +35,16 @@ pipelines:
       - parallel: *build_steps
       - step:
           name: Deploy to test
-          image: atlassian/default-image:2
           deployment: test
           script:
+            - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             - pipe: ozma/deploy-artifact:master
       - step:
           name: Deploy to production
-          image: atlassian/default-image:2
           deployment: production
           trigger: manual
           script:
+            - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             - pipe: ozma/deploy-artifact:master
 
 definitions:
