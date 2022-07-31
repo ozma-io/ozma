@@ -8,22 +8,25 @@ pipelines:
           image: node:lts
           size: 2x
           caches:
-            - node-funapp
+            - node
             - yarn
           script:
             - git submodule update --init
-            - cd FunApp && ./build.sh
+            - ./build.sh
+            - pipe: ozma/upload-artifact
+              variables:
+                LOCAL_PATH: dist
           artifacts:
-            - FunApp/dist/**
+            - artifact.json
       - step:
           name: Lint FunApp
           image: node:lts
           caches:
-            - node-funapp
+            - node
             - yarn
           script:
             - git submodule update --init
-            - cd FunApp && ./lint.sh
+            - ./lint.sh
 
   pull-requests:
     '**':
@@ -36,16 +39,15 @@ pipelines:
           image: atlassian/default-image:2
           deployment: test
           script:
-            - dev/deploy.sh bitbucket@manager.services.ozma.io development
+            - pipe: ozma/deploy-artifact
       - step:
           name: Deploy to production
           image: atlassian/default-image:2
           deployment: production
           trigger: manual
           script:
-            - dev/deploy.sh bitbucket@manager.services.ozma.io production
+            - pipe: ozma/deploy-artifact
 
 definitions:
   caches:
-    node-funapp: FunApp/node_modules
     yarn: /usr/local/share/.cache/yarn
