@@ -31,6 +31,9 @@
             "enable_development_mode": "Enable development mode",
             "disable_development_mode": "Disable development mode",
             "development_mode_indicator": "Development mode is on",
+            "change_language": "Language",
+            "en": "English",
+            "ru": "Russian (Русский)",
             "authed_link": "Copy link with authorization"
         },
         "ru": {
@@ -64,6 +67,9 @@
             "enable_development_mode": "Включить режим разработки",
             "disable_development_mode": "Выключить режим разработки",
             "development_mode_indicator": "Включён режим разработки",
+            "change_language": "Язык",
+            "en": "Английский (English)",
+            "ru": "Русский",
             "authed_link": "Скопировать ссылку с авторизацией"
         }
     }
@@ -341,6 +347,7 @@ export default class TopLevelUserView extends Vue {
   @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: IThemeRef) => Promise<void>;
   @staging.State("autoSaveLocks") autoSaveLocks!: Object | null;
   @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
+  @settings.Action("writeUserSettings") writeUserSettings!: (setting: { name: string; value: string }) => Promise<void>;
 
   private statusLine = "";
   private enableFilter = false;
@@ -403,7 +410,6 @@ export default class TopLevelUserView extends Vue {
   }
 
   private get themeButtons(): Button[] {
-    const themes = this.currentSettings.themes;
     const locale = this.$i18n.locale;
     return Object.entries(this.currentSettings.themes).flatMap(([schemaName, themesSchema]) => {
       return Object.entries(themesSchema).map(([themeName, theme]) => {
@@ -606,6 +612,23 @@ export default class TopLevelUserView extends Vue {
         variant: defaultVariantAttribute,
       });
     }
+
+    buttons.push({
+      icon: "language",
+      caption: this.$t("change_language").toString(),
+      variant: defaultVariantAttribute,
+      type: "button-group",
+      buttons: ["en", "ru"].map(language =>
+        ({
+          caption: this.$t(language).toString(),
+          variant: defaultVariantAttribute,
+          type: "callback",
+          callback: () => {
+            void this.writeUserSettings({ name: "language", value: language });
+            this.$root.$i18n.locale = language;
+          },
+        })),
+    });
 
     if (this.currentAuth?.token) {
       if (this.allowBusinessMode && this.userIsRoot) {

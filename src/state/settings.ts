@@ -75,6 +75,10 @@ const settingsModule: Module<ISettingsState, {}> = {
   getters: {
     developmentModeEnabled: state => state.displayMode === "development",
     businessModeEnabled: state => state.displayMode === "business",
+    language: state => {
+      const browserLocale = navigator.languages[0].split("-")[0];
+      return state.current.getEntry("language", String, browserLocale);
+    },
   },
   mutations: {
     setSettings: (state, settings: CurrentSettings) => {

@@ -3,20 +3,8 @@ import { IActionRef, IActionResult } from "ozma-api";
 
 import Api from "@/api";
 import { app } from "@/main";
+import { i18n } from "@/modules";
 import { ISubmitResult } from "@/state/staging_changes";
-import { shortLanguage } from "@/utils";
-
-const messages: Record<string, Record<string, string>> = {
-  en: {
-    "exception_in_action": "Exception in action",
-  },
-  ru: {
-    "exception_in_action": "Исключение в действии",
-  },
-};
-
-// TODO: can't access VueI18n here, but this solution looks stupid too.
-const funI18n = (key: string) => messages[shortLanguage]?.[key];
 
 const dirtyHackGetErrorMessage = (error: any): string =>
   /Unhandled exception (Error: )?(.*):\n/g.exec(String(error))?.[2] ?? "";
@@ -38,7 +26,7 @@ export const saveAndRunAction = async (
       } catch (e) {
         // TODO: Return proper messages from backend instead of using regexps.
         app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
-          title: funI18n("exception_in_action"),
+          title: i18n.tc("exception_in_action"),
           variant: "danger",
           solid: true,
         });

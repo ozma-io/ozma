@@ -1,6 +1,7 @@
 import { RawLocation } from "vue-router";
 import { Link, IAttrToLinkOpts, attrToLink } from "@/links";
-import { mapMaybe, isMobile, shortLanguage } from "@/utils";
+import { mapMaybe, isMobile } from "@/utils";
+import { i18n } from "@/modules";
 
 export const buttonDisplays = ["all", "desktop", "mobile", "selection_panel", "selectionPanel"] as const;
 export type ButtonDisplay = typeof buttonDisplays[number];
@@ -53,18 +54,6 @@ export interface IErrorButton extends IButton {
 }
 
 export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IOtherButton | IErrorButton;
-
-const messages: Record<string, Record<string, string>> = {
-  en: {
-    "error_button": "<Error>",
-    "computed_attributes": "Computed attributes",
-  },
-  ru: {
-    "error_button": "<Ошибка>",
-    "computed_attributes": "Вычисленные атрибуты",
-  },
-};
-const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseAsOtherInsteadError = false): Button | undefined => {
   if (typeof buttonAttr !== "object" || buttonAttr === null) {
@@ -126,9 +115,9 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
   }
 
   return {
-    caption: funI18n("error_button"),
+    caption: i18n.tc("error_button"),
     icon: "error_outline",
-    tooltip: `${funI18n("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
+    tooltip: `${i18n.tc("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
     variant: { type: "existing", className: "outline-danger" },
     display,
     type: "error",
