@@ -22,8 +22,8 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
-export default class FunOverview extends Vue {
-  @Prop({ type: Boolean, required: true }) show!: Boolean;
+export default class FunOverlay extends Vue {
+  @Prop({ type: Boolean, required: true }) show!: boolean;
 
   private onOverlayScroll() {
     const overlayElement = (this.$refs.overlayRef as Vue)?.$el;
