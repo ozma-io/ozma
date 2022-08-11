@@ -243,6 +243,8 @@ export default class App extends Vue {
 
   @Watch("language")
   private updateLanguage() {
+    // eslint-disable-next-line no-console
+    console.log(`Setting language to ${this.language}`, JSON.parse(JSON.stringify(this.settings.settings)));
     this.$root.$i18n.locale = this.language;
     moment.locale(this.language);
   }
