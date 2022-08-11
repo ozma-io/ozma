@@ -241,7 +241,7 @@ export default class App extends Vue {
     this.$bvToast.hide();
   }
 
-  @Watch("language")
+  @Watch("language", { immediate: true })
   private updateLanguage() {
     // eslint-disable-next-line no-console
     console.log(`Setting language to ${this.language}`, JSON.parse(JSON.stringify(this.settings.settings)));
@@ -249,7 +249,7 @@ export default class App extends Vue {
     moment.locale(this.language);
   }
 
-  @Watch("settings")
+  @Watch("settings", { immediate: true })
   private updateSettings() {
     const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "1"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
