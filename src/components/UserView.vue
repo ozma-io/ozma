@@ -185,16 +185,9 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <!-- `z-index: 30` to work well with popups from ArgumentEditor -->
-      <b-overlay
+      <FunOverlay
         ref="overlayRef"
-        class="userview-overlay"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
-        variant="dark"
-        opacity="0.4"
-        blur="5px"
-        rounded="sm"
-        :z-index="30"
         :infinite-wrapper="isRoot"
       >
         <template #overlay>
@@ -248,7 +241,7 @@
             @load-entries="loadEntries"
           />
         </transition>
-      </b-overlay>
+      </FunOverlay>
     </template>
 
     <Errorbox
@@ -304,6 +297,7 @@ import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
 import ArgumentEditor from "@/components/ArgumentEditor.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import FunOverlay from "@/components/FunOverlay.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { addLinkDefaultArgs, attrToLink, Link, linkHandler, ILinkHandlerParams } from "@/links";
 import type { ICombinedUserViewAny, IRowLoadState, IUserViewArguments } from "@/user_views/combined";
@@ -424,6 +418,7 @@ const loadingState: IUserViewLoading = { state: "loading", args: null };
   ArgumentEditor,
   Errorbox,
   ButtonItem,
+  FunOverlay,
   ...components,
 } })
 export default class UserView extends Vue {
@@ -1177,12 +1172,6 @@ export default class UserView extends Vue {
 
   .userview-argument-editor {
     flex: 0 0 auto;
-  }
-
-  .userview-overlay {
-    flex: 1 1;
-    width: 100%;
-    overflow-x: auto;
   }
 
   .loading-container {
