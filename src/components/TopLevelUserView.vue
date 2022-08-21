@@ -625,7 +625,6 @@ export default class TopLevelUserView extends Vue {
           type: "callback",
           callback: () => {
             void this.writeUserSettings({ name: "language", value: language });
-            this.$root.$i18n.locale = language;
           },
         })),
     });

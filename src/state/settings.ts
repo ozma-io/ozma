@@ -134,7 +134,11 @@ const settingsModule: Module<ISettingsState, {}> = {
       commit("setPending", null);
     },
     writeUserSettings: async ({ state, dispatch, commit }, { name, value }: { name: string; value: string }) => {
-      if (state.userId === null) return;
+      const values = { ...state.current.settings, [name]: value };
+      const settings = new CurrentSettings(values, state.current.themes);
+      commit("setSettings", settings);
+
+      if (state.userId === null) return; // We can't write settings to the serever if user isn't signed in.
 
       const entity: IEntityRef = { schema: funappSchema, name: "user_settings" };
       const id: RowKey = { alt: "name", keys: { "user_id": state.userId, name } };
@@ -168,10 +172,6 @@ const settingsModule: Module<ISettingsState, {}> = {
           args: [insertTransaction],
         }, { root: true });
       }
-
-      const values = { ...state.current.settings, [name]: value };
-      const settings = new CurrentSettings(values, state.current.themes);
-      commit("setSettings", settings);
     },
     getSettings: ({ state, commit, dispatch }) => {
       if (state.pending !== null) {
