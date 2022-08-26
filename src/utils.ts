@@ -785,9 +785,14 @@ const replaceLink = (match: string, email: string, tel: string, url: string) => 
 target="_blank" rel="noopener noreferrer" \
 href="${prefix}${formattedMatch}">${match}</a>`;
 };
-export const replaceHtmlLinks = (text: string): string => {
+export const replaceHtmlLinksWithInfo = (text: string): { result: string; hasLinks: boolean } => {
   const sanitized = sanitizeHtml(text, { allowedTags: [], disallowedTagsMode: "escape" });
-  return sanitized.replace(linksRegex, replaceLink);
+  const result = sanitized.replace(linksRegex, replaceLink);
+  const hasLinks = sanitized.match(linksRegex) !== null;
+  return { result, hasLinks };
+};
+export const replaceHtmlLinks = (text: string): string => {
+  return replaceHtmlLinksWithInfo(text).result;
 };
 
 export type TextLinkType = "url" | "tel" | "email";

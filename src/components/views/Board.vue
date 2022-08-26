@@ -72,7 +72,7 @@ import {
   getColorVariantAttributeClassName,
   getColorVariantAttributeVariables,
 } from "@/utils_colors";
-import { formatValueToHtml } from "@/user_views/format";
+import { formatValueToHtmlWithInfo } from "@/user_views/format";
 
 interface IGroupColumn {
   group: unknown;
@@ -484,12 +484,13 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
         return undefined;
       }
 
-      const textHtml = formatValueToHtml(info.valueType, value, { columnAttributeMappings: columnMappings });
+      const { result: textHtml, hasLinks } = formatValueToHtmlWithInfo(info.valueType, value, { columnAttributeMappings: columnMappings });
       const icon = getCellAttr("icon");
       const colorCellVariant = colorVariantFromAttribute(getCellAttr("cell_variant"));
       return {
         type: "text",
         textHtml,
+        hasLinks,
         size: 12,
         icon: icon ? String(icon) : null,
         cellVariantClass: getColorVariantAttributeClassName(colorCellVariant),
