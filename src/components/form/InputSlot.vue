@@ -106,7 +106,7 @@
           ]"
         >
           <div
-            v-if="required || disabled"
+            v-if="!hideRequiredAndDisabledIcons && (required || disabled)"
             :class="[
               'indicator-container',
               {
@@ -171,6 +171,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, default: false }) required!: boolean;
   @Prop({ type: Boolean, default: false }) disabled!: boolean;
   @Prop({ type: Boolean, required: true }) empty!: boolean;
+  @Prop({ type: Boolean, required: false }) hideRequiredAndDisabledIcons!: boolean;
 
   private isModalOpen = false;
 
