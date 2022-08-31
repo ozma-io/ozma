@@ -42,7 +42,7 @@
           <!-- eslint-disable vue/no-v-html -->
           <span
             class="card-text-text"
-            @click.stop
+            @click="handleClick($event, col.hasLinks)"
             v-html="col.textHtml"
           />
           <!-- eslint-enable vue/no-v-html -->
@@ -68,6 +68,7 @@ export interface ITextCardColumn extends ICardColumnBase {
   type: "text";
   icon: string | null;
   textHtml: string;
+  hasLinks: boolean;
   cellVariantClass: ColorVariantFullClassName | null;
   cellVariantStyles: ColorVariantCssVariables | null;
 }
@@ -96,6 +97,13 @@ export default class RowCard extends Vue {
 
   private getIconType(icon: string) {
     return getIconType(icon);
+  }
+
+  // We need to prevent clicks if row has links, otherwise click on link opens a card also.
+  private handleClick(event: MouseEvent, stopPropagation: boolean) {
+    if (stopPropagation) {
+      event.stopPropagation();
+    }
   }
 }
 </script>

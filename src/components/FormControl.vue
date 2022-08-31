@@ -36,6 +36,7 @@
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
       :required="!isNullable"
       :disabled="isDisabled"
+      :hide-required-and-disabled-icons="hideRequiredAndDisabledIcons"
       :empty="valueIsNull"
       @close-modal-input="$emit('close-modal-input')"
       @focus="onFocus"
@@ -459,8 +460,10 @@ export type IType =
 
 const multilineTypes: Set<IType["name"]> =
   new Set(["markdown", "codeeditor", "textarea", "user_view", "empty_user_view", "static_image", "iframe"]);
-const closeAfterUpdate: Set<IType["name"]> =
+const closeAfterUpdateTypes: Set<IType["name"]> =
   new Set(["select", "reference"]);
+const hideRequiredAndDisabledIconsTypes: Set<IType["name"]> =
+  new Set(["buttons", "user_view"]);
 
 const parseTime = (raw: string): ITime | null => {
   const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
@@ -601,6 +604,10 @@ export default class FormControl extends Vue {
   get isDisabled() {
     const softDisabled = Boolean(this.attributes["soft_disabled"]);
     return softDisabled || this.locked;
+  }
+
+  get hideRequiredAndDisabledIcons() {
+    return hideRequiredAndDisabledIconsTypes.has(this.inputType.name);
   }
 
   // Textual representation of `value`.
@@ -960,7 +967,7 @@ export default class FormControl extends Vue {
       this.$emit("update", newValue);
     }
 
-    if (closeAfterUpdate.has(this.inputType.name)) {
+    if (closeAfterUpdateTypes.has(this.inputType.name)) {
       this.$emit("close-modal-input");
     }
   }

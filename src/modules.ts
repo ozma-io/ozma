@@ -11,9 +11,7 @@ import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
 import { Plugin as FragmentPlugin } from "vue-fragment";
 import VueHotkey from "v-hotkey";
-// import VueClipboard from "vue-clipboard2";
 
-import * as Utils from "@/utils";
 import NotFound from "@/components/NotFound.vue";
 import AuthResponse from "@/components/AuthResponse.vue";
 import TopLevelUserView from "@/components/TopLevelUserView.vue";
@@ -51,9 +49,27 @@ const routes = [
 const globalMessages = {
   "en": {
     "confirm_close": "You have unsaved changes, do you want to discard them?",
+    "generation_start_title": "File generation is started",
+    "generation_start_description": "It may take few seconds",
+    "generation_fail": "Error occured while file generation. Try again.",
+    "ellipsis": "... (Open cell to view full)",
+    "exception_in_action": "Exception in action",
+    "not_all_values_found_in_options": "Not all references were found in `options_view` or `referenced_entity`",
+    "not_found": "Not found",
+    "error_button": "<Error>",
+    "computed_attributes": "Computed attributes",
   },
   "ru": {
     "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
+    "generation_start_title": "Началось создание файла",
+    "generation_start_description": "Это займёт несколько секунд",
+    "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
+    "ellipsis": "... (Откройте ячейку, чтобы читать дальше)",
+    "exception_in_action": "Исключение в действии",
+    "not_all_values_found_in_options": "Не все значения-отношения были найдены в `options_view` или `referenced_entity`",
+    "not_found": "Не найдены",
+    "error_button": "<Ошибка>",
+    "computed_attributes": "Вычисленные атрибуты",
   },
 };
 
@@ -63,7 +79,7 @@ export const router = new VueRouter({
 });
 
 export const i18n = new VueI18n({
-  locale: Utils.shortLanguage,
+  locale: "en",
   messages: globalMessages,
 });
 

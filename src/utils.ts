@@ -1,6 +1,5 @@
 // eslint-disable-next-line
 import * as R from "ramda";
-import moment from "moment";
 import Vue, { RenderContext } from "vue";
 import sanitizeHtml from "sanitize-html";
 import { Link } from "./links";
@@ -93,21 +92,9 @@ export const randomId = () => {
   return Math.random().toString(36).substring(2, 15);
 };
 
-// FIXME: remove hardcoded language to stored language in settings for user in instance
-// `export const language = navigator.languages[0];`
-export const language = "ru-RU";
-export const shortLanguage = language.split("-")[0];
-
 export function isFirefox(): boolean {
   return navigator.userAgent.toLowerCase().includes("firefox");
 }
-
-export const momentLocale = (async () => {
-  if (shortLanguage !== "en") {
-    await import(`moment/locale/${shortLanguage}.js`);
-  }
-  moment.locale(shortLanguage);
-})();
 
 export const sse = () => {
   return Math.floor((new Date()).getTime() / 1000);
@@ -798,9 +785,14 @@ const replaceLink = (match: string, email: string, tel: string, url: string) => 
 target="_blank" rel="noopener noreferrer" \
 href="${prefix}${formattedMatch}">${match}</a>`;
 };
-export const replaceHtmlLinks = (text: string): string => {
+export const replaceHtmlLinksWithInfo = (text: string): { result: string; hasLinks: boolean } => {
   const sanitized = sanitizeHtml(text, { allowedTags: [], disallowedTagsMode: "escape" });
-  return sanitized.replace(linksRegex, replaceLink);
+  const result = sanitized.replace(linksRegex, replaceLink);
+  const hasLinks = sanitized.match(linksRegex) !== null;
+  return { result, hasLinks };
+};
+export const replaceHtmlLinks = (text: string): string => {
+  return replaceHtmlLinksWithInfo(text).result;
 };
 
 export type TextLinkType = "url" | "tel" | "email";

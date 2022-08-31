@@ -73,6 +73,8 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace, Action } from "vuex-class";
 import { IViewExprResult } from "ozma-api";
+import moment from "moment";
+import "moment/locale/ru";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
@@ -108,6 +110,7 @@ export default class App extends Vue {
   @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
+  @settings.Getter("language") language!: string;
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
@@ -238,12 +241,19 @@ export default class App extends Vue {
     this.$bvToast.hide();
   }
 
-  @Watch("settings")
+  @Watch("language", { immediate: true })
+  private updateLanguage() {
+    // eslint-disable-next-line no-console
+    console.log(`Setting language to ${this.language}`, JSON.parse(JSON.stringify(this.settings.settings)));
+    this.$root.$i18n.locale = this.language;
+    moment.locale(this.language);
+  }
+
+  @Watch("settings", { immediate: true })
   private updateSettings() {
     const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "1"));
     const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
     this.setAutoSaveTimeout(autoSaveTimeout);
-
     const html = document.querySelector("html");
     if (html) {
       // `rem` in CSS is calculated only from `font-size` on `<html>`.

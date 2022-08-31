@@ -4,9 +4,9 @@ import { z } from "zod";
 
 import { app } from "@/main";
 import { queryLocation, IQueryState, IQuery, attrToRef, IAttrToQueryOpts, attrToRecord, attrObjectToQuery, selfIdArgs, refIdArgs } from "@/state/query";
-import { randomId, shortLanguage, waitTimeout } from "@/utils";
+import { randomId, waitTimeout } from "@/utils";
 import { saveAndRunAction } from "@/state/actions";
-import { router } from "@/modules";
+import { router, i18n } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
 import { documentGeneratorUrl, IDocumentRef, instanceName } from "@/api";
 
@@ -60,20 +60,6 @@ export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   defaultTarget?: TargetType;
   defaultActionArgs?: Record<string, any>;
 }
-
-const messages: Record<string, Record<string, string>> = {
-  en: {
-    "generation_start_title": "File generation is started",
-    "generation_start_description": "It may take few seconds",
-    "generation_fail": "Error occured while file generation. Try again.",
-  },
-  ru: {
-    "generation_start_title": "Началось создание файла",
-    "generation_start_description": "Это займёт несколько секунд",
-    "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
-  },
-};
-const funI18n = (key: string) => messages[shortLanguage]?.[key]; // TODO: can't access VueI18n here, but this solution looks stupid too.
 
 export const addLinkDefaultArgs = (link: Link, args: object) => {
   if ("args" in link) {
@@ -364,8 +350,8 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
     const { template, filename, args } = params.link;
     handler = async () => {
       const id = randomId();
-      app.$bvToast.toast(funI18n("generation_start_description"), {
-        title: funI18n("generation_start_title"),
+      app.$bvToast.toast(i18n.tc("generation_start_description"), {
+        title: i18n.tc("generation_start_title"),
         noAutoHide: true,
         solid: true,
         id,
@@ -394,7 +380,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         } else {
           const body = await res.json();
           app.$bvToast.toast(String(body.message), {
-            title: funI18n("generation_fail"),
+            title: i18n.tc("generation_fail"),
             variant: "danger",
             solid: true,
           });
@@ -402,7 +388,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         }
       } catch (e) {
         app.$bvToast.toast(String(e), {
-          title: funI18n("generation_fail"),
+          title: i18n.tc("generation_fail"),
           variant: "danger",
           solid: true,
         });
