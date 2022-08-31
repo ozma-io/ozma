@@ -12,9 +12,8 @@ pipelines:
           script:
             - git submodule update --init
             # - ./build.sh
-            - mkdir dist && touch dist/kek
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
-            - pipe: docker://myprocessx/upload-artifact:latest # ozma/upload-artifact:master
+            - pipe: ozma/upload-artifact:master # docker://myprocessx/upload-artifact:latest
               variables:
                 LOCAL_PATH: dist
           artifacts:
