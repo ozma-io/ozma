@@ -12,6 +12,7 @@ pipelines:
           script:
             - git submodule update --init
             # - ./build.sh
+            - mkdir dist && touch dist/kek
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             # Pipes from private repositories are currently not supported:
             # https://jira.atlassian.com/browse/BCLOUD-18270
