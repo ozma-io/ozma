@@ -1,7 +1,7 @@
 import moment from "moment";
 import { AttributeName, IExecutedValue, ValueType } from "ozma-api";
 
-import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinks } from "@/utils";
+import { getNumberFormatter, isValidNumberFormat, replaceHtmlLinksWithInfo } from "@/utils";
 import { ConvertedBoundAttributesMap, currentValue, valueToPunnedText } from "./combined";
 import { valueToText } from "@/values";
 import { i18n } from "@/modules";
@@ -61,13 +61,20 @@ export const formatValue = (valueType: ValueType, value: IExecutedValue, opts?: 
   }
 };
 
-export const formatValueToHtml = (valueType: ValueType, value: IExecutedValue, opts?: IFormatValueOpts): string => {
+export const formatValueToHtmlWithInfo = (valueType: ValueType, value: IExecutedValue, opts?: IFormatValueOpts): { result: string; hasLinks: boolean } => {
   let valueHtml = formatValue(valueType, value, opts);
+  let hasLinks = false;
   if (typeof value.value === "string") {
     if (valueHtml.length > 1000) {
       valueHtml = valueHtml.slice(0, 1000) + i18n.tc("ellipsis");
     }
-    valueHtml = replaceHtmlLinks(valueHtml);
+    const { result, hasLinks: resultHasLinks } = replaceHtmlLinksWithInfo(valueHtml);
+    valueHtml = result;
+    hasLinks = resultHasLinks;
   }
-  return valueHtml;
+  return { result: valueHtml, hasLinks };
+};
+
+export const formatValueToHtml = (valueType: ValueType, value: IExecutedValue, opts?: IFormatValueOpts): string => {
+  return formatValueToHtmlWithInfo(valueType, value, opts).result;
 };
