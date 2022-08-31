@@ -39,14 +39,14 @@ pipelines:
           deployment: test
           script:
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
-            - pipe: ozma/deploy-artifact:master
+            - pipe: ozma-io/deploy-artifact:master
       - step:
           name: Deploy to production
           deployment: production
           trigger: manual
           script:
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
-            - pipe: ozma/deploy-artifact:master
+            - pipe: ozma-io/deploy-artifact:master
 
 definitions:
   caches:
