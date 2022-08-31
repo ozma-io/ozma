@@ -1372,32 +1372,32 @@
     "@types/prosemirror-view" "*"
 
 "@types/prosemirror-model@*", "@types/prosemirror-model@^1.16.0":
-  version "1.16.2"
-  resolved "https://registry.yarnpkg.com/@types/prosemirror-model/-/prosemirror-model-1.16.2.tgz#8896adac3a5d5d66f06491bb13940aa734a7b6e8"
-  integrity sha512-1XPJopkKP3oHSBP61uuSuW13DIDZPWvAzP6Pv2/6mixk8EBPUeRGIW548DjJTicMo23gEg1zvCZy9asblQdWag==
+  version "1.16.0"
+  resolved "https://registry.yarnpkg.com/@types/prosemirror-model/-/prosemirror-model-1.16.0.tgz#8b22c7431a4c93f7f550fc89c4b0e2d44d42c8b6"
+  integrity sha512-nv93YLyTEcDDl17OB90EldxZjyJQJll2WSMLDvLzTewbpvE/vtMjHT3j4mik3uSzQ6YD486AcloCO3WODY/lDg==
   dependencies:
     "@types/orderedmap" "*"
 
 "@types/prosemirror-state@*":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@types/prosemirror-state/-/prosemirror-state-1.3.0.tgz#7fd25db7244c027eef0849d79b112a8a0dfbb483"
-  integrity sha512-nMdUF6w8B++NH4V54X+4GvDty7M02UfuHQW0s1AS25Z4ZrOW4RSY2+s57doXBbeMSjzYV/QoMxCY2sT3KQ2VdQ==
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/@types/prosemirror-state/-/prosemirror-state-1.2.8.tgz#65080eeec52f63c50bf7034377f07773b4f6b2ac"
+  integrity sha512-mq9uyQWcpu8jeamO6Callrdvf/e1H/aRLR2kZWSpZrPHctEsxWHBbluD/wqVjXBRIOoMHLf6ZvOkrkmGLoCHVA==
   dependencies:
     "@types/prosemirror-model" "*"
     "@types/prosemirror-transform" "*"
     "@types/prosemirror-view" "*"
 
 "@types/prosemirror-transform@*":
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/@types/prosemirror-transform/-/prosemirror-transform-1.4.2.tgz#0be91da7ee962c40c19ae1db1e4bf5b6e7ee6914"
-  integrity sha512-FZNzjYm6YUkb1XXOrw2193TiFzwM92ui1nycNaRSd5JDbugf9yBLkXm4Rq3HGJJxBBkRcUE8niqUW5aWlXQQiQ==
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@types/prosemirror-transform/-/prosemirror-transform-1.1.5.tgz#e6949398c64a5d3ca53e6081352751aa9e9ce76e"
+  integrity sha512-Wr2HXaEF4JPklWpC17RTxE6PxyU54Taqk5FMhK1ojgcN93J+GpkYW8s0mD3rl7KfTmlhVwZPCHE9o0cYf2Go5A==
   dependencies:
     "@types/prosemirror-model" "*"
 
 "@types/prosemirror-view@*", "@types/prosemirror-view@^1.23.1":
-  version "1.23.3"
-  resolved "https://registry.yarnpkg.com/@types/prosemirror-view/-/prosemirror-view-1.23.3.tgz#8ad847fc45b9c7eba8362fccdafc7144c491ea35"
-  integrity sha512-T5dPDmZiXAazJVSvnx55D6h4mcpiH2q2wTyO9zIeOdox5zx964+zcDl9dFNaXG3qCGlERwMPckhBZL1HCxyygw==
+  version "1.23.1"
+  resolved "https://registry.yarnpkg.com/@types/prosemirror-view/-/prosemirror-view-1.23.1.tgz#a9a926bb6b6e6873e3a9d8caa61c32f3402629eb"
+  integrity sha512-6e1B2oKUnhmZPUrsVvYjDqeVjE6jGezygjtoHsAK4ZENAxHzHqy5NT4jUvdPTWjCYeH0t2Y7pSfRPNrPIyQX4A==
   dependencies:
     "@types/prosemirror-model" "*"
     "@types/prosemirror-state" "*"
@@ -2953,9 +2953,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001109, caniuse-lite@^1.0.30001286:
-  version "1.0.30001300"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001300.tgz#11ab6c57d3eb6f964cba950401fd00a146786468"
-  integrity sha512-cVjiJHWGcNlJi8TZVKNMnvMid3Z3TTdDHmLDzlOdIiZq138Exvo0G+G0wTdVYolxKb4AYwC+38pxodiInVtJSA==
+  version "1.0.30001387"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001387.tgz"
+  integrity sha512-fKDH0F1KOJvR+mWSOvhj8lVRr/Q/mc5u5nabU2vi1/sgvlSqEsE8dOq0Hy/BqVbDkCYQPRRHB1WRjW6PGB/7PA==
 
 case-sensitive-paths-webpack-plugin@^2.3.0:
   version "2.4.0"

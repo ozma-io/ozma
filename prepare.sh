@@ -5,7 +5,7 @@ set -ex
 test -f yarn.lock
 pushd 3rdparty/ozma-api
 yarn
-yarn build
+./build.sh
 yarn link
 popd
 yarn link ozma-api
