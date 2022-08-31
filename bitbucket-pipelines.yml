@@ -16,12 +16,12 @@ pipelines:
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             # Pipes from private repositories are currently not supported:
             # https://jira.atlassian.com/browse/BCLOUD-18270
-            # - pipe: ozma-io/upload-artifact:master
-            - pipe: docker://myprocessx/upload-artifact:latest
+            # - pipe: docker://myprocessx/upload-artifact:latest
+            - pipe: ozma-io/upload-artifact:master
               variables:
                 LOCAL_PATH: dist
-                AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
-                AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+                  # AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+                  # AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
           artifacts:
             - artifact.json
       - step:
