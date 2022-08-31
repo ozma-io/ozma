@@ -13,7 +13,7 @@ pipelines:
             - git submodule update --init
             # - ./build.sh
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
-            - pipe: ozma/upload-artifact:master # docker://myprocessx/upload-artifact:latest
+            - pipe: ozma-io/upload-artifact:master # docker://myprocessx/upload-artifact:latest
               variables:
                 LOCAL_PATH: dist
           artifacts:
