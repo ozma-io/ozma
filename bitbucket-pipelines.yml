@@ -9,6 +9,7 @@ pipelines:
           size: 2x
           caches:
             - yarn
+            - docker
           script:
             - git submodule update --init
             - ./build.sh
@@ -41,6 +42,8 @@ pipelines:
       - step:
           name: Deploy to test
           deployment: test
+          caches:
+            - docker
           script:
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             - pipe: ozma-io/deploy-artifact:master
@@ -48,6 +51,8 @@ pipelines:
           name: Deploy to production
           deployment: production
           trigger: manual
+          caches:
+            - docker
           script:
             - docker login -u "$DOCKER_HUB_USER" -p "$DOCKER_HUB_PASSWORD"
             - pipe: ozma-io/deploy-artifact:master
