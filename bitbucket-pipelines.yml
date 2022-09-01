@@ -13,7 +13,7 @@ pipelines:
             - git submodule update --init
             - ./build.sh
           artifacts:
-            - dist
+            - dist/**
       - step:
           name: Lint FunApp
           image: node:lts
