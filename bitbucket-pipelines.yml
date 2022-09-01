@@ -29,7 +29,6 @@ pipelines:
           script:
             - git submodule update --init
             - ./lint.sh
-
   pull-requests:
     '**':
       - parallel: *build_steps
