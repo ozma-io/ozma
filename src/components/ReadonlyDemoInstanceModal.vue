@@ -3,7 +3,7 @@
         "en": {
             "header_1": "Sign up",
             "header_2": "to continue",
-            "description_1": "It's read-only example. To start make changes,",
+            "description_1": "It's read-only example. To start making changes,",
             "description_2": "sign up and we will create personal instance for you.",
             "sign_up": "Sign up",
             "later": "Later"
