@@ -27,11 +27,11 @@
     />
     <Board
       v-else
-      allow-dragging
+      :allow-dragging="!disabled"
       :column-width="columnWidth"
       :background-color="backgroundColor"
       :columns="columns"
-      :create-button="createView !== null"
+      :create-button="!disabled && createView !== null"
       @add="changeGroup"
       @move="changeOrder"
       @create="createCard"
@@ -158,6 +158,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       // eslint-disable-next-line no-await-in-loop
       await this.updateValue(ref, (card.card.order as number) + 0.1 * Math.random());
     }
+  }
+
+  get disabled() {
+    return Boolean(this.uv.attributes["soft_disabled"]);
   }
 
   get columnsType(): BoardColumnsType | null {
