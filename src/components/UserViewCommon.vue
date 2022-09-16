@@ -418,10 +418,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           void submitOperations();
         }
       },
-      complete: async () => {
-        await submitOperations();
-        await this.reload();
-      },
+      complete: () => void submitOperations().then(this.reload),
     });
   }
 
@@ -596,7 +593,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push({
         icon: "file_upload",
         caption: this.$t("import_from_csv").toString(),
-        uploadFile: file => this.importFromCsv(file),
+        uploadFile: file => void this.importFromCsv(file),
         type: "upload-file",
         variant: defaultVariantAttribute,
       });
@@ -607,7 +604,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       buttons.push({
         icon: "file_download",
         caption: this.$t("export_to_csv").toString(),
-        callback: () => this.exportToCsv(),
+        callback: () => void this.exportToCsv(),
         type: "callback",
         variant: defaultVariantAttribute,
       });

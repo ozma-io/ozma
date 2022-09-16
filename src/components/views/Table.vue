@@ -1370,7 +1370,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       icon: "add",
       variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
-      callback: () => this.loadAllRowsAndAddNewRowOnPosition("top_front"),
+      callback: () => void this.loadAllRowsAndAddNewRowOnPosition("top_front"),
     };
   }
 
@@ -1381,7 +1381,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       variant: interfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () =>
-        this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>
+        void this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>
           (this.$refs.bottomButtonContainer as Element | undefined)?.scrollIntoView({ block: "nearest" })),
     };
   }
@@ -2956,20 +2956,18 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  ::v-deep {
-    /* Second selctor is for system columns */
-    .table-tr.last-top-new td,
-    .table-tr.last-top-new td ~ td {
-      border-bottom: 2px solid var(--table-backgroundDarker2Color);
-    }
-
-    /* stylelint-disable no-descending-specificity */
-    .table-tr.first-bottom-new td,
-    .table-tr.first-bottom-new td ~ td {
-      border-top: 2px solid var(--table-backgroundDarker2Color);
-    }
-    /* stylelint-enable no-descending-specificity */
+  /* Second selctor is for system columns */
+  ::v-deep .table-tr.last-top-new td,
+  .table-tr.last-top-new td ~ td {
+    border-bottom: 2px solid var(--table-backgroundDarker2Color);
   }
+
+  /* stylelint-disable no-descending-specificity */
+  ::v-deep .table-tr.first-bottom-new td,
+  .table-tr.first-bottom-new td ~ td {
+    border-top: 2px solid var(--table-backgroundDarker2Color);
+  }
+  /* stylelint-enable no-descending-specificity */
 
   ::v-deep .button-element > button {
     width: 100%;

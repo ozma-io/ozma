@@ -697,7 +697,7 @@ export default class TopLevelUserView extends Vue {
         icon: "exit_to_app",
         caption: this.$t("logout").toString(),
         type: "callback",
-        callback: this.logout,
+        callback: () => void this.logout(),
         variant: defaultVariantAttribute,
       });
     } else {
@@ -705,7 +705,7 @@ export default class TopLevelUserView extends Vue {
         icon: "login",
         caption: this.$t("login").toString(),
         type: "callback",
-        callback: this.login,
+        callback: () => void this.login(),
         variant: defaultVariantAttribute,
       });
     }

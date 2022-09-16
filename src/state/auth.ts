@@ -383,7 +383,7 @@ export const authModule: Module<IAuthState, {}> = {
             return;
           }
 
-          await new Promise(resolve => {
+          await new Promise<void>(resolve => {
             router.onReady(resolve);
           }); // Await till router is ready.
 
