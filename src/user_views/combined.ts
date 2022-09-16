@@ -1090,7 +1090,7 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
           return;
         }
         const fieldRef = id.subEntity ? { entity: id.subEntity, name: field.ref.name } : field.ref;
-        const updateInfo = {
+        const updateInfo : IValueInfo = {
           field: field.field || null,
           fieldRef,
           id: id.id,

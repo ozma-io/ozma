@@ -332,7 +332,7 @@ import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
 import { Moment, default as moment } from "moment";
 import * as R from "ramda";
 import { z } from "zod";
-import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef } from "ozma-api";
+import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef, AttributeName } from "ozma-api";
 import Popper from "vue-popperjs";
 
 import { eventBus } from "@/main";
@@ -1721,9 +1721,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   private valueIsReadOnly(valueRef: ValueRef, throwToastOnReadOnly = false): boolean {
     const value = this.uv.getValueByRef(valueRef)!;
-    const rowSoftDisabled = Boolean(value.row.attributes?.["soft_disabled"]);
-    const valueSoftDisabled = Boolean(value.value.attributes?.["soft_disabled"]);
-    if (!value.value.info?.field || this.softDisabled || rowSoftDisabled || valueSoftDisabled) {
+    const columnAttrs = this.uv.columnAttributes[valueRef.column];
+    const getCellAttr = (name: AttributeName) => value.value.attributes?.[name] || value.row.attributes?.[name] || columnAttrs[name] || this.uv.attributes[name];
+    if (!value.value.info?.field || getCellAttr("soft_disabled")) {
       if (throwToastOnReadOnly) {
         this.$bvToast.toast(this.$t("read_only_cell").toString(), {
           title: this.$t("edit_error").toString(),
@@ -1760,6 +1760,10 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   private async updateValueWithParseValue(ref: ValueRef, parseValue: ClipboardParseValue) {
+    if (this.valueIsReadOnly(ref, true)) {
+      return false;
+    }
+
     const value = this.uv.getValueByRef(ref)!.value;
     const fieldType = value.info?.field?.fieldType.type;
     if (parseValue.type === "reference") {
@@ -1775,6 +1779,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     } else {
       await this.updateValue(ref, parseValue.value);
     }
+    return true;
   }
 
   private async pasteManyCellsToSelectedCell(event: ClipboardEvent, values: ClipboardParseValue[][]) {
@@ -1787,8 +1792,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       let counter = 0;
       for (const [cellIndex, cell] of row.entries()) {
         valueRef = this.uv.extra.cursorValue as ValueRef;
-
-        if (this.valueIsReadOnly(valueRef, true)) return;
 
         // eslint-disable-next-line no-await-in-loop
         await this.updateValueWithParseValue(valueRef, cell);
