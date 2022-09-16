@@ -64,7 +64,7 @@ export const formatValue = (valueType: ValueType, value: IExecutedValue, opts?: 
 export const formatValueToHtmlWithInfo = (valueType: ValueType, value: IExecutedValue, opts?: IFormatValueOpts): { result: string; hasLinks: boolean } => {
   let valueHtml = formatValue(valueType, value, opts);
   let hasLinks = false;
-  if (typeof value.value === "string") {
+  if (typeof value.pun === "string" || typeof value.value === "string") {
     if (valueHtml.length > 1000) {
       valueHtml = valueHtml.slice(0, 1000) + i18n.tc("ellipsis");
     }
