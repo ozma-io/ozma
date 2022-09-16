@@ -204,7 +204,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       disableAutoSave = false;
       if ("post_create_link" in uv.attributes) {
         disableAutoSave = true;
-      } else if (uv.info.mainEntity) {
+      } else if (uv.rows === null && uv.info.mainEntity) {
         const entity = await this.getEntity(uv.info.mainEntity.entity);
         if (entity.hasInsertTriggers) {
           disableAutoSave = true;
