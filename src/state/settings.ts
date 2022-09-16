@@ -202,7 +202,7 @@ const settingsModule: Module<ISettingsState, {}> = {
             return [key, value];
           }));
           const themes = await loadThemes();
-          const currentThemeName = getPreferredTheme(themes);
+          const currentThemeName = getPreferredTheme(themes, values["themes_schema"]);
 
           const settings = new CurrentSettings(values, themes);
           commit("setSettings", settings);

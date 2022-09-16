@@ -296,8 +296,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    *    And it supports CSS-cascading and doesn't affected by scoping, so we have `class="default-variant default-local-variant"` in <App /> and we use this variables in many places.
    * 7. Custom/inline variants works similar but a little simpler, but I'm too tired to explain, sorry.
    */
-  @Watch("currentThemeRef", { immediate: true })
-  private loadColors() {
+  get themeStyleSettings() {
     let currentTheme: ITheme | undefined;
     if (this.currentThemeRef !== null) {
       currentTheme = this.settings.themes[this.currentThemeRef.schema][this.currentThemeRef.name];
@@ -322,14 +321,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       menuEntry: interfaceButton,
     };
     const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
-    const rules = colorVariantsToCssRules(colorVariants);
+    return colorVariantsToCssRules(colorVariants);
+  }
+
+  @Watch("themeStyleSettings", { immediate: true })
+  private loadColors() {
     const sheet = (document.getElementById("theme-styles") as any)?.sheet as CSSStyleSheet | undefined;
     if (sheet) {
       while (sheet.cssRules.length > 0) {
         sheet.deleteRule(0);
       }
 
-      for (const rule of rules) {
+      for (const rule of this.themeStyleSettings) {
         sheet.insertRule(rule);
       }
     }
