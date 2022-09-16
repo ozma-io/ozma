@@ -1,4 +1,5 @@
 <template>
+  <!-- eslint-disable vue/v-on-event-hyphenation -->
   <popper
     ref="popup"
     trigger="clickToOpen"
@@ -15,7 +16,7 @@
     }"
     :disabled="!show"
     :force-show="show"
-    @document-сlick="onDocumentClick"
+    @documentClick="onDocumentClick"
   >
     <div class="popper shadow">
       <ButtonList
