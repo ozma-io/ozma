@@ -219,10 +219,12 @@ const tryGetToken = (context: ActionContext<IAuthState, {}>, params: Record<stri
   return pending.ref;
 };
 
-const updateAuth = (context: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth) => {
+const updateAuth = (context: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth, opts?: { noPersist?: boolean }) => {
   context.commit("setAuth", auth);
   if (auth.refreshToken) {
-    persistCurrentAuth(auth);
+    if (!opts?.noPersist) {
+      persistCurrentAuth(auth);
+    }
     startTimeouts(context);
   }
 };
@@ -251,22 +253,28 @@ const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
     throw new Error("Cannot start timeouts without a token");
   }
 
-  const validFor = state.current.validFor;
+  const validFor = state.current.createdTime - Utils.sse() + state.current.validFor;
   // Random timeouts to not overload the server with different tabs.
   const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
 
   if (state.renewalTimeoutId !== null) {
     clearTimeout(state.renewalTimeoutId);
   }
-  const timeoutRef: IRef<NodeJS.Timeout> = {};
-  timeoutRef.ref = setTimeout(() => {
-    if (state.pending === null) {
-      void renewAuth(context);
-    } else if (state.renewalTimeoutId === timeoutRef.ref) {
-      commit("setRenewalTimeout", null);
-    }
-  }, timeoutSecs * 1000);
-  commit("setRenewalTimeout", timeoutRef.ref);
+  if (document.hidden) {
+    commit("setRenewalTimeout", null);
+  } else if (timeoutSecs < 0) {
+    void renewAuth(context);
+  } else {
+    const timeoutRef: IRef<NodeJS.Timeout> = {};
+    timeoutRef.ref = setTimeout(() => {
+      if (state.pending === null) {
+        void renewAuth(context);
+      } else if (state.renewalTimeoutId === timeoutRef.ref) {
+        commit("setRenewalTimeout", null);
+      }
+    }, timeoutSecs * 1000);
+    commit("setRenewalTimeout", timeoutRef.ref);
+  }
 };
 
 const goAway = ({ commit }: ActionContext<IAuthState, {}>, url: string) => {
@@ -320,7 +328,7 @@ const runProtectedCall = async <Args extends unknown[], Ret>(context: ActionCont
           if (e.body.error === "unauthorized") {
             if (!state.current?.refreshToken) {
               // eslint-disable-next-line no-await-in-loop
-              await dispatch("login");
+              await requestLogin(context, { tryExisting: true });
             } else {
               commit("resetToken");
               // eslint-disable-next-line no-await-in-loop
@@ -336,6 +344,13 @@ const runProtectedCall = async <Args extends unknown[], Ret>(context: ActionCont
     }
   } finally {
     commit("decreaseProtectedCalls");
+  }
+};
+
+const stopTimeouts = ({ state, commit }: ActionContext<IAuthState, {}>) => {
+  if (state.renewalTimeoutId !== null) {
+    clearTimeout(state.renewalTimeoutId);
+    commit("setRenewalTimeout", null);
   }
 };
 
@@ -382,15 +397,14 @@ export const authModule: Module<IAuthState, {}> = {
   },
   actions: {
     removeAuth: {
-      handler: ({ state, commit, dispatch }) => {
-        if (state.renewalTimeoutId !== null) {
-          clearTimeout(state.renewalTimeoutId);
-        }
-        if (state.current?.refreshToken) {
-          commit("resetToken");
-          dropCurrentAuth();
-        }
-        return dispatch("login");
+      handler: async context => {
+        stopTimeouts(context);
+        return requestLogin(context, { tryExisting: true });
+      },
+    },
+    stopTimeouts: {
+      handler: context => {
+        stopTimeouts(context);
       },
     },
     setAuth: {
@@ -476,7 +490,6 @@ export const authModule: Module<IAuthState, {}> = {
             const oldAuth = loadCurrentAuth();
             if (oldAuth !== null) {
               updateAuth(context, oldAuth);
-              void renewAuth(context);
             }
           }
 
@@ -490,13 +503,24 @@ export const authModule: Module<IAuthState, {}> = {
             } else {
               const newAuth = loadCurrentAuth();
               if (newAuth !== null && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
-                updateAuth(context, newAuth);
+                // Stop running any refresh. We will run it if the token is expired later.
+                commit("setPending", null);
+                updateAuth(context, newAuth, { noPersist: true });
               }
             }
           };
           window.addEventListener("storage", e => {
             void authStorageHandler(e);
           });
+
+          const visibilityHandler = () => {
+            if (document.hidden) {
+              stopTimeouts(context);
+            } else if (state.current?.refreshToken) {
+              startTimeouts(context);
+            }
+          };
+          window.addEventListener("visibilitychange", visibilityHandler);
         } finally {
           if (state.pending === pending.ref) {
             commit("setPending", null);
@@ -566,9 +590,6 @@ export const authModule: Module<IAuthState, {}> = {
 
       dropCurrentAuth();
       await goAway(context, `${authUrl}/logout?${paramsString}`);
-    },
-    login: async context => {
-      await requestLogin(context, { tryExisting: true });
     },
   },
 };
