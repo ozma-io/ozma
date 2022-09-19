@@ -41,9 +41,8 @@
       />
 
       <InviteUserModal
-        v-if="authToken"
+        v-if="hasAuth"
         ref="inviteUserModal"
-        :auth-token="authToken"
       />
 
       <HelpModal
@@ -114,6 +113,7 @@ export default class App extends Vue {
   @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
   @auth.Action("startAuth") startAuth!: () => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
+  @errors.State("silent") silentErrors!: boolean;
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
   @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
   @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
@@ -170,15 +170,15 @@ export default class App extends Vue {
   }
 
   private get isReadonlyDemoInstance() {
-    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.currentAuth?.token;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.hasAuth;
   }
 
-  private get authToken(): string | null {
-    return this.currentAuth?.token ?? null;
+  private get hasAuth() {
+    return Boolean(this.currentAuth?.refreshToken);
   }
 
   get authErrors() {
-    return this.rawErrors["auth"] ?? [];
+    return this.silentErrors ? [] : (this.rawErrors["auth"] ?? []);
   }
 
   private showDemoModal() {
@@ -243,8 +243,6 @@ export default class App extends Vue {
 
   @Watch("language", { immediate: true })
   private updateLanguage() {
-    // eslint-disable-next-line no-console
-    console.log(`Setting language to ${this.language}`, JSON.parse(JSON.stringify(this.settings.settings)));
     this.$root.$i18n.locale = this.language;
     moment.locale(this.language);
   }
@@ -339,11 +337,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   private get showInviteButtonInBanner() {
-    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.authToken !== null;
+    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.hasAuth;
   }
 
   private get showSignUpButtonInBanner() {
-    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false) && this.authToken === null;
+    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false) && !this.hasAuth;
   }
 
   private get fontSize(): number {

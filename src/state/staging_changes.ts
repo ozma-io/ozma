@@ -189,7 +189,7 @@ export interface IStagingState {
 
 const askOnClose = (e: BeforeUnloadEvent) => {
   e.preventDefault();
-  const msg = i18n.tc("confirm_close");
+  const msg = i18n.tc("confirm_reset");
   e.returnValue = msg;
   return msg;
 };
@@ -596,6 +596,20 @@ const stagingModule: Module<IStagingState, {}> = {
 
       // Vuex is stupid, so we need to re-fetch the value.
       Object.values(state.handlers).forEach(handler => handler.deleteEntry(args.entityRef, args.id, args.meta));
+    },
+    askAndReset: async ({ state, dispatch }) => {
+      if (state.current.isEmpty) {
+        return true;
+      }
+
+      const msg = i18n.tc("confirm_reset");
+      // eslint-disable-next-line
+      if (confirm(msg)) {
+        await dispatch("reset");
+        return true;
+      } else {
+        return false;
+      }
     },
     reset: context => {
       const { state, commit } = context;

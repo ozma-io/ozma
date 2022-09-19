@@ -260,7 +260,7 @@ export default class BaseUserView<ValueT extends IBaseValueExtra, RowT extends I
   }
 
   private get isReadonlyDemoInstance() {
-    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.auth?.token;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.auth?.refreshToken;
   }
 
   deleteRow(ref: RowRef) {

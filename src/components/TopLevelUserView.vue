@@ -340,6 +340,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
+  @errors.State("silent") silentErrors!: boolean;
   @settings.State("current") currentSettings!: CurrentSettings;
   @settings.State("pending") settingsPending!: Promise<CurrentSettings> | null;
   @settings.State("userIsRoot") userIsRoot!: boolean;
@@ -457,14 +458,18 @@ export default class TopLevelUserView extends Vue {
   }
 
   get errors() {
-    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      const translationKey = `${key}_error`;
-      if (this.$te(translationKey)) {
-        return this.$t(translationKey, { msg: error });
-      } else {
-        return error;
-      }
-    }));
+    if (this.silentErrors) {
+      return {};
+    } else {
+      return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
+        const translationKey = `${key}_error`;
+        if (this.$te(translationKey)) {
+          return this.$t(translationKey, { msg: error });
+        } else {
+          return error;
+        }
+      }));
+    }
   }
 
   get isLoading(): boolean {

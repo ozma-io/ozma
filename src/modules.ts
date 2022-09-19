@@ -48,7 +48,7 @@ const routes = [
 
 const globalMessages = {
   "en": {
-    "confirm_close": "You have unsaved changes, do you want to discard them?",
+    "confirm_reset": "You have unsaved changes, do you want to discard them?",
     "generation_start_title": "File generation is started",
     "generation_start_description": "It may take few seconds",
     "generation_fail": "Error occured while file generation. Try again.",
@@ -60,7 +60,7 @@ const globalMessages = {
     "computed_attributes": "Computed attributes",
   },
   "ru": {
-    "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
+    "confirm_reset": "У вас есть несохранённые изменения, отбросить их?",
     "generation_start_title": "Началось создание файла",
     "generation_start_description": "Это займёт несколько секунд",
     "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
