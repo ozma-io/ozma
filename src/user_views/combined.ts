@@ -1142,8 +1142,8 @@ export class CombinedUserView<T extends IUserViewHandler<ValueT, RowT, ViewT>, V
     if (ref.type === "added") {
       return this.newRows[ref.id];
     } else if (ref.type === "existing") {
-      const row = this.rows![ref.position];
-      return row.deleted ? undefined : row;
+      const row = this.rows?.[ref.position];
+      return !row || row.deleted ? undefined : row;
     } else if (ref.type === "new") {
       return this.emptyRow ?? undefined;
     } else {
