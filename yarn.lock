@@ -1163,10 +1163,10 @@
   resolved "https://registry.yarnpkg.com/@soda/get-current-script/-/get-current-script-1.0.2.tgz#a53515db25d8038374381b73af20bb4f2e508d87"
   integrity sha512-T7VNNlYVM1SgQ+VsMYhnDkcGmWhQdL0bDyGm5TlQ3GBXnJscEClUUOKduWTmm2zCnvNLC1hc3JpuXjs/nFOc5w==
 
-"@toast-ui/editor@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@toast-ui/editor/-/editor-3.2.0.tgz#5c0bca0be825465fdb786b2d70aa16ab9ca09c46"
-  integrity sha512-lEvbBSbvz5MvmTGHoDAYkco5B1os9C8B0IJmSj/iLmjSFQCtku1g4hFG4jKzTju9e+5wTosbDa3aYHAJAZK/QA==
+"@toast-ui/editor@3.1.8", "@toast-ui/editor@^3.1.8":
+  version "3.1.8"
+  resolved "https://registry.yarnpkg.com/@toast-ui/editor/-/editor-3.1.8.tgz#b10c788c893b97b1ca9e57238e0f3233cc75c421"
+  integrity sha512-2IIHQnaxPZsCySvYAjgSlQWEQZGCakMl6S6mkKm+oWFMVyCBhLd1DMrooj7xI8kJEEZLTGsVj5OGvlHY1LboNg==
   dependencies:
     dompurify "^2.3.3"
     prosemirror-commands "^1.1.9"
@@ -1177,12 +1177,12 @@
     prosemirror-state "^1.3.4"
     prosemirror-view "^1.18.7"
 
-"@toast-ui/vue-editor@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@toast-ui/vue-editor/-/vue-editor-3.2.0.tgz#f887dd629df5b5e0f4dd7b43a2da425d30728e70"
-  integrity sha512-IzFJ09xreOBshixM1hh6FYXm4HpWISo0SPvNPZGAmZ6EZdraZo1ee2iE/+5wpDvzui95FpTirj+khg8xrvwTvQ==
+"@toast-ui/vue-editor@3.1.8":
+  version "3.1.8"
+  resolved "https://registry.yarnpkg.com/@toast-ui/vue-editor/-/vue-editor-3.1.8.tgz#5e86e7cb68988fccfcfa2f8f0bec55295aaf8966"
+  integrity sha512-s4HpU1fzRK75V7FzAeZmnKCq0r5iwxvY7ePq9sKLcNDY5zU8CIw4Fbn8Rr18/CaCTJVBrtxWYAgcbeaGEoakwg==
   dependencies:
-    "@toast-ui/editor" "^3.2.0"
+    "@toast-ui/editor" "^3.1.8"
 
 "@trysound/sax@0.2.0":
   version "0.2.0"

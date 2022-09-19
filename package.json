@@ -19,8 +19,9 @@
     "vue-router": "3.6.5",
     "vuex": "3.6.2",
 
+    "@toast-ui/vue-editor": "3.1.8",
+
     "@liqueflies/vue-flex-grid": "^0.0.1",
-    "@toast-ui/vue-editor": "^3.2.0",
     "bootstrap-vue": "^2.22.0",
     "color2k": "^2.0.0",
     "core-js": "^3.25.1",
@@ -52,6 +53,9 @@
     "vuedraggable": "^2.23.2",
     "vuex-class": "^0.3.2",
     "zod": "^3.19.1"
+  },
+  "resolutions": {
+    "@toast-ui/editor": "3.1.8"
   },
   "devDependencies": {
     "@intlify/vue-i18n-loader": "1.1.0",
