@@ -157,20 +157,18 @@
         </span>
       </button>
 
-      <transition name="fade-move">
-        <ArgumentEditor
-          v-if="argumentEditorVisible"
-          class="userview-argument-editor"
-          :home-schema="state.uv.homeSchema"
-          :params="state.uv.info.arguments"
-          :values="currentArguments"
-          :attributes="state.uv.argumentAttributes"
-          :attribute-mappings="state.uv.argumentAttributeMappings"
-          @clear="clearUpdatedArguments"
-          @update="updateArgument"
-          @apply="applyUpdatedArguments"
-        />
-      </transition>
+      <ArgumentEditor
+        v-if="argumentEditorVisible"
+        class="userview-argument-editor"
+        :home-schema="state.uv.homeSchema"
+        :params="state.uv.info.arguments"
+        :values="currentArguments"
+        :attributes="state.uv.argumentAttributes"
+        :attribute-mappings="state.uv.argumentAttributeMappings"
+        @clear="clearUpdatedArguments"
+        @update="updateArgument"
+        @apply="applyUpdatedArguments"
+      />
 
       <UserViewCommon
         :uv="state.uv"
