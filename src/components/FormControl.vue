@@ -988,6 +988,8 @@ export default class FormControl extends Vue {
       const lock = await this.addAutoSaveLock();
       this.autoSaveLock = lock;
     }
+
+    this.$emit("focus");
   }
 
   private onBlur() {
