@@ -489,17 +489,17 @@ export const authModule: Module<IAuthState, {}> = {
           } else {
             const oldAuth = loadCurrentAuth();
             if (oldAuth !== null) {
-              updateAuth(context, oldAuth);
+              updateAuth(context, oldAuth, { noPersist: true });
             }
           }
 
-          const authStorageHandler = async (e: StorageEvent) => {
+          const authStorageHandler = (e: StorageEvent) => {
             if (e.key !== authKey) {
               return;
             }
 
             if (e.newValue === null) {
-              await dispatch("removeAuth");
+              void dispatch("removeAuth");
             } else {
               const newAuth = loadCurrentAuth();
               if (newAuth !== null && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
@@ -509,9 +509,7 @@ export const authModule: Module<IAuthState, {}> = {
               }
             }
           };
-          window.addEventListener("storage", e => {
-            void authStorageHandler(e);
-          });
+          window.addEventListener("storage", authStorageHandler);
 
           const visibilityHandler = () => {
             if (document.hidden) {
