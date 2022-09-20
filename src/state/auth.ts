@@ -438,8 +438,6 @@ export const authModule: Module<IAuthState, {}> = {
           }); // Await till router is ready.
 
           if (router.currentRoute.name === "auth_response") {
-            dropCurrentAuth();
-
             const stateString = getQueryValue("state");
             if (stateString !== null) {
               const savedState: IOIDCState = JSON.parse(atob(stateString));
@@ -475,7 +473,6 @@ export const authModule: Module<IAuthState, {}> = {
               await router.replace({ name: "main" });
             }
           } else if (developmentMode && authQueryKey in router.currentRoute.query) {
-            dropCurrentAuth();
             const refreshToken = String(router.currentRoute.query[authQueryKey]);
             const newQuery = { ...router.currentRoute.query };
             delete newQuery[authQueryKey];
