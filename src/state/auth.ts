@@ -589,6 +589,11 @@ export const authModule: Module<IAuthState, {}> = {
       dropCurrentAuth();
       await goAway(context, `${authUrl}/logout?${paramsString}`);
     },
+    login: async context => {
+      if (!context.state.current?.refreshToken) {
+        await requestLogin(context, { tryExisting: true });
+      }
+    },
   },
 };
 
