@@ -221,11 +221,15 @@ const tryGetToken = (context: ActionContext<IAuthState, {}>, params: Record<stri
 
 const updateAuth = (context: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth, opts?: { noPersist?: boolean }) => {
   context.commit("setAuth", auth);
+  // eslint-disable-next-line
+  Utils.debugLog("Setting new refresh token", auth.refreshToken, "no_persist", opts?.noPersist);
   if (auth.refreshToken) {
     if (!opts?.noPersist) {
       persistCurrentAuth(auth);
     }
     startTimeouts(context);
+  } else {
+    stopTimeouts(context);
   }
 };
 
@@ -502,8 +506,10 @@ export const authModule: Module<IAuthState, {}> = {
               void dispatch("removeAuth");
             } else {
               const newAuth = loadCurrentAuth();
+              Utils.debugLog("Got new current auth", newAuth?.refreshToken, "current", state.current, "current token", state.current?.refreshToken);
               if (newAuth !== null && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
                 // Stop running any refresh. We will run it if the token is expired later.
+
                 commit("setPending", null);
                 updateAuth(context, newAuth, { noPersist: true });
               }
