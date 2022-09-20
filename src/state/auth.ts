@@ -504,9 +504,8 @@ export const authModule: Module<IAuthState, {}> = {
             } else {
               const newAuth = loadCurrentAuth();
               Utils.debugLog("Got new current auth", newAuth?.refreshToken, "current", state.current, "current token", state.current?.refreshToken);
-              if (newAuth !== null && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
+              if (newAuth?.refreshToken && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
                 // Stop running any refresh. We will run it if the token is expired later.
-
                 commit("setPending", null);
                 updateAuth(context, newAuth, { noPersist: true });
               }
