@@ -39,7 +39,7 @@ import { dragscroll } from "vue-dragscroll";
 import { ICard, default as Column } from "@/components/kanban/Column.vue";
 
 export interface IColumn<CardT, ColumnT> {
-  title: string;
+  title: string | null;
   key: unknown;
   column: ColumnT;
   cards: ICard<CardT>[];

@@ -262,7 +262,7 @@ export interface ILinkHandlerParams {
   goto: (query: IQuery) => void;
   link: Link;
   openQRCodeScanner: (link: Link) => void;
-  replaceInsteadPush?: boolean;
+  replace?: boolean;
 }
 
 export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
@@ -284,7 +284,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
       };
     } else if (params.link.target === "root") {
       /* eslint-disable @typescript-eslint/require-await */
-      handler = params.replaceInsteadPush
+      handler = params.replace
         ? async () => params.store.dispatch("query/replaceRoot", query)
         : async () => params.goto(query);
       /* eslint-enable @typescript-eslint/require-await */
@@ -337,6 +337,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
           goto: params.goto,
           link: retLink,
           openQRCodeScanner: params.openQRCodeScanner,
+          replace: params.replace,
         };
         await linkHandler(linkHandlerParams).handler();
       }

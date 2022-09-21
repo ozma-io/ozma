@@ -2,8 +2,8 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId } from "ozma-api";
-import { ReferenceName, deepClone, deepEquals, waitTimeout } from "@/utils";
-import { CurrentEntries, Entries, EntriesRef } from "@/state/entries";
+import { ReferenceName, deepClone, deepEquals } from "@/utils";
+import { CurrentEntries, Entries, EntriesRef, PartialEntries } from "@/state/entries";
 
 const entries = namespace("entries");
 
@@ -36,7 +36,7 @@ export default class BaseEntriesView extends Vue {
 
   // These are supposed to be read only in children user views!
   // Keeping them as state values to avoid creating computed properties (which, also, weirdly fail in this case).
-  protected currentEntries: Entries | null = null;
+  protected currentEntries: PartialEntries | null = null;
   protected requestedEntriesRef: EntriesRef | null = null;
   protected requestedSearch = "";
   protected requestedLimit = 0;
@@ -66,7 +66,7 @@ export default class BaseEntriesView extends Vue {
       } else if (this.newEntries === null) {
         void this.getRequestedEntries();
       } else if (!(this.newEntries instanceof Promise)) {
-        this.currentEntries = this.newEntries.entries;
+        this.currentEntries = this.newEntries;
       }
     }
   }
@@ -91,30 +91,25 @@ export default class BaseEntriesView extends Vue {
   }
 
   // Returns `true`, if more entries are available.
-  protected fetchEntries(entity: EntriesRef, search: string, limit: number) {
+  protected async fetchEntries(entity: EntriesRef, search: string, limit: number) {
     if (!deepEquals(this.requestedEntriesRef, entity)) {
       this.freeEntries();
       this.requestedEntriesRef = deepClone(entity);
     }
     this.requestedSearch = search;
     this.requestedLimit = limit;
-    return waitTimeout().then(() => this.getRequestedEntries());
+    return this.getRequestedEntries();
   }
 
-  protected fetchEntriesByIds(entity: EntriesRef, ids: number[]) {
+  protected async fetchEntriesByIds(entity: EntriesRef, ids: RowId[]) {
     if (!deepEquals(this.requestedEntriesRef, entity)) {
       this.freeEntries();
       this.requestedEntriesRef = deepClone(entity);
     }
-    // For an unknown reason, removing this `waitTimeout` results in an infinite
-    // loop when opening a kanban board with reference columns. I'm sure there's
-    // something going on with Vuex here, because even returning immediately from
-    // `gedtEntriesByIds` doesn't help, but returning from this function or adding
-    // this delay does.
-    return waitTimeout().then(() => this.getEntriesByIds({
+    return this.getEntriesByIds({
       ref: this.requestedEntriesRef!,
       reference: this.uid,
       ids,
-    }));
+    });
   }
 }

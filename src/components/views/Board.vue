@@ -91,7 +91,7 @@ interface IEnumColumns {
 
 interface IReferenceColumn {
   id: RowId;
-  name: string;
+  name: string | null;
 }
 
 interface IReferenceColumns {
@@ -191,14 +191,19 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {
         if (typeof col === "number") {
-          let name = this.currentEntries?.[col];
-          if (name === undefined) {
+          const mainName = this.currentEntries?.getMainField(col);
+          let name: string | null;
+          if (mainName === undefined) {
             requestedColumns.push(col);
+            name = null;
+          } else if (mainName === null) {
             name = String(col);
+          } else {
+            name = mainName;
           }
           return {
             id: col,
-            name: String(name),
+            name,
           };
         } else if (typeof col === "object" && col !== null) {
           const id = col["id"];

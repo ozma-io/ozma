@@ -243,13 +243,13 @@
     </template>
 
     <Errorbox
-      v-else-if="state.state === 'error'"
+      v-else-if="state.state === 'error' && !silentErrors"
       :class="isRoot ? 'm-2' : ''"
       :message="state.message"
     />
     <transition name="fade-2">
       <div
-        v-if="state.state === 'loading'"
+        v-if="state.state === 'loading'|| (state.state === 'error' && silentErrors)"
         :class="[
           'loading-container',
           {
@@ -323,6 +323,7 @@ const reload = namespace("reload");
 const staging = namespace("staging");
 const query = namespace("query");
 const settings = namespace("settings");
+const errors = namespace("errors");
 
 interface IUserViewComponent {
   type: "component";
@@ -431,6 +432,7 @@ export default class UserView extends Vue {
   @settings.State("userIsRoot") userIsRoot!: boolean;
   @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
   @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
+  @errors.State("silent") silentErrors!: boolean;
 
   @Prop({ type: Object, required: true }) args!: IUserViewArguments;
   @Prop({ type: Boolean, default: false }) isRoot!: boolean;
@@ -551,7 +553,6 @@ export default class UserView extends Vue {
           goto: target => this.$emit("goto", target),
           openQRCodeScanner: () => {},
           link: { query: this.editViewQuery!, target: "modal-auto", type: "query" },
-          replaceInsteadPush: true,
         };
         const handler = linkHandler(linkHandlerParams);
         void handler.handler();
@@ -863,7 +864,9 @@ export default class UserView extends Vue {
 
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
-          if (pending.ref !== this.nextUv) return;
+          if (pending.ref !== this.nextUv) {
+            return;
+          }
 
           const handler = component.handler ?? baseUserViewHandler;
 
@@ -942,7 +945,7 @@ export default class UserView extends Vue {
             goto: target => this.$emit("goto", target),
             openQRCodeScanner: link => this.$root.$emit("open-qrcode-scanner", link),
             link: newType.link,
-            replaceInsteadPush: true,
+            replace: true,
           };
           const handler = linkHandler(linkHandlerParams);
           this.userViewRedirects++;
