@@ -284,7 +284,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     if (this.currentEntries === null) {
       return null;
     } else {
-      return Object.entries(this.currentEntries).map(([rawId, name]) => this.makeOption(Number(rawId), name));
+      return Object.entries(this.currentEntries.entries).map(([rawId, name]) => this.makeOption(Number(rawId), name));
     }
   }
 
