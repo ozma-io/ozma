@@ -511,8 +511,6 @@ const initTreeChildren = (uv: ITableCombinedUserView) => {
       uv.rows![i].extra.tree.level = level;
     }
   });
-
-  return uv;
 };
 
 const equalNewRowRef = (a: NewRowRef, b: NewRowRef): boolean => {
@@ -837,7 +835,13 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
 
   postInitUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra) {
     if (!R.isEmpty(uv.extra.rowsParentPositions)) {
-      uv = initTreeChildren(uv);
+      uv.extra.lazyLoad = {
+        type: "infinite_scroll",
+        infiniteScroll: {
+          shownRowsLength: uv.extra.lazyLoad.type === "infinite_scroll" ? uv.extra.lazyLoad.infiniteScroll.shownRowsLength : 0,
+        },
+      };
+      initTreeChildren(uv);
     }
 
     for (const pos of [...uv.extra.newRowTopSidePositions, ...uv.extra.newRowBottomSidePositions]) {
@@ -928,7 +932,7 @@ interface IShownRow {
 }
 
 const defaultPageSize = 5;
-// Just look at `ITableLazyLoad` to see which type this mess make.
+// Just look at `ITableLazyLoad` to see which type this mess makes.
 export const TableLazyLoad =
   z.union([
     z.object({
