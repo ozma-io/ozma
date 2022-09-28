@@ -7342,10 +7342,10 @@ vue-eslint-parser@^9.0.1:
     lodash "^4.17.21"
     semver "^7.3.6"
 
-vue-fragment@1.6.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/vue-fragment/-/vue-fragment-1.6.0.tgz#2ac0ff656b74fa87d049a003b5dcd5befe9185cc"
-  integrity sha512-a5T8ZZZK/EQzgVShEl374HbobUJ0a7v12BzOzS6Z/wd/5EE/5SffcyHC+7bf9hP3L7Yc0hhY/GhMdwFQ25O/8A==
+vue-frag@1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/vue-frag/-/vue-frag-1.4.1.tgz#c0c2e633ce36b0b5eb8373c539c90d3bab25a7f8"
+  integrity sha512-1EAPTI/F6huKp8U7lgjCDT119mrJgjrsNJY0j4MD+mNAVqE9LyIBXuWlMpPTFiTH45XDEhiKa4UZoUoW8V72Jg==
 
 vue-functional-data-merge@^3.1.0:
   version "3.1.0"

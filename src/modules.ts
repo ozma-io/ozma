@@ -9,7 +9,7 @@ import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
-import { Plugin as FragmentPlugin } from "vue-fragment";
+import { Fragment } from "vue-frag";
 import VueHotkey from "v-hotkey";
 
 import NotFound from "@/components/NotFound.vue";
@@ -29,11 +29,9 @@ Vue.use(vClickOutside);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(VueGrid);
 Vue.use(PortalVue);
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-Vue.use(FragmentPlugin);
+Vue.component("Fragment", Fragment as any);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 Vue.use(VueHotkey);
-// Vue.use(VueClipboard);
 
 const routes = [
   { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },
