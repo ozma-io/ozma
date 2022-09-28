@@ -55,10 +55,9 @@ export default class MarkdownEditor extends Vue {
 
   private suppressOnChange = false;
   private key = 0;
-  private editorOptions: Record<string, unknown> = {};
 
-  created() {
-    this.editorOptions = {
+  get editorOptions() {
+    return {
       minHeight: "205px",
       useCommandShortcut: true,
       useDefaultHTMLSanitizer: true,
@@ -66,7 +65,7 @@ export default class MarkdownEditor extends Vue {
       hideModeSwitch: false,
       language: this.$root.$i18n.locale,
       placeholder: this.$t("input_placeholder"),
-      autofocus: false,
+      autofocus: this.autofocus,
     };
   }
 
