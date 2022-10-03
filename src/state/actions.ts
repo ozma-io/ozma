@@ -6,8 +6,11 @@ import { app } from "@/main";
 import { i18n } from "@/modules";
 import { ISubmitResult } from "@/state/staging_changes";
 
-const dirtyHackGetErrorMessage = (error: any): string =>
-  /Unhandled exception (Error: )?(.*):\n/g.exec(String(error))?.[2] ?? "";
+const dirtyHackGetErrorMessage = (error: unknown): string => {
+  const errorString = String(error);
+  return /^Error: Uncaught Error: (.*)\n/.exec(errorString)?.[1] ??
+    errorString.replace(/^Error: /, "");
+};
 
 export const saveAndRunAction = async (
   { dispatch }: { dispatch: Dispatch },

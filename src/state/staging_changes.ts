@@ -807,15 +807,13 @@ const stagingModule: Module<IStagingState, {}> = {
       }
       if (ops.length === 0) {
         if (params.preReload) {
-          try {
-            await params.preReload();
-          } catch (e) {
-            console.error("Error while commiting", e);
-          }
+          await params.preReload();
         }
         return { autoSave, results: [] };
       }
       const action: ITransaction = { operations: ops.map(internalOpToTransactionOp) };
+
+      let preReloadError: unknown;
 
       const submit = (async (): Promise<ISubmitResult> => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
@@ -832,7 +830,11 @@ const stagingModule: Module<IStagingState, {}> = {
             throw e;
           }
         }
+
         if (!(result instanceof Error)) {
+          commit("errors/resetErrors", errorKey, { root: true });
+          eventBus.emit("close-all-toasts");
+
           try {
             if (params.preReload) {
               await params.preReload();
@@ -840,16 +842,15 @@ const stagingModule: Module<IStagingState, {}> = {
             void dispatch("reload", undefined, { root: true });
           } catch (e) {
             console.error("Error while commiting", e);
-            // Ignore errors; they've been already handled for userView
+            preReloadError = e;
           }
         }
 
         commit("finishSubmit");
         if (!(result instanceof Error)) {
-          commit("errors/resetErrors", errorKey, { root: true });
-          eventBus.emit("close-all-toasts");
           const opResults = R.zipWith((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
           await dispatch("clearUnchanged", opResults);
+
           return { autoSave, results: opResults };
         } else {
           commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
@@ -857,7 +858,12 @@ const stagingModule: Module<IStagingState, {}> = {
         }
       })();
       commit("startSubmit", submit);
-      return submit;
+
+      const ret = await submit;
+      if (preReloadError) {
+        throw preReloadError;
+      }
+      return ret;
     },
   },
 };
