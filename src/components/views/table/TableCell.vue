@@ -84,7 +84,7 @@
             'option-local-variant',
             {
               'option': (fieldTypeName == 'enum' || fieldTypeName == 'reference') && valueHtml.length > 0,
-              'tree': showTree && column.treeUnfoldColumn && !notExisting,
+              'tree': showTree && column.treeUnfoldColumn,
             }
           ]"
           :style="optionVariantVariables"
@@ -223,8 +223,7 @@ export default class TableCell extends Vue {
 
   get isTreeCell() {
     return this.showTree
-        && this.column.treeUnfoldColumn
-        && !this.notExisting;
+        && this.column.treeUnfoldColumn;
   }
 
   get treeHasChildren() {
@@ -242,7 +241,7 @@ export default class TableCell extends Vue {
   }
 
   get addChildButton(): Button | null {
-    if (!this.isTreeCell || !this.showAddChild) {
+    if (!this.isTreeCell || !this.showAddChild || this.notExisting) {
       return null;
     } else {
       return {

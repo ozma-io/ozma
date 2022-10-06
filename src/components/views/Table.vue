@@ -335,7 +335,7 @@ import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef, AttributeName } from "ozma-api";
 import Popper from "vue-popperjs";
 
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue, debugLog } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -465,7 +465,6 @@ const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): New
       for (const rowI of rowIndices) {
         const row = uv.rows![rowI];
         id = row.mainId!;
-        row.extra.shownAsNewRow = true;
       }
       if (id === undefined) {
         return null;
@@ -490,7 +489,14 @@ const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): New
 };
 
 const inheritOldRowsPositions = (uv: ITableCombinedUserView, positions: NewRowRef[]): NewRowRef[] => {
-  return mapMaybe(pos => inheritOldRowsPosition(uv, pos) ?? undefined, positions);
+  if (positions.length > 0) {
+    debugLog("positions", positions, "old committed", uv.oldCommittedRows);
+  }
+  const ret = mapMaybe(pos => inheritOldRowsPosition(uv, pos) ?? undefined, positions);
+  if (positions.length > 0) {
+    debugLog("ret", ret);
+  }
+  return ret;
 };
 
 const getRowTreeId = (uv: ITableCombinedUserView, row: IRowCommon): TreeId | null => {
@@ -522,7 +528,6 @@ const createCommonLocalRow = (uv: ITableCombinedUserView, row: IRowCommon, rowRe
   return {
     searchText: "",
     link: null,
-    shownAsNewRow: false,
     tree,
   };
 };
@@ -796,6 +801,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...commonExtra,
       ...baseExtra,
+      shownAsNewRow: oldRow?.shownAsNewRow ?? false,
     };
   },
 
@@ -828,6 +834,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...commonExtra,
       ...baseExtra,
+      shownAsNewRow: true,
     };
   },
 
@@ -837,6 +844,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...commonExtra,
       ...baseExtra,
+      shownAsNewRow: true,
     };
   },
 
@@ -924,14 +932,6 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
   postInitUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra) {
     if (uv.extra.treeParentColumnIndex !== -1) {
       initTreeChildren(uv);
-    }
-
-    for (const pos of [...uv.extra.newRowTopSidePositions, ...uv.extra.newRowBottomSidePositions]) {
-      if (pos.type === "committed") {
-        // `index.type === "existing"` here; "added" may only appear after a commit.
-        const index = uv.mainRowMapping[pos.id][0] as IExistingRowRef;
-        uv.rows![index.position].extra.shownAsNewRow = true;
-      }
     }
 
     const cursorValue = oldView?.cursorValue ?? null;
@@ -2700,40 +2700,33 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   get middleRows(): IShownRow[] {
     if (this.showTree) {
       const rowPositions: IShownRow[] = [];
-      const addRowAndChildren = (rowRef: CommittedRowRef | NewRowRef) => {
-        if (rowRef.type === "committed") {
-          const existingRows = this.uv.mainRowMapping[rowRef.id];
-          if (!existingRows) return;
-          for (const row of existingRows) {
-            addRowAndChildren(row);
+      const addRowAndChildren = (rowRef: CommittedRowRef) => {
+        let row: ITableExtendedRowCommon;
+        if (rowRef.type === "existing") {
+          const existingRow = this.uv.rows![rowRef.position];
+          if (existingRow.deleted) {
+            return;
           }
+          row = existingRow;
+        } else if (rowRef.type === "added") {
+          const addedRow = this.uv.newRows[rowRef.id];
+          if (!addedRow) {
+            return;
+          }
+          row = addedRow;
         } else {
-          let row: ITableExtendedRowCommon;
-          if (rowRef.type === "existing") {
-            const existingRow = this.uv.rows![rowRef.position];
-            if (existingRow.deleted || existingRow.extra.shownAsNewRow) {
-              return;
-            }
-            row = existingRow;
-          } else if (rowRef.type === "added") {
-            const addedRow = this.uv.newRows[rowRef.id];
-            if (!addedRow) {
-              return;
-            }
-            row = addedRow;
-          } else {
-            throw new Error("Impossible");
+          throw new Error("Impossible");
+        }
+
+        rowPositions.push(refToShownRow(rowRef, row));
+
+        if (row.extra.tree!.arrowDown) {
+          for (const ref of row.extra.tree!.addedChildren) {
+            debugLog("ref", ref, "row", getNewRow(this.uv, ref));
+            addRowAndChildren(getNewRow(this.uv, ref).ref);
           }
-
-          rowPositions.push(refToShownRow(rowRef, row));
-
-          if (row.extra.tree!.arrowDown) {
-            for (const ref of row.extra.tree!.addedChildren) {
-              addRowAndChildren(ref);
-            }
-            for (const ref of row.extra.tree!.children) {
-              addRowAndChildren(ref);
-            }
+          for (const ref of row.extra.tree!.children) {
+            addRowAndChildren(ref);
           }
         }
       };
