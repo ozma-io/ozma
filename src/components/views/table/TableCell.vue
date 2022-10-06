@@ -156,7 +156,7 @@ export default class TableCell extends Vue {
   @Prop({ type: String, default: "existing" }) from!: string;
   @Prop({ type: Boolean, default: false }) firstNonFixed!: boolean;
   @Prop({ type: Number }) fixedLeft!: number | undefined;
-  @Prop({ type: Object, required: true }) tree!: ITableRowTree;
+  @Prop({ type: Object }) tree!: ITableRowTree | undefined;
   @Prop({ type: Boolean, required: true }) showTree!: boolean;
   @Prop({ type: Boolean, required: true }) showAddChild!: boolean;
   @Prop({ type: Boolean, default: false }) notExisting!: boolean;
@@ -215,7 +215,7 @@ export default class TableCell extends Vue {
 
   get treeLevel() {
     if (this.column.treeUnfoldColumn) {
-      return this.tree.level;
+      return this.tree!.level ?? 0;
     } else {
       return 0;
     }
@@ -229,7 +229,7 @@ export default class TableCell extends Vue {
 
   get treeHasChildren() {
     return this.isTreeCell
-        && this.tree.children !== undefined
+        && this.tree?.children !== undefined
         && this.tree.children.length > 0;
   }
 
@@ -261,7 +261,7 @@ export default class TableCell extends Vue {
   }
 
   toggleChildren() {
-    this.$emit("toggle-children", !this.tree.arrowDown);
+    this.$emit("toggle-children", !this.tree!.arrowDown);
   }
 
   get iconValue() {
