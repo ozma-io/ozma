@@ -2081,11 +2081,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       this.$emit("load-all-chunks");
     }
 
+    // Check if current filter contained this one
+    const contained = !this.showTree && this.currentFilter.every(oldWord => this.filter.some(newWord => newWord.startsWith(oldWord)));
+
     const oldFilter = this.currentFilter;
     this.currentFilter = this.filter;
-
-    // Check if current filter contained this one
-    const contained = !this.showTree && oldFilter.every(oldWord => this.currentFilter.some(newWord => newWord.startsWith(oldWord)));
 
     if (!contained) {
       this.buildRowPositions();
