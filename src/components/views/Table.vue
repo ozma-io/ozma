@@ -335,7 +335,7 @@ import { z } from "zod";
 import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef, AttributeName } from "ozma-api";
 import Popper from "vue-popperjs";
 
-import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue, debugLog } from "@/utils";
+import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
 import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
@@ -489,13 +489,7 @@ const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): New
 };
 
 const inheritOldRowsPositions = (uv: ITableCombinedUserView, positions: NewRowRef[]): NewRowRef[] => {
-  if (positions.length > 0) {
-    debugLog("positions", positions, "old committed", uv.oldCommittedRows);
-  }
   const ret = mapMaybe(pos => inheritOldRowsPosition(uv, pos) ?? undefined, positions);
-  if (positions.length > 0) {
-    debugLog("ret", ret);
-  }
   return ret;
 };
 
@@ -2722,7 +2716,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
         if (row.extra.tree!.arrowDown) {
           for (const ref of row.extra.tree!.addedChildren) {
-            debugLog("ref", ref, "row", getNewRow(this.uv, ref));
             addRowAndChildren(getNewRow(this.uv, ref).ref);
           }
           for (const ref of row.extra.tree!.children) {
