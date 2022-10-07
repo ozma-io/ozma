@@ -401,11 +401,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       this.groupIndex === null && this.$t("no_group"),
     ].filter(v => v);
 
-    const hasErrors = messagesArray.length > 0;
-
-    const errorMessage = this.$t("view_error");
-    const errorString = `${errorMessage}:\n${messagesArray.join("\n")}.`;
-    return hasErrors ? errorString : null;
+    if (messagesArray.length === 0) {
+      return null;
+    } else {
+      const errorMessage = this.$t("view_error");
+      return `${errorMessage}:\n${messagesArray.join("\n")}.`;
+    }
   }
 
   createCard(column: IGroupColumn, columnIndex: number) {

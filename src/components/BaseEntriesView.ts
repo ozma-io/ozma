@@ -2,7 +2,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
 import { RowId } from "ozma-api";
-import { ReferenceName, deepClone, deepEquals } from "@/utils";
+import { ReferenceName, deepClone, deepEquals, waitTimeout } from "@/utils";
 import { CurrentEntries, Entries, EntriesRef, PartialEntries } from "@/state/entries";
 
 const entries = namespace("entries");
@@ -92,6 +92,8 @@ export default class BaseEntriesView extends Vue {
 
   // Returns `true`, if more entries are available.
   protected async fetchEntries(entity: EntriesRef, search: string, limit: number) {
+    // Needed to break a cycle with currentEntries.
+    await waitTimeout(0);
     if (!deepEquals(this.requestedEntriesRef, entity)) {
       this.freeEntries();
       this.requestedEntriesRef = deepClone(entity);
@@ -102,6 +104,8 @@ export default class BaseEntriesView extends Vue {
   }
 
   protected async fetchEntriesByIds(entity: EntriesRef, ids: RowId[]) {
+    // Needed to break a cycle with currentEntries.
+    await waitTimeout(0);
     if (!deepEquals(this.requestedEntriesRef, entity)) {
       this.freeEntries();
       this.requestedEntriesRef = deepClone(entity);
