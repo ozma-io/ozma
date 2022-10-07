@@ -37,6 +37,7 @@ export default class CodeEditor extends Vue {
         useShadows: false,
       },
       unicodeHighlight: {
+        ambiguousCharacters: false,
         nonBasicASCII: false,
       },
       fontSize,
