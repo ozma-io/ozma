@@ -2210,7 +2210,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get showTree() {
-    return this.uv.extra.treeParentColumnIndex !== null && this.filter.length === 0;
+    return this.uv.extra.treeParentColumnIndex !== null && this.currentFilter.length === 0;
   }
 
   // Update `this.rowsPositions` when `this.uv.rows` has changed.
