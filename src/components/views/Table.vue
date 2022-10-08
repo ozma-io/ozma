@@ -472,16 +472,6 @@ const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): New
       return { type: "committed", id };
     }
   } else if (pos.type === "committed") {
-    const rowRefs = uv.mainRowMapping[pos.id];
-    if (!rowRefs) {
-      return null;
-    }
-    for (const rowRef of rowRefs) {
-      const row = uv.getRowByRef(rowRef);
-      if (row) {
-        row.extra.shownAsNewRow = true;
-      }
-    }
     return { type: "committed", id: pos.id };
   } else {
     throw new Error("Impossible");
