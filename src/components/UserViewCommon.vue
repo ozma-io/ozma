@@ -49,8 +49,8 @@
     <QRCodeScannerModal
       v-if="selectedBarCodeReference !== null"
       ref="barcodeScanner"
-      :reference-entity="openBarCodeScanner.referenceEntity"
-      :entries="openBarCodeScanner.entries"
+      :reference-entity="selectedBarCodeReference.referenceEntity"
+      :entries="selectedBarCodeReference.entries"
       multi-scan
       text-input
       @select="selectFromScanner(barCodeColumnIndex, $event)"
