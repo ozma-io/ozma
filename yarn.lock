@@ -2088,19 +2088,14 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@zxing/library@^0.19.1":
-  version "0.19.1"
-  resolved "https://registry.yarnpkg.com/@zxing/library/-/library-0.19.1.tgz#68932436a9cf860e2148a6d6ae38fe1e27ea23a8"
-  integrity sha512-rKwvl3Uuqs8yf364iU9l3HDDaIx8yPv+CH6DbtQaQr67VdKLG22G1ukEp9fOdDefE6tpLtRAdMnTrgtpiaKAZw==
+"@zxing/library@^0.15.1":
+  version "0.15.2"
+  resolved "https://registry.yarnpkg.com/@zxing/library/-/library-0.15.2.tgz#3026071aca80a84af09706dffa1d386053e11efc"
+  integrity sha512-J+N88Eyg6eI2SKIk2YIkjjNICbMSqmLZnB3oD1S21Bi3k+Ddg2eKe/nW+Hce4NKAFAZtY1mdDM08Bj9eu87HSg==
   dependencies:
     ts-custom-error "^3.0.0"
   optionalDependencies:
-    "@zxing/text-encoding" "~0.9.0"
-
-"@zxing/text-encoding@~0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@zxing/text-encoding/-/text-encoding-0.9.0.tgz#fb50ffabc6c7c66a0c96b4c03e3d9be74864b70b"
-  integrity sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==
+    text-encoding "^0.7.0"
 
 accepts@~1.3.4, accepts@~1.3.5, accepts@~1.3.8:
   version "1.3.8"
@@ -7008,6 +7003,11 @@ terser@^5.10.0, terser@^5.14.1:
     commander "^2.20.0"
     source-map-support "~0.5.20"
 
+text-encoding@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/text-encoding/-/text-encoding-0.7.0.tgz#f895e836e45990624086601798ea98e8f36ee643"
+  integrity sha512-oJQ3f1hrOnbRLOcwKz0Liq2IcrvDeZRHXhd9RgLrsT+DjWY/nty1Hi7v3dtkaEYbPYe0mUoOfzRrMwfXXwgPUA==
+
 text-table@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
@@ -7295,12 +7295,12 @@ vfile-message@*:
     "@types/unist" "^2.0.0"
     unist-util-stringify-position "^3.0.0"
 
-vue-barcode-reader@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/vue-barcode-reader/-/vue-barcode-reader-1.0.2.tgz#71d481cb84e815f420129701607688901e298720"
-  integrity sha512-dDf7HeDZBAo7xYdmpfUql92pmZsjdFCHNy3JXd2FCer5mA8sNU42CDNNf/juaUIxjZNUXaBFwEX4pJD2zGqtvw==
+vue-barcode-reader@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/vue-barcode-reader/-/vue-barcode-reader-0.0.3.tgz#5831a39ce9fd699c74d5fe38fd7c61fb58114534"
+  integrity sha512-3hzsMQ6otBRJp55Nchva/Z+Tob81BrWJqNS50myoDmGAbO5ufiulT+ix6EKi5bl0iUN6cepMg0jWIn082WD1QA==
   dependencies:
-    "@zxing/library" "^0.19.1"
+    "@zxing/library" "^0.15.1"
 
 vue-barcode@^1.3.0:
   version "1.3.0"

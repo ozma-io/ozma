@@ -38,17 +38,17 @@
       @select="selectFromUserView($event)"
       @close="modalView = null"
     />
-    <QRCodeScanner
+    <QRCodeScannerModal
       v-if="selectedQRCodeReference !== null"
-      :open-scanner="openQRCodeScanner"
+      ref="qrcodeScanner"
       :reference-entity="selectedQRCodeReference.referenceEntity"
       :entries="selectedQRCodeReference.entries"
       multi-scan
       @select="selectFromScanner(qrCodeColumnIndex, $event)"
     />
-    <QRCodeScanner
+    <QRCodeScannerModal
       v-if="selectedBarCodeReference !== null"
-      :open-scanner="openBarCodeScanner"
+      ref="barcodeScanner"
       :reference-entity="openBarCodeScanner.referenceEntity"
       :entries="openBarCodeScanner.entries"
       multi-scan
@@ -100,6 +100,7 @@ import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
 import { eventBus, IShowHelpModalArgs } from "@/main";
 import { formatValue } from "@/user_views/format";
+import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -123,7 +124,7 @@ const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
 @Component({
   components: {
     SelectUserView,
-    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    QRCodeScannerModal,
   },
 })
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
@@ -135,8 +136,6 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
   @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
 
   private modalView: IQuery | null = null;
-  private openQRCodeScanner = false;
-  private openBarCodeScanner = false;
   private showDeleteEntiesButton = false;
   private autoSaveLock: AutoSaveLock | null = null;
 
@@ -618,7 +617,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         tooltip: this.qrCodeButton.tooltip,
         variant: this.qrCodeButton.variant,
         callback: () => {
-          this.openQRCodeScanner = !this.openQRCodeScanner;
+          (this.$refs.qrcodeScanner as QRCodeScannerModal).scan();
         },
         type: "callback",
       });
@@ -632,7 +631,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         tooltip: this.barCodeButton.tooltip,
         variant: this.barCodeButton.variant,
         callback: () => {
-          this.openBarCodeScanner = !this.openBarCodeScanner;
+          (this.$refs.barcodeScanner as QRCodeScannerModal).scan();
         },
         type: "callback",
       });
