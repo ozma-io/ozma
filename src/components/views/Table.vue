@@ -472,7 +472,11 @@ const inheritOldRowsPosition = (uv: ITableCombinedUserView, pos: NewRowRef): New
       return { type: "committed", id };
     }
   } else if (pos.type === "committed") {
-    return { type: "committed", id: pos.id };
+    if (pos.id in uv.mainRowMapping) {
+      return { type: "committed", id: pos.id };
+    } else {
+      return null;
+    }
   } else {
     throw new Error("Impossible");
   }
