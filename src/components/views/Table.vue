@@ -582,7 +582,18 @@ const getRowParent = (uv: ITableCombinedUserView, row: ITableExtendedRowCommon):
   return parentRef === undefined ? undefined : uv.getRowByRef(parentRef);
 };
 
+const markNewRows = (uv: ITableCombinedUserView, rows: NewRowRef[]) => {
+  for (const addedRef of rows) {
+    const addedRow = getNewRow(uv, addedRef);
+    addedRow.row.extra.shownAsNewRow = true;
+  }
+};
+
 const initTreeChildren = (uv: ITableCombinedUserView) => {
+  uv.forEachCommittedRow(row => {
+    markNewRows(uv, row.extra.tree!.addedChildren);
+  });
+
   uv.forEachCommittedRow((row, rowRef) => {
     const parentRef = getRowParentRef(uv, row);
     const parent = parentRef === undefined ? undefined : uv.getRowByRef(parentRef);
@@ -789,7 +800,7 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
     return {
       ...commonExtra,
       ...baseExtra,
-      shownAsNewRow: oldRow?.shownAsNewRow ?? false,
+      shownAsNewRow: false,
     };
   },
 
@@ -918,7 +929,10 @@ export const tableUserViewHandler: IUserViewHandler<ITableValueExtra, ITableRowE
   },
 
   postInitUserView(uv: ITableCombinedUserView, oldView?: ITableViewExtra) {
-    if (uv.extra.treeParentColumnIndex !== -1) {
+    markNewRows(uv, uv.extra.newRowTopSidePositions);
+    markNewRows(uv, uv.extra.newRowBottomSidePositions);
+
+    if (uv.extra.treeParentColumnIndex !== null) {
       initTreeChildren(uv);
     }
 
