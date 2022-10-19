@@ -290,6 +290,7 @@
           :scope="scope"
           :level="level + 1"
           :filter-string="filterString"
+          :in-container="customHeight !== null"
           @update:buttons="buttons = $event"
           @update:enable-filter="enableFilter = $event"
           @update:is-loading="isUserViewLoading = $event"

@@ -186,7 +186,7 @@
       <FunOverlay
         ref="overlayRef"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
-        :infinite-wrapper="isRoot"
+        :infinite-wrapper="inContainer"
       >
         <template #overlay>
           <div class="overlay-content">
@@ -443,6 +443,7 @@ export default class UserView extends Vue {
   @Prop({ type: Object, default: () => ({}) }) defaultValues!: Record<string, unknown>;
   // Use this user view to select and return an entry.
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
+  @Prop({ type: Boolean, default: false }) inContainer!: boolean;
 
   private uvCommonButtons: Button[] = [];
   private componentButtons: Button[] = [];

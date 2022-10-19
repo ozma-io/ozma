@@ -122,6 +122,7 @@
         <UserView
           is-root
           is-top-level
+          in-container
           :args="query.root.args"
           :filter="filterWords"
           :default-values="query.root.defaultValues"

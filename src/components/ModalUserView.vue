@@ -48,7 +48,8 @@
         class="view-container"
       >
         <UserView
-          :is-root="isRoot"
+          is-root
+          in-container
           :args="view.args"
           :default-values="view.defaultValues"
           :selection-mode="selectionMode"
@@ -93,7 +94,6 @@ export default class ModalUserView extends Vue {
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean }) => Promise<void>;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
-  @Prop({ type: Boolean, default: false }) isRoot!: boolean;
   @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
   @Prop({ type: Object, required: true }) view!: IQuery;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
