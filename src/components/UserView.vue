@@ -186,7 +186,7 @@
       <FunOverlay
         ref="overlayRef"
         :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
-        :infinite-wrapper="isTopLevel"
+        :infinite-wrapper="isRoot"
       >
         <template #overlay>
           <div class="overlay-content">
