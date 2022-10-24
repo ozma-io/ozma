@@ -108,7 +108,7 @@ export default class ButtonItem extends Vue {
   }
 
   private get isReadonlyDemoInstance() {
-    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.auth?.token;
+    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && this.auth?.refreshToken;
   }
 
   private onClickLinkReadonlyDemoInstance() {

@@ -315,7 +315,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       }
       const col = this.uv.info.columns[colI];
       return [col.mainField!.name, value.value];
-    }, this.uv.emptyRow!.values));
+    }, this.uv.emptyRow!.values)) as Record<string, unknown>;
     const columnNames = Object.fromEntries(mapMaybe((info, colI) => {
       if (!info.mainField) {
         return undefined;

@@ -839,7 +839,6 @@ const stagingModule: Module<IStagingState, {}> = {
             if (params.preReload) {
               await params.preReload();
             }
-            void dispatch("reload", undefined, { root: true });
           } catch (e) {
             console.error("Error while commiting", e);
             preReloadError = e;

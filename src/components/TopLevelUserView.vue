@@ -460,7 +460,7 @@ export default class TopLevelUserView extends Vue {
 
   get errors() {
     if (this.silentErrors) {
-      return {};
+      return [];
     } else {
       return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
         const translationKey = `${key}_error`;
@@ -599,7 +599,7 @@ export default class TopLevelUserView extends Vue {
   get burgerButton() {
     const buttons: Button[] = [];
 
-    if (this.currentAuth?.token) {
+    if (this.currentAuth?.refreshToken) {
       buttons.push({
         icon: "person_add",
         caption: this.$t("invite_user").toString(),
@@ -635,7 +635,7 @@ export default class TopLevelUserView extends Vue {
         })),
     });
 
-    if (this.currentAuth?.token) {
+    if (this.currentAuth?.refreshToken) {
       if (this.allowBusinessMode && this.userIsRoot) {
         buttons.push({
           icon: "developer_mode",

@@ -451,20 +451,19 @@ export default class UserView extends Vue {
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private nextUv: Promise<void> | null = null;
-  private inhibitReload = false;
   private updatedArguments: Record<ArgumentName, unknown> = {};
   private showArgumentEditor = false;
   private userViewRedirects = 0;
 
   protected created() {
-    this.setReloadHandler({
-      key: this.uid,
-      handler: () => {
-        if (!this.inhibitReload) {
+    if (this.isRoot) {
+      this.setReloadHandler({
+        key: this.uid,
+        handler: () => {
           void this.reload();
-        }
-      },
-    });
+        },
+      });
+    }
   }
 
   destroyed() {
@@ -742,7 +741,7 @@ export default class UserView extends Vue {
   }
 
   private async reloadIfRoot(autoSaved?: boolean) {
-    if (this.isRoot) {
+    if (this.isRoot && this.args.args !== null) {
       await this.reload({ autoSaved });
     }
   }
@@ -1042,17 +1041,6 @@ export default class UserView extends Vue {
 
   @Watch("args", { deep: true, immediate: true })
   private argsChanged() {
-    let currentArgs: IUserViewArguments | undefined;
-    if (this.state.state === "show") {
-      currentArgs = this.state.uv.args;
-    } else if (this.state.state === "loading" && this.state.args !== null) {
-      currentArgs = this.state.args;
-    } else if (this.state.state === "error") {
-      currentArgs = this.state.args;
-    }
-    if (deepEquals(currentArgs, this.args)) {
-      return;
-    }
     void this.reload({ differentComponent: true });
   }
 
@@ -1081,14 +1069,15 @@ export default class UserView extends Vue {
     return this.hasArguments && this.showArgumentEditor;
   }
 
+  // Returns whether we need to reload.
   private async redirectOnInsert(oldUv: ICombinedUserViewAny, result: ISubmitResult): Promise<boolean> {
-    if (!oldUv.info.mainEntity || !oldUv.info.mainEntity.forInsert) {
+    if (!oldUv.info.mainEntity || !oldUv.info.mainEntity.forInsert || oldUv.args.args !== null) {
       return false;
     }
 
     if (!deepEquals(this.args, oldUv.args)) {
       // We went somewhere else meanwhile.
-      return false;
+      return true;
     }
 
     const createOps = result.results.filter(x => x.type === "insert" && equalEntityRef(x.entity, oldUv.info.mainEntity!.entity));
@@ -1114,7 +1103,6 @@ export default class UserView extends Vue {
       link = customLink;
     }
 
-    const oldArgs = deepClone(this.args);
     try {
       const linkHandlerParams: ILinkHandlerParams = {
         store: this.$store,
@@ -1126,38 +1114,28 @@ export default class UserView extends Vue {
     } catch (e) {
       return false;
     }
-    await this.$nextTick();
-    if (deepEquals(oldArgs, this.args)) {
-      await this.reloadIfRoot(result.autoSave);
-    }
     return true;
   }
 
   @Watch("submitPromise", { immediate: true })
   private changesSubmitted(submitPromise: Promise<ISubmitResult> | null) {
-    if (this.state.state !== "show" || this.state.uv.rows !== null || submitPromise === null) {
+    if (this.state.state !== "show" || submitPromise === null) {
       return;
     }
-    this.inhibitReload = true;
     const uv = this.state.uv;
 
     // We detect if a redirect should happen. If not, we just reload. If it does, we
     // execute it and then reload only if `args` didn't change.
     void (async () => {
+      let ret: ISubmitResult;
       try {
-        let ret: ISubmitResult;
-        try {
-          ret = await submitPromise;
-        } catch (e) {
-          return;
-        }
+        ret = await submitPromise;
+      } catch (e) {
+        return;
+      }
 
-        if (!await this.redirectOnInsert(uv, ret)) {
-          await this.reloadIfRoot(ret.autoSave);
-          return;
-        }
-      } finally {
-        this.inhibitReload = false;
+      if (this.isRoot && !await this.redirectOnInsert(uv, ret)) {
+        await this.reloadIfRoot(ret.autoSave);
       }
     })();
   }
