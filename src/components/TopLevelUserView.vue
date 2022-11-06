@@ -122,6 +122,7 @@
         <UserView
           is-root
           is-top-level
+          in-container
           :args="query.root.args"
           :filter="filterWords"
           :default-values="query.root.defaultValues"
@@ -340,6 +341,7 @@ export default class TopLevelUserView extends Vue {
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
+  @errors.State("silent") silentErrors!: boolean;
   @settings.State("current") currentSettings!: CurrentSettings;
   @settings.State("pending") settingsPending!: Promise<CurrentSettings> | null;
   @settings.State("userIsRoot") userIsRoot!: boolean;
@@ -457,14 +459,18 @@ export default class TopLevelUserView extends Vue {
   }
 
   get errors() {
-    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      const translationKey = `${key}_error`;
-      if (this.$te(translationKey)) {
-        return this.$t(translationKey, { msg: error });
-      } else {
-        return error;
-      }
-    }));
+    if (this.silentErrors) {
+      return [];
+    } else {
+      return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
+        const translationKey = `${key}_error`;
+        if (this.$te(translationKey)) {
+          return this.$t(translationKey, { msg: error });
+        } else {
+          return error;
+        }
+      }));
+    }
   }
 
   get isLoading(): boolean {
@@ -593,7 +599,7 @@ export default class TopLevelUserView extends Vue {
   get burgerButton() {
     const buttons: Button[] = [];
 
-    if (this.currentAuth?.token) {
+    if (this.currentAuth?.refreshToken) {
       buttons.push({
         icon: "person_add",
         caption: this.$t("invite_user").toString(),
@@ -629,7 +635,7 @@ export default class TopLevelUserView extends Vue {
         })),
     });
 
-    if (this.currentAuth?.token) {
+    if (this.currentAuth?.refreshToken) {
       if (this.allowBusinessMode && this.userIsRoot) {
         buttons.push({
           icon: "developer_mode",
@@ -697,7 +703,7 @@ export default class TopLevelUserView extends Vue {
         icon: "exit_to_app",
         caption: this.$t("logout").toString(),
         type: "callback",
-        callback: this.logout,
+        callback: () => void this.logout(),
         variant: defaultVariantAttribute,
       });
     } else {
@@ -705,7 +711,7 @@ export default class TopLevelUserView extends Vue {
         icon: "login",
         caption: this.$t("login").toString(),
         type: "callback",
-        callback: this.login,
+        callback: () => void this.login(),
         variant: defaultVariantAttribute,
       });
     }

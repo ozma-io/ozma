@@ -27,11 +27,11 @@
     />
     <Board
       v-else
-      allow-dragging
+      :allow-dragging="!disabled"
       :column-width="columnWidth"
       :background-color="backgroundColor"
       :columns="columns"
-      :create-button="createView !== null"
+      :create-button="!disabled && createView !== null"
       @add="changeGroup"
       @move="changeOrder"
       @create="createCard"
@@ -91,7 +91,7 @@ interface IEnumColumns {
 
 interface IReferenceColumn {
   id: RowId;
-  name: string;
+  name: string | null;
 }
 
 interface IReferenceColumns {
@@ -160,6 +160,10 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
     }
   }
 
+  get disabled() {
+    return Boolean(this.uv.attributes["soft_disabled"]);
+  }
+
   get columnsType(): BoardColumnsType | null {
     if (this.groupIndex === null) {
       return null;
@@ -187,14 +191,19 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       const requestedColumns: RowId[] = [];
       const columns = mapMaybe(col => {
         if (typeof col === "number") {
-          let name = this.currentEntries?.[col];
-          if (name === undefined) {
+          const mainName = this.currentEntries?.getMainField(col);
+          let name: string | null;
+          if (mainName === undefined) {
             requestedColumns.push(col);
+            name = null;
+          } else if (mainName === null) {
             name = String(col);
+          } else {
+            name = mainName;
           }
           return {
             id: col,
-            name: String(name),
+            name,
           };
         } else if (typeof col === "object" && col !== null) {
           const id = col["id"];
@@ -392,11 +401,12 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
       this.groupIndex === null && this.$t("no_group"),
     ].filter(v => v);
 
-    const hasErrors = messagesArray.length > 0;
-
-    const errorMessage = this.$t("view_error");
-    const errorString = `${errorMessage}:\n${messagesArray.join("\n")}.`;
-    return hasErrors ? errorString : null;
+    if (messagesArray.length === 0) {
+      return null;
+    } else {
+      const errorMessage = this.$t("view_error");
+      return `${errorMessage}:\n${messagesArray.join("\n")}.`;
+    }
   }
 
   createCard(column: IGroupColumn, columnIndex: number) {

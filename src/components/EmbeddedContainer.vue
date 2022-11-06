@@ -17,8 +17,10 @@ import { Link, HrefTargetType, attrToQueryLink, linkHandler } from "../links";
 
 type SupportedVecrsion = 0 | 1;
 
+type HandlerResult = { result: unknown } | { error: unknown; message: string };
+
 type Handlers<Requests extends { type: string }> = {
-  [Data in Requests as Data["type"]]: (request: Data) => { result: unknown } | { error: unknown; message: string };
+  [Data in Requests as Data["type"]]: (request: Data) => HandlerResult;
 };
 
 type API1ClientRequestData = Embedded.IChangeHeightRequestData | Embedded.IUpdateValueRequestData | Embedded.IGotoRequestData;
@@ -217,7 +219,9 @@ export default class EmbeddedContainer extends Vue {
     const request = msg.request;
     if (typeof request === "object" && request !== null && request.type in handlers) {
       try {
-        const result = handlers[request.type as R["type"]](request as any);
+        const handler = handlers[request.type as R["type"]];
+        // FIXME: smth with the type signature.
+        const result = (handler as any)(request as any) as HandlerResult;
         if ("result" in result) {
           const response: Embedded.IResponseSuccess<typeof result> = {
             type: "response",

@@ -5,6 +5,7 @@
     :scope="scope"
     :level="level"
     :filter="filterWords"
+    :in-container="inContainer"
     @update:buttons="$emit('update:buttons', $event)"
     @goto="$emit('goto', $event)"
     @update:enable-filter="$emit('update:enable-filter', $event)"
@@ -24,6 +25,7 @@ export default class NestedUserView extends Vue {
   @Prop({ type: Number, required: true }) level!: number;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Object, required: true }) defaultValues!: Record<string, unknown>;
+  @Prop({ type: Boolean, default: false }) inContainer!: boolean;
 
   private isLoading = true;
 

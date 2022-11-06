@@ -9,7 +9,7 @@ import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
-import { Plugin as FragmentPlugin } from "vue-fragment";
+import { Fragment } from "vue-frag";
 import VueHotkey from "v-hotkey";
 
 import NotFound from "@/components/NotFound.vue";
@@ -29,11 +29,9 @@ Vue.use(vClickOutside);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(VueGrid);
 Vue.use(PortalVue);
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-Vue.use(FragmentPlugin);
+Vue.component("Fragment", Fragment as any);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 Vue.use(VueHotkey);
-// Vue.use(VueClipboard);
 
 const routes = [
   { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },
@@ -48,7 +46,7 @@ const routes = [
 
 const globalMessages = {
   "en": {
-    "confirm_close": "You have unsaved changes, do you want to discard them?",
+    "confirm_reset": "You have unsaved changes, do you want to discard them?",
     "generation_start_title": "File generation is started",
     "generation_start_description": "It may take few seconds",
     "generation_fail": "Error occured while file generation. Try again.",
@@ -60,7 +58,7 @@ const globalMessages = {
     "computed_attributes": "Computed attributes",
   },
   "ru": {
-    "confirm_close": "У вас есть несохранённые изменения, отбросить их?",
+    "confirm_reset": "У вас есть несохранённые изменения, отбросить их?",
     "generation_start_title": "Началось создание файла",
     "generation_start_description": "Это займёт несколько секунд",
     "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",

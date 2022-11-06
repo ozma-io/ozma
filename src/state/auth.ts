@@ -11,16 +11,16 @@ import { router, getQueryValue, CancelledError } from "@/modules";
 
 export class CurrentAuth {
   createdTime: number;
-  token: string;
+  token: string | null;
   refreshToken: string;
   idToken: string;
-  decodedToken: Record<string, string>;
+  decodedToken: Record<string, string> | null;
   decodedRefreshToken: Record<string, string>;
   decodedIdToken: Record<string, string>;
 
-  constructor(token: string, refreshToken: string, idToken: string, createdTime?: number) {
+  constructor(token: string | null, refreshToken: string, idToken: string, createdTime?: number) {
     this.createdTime = (createdTime !== undefined) ? createdTime : Utils.sse();
-    this.decodedToken = jwtDecode(token);
+    this.decodedToken = token ? jwtDecode(token) : null;
     this.decodedRefreshToken = jwtDecode(refreshToken);
     this.decodedIdToken = jwtDecode(idToken);
     this.token = token;
@@ -41,11 +41,18 @@ export class CurrentAuth {
   }
 
   get validFor(): number {
-    return Number(this.decodedToken["exp"]) - Number(this.decodedToken["iat"]);
+    return this.decodedToken
+      ? Number(this.decodedToken["exp"]) - Number(this.decodedToken["iat"])
+      : 0;
   }
 
-  get session(): string {
+  /* get session(): string {
     return this.decodedToken["session_state"];
+  } */
+
+  resetToken() {
+    this.token = null;
+    this.decodedToken = null;
   }
 }
 
@@ -57,7 +64,7 @@ export interface IAuthState {
 }
 
 export interface INoAuth {
-  token: null;
+  refreshToken: null;
 }
 
 interface IOIDCState {
@@ -66,7 +73,7 @@ interface IOIDCState {
 }
 
 const AuthPersistedState = z.object({
-  token: z.string(),
+  token: z.nullable(z.string()),
   refreshToken: z.string(),
   idToken: z.string(),
   createdTime: z.number(),
@@ -136,8 +143,15 @@ const requestToken = async (params: Record<string, string>): Promise<CurrentAuth
   return new CurrentAuth(ret.access_token as string, ret.refresh_token as string, ret.id_token as string);
 };
 
-const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
+// Forces login on error.
+const tryGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
   const { state, commit, dispatch } = context;
+
+  if (state.renewalTimeoutId !== null) {
+    clearTimeout(state.renewalTimeoutId);
+    commit("setRenewalTimeout", null);
+  }
+
   const oldPending = state.pending;
   const pending: IRef<Promise<void>> = {};
   pending.ref = (async () => {
@@ -150,9 +164,7 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
       }
     }
     try {
-      let networkError = false;
-      do {
-        networkError = false;
+      while (true) {
         try {
           // eslint-disable-next-line no-await-in-loop
           const auth = await requestToken(params);
@@ -160,40 +172,43 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
             throw new CancelledError();
           }
           updateAuth(context, auth);
-          startTimeouts(context);
         } catch (e) {
-          if (state.pending === pending.ref) {
+          if ((state.pending === pending.ref && e instanceof Utils.NetworkError)
+             || (e instanceof Utils.FetchError && e.response.status >= 500)) {
+            // Most likely there are no internet connection now, so wait and try again.
             // eslint-disable-next-line no-await-in-loop
-            await dispatch("removeAuth");
-
-            let description: string | null = String(e);
-            if (e instanceof Utils.FetchError && typeof e.body === "object") {
-              // try setting a better error
-              try {
-                if (e.body.error === "invalid_grant") {
-                  // token got revoked, not an error condition
-                  description = null;
-                } else if ("error_description" in e.body) {
-                  description = e.body.error_description;
-                }
-              } catch (_) {
-                // just don't try.
-              }
-
-              if (description) {
-                void dispatch("setError", `Error when getting token: ${description}`);
-              }
-            } else if (e instanceof Utils.NetworkError) {
-              // Most likely there are no internet connection now, so wait and try again.
-              networkError = true;
-              // eslint-disable-next-line no-await-in-loop
-              await Utils.waitTimeout(10000);
-            } else {
-              void dispatch("setError", `Error when getting token: ${e}`);
-            }
+            await Utils.waitTimeout(10000);
+            continue;
           }
+          throw e;
         }
-      } while (networkError);
+        break;
+      }
+    } catch (e) {
+      if (state.pending === pending.ref) {
+        let error: string | null;
+        if (e instanceof Utils.FetchError && typeof e.body === "object") {
+          // try setting a better error
+          if (e.body?.error === "invalid_grant") {
+            // token got revoked, not an error condition.
+            error = null;
+          } else if ("error_description" in e.body) {
+            error = String(e.body.error_description);
+          } else {
+            error = String(e);
+          }
+        } else {
+          error = String(e);
+        }
+
+        if (error) {
+          void dispatch("setError", `Error when getting token: ${error}`);
+        }
+
+        await dispatch("removeAuth");
+      }
+
+      throw e;
     } finally {
       if (state.pending === pending.ref) {
         commit("setPending", null);
@@ -204,29 +219,32 @@ const startGetToken = (context: ActionContext<IAuthState, {}>, params: Record<st
   return pending.ref;
 };
 
-const updateAuth = ({ commit }: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth) => {
-  commit("setAuth", auth);
-  if (auth.token) {
-    persistCurrentAuth(auth);
+const updateAuth = (context: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth, opts?: { noPersist?: boolean }) => {
+  context.commit("setAuth", auth);
+  // eslint-disable-next-line
+  Utils.debugLog("Setting new refresh token", auth.refreshToken, "no_persist", opts?.noPersist);
+  if (auth.refreshToken) {
+    if (!opts?.noPersist) {
+      persistCurrentAuth(auth);
+    }
+    startTimeouts(context);
+  } else {
+    stopTimeouts(context);
   }
 };
 
 const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
-  const { commit, state } = context;
-  if (!state.current?.token) {
-    throw new Error("Cannot renew without an existing token");
-  }
+  const { state } = context;
 
-  if (state.renewalTimeoutId !== null) {
-    clearTimeout(state.renewalTimeoutId);
-    commit("setRenewalTimeout", null);
+  if (!state.current?.refreshToken) {
+    throw new Error("Cannot renew without an existing token");
   }
 
   const params: Record<string, string> = {
     "grant_type": "refresh_token",
     "refresh_token": state.current.refreshToken,
   };
-  await startGetToken(context, params);
+  await tryGetToken(context, params);
 };
 
 const constantFactorStart = 0.8;
@@ -234,33 +252,48 @@ const constantFactorEnd = 0.9;
 
 const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
   const { state, commit } = context;
-  if (!state.current?.token) {
-    throw new Error("Cannot start timeouts with no tokens");
+
+  if (!state.current?.refreshToken) {
+    throw new Error("Cannot start timeouts without a token");
   }
 
-  const validFor = state.current.validFor;
+  const validFor = state.current.createdTime - Utils.sse() + state.current.validFor;
   // Random timeouts to not overload the server with different tabs.
   const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
 
   if (state.renewalTimeoutId !== null) {
     clearTimeout(state.renewalTimeoutId);
   }
-  const renewalTimeoutId = setTimeout(() => {
-    if (state.pending === null) {
-      void renewAuth(context);
-    } else {
-      commit("setRenewalTimeout", null);
-    }
-  }, timeoutSecs * 1000);
-  commit("setRenewalTimeout", renewalTimeoutId);
+  if (document.hidden) {
+    commit("setRenewalTimeout", null);
+  } else if (timeoutSecs < 0) {
+    void renewAuth(context);
+  } else {
+    const timeoutRef: IRef<NodeJS.Timeout> = {};
+    timeoutRef.ref = setTimeout(() => {
+      if (state.pending === null) {
+        void renewAuth(context);
+      } else if (state.renewalTimeoutId === timeoutRef.ref) {
+        commit("setRenewalTimeout", null);
+      }
+    }, timeoutSecs * 1000);
+    commit("setRenewalTimeout", timeoutRef.ref);
+  }
 };
 
-const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExisting: boolean, path?: string) => {
+const goAway = ({ commit }: ActionContext<IAuthState, {}>, url: string) => {
+  window.open(url, "_self");
+  commit("errors/setSilent", true, { root: true });
+  commit("setPending", Utils.never);
+  return Utils.never;
+};
+
+const requestLogin = (context: ActionContext<IAuthState, {}>, opts: { tryExisting?: boolean; path?: string }) => {
   const nonce = uuidv4();
   sessionStorage.setItem(authNonceKey, nonce);
   let realPath: string;
-  if (path) {
-    realPath = path;
+  if (opts.path) {
+    realPath = opts.path;
   } else if (router.currentRoute.name === "auth_response") {
     realPath = router.resolve({ name: "main" }).href;
   } else {
@@ -277,34 +310,51 @@ const requestLogin = ({ state, commit }: ActionContext<IAuthState, {}>, tryExist
     "scope": "openid",
     "response_mode": "query",
     "response_type": "code",
-    "prompt": tryExisting ? "none" : "login",
+    "prompt": opts.tryExisting ? "none" : "login",
   };
   const paramsString = new URLSearchParams(params).toString();
 
-  window.open(`${authUrl}/auth?${paramsString}`, "_self");
-  commit("setPending", Utils.never);
-  return Utils.never;
+  return goAway(context, `${authUrl}/auth?${paramsString}`);
 };
 
-const runProtectedCall = async <Args extends unknown[], Ret>({ state, commit, dispatch }: ActionContext<IAuthState, {}>, func: (token: string | null, ...args: Args) => Promise<Ret>, ...args: Args) => {
+const runProtectedCall = async <Args extends unknown[], Ret>(context: ActionContext<IAuthState, {}>, func: (token: string | null, ...args: Args) => Promise<Ret>, ...args: Args) => {
+  const { state, commit, dispatch } = context;
   commit("increaseProtectedCalls");
+
   try {
-    const token = state.current?.token ?? null;
-    return await func(token, ...args);
-  } catch (e) {
-    if (e instanceof FunDBError) {
-      if (e.body.error === "unauthorized") {
-        if (state.current === null) {
-          await dispatch("login", undefined);
-        } else {
-          await dispatch("removeAuth");
-          await dispatch("setError", `Authentication error during request: ${e.message}`);
+    while (true) {
+      try {
+        const token = state.current?.refreshToken ? state.current.token : null;
+        // eslint-disable-next-line no-await-in-loop
+        return await func(token, ...args);
+      } catch (e) {
+        if (e instanceof FunDBError) {
+          if (e.body.error === "unauthorized") {
+            if (!state.current?.refreshToken) {
+              // eslint-disable-next-line no-await-in-loop
+              await requestLogin(context, { tryExisting: true });
+            } else {
+              commit("resetToken");
+              // eslint-disable-next-line no-await-in-loop
+              await dispatch("setError", `Authentication error during request: ${e.message}`);
+              // eslint-disable-next-line no-await-in-loop
+              await renewAuth(context);
+              continue;
+            }
+          }
         }
+        throw e;
       }
     }
-    throw e;
   } finally {
     commit("decreaseProtectedCalls");
+  }
+};
+
+const stopTimeouts = ({ state, commit }: ActionContext<IAuthState, {}>) => {
+  if (state.renewalTimeoutId !== null) {
+    clearTimeout(state.renewalTimeoutId);
+    commit("setRenewalTimeout", null);
   }
 };
 
@@ -328,15 +378,16 @@ export const authModule: Module<IAuthState, {}> = {
     protectedCalls: 0,
   },
   mutations: {
-    setAuth: (state, auth: CurrentAuth) => {
+    setAuth: (state, auth: CurrentAuth | INoAuth) => {
       state.current = auth;
     },
     setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
       state.renewalTimeoutId = renewalTimeoutId;
     },
-    clearAuth: state => {
-      state.current = null;
-      state.renewalTimeoutId = null;
+    resetToken: state => {
+      if (state.current?.refreshToken) {
+        state.current.resetToken();
+      }
     },
     setPending: (state, pending: Promise<void> | null) => {
       state.pending = pending;
@@ -350,15 +401,14 @@ export const authModule: Module<IAuthState, {}> = {
   },
   actions: {
     removeAuth: {
-      handler: ({ state, commit, dispatch }) => {
-        if (state.renewalTimeoutId !== null) {
-          clearTimeout(state.renewalTimeoutId);
-        }
-        if (state.current !== null) {
-          commit("clearAuth");
-          dropCurrentAuth();
-        }
-        void dispatch("onAuthRemoved", undefined, { root: true });
+      handler: async context => {
+        stopTimeouts(context);
+        return requestLogin(context, { tryExisting: true });
+      },
+    },
+    stopTimeouts: {
+      handler: context => {
+        stopTimeouts(context);
       },
     },
     setAuth: {
@@ -383,13 +433,11 @@ export const authModule: Module<IAuthState, {}> = {
             return;
           }
 
-          await new Promise(resolve => {
+          await new Promise<void>(resolve => {
             router.onReady(resolve);
           }); // Await till router is ready.
 
           if (router.currentRoute.name === "auth_response") {
-            dropCurrentAuth();
-
             const stateString = getQueryValue("state");
             if (stateString !== null) {
               const savedState: IOIDCState = JSON.parse(atob(stateString));
@@ -409,14 +457,13 @@ export const authModule: Module<IAuthState, {}> = {
                   };
                   const auth = await requestToken(params);
                   updateAuth(context, auth);
-                  startTimeouts(context);
                 } else {
                   const error = getQueryValue("error");
                   if (error !== "login_required" && error !== "interaction_required") {
                     const errorDescription = getQueryValue("errorDescription");
                     void dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
                   } else {
-                    await requestLogin(context, false, savedState.path);
+                    await requestLogin(context, { path: savedState.path });
                   }
                 }
                 await router.replace(savedState.path);
@@ -426,7 +473,6 @@ export const authModule: Module<IAuthState, {}> = {
               await router.replace({ name: "main" });
             }
           } else if (developmentMode && authQueryKey in router.currentRoute.query) {
-            dropCurrentAuth();
             const refreshToken = String(router.currentRoute.query[authQueryKey]);
             const newQuery = { ...router.currentRoute.query };
             delete newQuery[authQueryKey];
@@ -438,36 +484,43 @@ export const authModule: Module<IAuthState, {}> = {
             try {
               const currAuth = await requestToken(params);
               updateAuth(context, currAuth);
-              startTimeouts(context);
             } catch (e) {
               console.error("Failed to use refresh token from URL", e);
             }
           } else {
             const oldAuth = loadCurrentAuth();
             if (oldAuth !== null) {
-              updateAuth(context, oldAuth);
-              void renewAuth(context);
+              updateAuth(context, oldAuth, { noPersist: true });
             }
           }
 
-          const authStorageHandler = async (e: StorageEvent) => {
+          const authStorageHandler = (e: StorageEvent) => {
             if (e.key !== authKey) {
               return;
             }
 
             if (e.newValue === null) {
-              await dispatch("removeAuth");
+              void dispatch("removeAuth");
             } else {
               const newAuth = loadCurrentAuth();
-              if (newAuth !== null && (state.current === null || newAuth.token !== state.current.token)) {
-                updateAuth(context, newAuth);
-                startTimeouts(context);
+              Utils.debugLog("Got new current auth", newAuth?.refreshToken, "current", state.current, "current token", state.current?.refreshToken);
+              if (newAuth?.refreshToken && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
+                // Stop running any refresh. We will run it if the token is expired later.
+                commit("setPending", null);
+                updateAuth(context, newAuth, { noPersist: true });
               }
             }
           };
-          window.addEventListener("storage", e => {
-            void authStorageHandler(e);
-          });
+          window.addEventListener("storage", authStorageHandler);
+
+          const visibilityHandler = () => {
+            if (document.hidden) {
+              stopTimeouts(context);
+            } else if (state.current?.refreshToken) {
+              startTimeouts(context);
+            }
+          };
+          window.addEventListener("visibilitychange", visibilityHandler);
         } finally {
           if (state.pending === pending.ref) {
             commit("setPending", null);
@@ -482,13 +535,15 @@ export const authModule: Module<IAuthState, {}> = {
       root: true,
       handler: async (context, { func, args }: { func: (token: string | null, ...funcArgs: unknown[]) => Promise<any>; args?: unknown[] }): Promise<any> => {
         const { state, commit } = context;
-        if (state.pending !== null) {
+        while (state.pending !== null) {
           try {
+            // eslint-disable-next-line no-await-in-loop
             await state.pending;
           } catch (_) {
             // It's handled somewhere else.
           }
-          console.assert(state.pending === null);
+          // eslint-disable-next-line no-await-in-loop
+          await Utils.waitTimeout();
         }
 
         if (state.current !== null) {
@@ -499,8 +554,9 @@ export const authModule: Module<IAuthState, {}> = {
           pending.ref = (async () => {
             await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
             const ret = await runProtectedCall(context, func, ...(args ?? []));
-            updateAuth(context, { token: null });
+            // Apparently we can proceed with no auth at all!
             if (state.pending === pending.ref) {
+              updateAuth(context, { refreshToken: null });
               commit("setPending", null);
             }
             return ret;
@@ -510,12 +566,18 @@ export const authModule: Module<IAuthState, {}> = {
         }
       },
     },
-    logout: async ({ state, commit }) => {
+    logout: async context => {
+      const { state, dispatch } = context;
+
       if (!(state.current instanceof CurrentAuth)) {
         throw new Error("Cannot logout without an existing token");
       }
 
       if (disableAuth) {
+        return;
+      }
+
+      if (!await dispatch("staging/askAndReset", undefined, { root: true })) {
         return;
       }
 
@@ -525,13 +587,14 @@ export const authModule: Module<IAuthState, {}> = {
         "id_token_hint": state.current.idToken,
       };
       const paramsString = new URLSearchParams(params).toString();
+
       dropCurrentAuth();
-      window.open(`${authUrl}/logout?${paramsString}`, "_self");
-      commit("setPending", Utils.never);
-      await Utils.never;
+      await goAway(context, `${authUrl}/logout?${paramsString}`);
     },
     login: async context => {
-      await requestLogin(context, true);
+      if (!context.state.current?.refreshToken) {
+        await requestLogin(context, { tryExisting: true });
+      }
     },
   },
 };

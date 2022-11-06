@@ -94,19 +94,24 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component } from "vue-property-decorator";
 import { IEntityRef } from "ozma-api";
+import { namespace } from "vuex-class";
 import { invitesServiceUrl, instanceName, instancesHost } from "@/api";
 
 import { randomId, waitTimeout } from "@/utils";
+import { CurrentAuth, INoAuth } from "@/state/auth";
 import ReferenceField from "@/components/ReferenceField.vue";
 import InputSlot from "@/components/form/InputSlot.vue";
 import Input from "@/components/form/Input.vue";
 import ModalWindow from "./modal/ModalWindow.vue";
 
+const auth = namespace("auth");
+
 @Component({ components: { ModalWindow, ReferenceField, InputSlot, Input } })
 export default class InviteUserModal extends Vue {
-  @Prop({ type: String, required: true }) authToken!: string;
+  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
+  @auth.State("pending") pendingAuth!: Promise<void> | null;
 
   private emailValue = "";
   private roleValue: number | null = null;
@@ -125,6 +130,17 @@ export default class InviteUserModal extends Vue {
   }
 
   private async sendInvite() {
+    while (this.pendingAuth) {
+      // eslint-disable-next-line no-await-in-loop
+      await this.pendingAuth;
+      // eslint-disable-next-line no-await-in-loop
+      await waitTimeout();
+    }
+
+    if (!this.currentAuth?.refreshToken) {
+      throw new Error("No token available");
+    }
+
     const id = randomId();
     this.$bvToast.toast(this.$t("invite_start_description").toString(), {
       title: this.$t("invite_start_title").toString(),
@@ -134,7 +150,7 @@ export default class InviteUserModal extends Vue {
     });
 
     const url = new URL(`${invitesServiceUrl}/api/invite`);
-    const token = this.authToken;
+    const token = this.currentAuth.token;
     const body = JSON.stringify({
       email: this.emailValue,
       role_id: this.roleValue,

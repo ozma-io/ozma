@@ -250,8 +250,8 @@ export const deepEquals = <T>(a: T, b: T): boolean => {
     }
   } else if (!(hasUserPrototype(a as unknown as object) || hasUserPrototype(b as unknown as object))) {
     const bObj = b as any as Record<string, any>;
-    return Object.keys(b).every(k => k in a)
-        && Object.entries(a).every(([k, v]) => k in b && deepEquals(v, bObj[k]));
+    return Object.keys(bObj).every(k => k in a)
+        && Object.entries(a).every(([k, v]) => k in bObj && deepEquals(v, bObj[k]));
   } else {
     throw new Error("Cannot compare objects");
   }

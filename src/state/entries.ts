@@ -210,6 +210,18 @@ export class PartialEntries {
     this.pendingSingleEntries = {};
   }
 
+  getMainField(id: RowId): string | null | undefined {
+    const pun = this.entries[id];
+    if (pun !== undefined) {
+      return pun;
+    }
+    const pending = this.pendingSingleEntries[id];
+    if (pending === null) {
+      return null;
+    }
+    return undefined;
+  }
+
   insert(search: string, limit: number, pending: Promise<boolean>) {
     const lowerSearch = search.toLowerCase();
     if (this.searchTree === null) {

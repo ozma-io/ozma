@@ -40,7 +40,7 @@
       :uv="uv"
       :row="row"
       :value="row.values[i]"
-      :tree="row.extra.tree"
+      :tree="row.extra.tree || undefined"
       :column-index="i"
       :column="columns[i]"
       :not-existing="notExisting"

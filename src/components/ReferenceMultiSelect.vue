@@ -260,13 +260,16 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
       const ret: ReferenceSelectOption[] = [];
       for (const value of values) {
         const curValue = currentValue(value) as number | null | undefined;
-        if (curValue === null || curValue === undefined) {
+        if (curValue === null ||
+            curValue === undefined ||
+            // We skip entries that have already been properly loaded; they will appear in `entriesOptions`.
+            (this.currentEntries !== null && curValue in this.currentEntries.entries)) {
           continue;
         }
-        if (this.currentEntries !== null && curValue in this.currentEntries) {
-          continue;
-        }
-        if (value.pun === undefined) {
+
+        if (value.pun === undefined &&
+            // Value didn't fail to load (in that case, we want to show a numeric id instead)
+            this.currentEntries?.pendingSingleEntries?.[curValue] !== null) {
           // No pun for one of values -- wait till we finish loading.
           return null;
         } else {
@@ -281,7 +284,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     if (this.currentEntries === null) {
       return null;
     } else {
-      return Object.entries(this.currentEntries).map(([rawId, name]) => this.makeOption(Number(rawId), name));
+      return Object.entries(this.currentEntries.entries).map(([rawId, name]) => this.makeOption(Number(rawId), name));
     }
   }
 

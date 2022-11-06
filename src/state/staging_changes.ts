@@ -189,7 +189,7 @@ export interface IStagingState {
 
 const askOnClose = (e: BeforeUnloadEvent) => {
   e.preventDefault();
-  const msg = i18n.tc("confirm_close");
+  const msg = i18n.tc("confirm_reset");
   e.returnValue = msg;
   return msg;
 };
@@ -597,6 +597,20 @@ const stagingModule: Module<IStagingState, {}> = {
       // Vuex is stupid, so we need to re-fetch the value.
       Object.values(state.handlers).forEach(handler => handler.deleteEntry(args.entityRef, args.id, args.meta));
     },
+    askAndReset: async ({ state, dispatch }) => {
+      if (state.current.isEmpty) {
+        return true;
+      }
+
+      const msg = i18n.tc("confirm_reset");
+      // eslint-disable-next-line
+      if (confirm(msg)) {
+        await dispatch("reset");
+        return true;
+      } else {
+        return false;
+      }
+    },
     reset: context => {
       const { state, commit } = context;
 
@@ -793,15 +807,13 @@ const stagingModule: Module<IStagingState, {}> = {
       }
       if (ops.length === 0) {
         if (params.preReload) {
-          try {
-            await params.preReload();
-          } catch (e) {
-            console.error("Error while commiting", e);
-          }
+          await params.preReload();
         }
         return { autoSave, results: [] };
       }
       const action: ITransaction = { operations: ops.map(internalOpToTransactionOp) };
+
+      let preReloadError: unknown;
 
       const submit = (async (): Promise<ISubmitResult> => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
@@ -818,24 +830,26 @@ const stagingModule: Module<IStagingState, {}> = {
             throw e;
           }
         }
+
         if (!(result instanceof Error)) {
+          commit("errors/resetErrors", errorKey, { root: true });
+          eventBus.emit("close-all-toasts");
+
           try {
             if (params.preReload) {
               await params.preReload();
             }
-            void dispatch("reload", undefined, { root: true });
           } catch (e) {
             console.error("Error while commiting", e);
-            // Ignore errors; they've been already handled for userView
+            preReloadError = e;
           }
         }
 
         commit("finishSubmit");
         if (!(result instanceof Error)) {
-          commit("errors/resetErrors", errorKey, { root: true });
-          eventBus.emit("close-all-toasts");
           const opResults = R.zipWith((op, res) => ({ ...op, ...res } as CombinedTransactionResult), ops, result.results);
           await dispatch("clearUnchanged", opResults);
+
           return { autoSave, results: opResults };
         } else {
           commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
@@ -843,7 +857,12 @@ const stagingModule: Module<IStagingState, {}> = {
         }
       })();
       commit("startSubmit", submit);
-      return submit;
+
+      const ret = await submit;
+      if (preReloadError) {
+        throw preReloadError;
+      }
+      return ret;
     },
   },
 };
