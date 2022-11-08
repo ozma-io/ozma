@@ -1,10 +1,13 @@
-import { Dispatch } from "vuex";
+import { Store } from "vuex";
 import { IActionRef, IActionResult } from "ozma-api";
 
 import Api from "@/api";
-import { app } from "@/main";
+import { app, eventBus } from "@/main";
 import { i18n } from "@/modules";
 import { ISubmitResult } from "@/state/staging_changes";
+
+import { CurrentSettings } from "./settings";
+import { CurrentAuth, INoAuth } from "./auth";
 
 const dirtyHackGetErrorMessage = (error: unknown): string => {
   const errorString = String(error);
@@ -13,10 +16,13 @@ const dirtyHackGetErrorMessage = (error: unknown): string => {
 };
 
 export const saveAndRunAction = async (
-  { dispatch }: { dispatch: Dispatch },
+  { dispatch, state }: Store<any>,
   ref: IActionRef,
   args: Record<string, unknown>,
 ): Promise<IActionResult> => {
+  const settings = state.settings.current as CurrentSettings;
+  const auth = state.auth.current as CurrentAuth | INoAuth | null;
+
   let ret: IActionResult | undefined;
   let reloaded = false;
   try {
@@ -28,11 +34,15 @@ export const saveAndRunAction = async (
         }, { root: true });
       } catch (e) {
         // TODO: Return proper messages from backend instead of using regexps.
-        app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
-          title: i18n.tc("exception_in_action"),
-          variant: "danger",
-          solid: true,
-        });
+        if (settings.getEntry("is_read_only_demo_instance", Boolean, false) && !auth?.refreshToken) {
+          eventBus.emit("show-readonly-demo-modal");
+        } else {
+          app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
+            title: i18n.tc("exception_in_action"),
+            variant: "danger",
+            solid: true,
+          });
+        }
 
         throw e;
       }
