@@ -82,7 +82,7 @@
     "import/prefer-default-export": "off",
     "import/extensions": "off",
     "unused-imports/no-unused-imports-ts": "warn",
-    "vue/custom-event-name-casing": "warn",
+    "vue/custom-event-name-casing": ["warn", "kebab-case"],
     "vue/no-deprecated-functional-template": "off",
     "vue/html-indent": ["warn", 2],
     "vue/this-in-template": "error",
@@ -93,7 +93,9 @@
     "vue/max-attributes-per-line": ["warn", {
       "singleline": 2
     }],
+    "vue/attribute-hyphenation": "off",
     "vue/no-v-for-template-key-on-child": "off",
+    "vue/multi-word-component-names": "off",
     "no-console": ["warn", {
       "allow": ["warn", "error", "trace", "assert"]
     }],
