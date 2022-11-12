@@ -30,7 +30,6 @@ pipelines:
       - parallel: *build_steps
       - step:
           name: Upload
-          deployment: test
           caches:
             - docker
           script:
