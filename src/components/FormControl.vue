@@ -1051,6 +1051,10 @@ export default class FormControl extends Vue {
         opacity: 0.1;
       }
     }
+
+    .header-panel {
+      border-bottom: 1px solid var(--MainBorderColor);
+    }
   }
 
   .nested-menu {
