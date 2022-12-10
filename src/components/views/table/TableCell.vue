@@ -375,6 +375,9 @@ export default class TableCell extends Vue {
     touch-action: manipulation;
 
     .td-content {
+      height: inherit;
+      min-height: 1.6rem;
+
       ::v-deep .checkbox {
         .material-icons {
           position: relative;
