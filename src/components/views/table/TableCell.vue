@@ -443,6 +443,7 @@ export default class TableCell extends Vue {
   .reference-open-modal {
     @include material-button("option");
 
+    align-self: center;
     margin: 0;
     margin-left: -0.25rem;
     margin-right: 0.25rem;
