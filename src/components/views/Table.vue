@@ -2914,7 +2914,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .table-block {
     position: relative;
-    background-color: var(--table-backgroundDarker1Color);
+    background-color: var(--table-backgroundColor);
   }
 
   .data-col {
