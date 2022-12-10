@@ -37,7 +37,7 @@
     @contextmenu.prevent="$emit('cell-contextmenu', $refs.cell, $event)"
   >
     <div v-if="value.extra.selected" class="selection-overlay" />
-    <p class="default-variant">
+    <div class="default-variant td-content">
       <template v-if="column.type == 'buttons'">
         <ButtonsPanel
           class="cell-buttons-panel"
@@ -120,7 +120,7 @@
           <!-- eslint-enable -->
         </div>
       </template>
-    </p>
+    </div>
   </td>
 </template>
 
@@ -374,9 +374,7 @@ export default class TableCell extends Vue {
     position: relative;
     touch-action: manipulation;
 
-    > p {
-      height: inherit;
-
+    .td-content {
       ::v-deep .checkbox {
         .material-icons {
           position: relative;
