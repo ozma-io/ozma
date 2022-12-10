@@ -110,11 +110,7 @@ export default class HeaderPanel extends Vue {
     align-items: stretch;
     overflow-x: hidden;
     color: var(--default-foregroundColor);
-
-    &.is-root {
-      border-bottom: 1px solid var(--borderColor);
-    }
-
+    border-bottom: 1px solid var(--borderColor);
   }
 
   .left-part {
