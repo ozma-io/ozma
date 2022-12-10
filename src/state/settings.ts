@@ -15,9 +15,9 @@ export interface ICommunicationLinks {
 }
 
 const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks => {
-  const emailLink = settings.getEntry("instance_help_email", String, "sales@ozma.io");
-  const whatsappLink = settings.getEntry("instance_help_whatsapp", String, "https://api.whatsapp.com/send?phone=74953748820");
-  const telegramLink = settings.getEntry("instance_help_telegram", String, "https://t.me/kirmark");
+  const emailLink = settings.getEntry("instance_help_email", String, null);
+  const whatsappLink = settings.getEntry("instance_help_whatsapp", String, null);
+  const telegramLink = settings.getEntry("instance_help_telegram", String, null);
 
   return {
     email: emailLink === "" ? null : emailLink,

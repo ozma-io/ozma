@@ -163,6 +163,7 @@ export default class Textarea extends Vue {
       color: var(--cell-foregroundColor);
       background-color: var(--cell-backgroundColor);
       border-color: var(--cell-borderColor);
+      border-radius: 0.4rem;
     }
   }
 

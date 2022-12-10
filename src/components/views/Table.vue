@@ -2868,6 +2868,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: fit-content;
     z-index: 30;
     pointer-events: none;
+    margin: 0.2rem;
   }
 
   .pagination {
@@ -2914,7 +2915,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .table-block {
     position: relative;
-    background-color: var(--table-backgroundDarker1Color);
+    background-color: var(--table-backgroundColor);
   }
 
   .data-col {
@@ -2927,7 +2928,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .custom-table {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     border-collapse: separate !important;
     border-spacing: 0;
     table-layout: fixed;
