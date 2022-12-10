@@ -2868,6 +2868,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     width: fit-content;
     z-index: 30;
     pointer-events: none;
+    margin: 0.2rem;
   }
 
   .pagination {
