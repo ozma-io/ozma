@@ -42,9 +42,9 @@
           </span>
           <i
             v-if="createButton"
-            class="material-icons material-button rounded-circle"
+            class="material-icons material-button add-button"
             @click="$emit('create')"
-          >add</i>
+          >add_box</i>
         </span>
       </div>
     </div>
@@ -204,9 +204,14 @@ export default class KanbanColumn extends Vue {
     margin-left: 0.25rem;
     display: flex;
     flex-direction: column;
-    background-color: var(--kanban-backgroundDarker1Color, var(--default-backgroundDarker1Color));
     color: var(--MainTextColor);
     border-radius: 0.2rem;
+
+    &:hover {
+      ::-webkit-scrollbar {
+        display: block;
+      }
+    }
   }
 
   .column_header {
@@ -256,6 +261,11 @@ export default class KanbanColumn extends Vue {
     vertical-align: middle;
   }
 
+  .add-button {
+    border: 0;
+    margin-right: -0.2rem;
+  }
+
   .no-card {
     padding: 2rem 0;
     color: var(--kanban-foregroundDarkerColor);
@@ -280,16 +290,19 @@ export default class KanbanColumn extends Vue {
   }
 
   ::-webkit-scrollbar {
-    width: 5px;
+    width: 3px;
     height: 10px;
+    display: none;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(150, 150, 150, 0.2);
+    background: rgba(150, 150, 150, 0.5);
+    border-radius: 5px;
   }
 
   ::-webkit-scrollbar-track {
     background: rgba(50, 50, 50, 0.1);
+    border-radius: 5px;
   }
 
   ::-webkit-scrollbar-thumb:vertical:hover {

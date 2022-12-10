@@ -121,5 +121,9 @@ export default class MarkdownEditor extends Vue {
     .te-preview {
       background-color: var(--default-backgroundDarker1Color);
     }
+
+    .toastui-editor-contents {
+      font-size: 1rem;
+    }
   }
 </style>

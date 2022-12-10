@@ -40,12 +40,13 @@ export default class KanbanCard extends Vue {
 
   .card_container {
     display: block;
-    border: 1px solid var(--kanbanCard-borderColor);
     border-radius: 0.25rem;
+    box-shadow: rgb(0 0 0 / 10%) 0 0 3px 2px!important;
     background-color: var(--kanbanCard-backgroundColor);
     color: var(--kanbanCard-foregroundColor);
     margin-bottom: 0.4rem;
     user-select: none;
+    min-height: 3.6rem;
   }
 
   @media screen and (max-width: 700px) {

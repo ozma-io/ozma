@@ -255,7 +255,7 @@ export default class InputSlot extends Vue {
   .input_label__container {
     padding: 0;
     display: flex;
-    height: 2rem;
+    height: 100%;
 
     .smaller-label & {
       height: initial;
@@ -269,6 +269,13 @@ export default class InputSlot extends Vue {
     text-overflow: ellipsis;
     white-space: pre;
     color: var(--form-foregroundDarkenColor);
+    font-weight: 600;
+    font-size: 1rem;
+    width: 95%;
+  }
+
+  .input_container {
+    font-size: 1rem;
   }
 
   .input_container_cell-edit {
@@ -343,7 +350,6 @@ export default class InputSlot extends Vue {
 
         .material-icons {
           color: var(--default-foregroundDarkerColor);
-          font-size: $indicator-size;
         }
       }
     }

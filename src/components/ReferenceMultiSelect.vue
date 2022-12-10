@@ -458,6 +458,9 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 
   .value-text {
     text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1rem;
   }
 
   .compact-mode {
@@ -465,6 +468,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.1rem;
     }
   }
 </style>

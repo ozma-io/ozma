@@ -21,7 +21,7 @@
     <span
       v-if="button.caption && button.type == 'button-group'"
       class="material-icons ml-auto dropdown-icon"
-    >arrow_drop_down</span>
+    >arrow_right</span>
 
     <span
       v-if="!button.caption"

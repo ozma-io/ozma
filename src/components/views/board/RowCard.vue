@@ -110,7 +110,7 @@ export default class RowCard extends Vue {
 
 <style lang="scss" scoped>
   .card-link {
-    padding: 0.25rem;
+    padding: 0.5rem;
     display: block;
     cursor: pointer;
     user-select: none;
@@ -137,6 +137,7 @@ export default class RowCard extends Vue {
 
   .card-icon {
     margin-right: 0.25rem;
+    font-size: 1.3rem;
   }
 
   .card-text-text {

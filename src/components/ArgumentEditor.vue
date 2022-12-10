@@ -108,13 +108,14 @@ export default class ArgumentEditor extends Vue {
 </script>
 
 <style lang="scss" scoped>
-  .arguments-editor {
-    min-height: 2rem;
-    background-color: var(--default-backgroundDarker1Color);
-  }
+.arguments-editor {
+  min-height: 2rem;
 
   .arguments-editor-container {
-    padding: 0.5rem 0 1rem 0;
-    border-bottom: 1px solid var(--default-backgroundDarker2Color);
+
+    .container-fluid {
+      padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+    }
   }
+}
 </style>

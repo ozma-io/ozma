@@ -21,7 +21,7 @@
     />
     <fragment v-else>
       <div v-if="messageIndex" class="input-container">
-        <b-input-group class="shadow-sm">
+        <b-input-group>
           <b-textarea
             v-model="message"
             class="cell-variant cell-local-variant textarea"
@@ -248,7 +248,7 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
 
   .timeline-background {
     padding: 1rem;
-    background-color: var(--default-backgroundDarker1Color);
+    background-color: var(--default-backgroundColor);
   }
 
   .timeline {
@@ -268,5 +268,12 @@ export default class UserViewTimeline extends mixins<EmptyBaseUserView>(BaseUser
 
   .fade-1-move {
     transition: transform 0.1s;
+  }
+
+  // Remove shadow for messages
+  .shadow-sm {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
   }
 </style>

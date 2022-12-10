@@ -274,6 +274,8 @@ export default class TabbedModal extends Vue {
     padding: 0.5rem;
     line-height: 0;
     border-radius: 10rem;
+    margin: 0.5rem;
+    cursor: pointer;
   }
 
   .tab-headers {
@@ -300,7 +302,7 @@ export default class TabbedModal extends Vue {
   }
 
   .tabbed-modal ::v-deep > .vm--modal {
-    background-color: var(--default-backgroundDarker1Color);
+    background-color: var(--default-backgroundColor);
     color: var(--MainTextColor);
     border-radius: 1rem;
     display: flex;
@@ -308,6 +310,10 @@ export default class TabbedModal extends Vue {
     flex-grow: 1;
     margin-top: 38px;
     max-height: 95% !important;
+  }
+
+  .tabbed-modal .header {
+    border-bottom: 1px solid var(--borderColor);
   }
 
   .tab-content {

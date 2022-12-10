@@ -133,42 +133,51 @@
     <template
       v-if="state.state === 'show'"
     >
-      <button
-        v-if="showArgumentEditorButton"
-        class="filter-button list-group-item list-group-item-action list-group-item-default"
-        @click.prevent="showArgumentEditor = !showArgumentEditor;"
+      <div
+        v-if="(showArgumentEditorButton || argumentEditorVisible)"
+        class="userview-argument-editor-container"
       >
-        <span
-          v-if="argumentEditorVisible"
-          class="icon material-icons md-14"
+        <div
+          v-if="showArgumentEditorButton"
+          class="filter-button-container"
         >
-          filter_alt_off
-        </span>
-        <span
-          v-else
-          class="icon material-icons md-14"
-        >
-          filter_alt
-        </span>
-        <span
-          class="filter-button-text mx-2"
-        >
-          {{ $t("switch_argument_editor").toString() }}
-        </span>
-      </button>
+          <button
+            class="filter-button list-group-item list-group-item-action list-group-item-default"
+            @click.prevent="showArgumentEditor = !showArgumentEditor;"
+          >
+            <span
+              v-if="argumentEditorVisible"
+              class="icon material-icons md-14"
+            >
+              filter_alt_off
+            </span>
+            <span
+              v-else
+              class="icon material-icons md-14"
+            >
+              filter_alt
+            </span>
+            <span
+              class="filter-button-text mx-2"
+            >
+              {{ $t("switch_argument_editor").toString() }}
+            </span>
+          </button>
+        </div>
 
-      <ArgumentEditor
-        v-if="argumentEditorVisible"
-        class="userview-argument-editor"
-        :home-schema="state.uv.homeSchema"
-        :params="state.uv.info.arguments"
-        :values="currentArguments"
-        :attributes="state.uv.argumentAttributes"
-        :attribute-mappings="state.uv.argumentAttributeMappings"
-        @clear="clearUpdatedArguments"
-        @update="updateArgument"
-        @apply="applyUpdatedArguments"
-      />
+        <ArgumentEditor
+          v-if="argumentEditorVisible"
+          class="userview-argument-editor-content"
+          :home-schema="state.uv.homeSchema"
+          :params="state.uv.info.arguments"
+          :values="currentArguments"
+          :attributes="state.uv.argumentAttributes"
+          :attribute-mappings="state.uv.argumentAttributeMappings"
+          @clear="clearUpdatedArguments"
+          @update="updateArgument"
+          @apply="applyUpdatedArguments"
+        />
+      </div>
 
       <UserViewCommon
         :uv="state.uv"
@@ -1150,10 +1159,6 @@ export default class UserView extends Vue {
     overflow-y: auto;
   }
 
-  .userview-argument-editor {
-    flex: 0 0 auto;
-  }
-
   .loading-container {
     min-height: 100px;
     height: 100%;
@@ -1213,28 +1218,41 @@ export default class UserView extends Vue {
     transform: translateY(-1rem);
   }
 
-  .filter-button {
-    margin-left: 10px;
-    max-width: 100px;
-    text-align: left;
-    background-color: transparent;
-    border-radius: 0.25rem !important;
-    border-width: 0;
-    width: fit-content;
-    color: var(--MainTextColor);
+  .userview-argument-editor-container {
+    border-bottom: 1px solid var(--borderColor);
 
-    .filter-button-text {
-      margin-left: 0.2rem !important;
+    .filter-button-container {
+      padding: 0.7rem;
+
+      .filter-button {
+        max-width: 100px;
+        padding: 0.2rem;
+        text-align: left;
+        background-color: transparent;
+        border-radius: 0.25rem !important;
+        border-width: 0;
+        width: fit-content;
+        color: var(--MainTextColor);
+
+        .filter-button-text {
+          margin-left: 0.2rem !important;
+        }
+
+        &:hover {
+          background-color: var(--default-backgroundDarker2Color) !important;
+          color: var(--MainTextColor);
+          cursor: pointer;
+        }
+
+        &:focus {
+          background-color: transparent;
+        }
+      }
     }
 
-    &:hover {
-      background-color: var(--default-backgroundDarker2Color) !important;
-      color: var(--MainTextColor);
-      cursor: pointer;
+    .userview-argument-editor-content {
+      flex: 0 0 auto;
     }
 
-    &:focus {
-      background-color: transparent;
-    }
   }
 </style>

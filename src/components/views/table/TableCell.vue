@@ -347,12 +347,12 @@ export default class TableCell extends Vue {
   .tree-level-circle {
     font-size: icon-size();
     display: inline-block;
-    width: 0.333em;
-    height: 0.333em;
+    width: 0.2em;
+    height: 0.2em;
     margin: 0.333em;
     border-radius: 0.333em;
     background-color: var(--cell-foregroundColor);
-    opacity: 0.05;
+    opacity: 0.3;
   }
 
   .selection-overlay {
@@ -461,7 +461,7 @@ export default class TableCell extends Vue {
     overflow: hidden;
     white-space: break-spaces;
     word-break: break-word;
-    line-height: 1.3rem;
+    line-height: 1.1rem;
   }
 
   .text {
@@ -473,6 +473,7 @@ export default class TableCell extends Vue {
     align-self: center;
     align-items: center;
     justify-content: flex-begin;
+    margin-left: -0.21rem;
   }
 
   .cell-buttons-panel {
