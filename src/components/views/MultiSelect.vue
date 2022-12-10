@@ -178,7 +178,7 @@ export default class UserViewMultiSelect extends mixins<EmptyBaseUserView>(BaseU
     padding: 0.25rem;
 
     ::v-deep .select-container {
-      border-radius: 0.3rem;
+      border-radius: 0.4rem;
       background-color: var(--cell-backgroundColor);
     }
   }

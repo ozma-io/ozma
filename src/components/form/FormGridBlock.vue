@@ -51,7 +51,7 @@ export default class FormGridBlock extends Vue {
   .form_grid_block__column:not(:only-child):not(:has(.form_grid_block__column)):has(.nested-userview) {
     margin-bottom: 0.25rem;
     border: 1px solid var(--default-borderColor);
-    border-radius: 0.5rem;
+    border-radius: 0.4rem;
     overflow: hidden;
 
     &:not(:last-child) {
