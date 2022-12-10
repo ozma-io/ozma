@@ -2843,7 +2843,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   ::v-deep .table-td {
-    padding: 0.3rem 0.15rem;
+    padding: 0.15rem 0.15rem;
   }
 
   .button-container {
@@ -2927,6 +2927,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .custom-table {
+    font-size: 0.85rem;
     border-collapse: separate !important;
     border-spacing: 0;
     table-layout: fixed;
@@ -2943,7 +2944,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   .table-th {
     height: 2rem;
     border: 0;
-    font-weight: normal;
+    font-weight: 600;
     max-width: 50px !important;
     overflow: hidden;
     white-space: nowrap;
@@ -2956,7 +2957,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* Instead of `0` to fix Safari's gap bug, not needed in normal browsers, but easier to set same for all. */
     top: -1px;
     cursor: pointer;
-    color: var(--MainTextColorLight);
+    color: var(--MainTextColor);
     background-color: var(--table-backgroundColor);
   }
 

@@ -464,7 +464,7 @@ const multilineTypes: Set<IType["name"]> =
 const closeAfterUpdateTypes: Set<IType["name"]> =
   new Set(["select", "reference"]);
 const hideRequiredAndDisabledIconsTypes: Set<IType["name"]> =
-  new Set(["buttons", "user_view"]);
+  new Set(["buttons", "user_view", "iframe"]);
 
 const parseTime = (raw: string): ITime | null => {
   const [_, hours, mins] = /^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9])$/.exec(raw) ?? [];
@@ -1009,7 +1009,7 @@ export default class FormControl extends Vue {
   .input_label__container {
     padding: 0;
     display: flex;
-    height: 2em;
+    height: 100%;
   }
 
   .input_label {
@@ -1021,7 +1021,8 @@ export default class FormControl extends Vue {
     white-space: pre;
     color: var(--MainTextColor);
     font-weight: 600;
-    font-size: 1.25em;
+    font-size: 1rem;
+    font-weight: 600;
 
     &.not-loaded {
       margin-left: 0.5rem;
@@ -1040,7 +1041,6 @@ export default class FormControl extends Vue {
 
   .nested-userview {
     margin-bottom: 0.25rem;
-    border: 1px solid var(--default-borderColor);
     border-radius: 0.5rem;
     overflow: hidden;
 

@@ -175,8 +175,8 @@ export default class ModalUserView extends Vue {
 
   .save-cluster {
     position: absolute;
-    bottom: 2rem;
-    right: 2rem;
+    bottom: 1rem;
+    right: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -189,8 +189,8 @@ export default class ModalUserView extends Vue {
   }
 
   .save-cluster-button {
-    height: 4rem;
-    width: 4rem;
+    height: 3rem;
+    width: 3rem;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -198,13 +198,17 @@ export default class ModalUserView extends Vue {
   }
 
   .save-cluster-indicator {
-    height: 4rem;
-    width: 4rem;
+    height: 3rem;
+    width: 3rem;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
     color: var(--default-backgroundDarker2Color);
+
+    .material-icons {
+      font-size: 2rem;
+    }
   }
 
   .show-errors-button {
@@ -224,8 +228,8 @@ export default class ModalUserView extends Vue {
   }
 
   .saving-spinner {
-    height: 4rem;
-    width: 4rem;
+    height: 3rem;
+    width: 3rem;
     border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;

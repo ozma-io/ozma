@@ -99,6 +99,10 @@ export default class HeaderPanel extends Vue {
 
 <style lang="scss" scoped>
   .header-panel {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.5rem;
     flex-grow: 1;
     display: flex;
     flex-direction: row;
@@ -106,6 +110,11 @@ export default class HeaderPanel extends Vue {
     align-items: stretch;
     overflow-x: hidden;
     color: var(--default-foregroundColor);
+
+    &.is-root {
+      border-bottom: 1px solid var(--borderColor);
+    }
+
   }
 
   .left-part {

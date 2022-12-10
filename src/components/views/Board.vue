@@ -546,7 +546,6 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
   .view_kanban {
     height: 100%;
-    background-color: var(--kanban-backgroundDarker2Color, var(--default-backgroundDarker2Color));
 
     &.nested {
       border: 1px solid var(--cell-borderColor, var(--form-borderColor, var(--default-borderColor)));

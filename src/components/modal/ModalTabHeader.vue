@@ -115,14 +115,14 @@ export default class ModalTabHeader extends Vue {
   .modal__tab_header.only_tab {
     border-color: transparent;
     cursor: grab;
-    background-color: var(--default-backgroundDarker1Color);
+    background-color: var(--default-backgroundColor);
   }
 
   .modal__tab_header:not(.only_tab) {
     cursor: grab;
 
     &:not(.selected) {
-      background-color: var(--default-backgroundDarker2Color, #eaeaea);
+      background-color: var(--default-backgroundDarker1Color, #eaeaea);
       cursor: pointer;
 
       ::v-deep {

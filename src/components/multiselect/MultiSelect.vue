@@ -905,8 +905,11 @@ export default class MultiSelect extends Vue {
     color: var(--option-foregroundColor);
     border-radius: 0.333rem;
     padding: 0.25rem 0.5rem;
-    line-height: 1rem;
+    line-height: 0.9rem;
     word-break: break-word;
+    overflow: hidden;
+    white-space: pre;
+    height: calc(1.5em + 0.5rem - 7px);
 
     > span {
       text-align: left;

@@ -41,7 +41,7 @@ export default class Avatar extends Vue {
   .avatar-box {
     width: 2rem;
     height: 2rem;
-    border-radius: 50%;
+    border-radius: 0.25rem;
     overflow: hidden;
 
     .placeholder-avatar {
@@ -50,7 +50,6 @@ export default class Avatar extends Vue {
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.3rem;
       font-weight: bold;
       color: white;
       user-select: none;

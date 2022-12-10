@@ -345,7 +345,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   private get fontSize(): number {
-    const defaultSize = 12;
+    const defaultSize = 14;
     const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
     const mobileSize = this.settings.getEntry("font_size_mobile", Number, 14);
     return this.$isMobile && mobileSize !== 0
@@ -436,7 +436,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     --MainBackgroundColor: var(--backgroundColor, var(--OldMainBackgroundColor)) !important;
     --MainBorderColor: var(--borderColor, var(--OldMainBorderColor)) !important;
 
-    background-color: var(--backgroundDarker1Color);
+    background-color: var(--backgroundColor);
     color: var(--foregroundColor);
   }
 
@@ -450,10 +450,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   .main-buttons-wrapper {
     position: absolute;
+    padding-top: 0.75rem;
+    padding-bottom: 0.6rem;
+    padding-left: 0.9rem;
+    padding-right: 0.5rem;
     top: 0;
     left: 0;
-    padding: 0.2rem;
-    background-color: var(--backgroundDarker1Color);
+    background-color: var(--backgroundColor);
     border-bottom-right-radius: 0.25rem;
     z-index: 1000;
   }

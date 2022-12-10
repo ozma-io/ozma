@@ -142,11 +142,21 @@ export default class MenuEntry extends Vue {
 
   .menu_category_block {
     margin-top: 1rem;
-    margin-bottom: 2rem;
+
+    &:not(:has(.first_level_entries)) {
+      box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      height: 90%;
+    }
 
     &.is-mobile {
       margin: 0;
       margin-bottom: 1rem;
+    }
+
+    &:not(:has(.menu-entry)) {
+      display: none;
     }
 
     @media (max-width: 575.98px) {
@@ -177,6 +187,8 @@ export default class MenuEntry extends Vue {
     width: 100%;
     max-width: 100%;
     border-radius: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
     display: flex;
     align-items: center;
     color: var(--menuEntry-foregroundColor);
@@ -198,9 +210,11 @@ export default class MenuEntry extends Vue {
     }
 
     .name {
-      margin-left: 5px;
+      margin-left: 0.35rem;
+      margin-right: 0.35rem;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 1rem;
     }
   }
 

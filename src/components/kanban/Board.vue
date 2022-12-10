@@ -73,7 +73,6 @@ export default class Board extends Vue {
   .board_container {
     width: 100%;
     height: 100%;
-    padding: 0.5rem;
     overflow-y: hidden;
     overflow-x: auto;
     display: flex;

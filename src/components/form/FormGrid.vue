@@ -9,6 +9,7 @@
         :key="blockI"
         v-slot="slotProps"
         :block-content="block"
+        :first-level="true"
       >
         <slot :element="slotProps.element" />
       </FormGridBlock>
