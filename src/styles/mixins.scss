@@ -13,6 +13,7 @@ $color-transition: background-color 0.3s, color 0.3s;
     border-color: var(--#{$variant}-borderColor) !important;
     color: var(--#{$variant}-foregroundContrastColor) !important;
     transition: background 0s, opacity 0.2s, $color-transition;
+    opacity: 0.7;
   }
 
   &:focus:not(.disabled) {
