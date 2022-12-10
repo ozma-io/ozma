@@ -849,8 +849,8 @@ export default class TopLevelUserView extends Vue {
 
   .auto-save-indicator {
     position: absolute;
-    height: 4rem;
-    width: 4rem;
+    height: 3rem;
+    width: 3rem;
     transform: translateX(-100%);
     display: flex;
     justify-content: center;
@@ -872,8 +872,8 @@ export default class TopLevelUserView extends Vue {
   }
 
   .saving-spinner {
-    height: 4rem;
-    width: 4rem;
+    height: 3rem;
+    width: 3rem;
     border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;
