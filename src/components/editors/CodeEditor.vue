@@ -26,7 +26,7 @@ export default class CodeEditor extends Vue {
   editor: monaco.editor.IStandaloneCodeEditor | null = null;
 
   get options(): monaco.editor.IStandaloneEditorConstructionOptions {
-    const fontSize = this.settings.getEntry("font_size", Number, 12);
+    const fontSize = 12;
 
     const options: monaco.editor.IStandaloneEditorConstructionOptions = {
       language: this.language,
