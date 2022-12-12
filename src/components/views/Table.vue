@@ -2928,7 +2928,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .custom-table {
-    font-size: 0.95rem;
+    font-size: 0.90rem;
     border-collapse: separate !important;
     border-spacing: 0;
     table-layout: fixed;

@@ -121,6 +121,7 @@ export default class TableCellEdit extends Vue {
     position: fixed;
     top: 0;
     z-index: 9999;
+    font-size: 0.9rem;
 
     /* First shadow is as `shadow-lg` */
     box-shadow:

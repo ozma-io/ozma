@@ -155,7 +155,7 @@ export default class InputPopup extends Vue {
   }
 
   .popup {
-    width: 25rem;
+    width: 30rem;
     max-width: 98%;
     height: 15rem;
     max-height: 15rem;
