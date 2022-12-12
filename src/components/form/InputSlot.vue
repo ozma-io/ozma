@@ -273,11 +273,7 @@ export default class InputSlot extends Vue {
     font-size: 1rem;
     width: 95%;
   }
-
-  .input_container {
-    font-size: 1rem;
-  }
-
+  
   .input_container_cell-edit {
     padding: 0;
   }
