@@ -1195,7 +1195,7 @@ export default class UserView extends Vue {
 
     .loading-background {
       padding: 30px;
-      background-color: var(--default-backgroundDarker2Color, rgba(240, 240, 240));
+      background-color: var(--default-backgroundColor, rgba(240, 240, 240));
       cursor: wait;
     }
 

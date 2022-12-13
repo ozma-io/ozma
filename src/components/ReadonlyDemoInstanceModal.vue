@@ -106,6 +106,8 @@ export default class ReadonlyDemoInstanceModal extends Vue {
 
   .demo-modal ::v-deep > .vm--modal {
     max-height: 80% !important;
+    max-width: 96% !important;
+    margin: 0 2% !important;
   }
 
   ::v-deep {
