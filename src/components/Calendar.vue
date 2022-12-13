@@ -9,6 +9,11 @@
         "clear": "Очистить",
         "today": "Сегодня",
         "now": "Сейчас"
+    },
+    "es": {
+        "clear": "Eliminar",
+        "today": "Hoy",
+        "now": " Ahora"
     }
 }
 </i18n>

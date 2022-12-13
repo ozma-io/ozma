@@ -59,6 +59,36 @@
             "edit_view_modal_text_for_roots": "Если вы желаете самостоятельно отредактировать исходный код представления, нажмите кнопку внизу, чтобы открыть редактор. Это подтверждение не показывается, когда включён режим разработки (в верхнем левом меню). Больше информации про редактирование представлений:",
             "open_editor": "Открыть редактор",
             "switch_argument_editor": "Фильтры"
+        },
+        "es": {
+            "edit_form": "Editar el formulario",
+            "edit_menu": "Editar el menú",
+            "edit_table": "Editar la tabla",
+            "edit_multi_select": "Editar la selección múltiple",
+            "edit_board": "Editar el tablero",
+            "edit_timeline": "Editar la línea de tiempo",
+            "edit_cancel": "Cerrar",
+            "edit_user_view": "Editar la vista de usuario",
+            "loading": "Ahora está cargando",
+            "forbidden": "Lo sentimos, no está autorizado para usar esta vista de usuario. Póngase en contacto con su administrador.",
+            "creation_not_available": "Para INSERTAR EN la cláusula se requiere para el nuevo modo de entrada.",
+            "no_instance": "La instancia no está encontrada.",
+            "not_found": "No se encontró la vista de usuario.",
+            "bad_request": "El error de solicitud de vista de usuario: {msg}",
+            "unknown_error": "El error de recuperación de vista de usuario desconocido: {msg}",
+            "anonymous_query": "(La consulta anónima)",
+            "edit_view": "Editar",
+            "arguments_updated": "Aplique o restablezca los cambios para continuar",
+            "reset_updated_arguments": "Restablecer",
+            "apply_updated_arguments": "Aplicar",
+            "show_argument_editor": "Mostrar los filtros",
+            "hide_argument_editor": "Ocultar los  filtros",
+            "invalid_user_view_link": "El enlace de vista de usuario no es válido.",
+            "user_view_loop": "Se detecta un bucle de vista de usuario.",
+            "edit_view_modal_text_common": "Para editar esta vista, póngase en contacto con su integrador mediante los enlaces que aparecen a continuación.",
+            "edit_view_modal_text_for_roots": "Si se siente cómodo editando el código fuente de la vista usted mismo, presione el botón de abajo para abrir el editor. Esta confirmación se omite cuando el modo de desarrollo está habilitado (en el menú superior izquierdo). Más información sobre la edición de vistas de usuario:",
+            "open_editor": "Abrir el editor",
+            "switch_argument_editor": "Los filtros"
         }
     }
 </i18n>

@@ -7,6 +7,10 @@
     "ru": {
       "hours": "часы",
       "mins": "минуты"
+    },
+    "es": {
+      "hours": "Las horas",
+      "mins": "Los minutos"
     }
   }
 </i18n>

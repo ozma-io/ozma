@@ -33,6 +33,7 @@
             "development_mode_indicator": "Development mode is on",
             "change_language": "Language",
             "en": "English",
+            "es": "Spanish (Español)",
             "ru": "Russian (Русский)",
             "authed_link": "Copy link with authorization"
         },
@@ -69,8 +70,46 @@
             "development_mode_indicator": "Включён режим разработки",
             "change_language": "Язык",
             "en": "Английский (English)",
+            "es": "Испанский (Español)",
             "ru": "Русский",
             "authed_link": "Скопировать ссылку с авторизацией"
+        },
+        "es": {
+            "new_entry": "La nueva entrada",
+            "search_placeholder": "Teclea para buscar",
+            "pending_changes": "La grabación",
+            "loading": "Ahora está cargando",
+            "save": "Guarder (Ctrl+S)",
+            "saved": "Todos los cambios estuvieron guardados",
+            "auto_save_disabled": "El guardado automático desactivado. Los datos se guardarán en el guardado manual o en el salto a una vista de usuario diferente",
+            "show_errors": "Mostrar los  errores",
+            "clear_changes": "Restablecer los cambios después del último guardado",
+            "clear_changes_confirm": "¿Restablecer los cambios después del último guardado?",
+            "clear_changes_ok": "Eliminar",
+            "cancel": "Cancelar",
+            "account": "La cuenta",
+            "theme": "El temático o el tema",
+            "invite_user": "Invitar",
+            "workspaces": "Espacios de Trabajo",
+            "documentation": "La ocumentación",
+            "login": "La sesión",
+            "logout": "Cerrar la sesión",
+            "auth_error": "El error de la autenticación: {msg}",
+            "user_view_error": "El error al recuperar la vista de usuario: {msg}",
+            "staging_error": "El error al enviar cambios: {msg}",
+            "settings_error": "El error al recuperar la configuración: {msg}",
+            "select_user_view_error": "El error al seleccionar una entrada: {msg}",
+            "base_user_view_error": "El error al realizar una operación: {msg}",
+            "error": "El error",
+            "forget_dismissed_help_pages": "Olvidar de las páginas de ayuda",
+            "enable_development_mode": "Habilitar el modo de desarrollo",
+            "disable_development_mode": "Deshabilitar el modo de desarrollo",
+            "development_mode_indicator": "El modo de desarrollo está activado",
+            "change_language": "El idioma",
+            "en": "Inglés (English)",
+            "es": "Español",
+            "ru": "Ruso (Русский)",
+            "authed_link": "Copiar el enlace con autorización"
         }
     }
 </i18n>
@@ -624,7 +663,7 @@ export default class TopLevelUserView extends Vue {
       caption: this.$t("change_language").toString(),
       variant: defaultVariantAttribute,
       type: "button-group",
-      buttons: ["en", "ru"].map(language =>
+      buttons: ["en", "es", "ru"].map(language =>
         ({
           caption: this.$t(language).toString(),
           variant: defaultVariantAttribute,

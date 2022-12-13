@@ -5,6 +5,9 @@
         },
         "ru": {
             "search_placeholder": "Поиск"
+        },
+        "es": {
+            "search_placeholder": "La búsqueda"
         }
     }
 </i18n>

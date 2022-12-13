@@ -7,6 +7,10 @@
         "ru": {
             "save_scoped": "Сохранить вложенное",
             "save_and_select_scoped": "Сохранить и выбрать"
+        },
+        "es": {
+            "save_scoped": "Guardar con ámbito",
+            "save_and_select_scoped": "Guardar y seleccionar"
         }
     }
 </i18n>

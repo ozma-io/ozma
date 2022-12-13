@@ -5,6 +5,9 @@
     },
     "ru": {
         "qrcode_scanner": "Сканер кодов"
+    },
+    "es": {
+        "qrcode_scanner": "Al escanear el código"
     }
   }
 </i18n>

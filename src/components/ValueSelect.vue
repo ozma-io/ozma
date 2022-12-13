@@ -7,6 +7,10 @@
     "ru": {
       "error": "Ошибка",
       "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению"
+    },
+    "es": {
+      "error": "El error",
+      "error_qrcode_is_inappropriate" : "El código QR es inapropiado"
     }
   }
 </i18n>

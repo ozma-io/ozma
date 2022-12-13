@@ -5,6 +5,9 @@
         },
         "ru": {
             "auth_error": "Ошибка аутентификации: {msg}"
+        },
+        "es": {
+            "auth_error": "El error durante la autenticación: {msg}"
         }
     }
 </i18n>

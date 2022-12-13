@@ -5,6 +5,9 @@
     },
     "ru": {
       "no_select_column": "Пожалуйста, обозначьте колонку для выбора через атрибут `select = true` на желаемой колонке."
+    },
+    "es": {
+      "no_select_column": "Por favor identifique la columna seleccionable utilizando el atributo `select = true`` en la columna deseada."
     }
   }
 </i18n>

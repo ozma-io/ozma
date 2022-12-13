@@ -23,6 +23,18 @@
             "help_button_caption": "Справка",
             "contacts": "Поддержка",
             "help": "Помощь"
+        },
+        "es": {
+            "create": "Crear la nueva entrada",
+            "create_in_modal": "Crear la entrada referenciada en la ventana modal",
+            "export_to_csv": "Exportar a .csv",
+            "import_from_csv": "Importar desde .csv",
+            "selected_n_entries": "{n} de las entradas {cargadas} están seleccionadas",
+            "remove_selected_rows": "Eliminar las entradas seleccionadas",
+            "error": "El error",
+            "help_button_caption": "La página de ayuda",
+            "contacts": "Soporte",
+            "help": "La ayuda"
         }
     }
 </i18n>

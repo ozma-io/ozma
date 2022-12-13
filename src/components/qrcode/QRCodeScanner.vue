@@ -19,6 +19,16 @@
         "unknown_code": "Неизвестный код",
         "error": "Ошибка",
         "entity_not_initialized": "Сущность не задана"
+    },
+    "es": {
+        "scan_result": "El resultado del escaneo",
+        "clear": "Eliminar",
+        "paste_data": "Pegar datos",
+        "qrcode_from_different_entity" : "Error: el código QR apunta a una entidad inapropiada",
+        "no_record_found": "No se encontró ningún registro con este ID",
+        "unknown_code": "El código desconocido",
+        "error": "El error",
+        "entity_not_initialized": "La entidad no está inicializada"
     }
   }
 </i18n>

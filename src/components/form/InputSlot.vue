@@ -1,17 +1,21 @@
 <i18n>
-    {
+  {
     "en": {
-        "ok": "Done",
-        "readonly_field": "Read-only field",
-        "required_field": "Required field"
-
-        },
+      "ok": "Done",
+      "readonly_field": "Read-only field",
+      "required_field": "Required field"
+    },
     "ru": {
-        "ok": "Готово",
-        "readonly_field": "Поле только для чтения",
-        "required_field": "Обязательное поле"
-        }
+      "ok": "Готово",
+      "readonly_field": "Поле только для чтения",
+      "required_field": "Обязательное поле"
+    },
+    "es": {
+      "ok": "Hecho",
+      "readonly_field": "El campo de solo lectura",
+      "required_field": "El campo obligatorio"
     }
+  }
 </i18n>
 <template>
   <b-row

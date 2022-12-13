@@ -69,6 +69,18 @@ const globalMessages = {
     "error_button": "<Ошибка>",
     "computed_attributes": "Вычисленные атрибуты",
   },
+  "es": {
+    "confirm_reset": "Usted tiene los cambios sin guardar, ¿quiere cancelarlos?",
+    "generation_start_title": "Se inicia la generación de archivos",
+    "generation_start_description": "Puede tardar unos segundos",
+    "generation_fail": "Se produjo un error al generar el archivo. Intentarlo de nuevo.",
+    "ellipsis": "... (Abra la celda para verla completa)",
+    "exception_in_action": "La excepción está en acción",
+    "not_all_values_found_in_options": "No se encontraron todas las referencias en `options_view` o `referenced_entity`",
+    "not_found": "No está encontrado",
+    "error_button": "<El error>",
+    "computed_attributes": "Los atributos calculados",
+  },
 };
 
 export const router = new VueRouter({

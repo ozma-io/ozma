@@ -25,6 +25,19 @@
             "drop_others": "Удалить другие схемы",
             "skip_preloaded": "Пропустить системные схемы",
             "force_allow_broken": "Помечать некорректные объекты как allow_broken"
+        },
+        "es": {
+            "schema_name": "El nombre del esquema",
+            "save": "Guardar",
+            "restore": "Restablecer",
+            "save_schema": "Guardar el esquema",
+            "restore_schema": "Restablecer el esquema",
+            "success": "El éxito",
+            "error": "El error",
+            "from_file": "Desde archivo",
+            "drop_others": "Soltar otros esquemas",
+            "skip_preloaded": "Omitir los  esquemas precargados",
+            "force_allow_broken": "Marcar los objetos rotos como allow_broken"
         }
     }
 </i18n>

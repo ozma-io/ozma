@@ -7,6 +7,10 @@
         "ru": {
             "sign_up": "Зарегистрироваться",
             "invite_user": "Пригласить"
+        },
+        "es": {
+            "sign_up": "Registrarse",
+            "invite_user": "Invitar"
         }
     }
 </i18n>

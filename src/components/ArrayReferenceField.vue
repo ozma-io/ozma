@@ -7,6 +7,10 @@
     "ru": {
       "error": "Ошибка в поле с массивом",
       "not_all_values_found_in_options" : "Не все значения найдены в опциях"
+    },
+    "es": {
+      "error": "El error en el campo de la matriz",
+      "not_all_values_found_in_options" : "No todos los valores están encontrados en las opciones"
     }
   }
 </i18n>

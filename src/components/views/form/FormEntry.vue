@@ -7,6 +7,10 @@
         "ru": {
             "delete": "Удалить",
             "select": "Выбрать"
+        },
+        "es": {
+            "delete": "Eliminar",
+            "select": "Seleccionar"
         }
     }
 </i18n>

@@ -41,6 +41,27 @@
       "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
       "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку",
       "no_columns": "В запросе отсутствуют видимые колонки"
+    },
+    "es": {
+      "cut": "Cortar",
+      "copy": "Copiar",
+      "paste": "Pegar",
+      "edit_error": "El error de edición",
+      "paste_error": "El error de pegado",
+      "copy_error": "El error de copia",
+      "clear_error": "El error de borrado",
+      "read_only_cell": "Leer solo la celda",
+      "paste_no_referencefield_data": "El portapapeles no tiene datos de campo de referencia",
+      "paste_error_too_many_columns": "El portapapeles tiene demasiadas columnas",
+      "non_rectangular_copy": "Solo se admiten selecciones rectangulares al copiar",
+      "no_results": "Vacio",
+      "add_entry": "Añadir la entrada",
+      "add_entry_in_modal": "Añadir la nueva entrada (en la ventana modal)",
+      "ok": "OK",
+      "contextmenu_cut_tooltip": "Usar Ctrl + X para cortar la celda seleccionada",
+      "contextmenu_copy_tooltip": "Usar Ctrl + C para copiar la celda seleccionada",
+      "contextmenu_paste_tooltip": "Usar Ctrl + V para pegar en la celda seleccionada",
+      "no_columns": "Esta consulta carece de columnas visibles"
     }
   }
 </i18n>

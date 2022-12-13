@@ -9,6 +9,11 @@
             "dismiss_tooltip": "Скрытые страницы справки можно будет открыть с помощью кнопки с вопросительным знаком сверху справа",
             "dismiss_all": "Пропустить все",
             "dismiss": "Закрыть"
+        },
+        "es": {
+            "dismiss_tooltip": "Aún podrá abrir páginas de ayuda ocultas usando \"?\" botón en la esquina superior derecha",
+            "dismiss_all": "Saltar todo",
+            "dismiss": "Cerrar"
         }
     }
 </i18n>
