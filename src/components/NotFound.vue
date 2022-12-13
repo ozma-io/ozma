@@ -5,6 +5,9 @@
         },
         "ru": {
             "not_found": "Страница не найдена"
+        },
+        "es": {
+            "not_found": "La página no está encontrada"
         }
     }
 </i18n>

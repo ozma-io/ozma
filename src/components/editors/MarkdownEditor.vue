@@ -5,6 +5,9 @@
     },
     "ru": {
         "input_placeholder": "Пусто"
+    },
+    "es": {
+        "input_placeholder": "Vacio"
     }
   }
 </i18n>

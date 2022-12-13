@@ -5,6 +5,9 @@
         },
         "ru": {
             "add_child_tooplip": "Добавить подстроку"
+        },
+        "es": {
+            "add_child_tooplip": "Agregar la  fila secundaria"
         }
     }
 </i18n>

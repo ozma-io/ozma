@@ -17,6 +17,15 @@
             "staging_error": "Ошибка сохранения изменений: {msg}",
             "save_scoped": "Сохранить вложенное",
             "save_and_select_scoped": "Сохранить и выбрать"
+        },
+        "es": {
+            "new_entry": "La nueva entrada",
+            "error": "El error",
+            "saved": "Todos los cambios están guardados",
+            "show_errors": "Mostrar  los errores",
+            "staging_error": "El error al enviar cambios: {msg}",
+            "save_scoped": "Guardar con el ámbito",
+            "save_and_select_scoped": "Guardar y seleccionar"
         }
     }
 </i18n>

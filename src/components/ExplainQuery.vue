@@ -19,6 +19,16 @@
             "arguments": "Аргументы",
             "limit": "Количество записей",
             "explain": "Показать план"
+        },
+        "es": {
+            "schema_name": "El nombre del esquema",
+            "view_name": "El nombre de la vista de usuario",
+            "role_schema": "El esquema de rol",
+            "role_name": "El nombre del rol",
+            "user_name": "El nombre del usuario",
+            "arguments": "Los argumentos",
+            "limit": "El limite",
+            "explain": "Mostrar el plan"
         }
     }
 </i18n>

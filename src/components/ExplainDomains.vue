@@ -21,6 +21,17 @@
             "row_id": "ID записи",
             "limit": "Количество записей",
             "explain": "Показать план"
+        },
+        "es": {
+            "schema_name": "El nombre del esquema",
+            "entity_name": "El nombre de la entidad",
+            "field_name": "El nombre del campo",
+            "role_schema": "El esquema de roles",
+            "role_name": "El nombre del rol",
+            "user_name": "El nombre del usuario",
+            "row_id": "ID de fila",
+            "limit": "El limite",
+            "explain": "Mostrar el plan"
         }
     }
 </i18n>

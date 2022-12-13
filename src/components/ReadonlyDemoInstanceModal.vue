@@ -15,6 +15,14 @@
             "description_2": "зарегистрируйтесь и мы создадим вам персональную копию.",
             "sign_up": "Зарегистрироваться",
             "later": "Посмотреть ещё"
+        },
+        "es": {
+            "header_1": "Registrarse",
+            "header_2": "A continuar",
+            "description_1": "Es un ejemplo de solo lectura. Para comenzar, haga cambios,",
+            "description_2": "Regístrese y crearemos una instancia personal para usted",
+            "sign_up": "Registrarse",
+            "later": "Ver más"
         }
     }
 </i18n>

@@ -5,6 +5,9 @@
         },
         "ru": {
             "in_progress": "Производится аутентификация. Если вы видите эту страницу слишком долго - напишите системному администратору."
+        },
+        "es": {
+            "in_progress": "Se realiza la autenticación .Si esta página está visible durante demasiado tiempo, solicite ayuda a su administrador"
         }
     }
 </i18n>

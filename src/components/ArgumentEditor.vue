@@ -9,6 +9,11 @@
       "hide": "Скрыть",
       "reset": "Сбросить",
       "apply": "Применить"
+    },
+    "es": {
+      "hide": "Ocultar",
+      "reset": "Reinicear",
+      "apply": " Aplicar"
     }
   }
 </i18n>

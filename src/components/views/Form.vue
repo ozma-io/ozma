@@ -17,6 +17,15 @@
             "cancel": "Отмена",
             "yes": "Да",
             "no": "Нет"
+        },
+        "es": {
+            "item_not_found": "El registro no está encontrado",
+            "delete": "Eliminar el registro",
+            "delete_confirmation": "¿Está seguro de que desea eliminar este registro?",
+            "ok": "OK",
+            "cancel": "Cancelar",
+            "yes": "Sí",
+            "no": "No"
         }
     }
 </i18n>

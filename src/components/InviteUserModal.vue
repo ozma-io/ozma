@@ -25,6 +25,19 @@
             "invite_fail_title": "Ошибка во время приглашения",
             "invite_fail_description": "Возможно на эту почту уже было отправлено приглашение или произошла ошибка на нашей стороне",
             "": ""
+        },
+        "es": {
+            "header": "Invitar",
+            "email_label": "Email o correo electronico",
+            "role_label": "El rol",
+            "send_invite": "Mandar la invitación",
+            "invite_start_title": "La invitación está mandando...",
+            "invite_start_description": " ",
+            "invite_success_title": "La invitacion fue mandada",
+            "invite_success_description": " ",
+            "invite_fail_title": "El error durante la invitación",
+            "invite_fail_description": "Tal vez este correo electrónico ya está invitado o algo salió mal de nuestro lado",
+            "": ""
         }
     }
 </i18n>

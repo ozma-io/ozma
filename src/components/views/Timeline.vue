@@ -9,6 +9,11 @@
       "no_datetime": "В запросе отсутствует атрибут timeline_datetime",
       "datetime_wrong_type": "Атрибут timeline_datetime должен быть указан для значения с типом datetime",
       "send": "Отправить"
+    },
+    "es": {
+      "no_datetime": "La consulta carece del atributo timeline_datetime",
+      "datetime_wrong_type": "El atributo timeline_datetime no está en el valor con el tipo datetime",
+      "send": "Enviar"
     }
   }
 </i18n>

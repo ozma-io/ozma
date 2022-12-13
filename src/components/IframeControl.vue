@@ -9,6 +9,11 @@
       "view_error": "В отображении следующие ошибки",
       "markup_not_found": "Разметка не найдена",
       "no_code_name": "Необходимо указать атрибут `iframe_name`"
+    },
+    "es": {
+      "view_error": "Hay los siguientes errores en la vista de usuario",
+      "markup_not_found": "La marca no está encontrada",
+      "no_code_name": "El atributo `iframe_name` está requerido"
     }
   }
 </i18n>

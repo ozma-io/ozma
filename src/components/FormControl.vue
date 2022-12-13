@@ -17,6 +17,15 @@
             "iframe_no_markup": "Для Iframe необходим атрибут `iframe_markup`, `iframe_src` или `iframe_srcdoc`",
             "data_will_load_after_save": "Данные загрузятся после сохранения",
             "select_view": "Создать во вложенном окне"
+        },
+        "es": {
+            "yes": "Sí",
+            "no": "No",
+            "boolean_null": "Vacio",
+            "invalid_uv": "Las filas de vista de usuario añadidas deben ser objetos JSON con `ref`` y `args` definidos",
+            "iframe_no_markup": "Iframe requiere el atributo `iframe_markup`, `iframe_src` o `iframe_srcdoc`",
+            "data_will_load_after_save": "Los datos se cargarán después de guardar",
+            "select_view": "Añadir la  ventana modal"
         }
     }
 </i18n>

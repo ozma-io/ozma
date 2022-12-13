@@ -5,6 +5,9 @@
     },
     "ru": {
       "click_anywhere": "Для закрытия модального окна можно нажать в любое место за его пределами"
+    },
+    "es": {
+      "click_anywhere": "Puede hacer clic en cualquier lugar fuera de la ventana modal para cerrarla"
     }
   }
 </i18n>

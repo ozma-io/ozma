@@ -9,6 +9,11 @@
       "invalid_create_mode": "Меню не поддерживает режим создания",
       "invalid_new_menu_value": "Неверное значение меню-массива",
       "invalid_menu": "Неверный формат данных для меню"
+    },
+    "es": {
+      "invalid_create_mode": "El menú no admite el modo de creación",
+      "invalid_new_menu_value": "El valor de menú de estilo de matriz no está válido",
+      "invalid_menu": "El formato de datos no está válido para el menú"
     }
   }
 </i18n>

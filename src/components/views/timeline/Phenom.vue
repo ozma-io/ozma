@@ -5,6 +5,9 @@
     },
     "ru": {
       "format": "Do MMM{year} [в] HH:mm"
+    },
+    "es": {
+      "format": "Do MMM{year} [at] hh:mm A"
     }
   }
 </i18n>

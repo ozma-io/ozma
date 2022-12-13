@@ -21,6 +21,17 @@
       "values_error": "Ошибка в поле выбора",
       "not_all_values_found_in_options" : "Не все значения найдены в опциях",
       "loading_error": "Ошибка при загрузке новых данных: {msg}"
+    },
+    "es": {
+      "clear": "Eliminar",
+      "enter_value": "Introduzca un valor",
+      "search_placeholder": "La búsqueda",
+      "no_results": "Vacio",
+      "no_results_for_filter": "No hay entradas para este filtro",
+      "trigram_tooltip": "Ingrese al menos 3 caracteres para cargar más opciones",
+      "values_error": "El error en el campo de selección",
+      "not_all_values_found_in_options" : "No todos los valores están encontrados en opciones",
+      "loading_error": "El error al cargar más datos: {msg}"
     }
   }
 </i18n>

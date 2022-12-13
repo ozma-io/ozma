@@ -11,6 +11,12 @@
             "no_title": "Без заголовка",
             "no_columns": "В запросе отсутствует атрибут board_columns",
             "no_group": "В запросе отсутствует атрибут board_group на поле, по которому идёт группировка"
+        },
+        "es": {
+            "view_error": "Hay los siguientes errores en la vista de usuario",
+            "no_title": "Sin título",
+            "no_columns": "Esta consulta carece del atributo board_columns",
+            "no_group": "Esta consulta carece del atributo board_group en el campo de agrupación"
         }
     }
 </i18n>

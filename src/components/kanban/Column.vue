@@ -7,6 +7,10 @@
         "ru": {
             "no_cards": "Пусто",
             "count_tooltip": "Количество карточек в колонке"
+        },
+        "es": {
+            "no_cards": "Vacio",
+            "count_tooltip": "El número de cartas en la columna"
         }
     }
 </i18n>
