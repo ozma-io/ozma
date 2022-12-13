@@ -380,6 +380,7 @@ export default class TableCell extends Vue {
     .td-content {
       height: inherit;
       min-height: 1.6rem;
+      max-height: 14rem;
 
       ::v-deep .checkbox {
         .material-icons {
