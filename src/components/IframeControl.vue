@@ -99,7 +99,6 @@ export default class IframeControl extends Vue {
 
 <style lang="scss" scoped>
   .iframe-container {
-    border: 1px solid var(--MainBorderColor);
     border-radius: 0.2rem;
     overflow: hidden;
   }
