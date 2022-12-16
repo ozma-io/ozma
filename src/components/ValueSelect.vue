@@ -45,6 +45,7 @@ import { ISelectOption, default as MultiSelect } from "@/components/multiselect/
 
 import { valueIsNull } from "@/values";
 import type { ColorVariantAttribute } from "@/utils_colors";
+import { UserString } from "@/translations";
 
 @Component({
   components: {
@@ -61,7 +62,7 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Number }) optionsListHeight!: number | undefined;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
-  @Prop({ type: String, default: null }) label!: string | null;
+  @Prop() label!: UserString | undefined;
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
   private getValueIndex(value: unknown) {

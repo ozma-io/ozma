@@ -14,8 +14,8 @@
         ]"
       >
         <MenuHeading :level="level + 1">
-          <span :title="entry.name">
-            {{ entry.name }}
+          <span :title="$ust(entry.name)">
+            {{ $ust(entry.name) }}
           </span>
         </MenuHeading>
         <b-row :class="['menu_entries', { 'first_level_entries': level === 0 }]">
@@ -46,8 +46,8 @@
         >
           {{ entry.icon || "chevron_right" }}
         </i>
-        <span class="name" :title="entry.name">
-          {{ entry.name }}
+        <span class="name" :title="$ust(entry.name)">
+          {{ $ust(entry.name) }}
         </span>
         <b-badge
           v-if="entry.badge !== undefined && entry.badge.value !== undefined"
@@ -71,6 +71,7 @@ import { Link } from "@/links";
 import { getIconType } from "@/utils";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
+import { UserString } from "@/translations";
 
 export type Badge = {
   value: unknown;
@@ -78,7 +79,7 @@ export type Badge = {
 };
 
 interface IMenuBase {
-  name: string;
+  name: UserString;
   size?: number;
 }
 

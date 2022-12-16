@@ -65,7 +65,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: String }) scope!: ScopeName;
-  @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: String }) label!: string | undefined;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 

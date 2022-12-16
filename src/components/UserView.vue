@@ -343,6 +343,7 @@ import { fetchUserViewData, UserViewError } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
+import { rawToUserString, UserString } from "@/translations";
 
 const types: RecordSet<string> = {
   "form": null,
@@ -525,11 +526,11 @@ export default class UserView extends Vue {
     return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
   }
 
-  get title() {
+  get title(): UserString {
     if (this.state.state === "show") {
-      const titleAttr = this.state.uv.attributes["title"];
+      const titleAttr = rawToUserString(this.state.uv.attributes["title"]);
       if (titleAttr) {
-        return String(titleAttr);
+        return titleAttr;
       }
     }
 

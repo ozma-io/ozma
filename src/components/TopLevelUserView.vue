@@ -140,7 +140,7 @@
 
     <div :class="'userview-upper-div'">
       <HeaderPanel
-        :title="titleOrNewEntry"
+        :title="titleOrNewEntry ?? undefined"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
@@ -172,7 +172,7 @@
           @update:status-line="statusLine = $event"
           @update:enable-filter="enableFilter = $event"
           @update:body-style="styleNode.innerHTML = $event"
-          @update:title="updateTitle"
+          @update:title="title = $event"
           @update:current-page="replaceRootPage($event)"
         />
       </div>
@@ -325,6 +325,7 @@ import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
 import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute, IThemeRef } from "@/utils_colors";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
+import { UserString } from "@/translations";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -393,7 +394,7 @@ export default class TopLevelUserView extends Vue {
   private statusLine = "";
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
-  private title = "";
+  private title: UserString | null = null;
 
   private buttons: Button[] = [];
 
@@ -408,10 +409,15 @@ export default class TopLevelUserView extends Vue {
     return this.protectedCalls > 0;
   }
 
-  private get titleOrNewEntry() {
-    if (this.query === null) return "";
-    const isNewEntry = this.query.root.args.args === null;
-    return isNewEntry ? this.$t("new_entry").toString() : this.title;
+  get titleOrNewEntry(): string | null {
+    if (this.query === null) {
+      return null;
+    }
+    if (this.query.root.args.args === null) {
+      return this.$t("new_entry").toString();
+    } else {
+      return this.title ? this.$ust(this.title) : null;
+    }
   }
 
   private get mainButtons(): Button[] {
@@ -566,9 +572,10 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  private updateTitle(title: string) {
-    this.title = title;
-    setHeadTitle(`${title} — Ozma`);
+  @Watch("title", { immediate: true })
+  private updateTitle(title: UserString | null) {
+    const head = title ? `${this.$ust(title)} — Ozma` : "Ozma";
+    setHeadTitle(head);
   }
 
   private created() {

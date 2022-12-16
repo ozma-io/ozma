@@ -54,6 +54,7 @@ import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import MenuEntry, { MenuValue, IMenuLink, Badge } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 import { currentValue, valueToPunnedText } from "@/user_views/combined";
+import { rawToUserString, UserString } from "@/translations";
 
 @UserView()
 @Component({ components: { MenuEntry } })
@@ -88,10 +89,11 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   }
 
   private convertNewMenuEntry(entry: Record<string, unknown>): MenuValue | null {
-    if (typeof entry.name !== "string") {
+    const name = rawToUserString(entry.name);
+    if (name === null) {
       return null;
     }
-    const base: { name: string; size?: number } = { name: entry.name };
+    const base: { name: UserString; size?: number } = { name };
     if ("size" in entry) {
       const size = Number(entry.size);
       if (!Number.isNaN(size)) {

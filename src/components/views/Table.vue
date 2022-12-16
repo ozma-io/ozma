@@ -264,11 +264,11 @@
                 'fixed-column' : columns[i].fixed,
               }]"
               :style="columns[i].style"
-              :title="columns[i].caption"
+              :title="$ust(columns[i].caption)"
               @click="loadAllRowsAndUpdateSort(i)"
             >
               <span class="table_header__content">
-                {{ columns[i].caption }}
+                {{ $ust(columns[i].caption) }}
               </span>
               <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
             </th>
@@ -385,9 +385,10 @@ import FormValueControl from "@/components/FormValueControl";
 import type TableCell from "./table/TableCell.vue";
 import { elementWindow, WindowKey } from "@/state/windows";
 import { formatValue } from "@/user_views/format";
+import { rawToUserString, UserString } from "@/translations";
 
 export interface IColumn {
-  caption: string;
+  caption: UserString;
   style: Record<string, unknown>;
   visible: boolean;
   fixed: boolean;
@@ -1166,8 +1167,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
-      const captionAttr = getColumnAttr("caption");
-      const caption = captionAttr !== undefined ? String(captionAttr) : columnInfo.name;
+      const captionAttr = rawToUserString(getColumnAttr("caption"));
+      const caption = captionAttr ?? columnInfo.name;
 
       const style: Record<string, unknown> = {};
 

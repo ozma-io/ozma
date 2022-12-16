@@ -39,7 +39,7 @@
       <div class="modal-content">
         <div class="header">
           <div v-if="label" class="label">
-            {{ label }}
+            {{ $ust(label) }}
           </div>
         </div>
 
@@ -78,7 +78,7 @@
             class="input_label"
             :for="inputName"
             :title="label"
-          >{{ label }}</label>
+          >{{ $ust(label) }}</label>
         </div>
       </b-col>
       <b-col
@@ -155,10 +155,11 @@ import TabbedModal from "@/components/modal/TabbedModal.vue";
 import Input from "@/components/form/Input.vue";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
+import type { UserString } from "@/translations";
 
 @Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {
-  @Prop({ type: String }) label!: string;
+  @Prop({ required: true }) label!: UserString;
   @Prop({ type: Boolean, default: false }) smallerLabel!: boolean;
   @Prop({ type: Boolean, default: true }) inline!: boolean;
   // FIXME: remove this and style parent nodes instead.

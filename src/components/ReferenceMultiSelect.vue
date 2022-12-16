@@ -189,7 +189,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) linkAttr!: unknown | undefined;
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
   @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
-  @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: String }) label!: string | undefined;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 

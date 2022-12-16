@@ -166,9 +166,10 @@ import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGri
 import type { Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
+import { UserString, rawToUserString } from "@/translations";
 
 export interface IButtonAction {
-  name: string;
+  name: UserString;
   variant: string;
   link: Link;
 }
@@ -177,7 +178,7 @@ export interface IElementField {
   type: "field";
   index: number;
   columnInfo: IResultColumnInfo;
-  caption: string;
+  caption: UserString;
   forceCaption: boolean;
   autofocus: boolean;
 }
@@ -479,8 +480,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
       const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
 
-      const captionAttr = getColumnAttr("caption");
-      const caption = String(captionAttr ?? columnInfo.name);
+      const captionAttr = rawToUserString(getColumnAttr("caption"));
+      const caption = captionAttr ?? columnInfo.name;
 
       const autofocus = columnInfo?.name === this.autofocusElementName;
 
@@ -511,7 +512,8 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         const actions: IButtonAction[] = [];
         if (Array.isArray(buttons["actions"])) {
           buttons["actions"].forEach(action => {
-            if (typeof action.name !== "string") {
+            const name = rawToUserString(action.name);
+            if (name === null) {
               return;
             }
             if (typeof action.variant !== "string") {

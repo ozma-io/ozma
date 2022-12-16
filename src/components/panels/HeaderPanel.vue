@@ -15,6 +15,7 @@
       </div>
       <!-- `tabindex` is required for closing tooltip on blur -->
       <label
+        v-if="title"
         v-b-tooltip.click.blur.bottom.noninteractive.viewport
         tabindex="0"
         :class="[
@@ -61,15 +62,15 @@ import { interfaceButtonVariant } from "@/utils_colors";
   },
 })
 export default class HeaderPanel extends Vue {
-  @Prop({ type: String, required: true }) title!: string;
+  @Prop({ type: String }) title!: string | undefined;
   @Prop({ type: Array, required: true }) buttons!: Button[];
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
-  @Prop({ type: Object, default: null }) view!: IUserViewType | null;
+  @Prop({ type: Object }) view!: IUserViewType | undefined;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
   // Is it TopLevelUserView's header or current tab of modal or component (sub UserView).
   // options: 'component', 'modal' ,'root', null
-  @Prop({ type: String, default: null }) type!: string | null;
+  @Prop({ type: String }) type!: string | undefined;
 
   get headerButtons() {
     const buttons = buttonsToPanelButtons(this.buttons);
@@ -80,18 +81,19 @@ export default class HeaderPanel extends Vue {
   }
 
   private get fullscreenButton(): Button | null {
-    return this.view === null
-      ? null
-      : {
-        type: "link",
-        variant: interfaceButtonVariant,
-        icon: "fullscreen",
-        link: {
-          type: "query",
-          target: (this.type === "modal") ? "top" : "root",
-          query: this.view,
-        },
-      };
+    if (!this.view) {
+      return null;
+    }
+    return {
+      type: "link",
+      variant: interfaceButtonVariant,
+      icon: "fullscreen",
+      link: {
+        type: "query",
+        target: (this.type === "modal") ? "top" : "root",
+        query: this.view,
+      },
+    };
   }
 }
 

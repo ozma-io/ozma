@@ -267,9 +267,9 @@
             v-b-tooltip.click.blur.bottom.noninteractive
             tabindex="0"
             class="input_label not-loaded"
-            :title="usedCaption"
+            :title="$ust(usedCaption)"
           >
-            {{ usedCaption }}
+            {{ $ust(usedCaption) }}
           </label>
         </div>
         <div class="empty_userview_text">
@@ -303,7 +303,7 @@
           @update:buttons="buttons = $event"
           @update:enable-filter="enableFilter = $event"
           @update:is-loading="isUserViewLoading = $event"
-          @update:title="updateTitle"
+          @update:title="title = $event"
           @goto="$emit('goto', $event)"
         />
       </div>
@@ -335,6 +335,7 @@ import { IIframeRef } from "@/api";
 import { ITime } from "@/components/Calendar.vue";
 import type { ConvertedBoundAttributesMap } from "@/user_views/combined";
 import { formatRawValue } from "@/user_views/format";
+import { UserString } from "@/translations";
 
 interface ITextType {
   name: "text";
@@ -580,7 +581,7 @@ export default class FormControl extends Vue {
   @Prop({ type: Object, default: () => ({}) }) attributeMappings!: ConvertedBoundAttributesMap;
   @Prop({ type: Boolean, default: false }) locked!: boolean;
   @Prop({ type: String }) homeSchema!: string | undefined;
-  @Prop({ type: String, default: "" }) caption!: string;
+  @Prop() caption!: UserString | undefined;
   @Prop({ type: Boolean, default: false }) forceCaption!: boolean;
   @Prop({ type: Boolean, default: false }) forceMultiline!: boolean;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
@@ -597,7 +598,7 @@ export default class FormControl extends Vue {
 
   private buttons: Button[] = [];
   private filterString = "";
-  private title = "";
+  private title: UserString | null = null;
   private enableFilter = false;
   private isUserViewLoading = false;
   private autoSaveLock: AutoSaveLock | null = null;
@@ -642,18 +643,16 @@ export default class FormControl extends Vue {
   // 2. "title", if there is a title or we show static content. The latter has "no title", because most likely
   //    a user doesn't want to have a caption for these.
   // 3. "caption".
-  get usedCaption(): string {
-    if (this.forceCaption) {
+  get usedCaption(): UserString {
+    if (this.forceCaption && this.caption) {
       return this.caption;
-    } else if (this.inputType.name === "buttons" || this.inputType.name === "static_text" || this.inputType.name === "static_image" || this.title !== "") {
+    } else if (this.title) {
       return this.title;
-    } else {
+    } else if (!(this.inputType.name === "buttons" || this.inputType.name === "static_text" || this.inputType.name === "static_image") && this.caption) {
       return this.caption;
+    } else {
+      return "";
     }
-  }
-
-  private updateTitle(title: string | null) {
-    this.title = title ?? this.caption;
   }
 
   get isQRCodeInput() {

@@ -88,7 +88,7 @@ type Mode = "popup" | "modal";
 
 @Component({ components: { Popper, TabbedModal, Portal } })
 export default class InputPopup extends Vue {
-  @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: String }) label!: string | undefined;
   @Prop({ type: Boolean, default: false }) show!: boolean;
   @Prop({ type: Object, default: () => {} }) popperOptions!: object;
 

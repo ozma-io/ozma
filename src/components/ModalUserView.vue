@@ -40,7 +40,7 @@
   >
     <template #header>
       <HeaderPanel
-        :title="titleOrNewEntry"
+        :title="titleOrNewEntry ?? undefined"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
@@ -91,6 +91,7 @@ import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ErrorKey } from "@/state/errors";
+import { UserString } from "@/translations";
 
 const staging = namespace("staging");
 const errors = namespace("errors");
@@ -107,7 +108,7 @@ export default class ModalUserView extends Vue {
   @Prop({ type: Object, required: true }) view!: IQuery;
   @Prop({ type: Boolean, default: false }) autofocus!: boolean;
 
-  private title = "";
+  private title: UserString | null = null;
   private buttons: Button[] = [];
 
   private enableFilter = false;
@@ -141,9 +142,12 @@ export default class ModalUserView extends Vue {
     });
   }
 
-  private get titleOrNewEntry() {
-    const isNewEntry = this.view.args.args === null;
-    return isNewEntry ? this.$t("new_entry").toString() : this.title;
+  get titleOrNewEntry(): string | null {
+    if (this.view.args.args === null) {
+      return this.$t("new_entry").toString();
+    } else {
+      return this.title ? this.$ust(this.title) : null;
+    }
   }
 
   get filterWords() {

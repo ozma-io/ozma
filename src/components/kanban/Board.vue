@@ -7,7 +7,7 @@
       v-for="(column, columnIndex) in columns"
       :key="column.key"
       data-dragscroll
-      :title="column.title"
+      :title="column.title ? $ust(column.title) : undefined"
       :cards="column.cards"
       :width="columnWidth"
       :color-variables="column.colorVariables"
@@ -37,9 +37,10 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { dragscroll } from "vue-dragscroll";
 
 import { ICard, default as Column } from "@/components/kanban/Column.vue";
+import { UserString } from "@/translations";
 
 export interface IColumn<CardT, ColumnT> {
-  title: string | null;
+  title: UserString | null;
   key: unknown;
   column: ColumnT;
   cards: ICard<CardT>[];

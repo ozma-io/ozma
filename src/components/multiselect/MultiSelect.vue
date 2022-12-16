@@ -317,9 +317,11 @@ export interface ISelectOption<T> {
   value: T;
 }
 
-export interface ISelectOptionHtml<T> extends ISelectOption<T> {
+interface ISelectOptionHtml<T> {
   index: number;
+  label: string;
   labelHtml: string; // Stores label with links replaced with <a> tags.
+  value: T;
 }
 
 export interface IPendingOptions {
@@ -354,7 +356,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) showFilter!: boolean;
   @Prop({ type: Object, default: (): LoadingState => ({ status: "ok", moreAvailable: false }) }) loadingState!: LoadingState;
   @Prop({ type: Function }) processFilter!: (_: string) => Promise<boolean> | undefined;
-  @Prop({ type: String, default: null }) label!: string | null;
+  @Prop({ type: String }) label!: string | undefined;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
 
@@ -369,11 +371,14 @@ export default class MultiSelect extends Vue {
   }
 
   get htmlOptions(): ISelectOptionHtml<unknown>[] {
-    return this.options.map((option, index) => ({
-      ...option,
-      index,
-      labelHtml: replaceHtmlLinks(option.label),
-    }));
+    return this.options.map((option, index) => {
+      return {
+        index,
+        label: option.label,
+        labelHtml: replaceHtmlLinks(option.label),
+        value: option.value,
+      };
+    });
   }
 
   get lowerFilterValue() {
