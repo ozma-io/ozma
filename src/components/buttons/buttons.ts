@@ -8,11 +8,12 @@ export type ButtonDisplay = typeof buttonDisplays[number];
 export const isButtonDisplay = (display: unknown): display is ButtonDisplay => buttonDisplays.includes(display as any);
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
+import { rawToUserString, UserString } from "@/translations";
 
 export interface IButton {
   icon?: string;
-  caption?: string;
-  tooltip?: string;
+  caption?: UserString;
+  tooltip?: UserString;
   display?: ButtonDisplay;
   disabled?: boolean;
   variant: ColorVariantAttribute;
@@ -65,11 +66,10 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
   const buttonObj = buttonAttr as Record<string, unknown>;
 
   // "caption" is preferred, but we can't put "name" only to `attrToButtonOld` due to buttons in table cells.
-  const caption = typeof buttonObj.caption === "string"
-    ? buttonObj.caption
-    : typeof buttonObj.name === "string" ? buttonObj.name : undefined;
+  const rawCaption = "caption" in buttonObj ? buttonObj.caption : buttonObj.name;
+  const caption = rawToUserString(rawCaption) ?? undefined;
   const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
-  const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
+  const tooltip = rawToUserString(buttonObj.tooltip) ?? undefined;
   const display = isButtonDisplay(buttonObj.display) ? buttonObj.display : undefined;
   const variant = colorVariantFromAttribute(buttonObj.variant);
 
@@ -151,9 +151,10 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
     // but TypeScript doesn't support advanced type witnesses like that.
     const buttonObj = rawButton as Record<string, unknown>;
 
-    const caption = typeof buttonObj.name === "string" ? buttonObj.name : undefined;
+    const rawCaption = "caption" in buttonObj ? buttonObj.caption : buttonObj.name;
+    const caption = rawToUserString(rawCaption) ?? undefined;
     const icon = typeof buttonObj.icon === "string" ? buttonObj.icon : undefined;
-    const tooltip = typeof buttonObj.tooltip === "string" ? buttonObj.tooltip : undefined;
+    const tooltip = rawToUserString(buttonObj.tooltip) ?? undefined;
     const display = isButtonDisplay(buttonObj.display) ? buttonObj.display : "desktop";
     const variant = colorVariantFromAttribute(buttonObj.variant);
 

@@ -16,7 +16,7 @@
     <span
       v-if="button.caption || listItem"
       :class="[listItem ? 'mx-2' : 'button-caption']"
-    >{{ button.caption || button.tooltip }}</span>
+    >{{ button.caption ? $ust(button.caption) : undefined }}</span>
 
     <span
       v-if="button.caption && button.type == 'button-group'"
