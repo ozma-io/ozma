@@ -89,7 +89,6 @@
           },
         ]"
       >
-        <!-- eslint-disable vue/multiline-html-element-content-newline -->
         <div
           :class="[
             'mob-handle',
@@ -98,7 +97,6 @@
             },
           ]"
         />
-        <!-- eslint-enable vue/multiline-html-element-content-newline -->
         <slot
           name="card"
           :dragged="cardIndex === draggedIndex"
