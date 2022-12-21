@@ -70,6 +70,7 @@
       animation="200"
       data-dragscroll
       draggable=".card_container"
+      handle=".handle"
       :style="[{ width }, colorVariables]"
       :value="shownCards"
       :disabled="!allowDragging"
@@ -82,7 +83,20 @@
         :key="card.key"
         :background-color="card.backgroundColor"
         :color-variant-attribute="card.colorVariant"
+        :class="[
+          {
+            'handle': !$isMobile,
+          },
+        ]"
       >
+        <div
+          :class="[
+            'mob-handle',
+            {
+              'handle': $isMobile,
+            },
+          ]"
+        />
         <slot
           name="card"
           :dragged="cardIndex === draggedIndex"
@@ -291,6 +305,14 @@ export default class KanbanColumn extends Vue {
     opacity: 1 !important;
     transform: rotate(3deg);
     box-shadow: 0 10px 10px -10px;
+  }
+
+  @media screen and (max-width: 460px) {
+    .mob-handle {
+      height: 20px;
+      background-color: var(--kanban-backgroundDarker2Color, #ddd);
+      border-radius: 0.25rem 0.25rem 0 0;
+    }
   }
 
   ::-webkit-scrollbar {
