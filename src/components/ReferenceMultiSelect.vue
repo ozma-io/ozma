@@ -65,7 +65,14 @@
           </FunLink>
 
           <!-- eslint-disable vue/no-v-html -->
-          <span class="value-text" v-html="select.option.labelHtml" />
+          <span
+            v-b-tooltip.hover.right.noninteractive="{
+              title: select.option.labelHtml.toString(),
+              disabled: $isMobile,
+            }"
+            class="value-text"
+            v-html="select.option.labelHtml"
+          />
           <!-- eslint-enable vue/no-v-html -->
         </fragment>
       </template>

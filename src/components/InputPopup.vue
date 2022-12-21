@@ -158,9 +158,12 @@ export default class InputPopup extends Vue {
     width: 30rem;
     max-width: 98%;
     height: 15rem;
-    max-height: 15rem;
+    max-height: 80vh;
     display: flex;
     flex-direction: column;
+    overflow: auto;
+    resize: both;
+    font-size: 0.9rem;
 
     .popup-inner-slot {
       flex: 1 1;
