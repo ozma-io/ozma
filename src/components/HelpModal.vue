@@ -2,17 +2,17 @@
     {
         "en": {
             "dismiss_tooltip": "You will still be able to open hidden help pages using \"?\" button in the top-right corner",
-            "dismiss_all": "Skip all",
+            "dismiss_all": "Disable hints",
             "dismiss": "Close"
         },
         "ru": {
             "dismiss_tooltip": "Скрытые страницы справки можно будет открыть с помощью кнопки с вопросительным знаком сверху справа",
-            "dismiss_all": "Пропустить все",
+            "dismiss_all": "Отключить подсказки",
             "dismiss": "Закрыть"
         },
         "es": {
             "dismiss_tooltip": "Aún podrá abrir páginas de ayuda ocultas usando \"?\" botón en la esquina superior derecha",
-            "dismiss_all": "Saltar todo",
+            "dismiss_all": "Deshabilitar sugerencias",
             "dismiss": "Cerrar"
         }
     }
