@@ -22,6 +22,8 @@
     <AlertBanner
       v-if="bannerMessage"
       :message="bannerMessage"
+      :language="language"
+      :show-contact-button="showContactButtonInBanner"
       :show-invite-button="showInviteButtonInBanner"
       :show-sign-up-button="showSignUpButtonInBanner"
       :color-variables="bannerColorVariables"
@@ -337,6 +339,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         sheet.insertRule(rule);
       }
     }
+  }
+
+  private get showContactButtonInBanner() {
+    return this.settings.getEntry("show_contact_button_in_banner", Boolean, false) && this.hasAuth;
   }
 
   private get showInviteButtonInBanner() {

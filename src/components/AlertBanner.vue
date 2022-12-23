@@ -1,14 +1,17 @@
 <i18n>
     {
         "en": {
+            "contact": "Plan demo call",
             "sign_up": "Sign Up",
             "invite_user": "Invite"
         },
         "ru": {
+            "contact": "Заказать внедрение",
             "sign_up": "Зарегистрироваться",
             "invite_user": "Пригласить"
         },
         "es": {
+            "contact": "Llamada de demostración",
             "sign_up": "Registrarse",
             "invite_user": "Invitar"
         }
@@ -27,6 +30,11 @@
       <!-- eslint-disable vue/no-v-html -->
       <span v-html="messageHtml" />
       <!-- eslint-enable vue/no-v-html -->
+      <ButtonItem
+        v-if="showContactButton"
+        class="contact-button"
+        :button="contactButton"
+      />
       <ButtonItem
         v-if="showInviteButton"
         class="invite-button"
@@ -62,11 +70,34 @@ const sanitize = (message: string) => sanitizeHtml(message, sanitizeSettings);
 export default class AlertBanner extends Vue {
   @Prop({ type: String, required: true }) message!: string;
   @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
+  @Prop({ type: String, required: false, default: "en" }) language!: string;
+  @Prop({ type: Boolean, default: false }) showContactButton!: boolean;
   @Prop({ type: Boolean, default: false }) showInviteButton!: boolean;
   @Prop({ type: Boolean, default: false }) showSignUpButton!: boolean;
 
   private get messageHtml() {
     return sanitize(this.message);
+  }
+
+  private get langPartURL() {
+    let urlPart = "";
+    if (this.language === "ru") {
+      urlPart = `/${this.language}`;
+    } else if (this.language === "es") {
+      urlPart = "";
+    } else {
+      urlPart = "";
+    }
+    return urlPart;
+  }
+
+  private get contactButton() {
+    return {
+      caption: this.$t("contact").toString(),
+      variant: bootstrapVariantAttribute("info"),
+      type: "link",
+      link: { type: "href", href: `https://ozma.io${this.langPartURL}/get-started/`, target: "blank" },
+    };
   }
 
   private get inviteButton() {
@@ -85,7 +116,7 @@ export default class AlertBanner extends Vue {
       caption: this.$t("sign_up").toString(),
       variant: bootstrapVariantAttribute("success"),
       type: "link",
-      link: { type: "href", href: "https://onboard.ozma.io/pm/ru", target: "blank" },
+      link: { type: "href", href: `https://onboard.ozma.io/pm${this.langPartURL}`, target: "blank" },
     };
   }
 }
@@ -105,11 +136,17 @@ export default class AlertBanner extends Vue {
     justify-content: space-between;
   }
 
+  .contact-button,
   .invite-button,
   .sign-up-button {
     margin: -1rem 0.5rem;
     padding: 0.25rem 1.25rem;
     align-self: center;
+
+  }
+
+  ::v-deep .contact-button .btn {
+    padding: 0 0.5rem;
   }
 
   ::v-deep .sign-up-button .btn {
