@@ -1,27 +1,30 @@
 <i18n>
     {
         "en": {
-            "header_1": "Sign up",
+            "header_1": "Connect with ozma.io",
             "header_2": "to continue",
             "description_1": "It's read-only example. To start making changes,",
-            "description_2": "sign up and we will create personal instance for you.",
-            "sign_up": "Sign up",
+            "description_2": "connect with ozma.io manager and we will create personal instance for you.",
+            "get_started": "Connect with manager",
+            "sign_up": "Sign up (only if you know SQL and JS)",
             "later": "Later"
         },
         "ru": {
-            "header_1": "Зарегистрируйтесь",
+            "header_1": "Свяжитесь с ozma.io",
             "header_2": "чтобы продолжить",
             "description_1": "Это демо-пример. Чтобы начать вносить изменения,",
-            "description_2": "зарегистрируйтесь и мы создадим вам персональную копию.",
-            "sign_up": "Зарегистрироваться",
+            "description_2": "свяжитесь с менеджером ozma.io.",
+            "get_started": "Связаться с менеджером ozma.io",
+            "sign_up": "Зарегистрироваться (только если вы знаете SQL и JS)",
             "later": "Посмотреть ещё"
         },
         "es": {
-            "header_1": "Registrarse",
-            "header_2": "A continuar",
+            "header_1": "Conéctate con ozma.io",
+            "header_2": "a continuar",
             "description_1": "Es un ejemplo de solo lectura. Para comenzar, haga cambios,",
-            "description_2": "Regístrese y crearemos una instancia personal para usted",
-            "sign_up": "Registrarse",
+            "description_2": "haga una cita con un gerente y crearemos una instancia personal para usted.",
+            "get_started": "Hacer una cita con el gerente",
+            "sign_up": "Registrarse (solo si sabes SQL y JS)",
             "later": "Ver más"
         }
     }
@@ -40,7 +43,7 @@
     @closed="showOverlay = false"
   >
     <div class="demo-message-container">
-      <i class="material-icons demo-icon">waving_hand</i>
+      <!-- <i class="material-icons demo-icon">waving_hand</i> -->
       <h1 class="demo-header">
         {{ $t("header_1") }}<br>{{ $t("header_2") }}
       </h1>
@@ -51,6 +54,15 @@
         <b-button
           class="ok-button"
           variant="primary"
+          :href="getStartedLink"
+          target="_blank"
+        >
+          {{ $t("get_started") }}
+        </b-button>
+
+        <b-button
+          class="ok-button"
+          variant="outline-primary"
           :href="signUpLink"
           target="_blank"
         >
@@ -93,8 +105,24 @@ export default class ReadonlyDemoInstanceModal extends Vue {
     this.$modal.hide(this.uid);
   }
 
+  private get locale() {
+    return this.$root.$i18n.locale;
+  }
+
+  private get getStartedLink() {
+    let urlPart = "";
+    if (this.locale === "ru") {
+      urlPart = "ru/";
+    } else if (this.locale === "es") {
+      urlPart = "es/";
+    } else {
+      urlPart = "";
+    }
+    return this.settings.getEntry("read_only_demo_instance_get_started_link", String, `https://ozma.io/${urlPart}get-started/`);
+  }
+
   private get signUpLink() {
-    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, "https://onboard.ozma.io/register?locale=ru&lp=demo-x");
+    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, `https://onboard.ozma.io/register?locale=${this.locale}&lp=demo-x`);
   }
 }
 </script>
@@ -129,7 +157,7 @@ export default class ReadonlyDemoInstanceModal extends Vue {
   }
 
   .demo-message-container {
-    padding: 1rem;
+    padding: 4rem 1rem;
     display: flex;
     flex-flow: column;
     align-items: center;
