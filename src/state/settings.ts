@@ -26,9 +26,25 @@ const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks
   };
 };
 
+export interface IEditViewQuery {
+  schema: string;
+  name: string;
+}
+
+const getEditViewQuery = (settings: CurrentSettings): IEditViewQuery => {
+  const schemaStr = settings.getEntry("edit_view_query_schema", String, funappSchema);
+  const nameStr = settings.getEntry("edit_view_query_name", String, "user_view_by_name");
+
+  return {
+    schema: schemaStr,
+    name: nameStr,
+  };
+};
+
 export class CurrentSettings {
   settings: Record<string, string>;
   communicationLinks: ICommunicationLinks;
+  editViewQuery: IEditViewQuery;
   themes: ThemesMap;
 
   constructor(
@@ -38,6 +54,7 @@ export class CurrentSettings {
     this.settings = settings;
     this.themes = themes;
     this.communicationLinks = getCommunicationButtons(this);
+    this.editViewQuery = getEditViewQuery(this);
   }
 
   getEntry<T>(name: string, constructor: (_: string) => T, defValue: T): T {
