@@ -43,7 +43,6 @@ const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
     let isViewAddressOk = true;
     schemaNameMatch.slice(1).forEach(value => {
       const quotesСount = (value.match(/"/g) || []).length;
-      console.log(quotesСount);
       // Check if "schema"."name" or "schema".name but not "schema.name"
       if (
         ((quotesСount !== 0) && (quotesСount !== 2))
