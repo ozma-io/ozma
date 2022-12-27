@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { FunDBError, IEntityRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey } from "ozma-api";
+import { FunDBError, IEntityRef, IUserViewRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -26,12 +26,7 @@ const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks
   };
 };
 
-export interface IEditViewQuery {
-  schema: string;
-  name: string;
-}
-
-const getEditViewQuery = (settings: CurrentSettings): IEditViewQuery => {
+const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
   const schemaStr = settings.getEntry("edit_view_query_schema", String, funappSchema);
   const nameStr = settings.getEntry("edit_view_query_name", String, "user_view_by_name");
 
@@ -44,7 +39,7 @@ const getEditViewQuery = (settings: CurrentSettings): IEditViewQuery => {
 export class CurrentSettings {
   settings: Record<string, string>;
   communicationLinks: ICommunicationLinks;
-  editViewQuery: IEditViewQuery;
+  editViewQuery: IUserViewRef;
   themes: ThemesMap;
 
   constructor(
