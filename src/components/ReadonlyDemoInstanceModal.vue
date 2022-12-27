@@ -1,11 +1,11 @@
 <i18n>
     {
         "en": {
-            "header_1": "Connect with ozma.io",
+            "header_1": "Request a demo call",
             "header_2": "to continue",
             "description_1": "It's read-only example. To start making changes,",
-            "description_2": "connect with ozma.io manager and we will create personal instance for you.",
-            "get_started": "Connect with manager",
+            "description_2": "contact our team, and we will create a personal demonstration instance just for you.",
+            "get_started": "Get in touch",
             "sign_up": "Sign up (only if you know SQL and JS)",
             "later": "Later"
         },
