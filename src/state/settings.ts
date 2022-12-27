@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { FunDBError, IEntityRef, IUserViewRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey } from "ozma-api";
+import { FunDBError, IEntityRef, IUserViewRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey, goodName } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -27,12 +27,41 @@ const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks
 };
 
 const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
-  const schemaStr = settings.getEntry("edit_view_query_schema", String, funappSchema);
-  const nameStr = settings.getEntry("edit_view_query_name", String, "user_view_by_name");
+  const schemaName = settings.getEntry(
+    "edit_view_query_custom_view",
+    String,
+    "",
+  );
+
+  let schema = funappSchema;
+  let name = "user_view_by_name";
+
+  const schemaNameRegex = /^("?[a-zA-Z0-9_]+"?)\.("?[a-zA-Z0-9_]+"?)$/;
+  const schemaNameMatch = schemaNameRegex.exec(schemaName);
+
+  if (schemaNameMatch !== null) {
+    let isViewAddressOk = true;
+    schemaNameMatch.slice(1).forEach(value => {
+      const quotesСount = (value.match(/"/g) || []).length;
+      console.log(quotesСount);
+      // Check if "schema"."name" or "schema".name but not "schema.name"
+      if (
+        ((quotesСount !== 0) && (quotesСount !== 2))
+        || !goodName(value)
+      ) {
+        isViewAddressOk = false;
+      }
+    });
+
+    if (isViewAddressOk) {
+      schema = schemaNameMatch[1];
+      name = schemaNameMatch[2];
+    }
+  }
 
   return {
-    schema: schemaStr,
-    name: nameStr,
+    schema,
+    name,
   };
 };
 
