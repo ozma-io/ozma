@@ -1,7 +1,7 @@
 <i18n>
     {
         "en": {
-            "contact": "Plan demo call",
+            "contact": "Request a demo call",
             "sign_up": "Sign Up",
             "invite_user": "Invite"
         },
