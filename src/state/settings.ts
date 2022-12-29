@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { FunDBError, IEntityRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey } from "ozma-api";
+import { FunDBError, IEntityRef, IUserViewRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey, goodName } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -26,9 +26,39 @@ const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks
   };
 };
 
+const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
+  const editViewQuery = settings.getEntry(
+    "edit_view_query_custom_view",
+    String,
+    "",
+  );
+
+  let schema = funappSchema;
+  let name = "user_view_by_name";
+
+  const namePartRegex = "[a-zA-Z0-9_]+";
+  const nameRegex = `(?:"(${namePartRegex})"|(${namePartRegex}))`;
+  const userViewRegex = new RegExp(`^${nameRegex}\\.${nameRegex}$`);
+
+  const schemaNameMatch = userViewRegex.exec(editViewQuery);
+  if (schemaNameMatch !== null) {
+    const [rawSchema, rawName] = schemaNameMatch.slice(1).filter(Boolean);
+    if (goodName(rawSchema) && goodName(rawName)) {
+      schema = rawSchema;
+      name = rawName;
+    }
+  }
+
+  return {
+    schema,
+    name,
+  };
+};
+
 export class CurrentSettings {
   settings: Record<string, string>;
   communicationLinks: ICommunicationLinks;
+  editViewQuery: IUserViewRef;
   themes: ThemesMap;
 
   constructor(
@@ -38,6 +68,7 @@ export class CurrentSettings {
     this.settings = settings;
     this.themes = themes;
     this.communicationLinks = getCommunicationButtons(this);
+    this.editViewQuery = getEditViewQuery(this);
   }
 
   getEntry<T>(name: string, constructor: (_: string) => T, defValue: T): T {

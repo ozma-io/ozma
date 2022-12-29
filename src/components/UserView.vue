@@ -325,7 +325,6 @@ import { Debounce } from "vue-debounce-decorator";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError, mapMaybe } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
-import { funappSchema } from "@/api";
 import { deserializeValueFunction, equalEntityRef, fieldToValueType, serializeValue, valueEquals, valueFromRaw } from "@/values";
 import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
@@ -558,14 +557,17 @@ export default class UserView extends Vue {
     const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
     if (args.source.type !== "named") return null;
 
+    const schema = this.settings.editViewQuery.schema;
+    const name = this.settings.editViewQuery.name;
+
     return {
       defaultValues: {},
       args: {
         source: {
           type: "named",
           ref: {
-            schema: funappSchema,
-            name: "user_view_by_name",
+            schema,
+            name,
           },
         },
         args: {
@@ -612,14 +614,17 @@ export default class UserView extends Vue {
     if (this.state.state === "error" || (this.state.state === "show" && !this.state.uv.attributes["hide_default_actions"])) {
       const args = this.state.state === "show" ? this.state.uv.args : this.state.args;
       if (args.source.type === "named") {
+        const schema = this.settings.editViewQuery.schema;
+        const name = this.settings.editViewQuery.name;
+
         const editQuery: IQuery = {
           defaultValues: {},
           args: {
             source: {
               type: "named",
               ref: {
-                schema: funappSchema,
-                name: "user_view_by_name",
+                schema,
+                name,
               },
             },
             args: {
@@ -1060,7 +1065,10 @@ export default class UserView extends Vue {
     if (this.state.state !== "show") return;
     if (this.args.source.type !== "named") return;
 
-    if (this.args.source.ref.schema === funappSchema && this.args.source.ref.name === "user_view_by_name") {
+    if (
+      this.args.source.ref.schema === this.settings.editViewQuery.schema
+      && this.args.source.ref.name === this.settings.editViewQuery.name
+    ) {
       void this.setDisplayMode("development");
     }
   }
