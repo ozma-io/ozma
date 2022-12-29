@@ -27,7 +27,7 @@ const getCommunicationButtons = (settings: CurrentSettings): ICommunicationLinks
 };
 
 const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
-  const schemaName = settings.getEntry(
+  const editViewQuery = settings.getEntry(
     "edit_view_query_custom_view",
     String,
     "",
@@ -36,26 +36,15 @@ const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
   let schema = funappSchema;
   let name = "user_view_by_name";
 
-  const schemaNameRegex = /^("?[a-zA-Z0-9_]+"?)\.("?[a-zA-Z0-9_]+"?)$/;
-  const schemaNameMatch = schemaNameRegex.exec(schemaName);
+  const namePartRegex = "[a-zA-Z0-9_]+";
+  const nameRegex = `(?:"(${namePartRegex})"|(${namePartRegex}))`;
+  const userViewRegex = new RegExp(`^${nameRegex}\\.${nameRegex}\$`); 
 
+  const schemaNameMatch = userViewRegex.exec(editViewQuery)
   if (schemaNameMatch !== null) {
-    let isViewAddressOk = true;
-    schemaNameMatch.slice(1).forEach(value => {
-      const quotesСount = (value.match(/"/g) || []).length;
-      // Check if "schema"."name" or "schema".name but not "schema.name"
-      if (
-        ((quotesСount !== 0) && (quotesСount !== 2))
-        || !goodName(value)
-      ) {
-        isViewAddressOk = false;
-      }
-    });
-
-    if (isViewAddressOk) {
-      schema = schemaNameMatch[1];
-      name = schemaNameMatch[2];
-    }
+    const schemaNameMatchCleanned = schemaNameMatch.slice(1).filter(Boolean)
+    schema = schemaNameMatchCleanned[0];
+    name = schemaNameMatchCleanned[1];
   }
 
   return {
