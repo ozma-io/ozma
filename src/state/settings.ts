@@ -42,10 +42,10 @@ const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
 
   const schemaNameMatch = userViewRegex.exec(editViewQuery);
   if (schemaNameMatch !== null) {
-    const schemaNameMatchCleanned = schemaNameMatch.slice(1).filter(Boolean);
-    if (goodName(schemaNameMatchCleanned[0]) && goodName(schemaNameMatchCleanned[1])) {
-      schema = schemaNameMatchCleanned[0];
-      name = schemaNameMatchCleanned[1];
+    const [rawSchema, rawName] = schemaNameMatch.slice(1).filter(Boolean);
+    if (goodName(rawSchema) && goodName(rawName)) {
+      schema = rawSchema;
+      name = rawName;
     }
   }
 
