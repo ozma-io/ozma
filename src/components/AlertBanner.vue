@@ -30,21 +30,23 @@
       <!-- eslint-disable vue/no-v-html -->
       <span v-html="messageHtml" />
       <!-- eslint-enable vue/no-v-html -->
-      <ButtonItem
-        v-if="showContactButton"
-        class="contact-button"
-        :button="contactButton"
-      />
-      <ButtonItem
-        v-if="showInviteButton"
-        class="invite-button"
-        :button="inviteButton"
-      />
-      <ButtonItem
-        v-if="showSignUpButton"
-        class="sign-up-button"
-        :button="signUpButton"
-      />
+      <div class="buttons-wrapper">
+        <ButtonItem
+          v-if="showContactButton"
+          class="contact-button"
+          :button="contactButton"
+        />
+        <ButtonItem
+          v-if="showSignUpButton"
+          class="sign-up-button"
+          :button="signUpButton"
+        />
+        <ButtonItem
+          v-if="showInviteButton"
+          class="invite-button"
+          :button="inviteButton"
+        />
+      </div>
     </div>
   </b-alert>
 </template>
@@ -70,33 +72,25 @@ const sanitize = (message: string) => sanitizeHtml(message, sanitizeSettings);
 export default class AlertBanner extends Vue {
   @Prop({ type: String, required: true }) message!: string;
   @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
-  @Prop({ type: String, required: false, default: "en" }) language!: string;
   @Prop({ type: Boolean, default: false }) showContactButton!: boolean;
-  @Prop({ type: Boolean, default: false }) showInviteButton!: boolean;
   @Prop({ type: Boolean, default: false }) showSignUpButton!: boolean;
+  @Prop({ type: Boolean, default: false }) showInviteButton!: boolean;
 
   private get messageHtml() {
     return sanitize(this.message);
   }
 
-  private get langPartURL() {
-    let urlPart = "";
-    if (this.language === "ru") {
-      urlPart = `/${this.language}`;
-    } else if (this.language === "es") {
-      urlPart = "";
-    } else {
-      urlPart = "";
-    }
-    return urlPart;
-  }
-
   private get contactButton() {
+    const language = this.$i18n.locale;
+    let url = "https://ozma.io/get-started/";
+    if (["ru"].includes(language)) {
+      url = `https://ozma.io/${language}/get-started/`;
+    }
     return {
       caption: this.$t("contact").toString(),
       variant: bootstrapVariantAttribute("info"),
       type: "link",
-      link: { type: "href", href: `https://ozma.io${this.langPartURL}/get-started/`, target: "blank" },
+      link: { type: "href", href: url, target: "blank" },
     };
   }
 
@@ -110,13 +104,18 @@ export default class AlertBanner extends Vue {
     };
   }
 
+  // TODO: add other options for sign up button, not only /crm
   private get signUpButton() {
+    const language = this.$i18n.locale;
+    let url = "https://onboard.ozma.io/crm";
+    if (["ru"].includes(language)) {
+      url = `https://onboard.ozma.io/crm/${language}`;
+    }
     return {
-      icon: "waving_hand",
       caption: this.$t("sign_up").toString(),
-      variant: bootstrapVariantAttribute("success"),
+      variant: bootstrapVariantAttribute("secondary"),
       type: "link",
-      link: { type: "href", href: `https://onboard.ozma.io/pm${this.langPartURL}`, target: "blank" },
+      link: { type: "href", href: url, target: "blank" },
     };
   }
 }
@@ -136,23 +135,24 @@ export default class AlertBanner extends Vue {
     justify-content: space-between;
   }
 
+  .buttons-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
   .contact-button,
   .invite-button,
   .sign-up-button {
     margin: -1rem 0.5rem;
-    padding: 0.25rem 1.25rem;
+    padding: 0.3rem 0.9rem;
     align-self: center;
 
-  }
-
-  ::v-deep .contact-button .btn {
-    padding: 0 0.5rem;
-  }
-
-  ::v-deep .sign-up-button .btn {
-    padding: 0.25rem 1.25rem;
-    margin: 0 0.5rem;
-    font-size: 1rem;
-    font-weight: normal;
+    &:deep(.btn) {
+      padding: 0.3rem 0.9rem;
+      margin: 0 0.5rem;
+      font-size: 1rem;
+      font-weight: normal;
+    }
   }
 </style>

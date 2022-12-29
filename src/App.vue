@@ -22,10 +22,9 @@
     <AlertBanner
       v-if="bannerMessage"
       :message="bannerMessage"
-      :language="language"
       :show-contact-button="showContactButtonInBanner"
-      :show-invite-button="showInviteButtonInBanner"
       :show-sign-up-button="showSignUpButtonInBanner"
+      :show-invite-button="showInviteButtonInBanner"
       :color-variables="bannerColorVariables"
       @banner-close="onBannerClose"
     />
@@ -342,15 +341,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   private get showContactButtonInBanner() {
-    return this.settings.getEntry("show_contact_button_in_banner", Boolean, false) && this.hasAuth;
+    return this.settings.getEntry("show_contact_button_in_banner", Boolean, false);
+  }
+
+  private get showSignUpButtonInBanner() {
+    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false);
   }
 
   private get showInviteButtonInBanner() {
     return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.hasAuth;
-  }
-
-  private get showSignUpButtonInBanner() {
-    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false) && !this.hasAuth;
   }
 
   private get fontSize(): number {
