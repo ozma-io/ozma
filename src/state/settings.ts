@@ -38,13 +38,15 @@ const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
 
   const namePartRegex = "[a-zA-Z0-9_]+";
   const nameRegex = `(?:"(${namePartRegex})"|(${namePartRegex}))`;
-  const userViewRegex = new RegExp(`^${nameRegex}\\.${nameRegex}\$`); 
+  const userViewRegex = new RegExp(`^${nameRegex}\\.${nameRegex}$`);
 
-  const schemaNameMatch = userViewRegex.exec(editViewQuery)
+  const schemaNameMatch = userViewRegex.exec(editViewQuery);
   if (schemaNameMatch !== null) {
-    const schemaNameMatchCleanned = schemaNameMatch.slice(1).filter(Boolean)
-    schema = schemaNameMatchCleanned[0];
-    name = schemaNameMatchCleanned[1];
+    const schemaNameMatchCleanned = schemaNameMatch.slice(1).filter(Boolean);
+    if (goodName(schemaNameMatchCleanned[0]) && goodName(schemaNameMatchCleanned[1])) {
+      schema = schemaNameMatchCleanned[0];
+      name = schemaNameMatchCleanned[1];
+    }
   }
 
   return {
