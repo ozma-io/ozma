@@ -1117,6 +1117,9 @@ export default class UserView extends Vue {
     this.$emit("update:is-loading", newValue === "loading");
   }
 
+  // FIXME: Do not changed when modal is open — only default values
+  // for title, description and url.
+
   @Watch("title", { immediate: true })
   private updateTitle() {
     this.$emit("update:title", this.title);

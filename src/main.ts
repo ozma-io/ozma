@@ -8,7 +8,7 @@ import mitt from "mitt";
 import TextareaAutosize from "vue-textarea-autosize";
 
 import * as Modules from "@/modules";
-import { setHeadTitle, setHeadMeta } from "@/elements";
+import { setHeadTitle, setHeadMeta, setHeadLink } from "@/elements";
 
 import UserView from "@/components/UserView.vue";
 import FunLink from "@/components/FunLink";
@@ -98,6 +98,10 @@ Modules.router.beforeResolve((to, from, next) => {
   setHeadMeta(
     "property",
     "og:url",
+    "https://ozma.io",
+  );
+  setHeadLink(
+    "canonical",
     "https://ozma.io",
   );
   next();

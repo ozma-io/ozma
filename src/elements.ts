@@ -19,3 +19,11 @@ export const setHeadMeta = (paramKey: string, paramValue: string, contentString:
     metaNode.content = contentString;
   }
 };
+export const setHeadLink = (rel: string, href: string) => {
+  const linkNode: HTMLLinkElement | null = document.head.querySelector(`link[rel="${rel}"]`);
+  if (linkNode === null) {
+    document.head.insertAdjacentHTML("beforeend", `<link rel="${rel}" content="${href}">`);
+  } else {
+    linkNode.href = href;
+  }
+};

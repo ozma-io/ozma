@@ -313,7 +313,7 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { eventBus } from "@/main";
-import { setHeadTitle, setHeadMeta } from "@/elements";
+import { setHeadTitle, setHeadMeta, setHeadLink } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
@@ -598,8 +598,7 @@ export default class TopLevelUserView extends Vue {
   private updateUrl(url: UserString | null) {
     if (url) {
       const urlString = `${this.$ust(url)}`;
-      // TODO: canonical link
-      // setHeadMeta("name", "description", descriptionString);
+      setHeadLink("canonical", urlString);
       setHeadMeta("property", "og:url", urlString);
     }
   }
