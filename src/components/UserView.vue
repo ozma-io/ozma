@@ -541,6 +541,16 @@ export default class UserView extends Vue {
     }
   }
 
+  get description(): UserString | null {
+    if (this.state.state === "show") {
+      const descriptionAttr = rawToUserString(this.state.uv.attributes["description"]);
+      if (descriptionAttr) {
+        return descriptionAttr;
+      }
+    }
+    return null;
+  }
+
   private get toggleArgumentEditorButton(): Button {
     return {
       icon: "edit_note",
@@ -1103,6 +1113,11 @@ export default class UserView extends Vue {
   @Watch("title", { immediate: true })
   private updateTitle() {
     this.$emit("update:title", this.title);
+  }
+
+  @Watch("description", { immediate: true })
+  private updateDescription() {
+    this.$emit("update:description", this.description);
   }
 
   private get argumentEditorHasUpdatedValues() {

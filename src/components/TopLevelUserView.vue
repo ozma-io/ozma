@@ -173,6 +173,7 @@
           @update:enable-filter="enableFilter = $event"
           @update:body-style="styleNode.innerHTML = $event"
           @update:title="title = $event"
+          @update:description="description = $event"
           @update:current-page="replaceRootPage($event)"
         />
       </div>
@@ -311,7 +312,7 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { eventBus } from "@/main";
-import { setHeadTitle } from "@/elements";
+import { setHeadTitle, setHeadDescription } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
@@ -395,6 +396,7 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
   private title: UserString | null = null;
+  private description: UserString | null = null;
 
   private buttons: Button[] = [];
 
@@ -575,8 +577,16 @@ export default class TopLevelUserView extends Vue {
   @Watch("title", { immediate: true })
   private updateTitle(title: UserString | null) {
     // TODO: replace ozma.io by full URL
-    const head = title ? `ozma.io - ${this.$ust(title)}` : "ozma.io";
-    setHeadTitle(head);
+    const titleString = title ? `ozma.io - ${this.$ust(title)}` : "ozma.io";
+    setHeadTitle(titleString);
+  }
+
+  @Watch("description", { immediate: true })
+  private updateDescription(description: UserString | null) {
+    if (description) {
+      const descriptionString = `${this.$ust(description)}`;
+      setHeadDescription(descriptionString);
+    }
   }
 
   private created() {
