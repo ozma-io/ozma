@@ -78,11 +78,27 @@ Vue.directive("visible", (el, bind) => {
 });
 
 Modules.router.beforeResolve((to, from, next) => {
-  // Reset page title
-  setHeadTitle("ozma.io");
+  // Reset page title and meta tags
+  setHeadTitle("ozma.io — a low-code platform for CRM and ERP solutions");
   setHeadMeta(
+    "name",
     "description",
     "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
+  );
+  setHeadMeta(
+    "property",
+    "og:description",
+    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
+  );
+  setHeadMeta(
+    "property",
+    "og:title",
+    "ozma.io — a low-code platform for CRM and ERP solutions",
+  );
+  setHeadMeta(
+    "property",
+    "og:url",
+    "https://ozma.io",
   );
   next();
 });

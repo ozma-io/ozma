@@ -1,4 +1,4 @@
-// Dynamic title tag
+// Dynamic title and meta tags
 if (document.head === null) {
   throw new Error("head not found");
 }
@@ -11,10 +11,10 @@ export const setHeadTitle = (titleString: string) => {
     titleNode.text = titleString;
   }
 };
-export const setHeadMeta = (name: string, contentString: string) => {
-  const metaNode: HTMLMetaElement | null = document.head.querySelector(`meta[name="${name}"]`);
+export const setHeadMeta = (paramKey: string, paramValue: string, contentString: string) => {
+  const metaNode: HTMLMetaElement | null = document.head.querySelector(`meta[${paramKey}="${paramValue}"]`);
   if (metaNode === null) {
-    document.head.insertAdjacentHTML("beforeend", `<meta name="${name}" content="${contentString}">`);
+    document.head.insertAdjacentHTML("beforeend", `<meta ${paramKey}="${paramValue}" content="${contentString}">`);
   } else {
     metaNode.content = contentString;
   }

@@ -174,6 +174,7 @@
           @update:body-style="styleNode.innerHTML = $event"
           @update:title="title = $event"
           @update:description="description = $event"
+          @update:url="url = $event"
           @update:current-page="replaceRootPage($event)"
         />
       </div>
@@ -397,6 +398,7 @@ export default class TopLevelUserView extends Vue {
   private styleNode!: HTMLStyleElement;
   private title: UserString | null = null;
   private description: UserString | null = null;
+  private url: UserString | null = null;
 
   private buttons: Button[] = [];
 
@@ -576,16 +578,29 @@ export default class TopLevelUserView extends Vue {
 
   @Watch("title", { immediate: true })
   private updateTitle(title: UserString | null) {
-    // TODO: replace ozma.io by full URL
-    const titleString = title ? `ozma.io - ${this.$ust(title)}` : "ozma.io";
-    setHeadTitle(titleString);
+    if (title) {
+      const titleString = `ozma.io - ${this.$ust(title)}`;
+      setHeadTitle(titleString);
+      setHeadMeta("property", "og:title", titleString);
+    }
   }
 
   @Watch("description", { immediate: true })
   private updateDescription(description: UserString | null) {
     if (description) {
       const descriptionString = `${this.$ust(description)}`;
-      setHeadMeta("description", descriptionString);
+      setHeadMeta("name", "description", descriptionString);
+      setHeadMeta("property", "og:description", descriptionString);
+    }
+  }
+
+  @Watch("url", { immediate: true })
+  private updateUrl(url: UserString | null) {
+    if (url) {
+      const urlString = `${this.$ust(url)}`;
+      // TODO: canonical link
+      // setHeadMeta("name", "description", descriptionString);
+      setHeadMeta("property", "og:url", urlString);
     }
   }
 

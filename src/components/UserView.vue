@@ -527,7 +527,6 @@ export default class UserView extends Vue {
 
   get title(): UserString {
     if (this.state.state === "show") {
-      // TODO: Add core url to the title if it is not present.
       const titleAttr = rawToUserString(this.state.uv.attributes["title"]);
       if (titleAttr) {
         return titleAttr;
@@ -549,6 +548,14 @@ export default class UserView extends Vue {
       }
     }
     return null;
+  }
+
+  get url(): UserString | null {
+    if (this.state.state === "show") {
+      return window.location.href;
+    } else {
+      return null;
+    }
   }
 
   private get toggleArgumentEditorButton(): Button {
@@ -1118,6 +1125,11 @@ export default class UserView extends Vue {
   @Watch("description", { immediate: true })
   private updateDescription() {
     this.$emit("update:description", this.description);
+  }
+
+  @Watch("url", { immediate: true })
+  private updateUrl() {
+    this.$emit("update:url", this.url);
   }
 
   private get argumentEditorHasUpdatedValues() {
