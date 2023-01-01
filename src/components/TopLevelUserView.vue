@@ -574,7 +574,8 @@ export default class TopLevelUserView extends Vue {
 
   @Watch("title", { immediate: true })
   private updateTitle(title: UserString | null) {
-    const head = title ? `${this.$ust(title)} — Ozma` : "Ozma";
+    // TODO: replace ozma.io by full URL
+    const head = title ? `${this.$ust(title)} - ozma.io` : "ozma.io";
     setHeadTitle(head);
   }
 

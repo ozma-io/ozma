@@ -14,8 +14,8 @@
         <slot name="main-buttons" />
       </div>
       <!-- `tabindex` is required for closing tooltip on blur -->
-      <label
-        v-if="title"
+      <h1
+        v-if="title && type === 'root'"
         v-b-tooltip.click.blur.bottom.noninteractive.viewport
         tabindex="0"
         :class="[
@@ -25,7 +25,23 @@
           }
         ]"
         :title="title"
-      >{{ title }}</label>
+      >
+        {{ title }}
+      </h1>
+      <h2
+        v-else
+        v-b-tooltip.click.blur.bottom.noninteractive.viewport
+        tabindex="0"
+        :class="[
+          'input_label',
+          {
+            'is-loading': isLoading,
+          }
+        ]"
+        :title="title"
+      >
+        {{ title }}
+      </h2>
     </div>
 
     <div class="right-part">

@@ -527,6 +527,7 @@ export default class UserView extends Vue {
 
   get title(): UserString {
     if (this.state.state === "show") {
+      // TODO: Add core url to the title if it is not present.
       const titleAttr = rawToUserString(this.state.uv.attributes["title"]);
       if (titleAttr) {
         return titleAttr;
