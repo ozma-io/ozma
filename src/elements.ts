@@ -2,18 +2,20 @@
 if (document.head === null) {
   throw new Error("head not found");
 }
-const titleNode: HTMLTitleElement | null = document.head.querySelector("title[app-managed]");
-if (titleNode === null) {
-  throw new Error("head.title not found");
-}
-const descriptionNode: HTMLMetaElement | null = document.head.querySelector("meta[name=\"description\"]");
-if (descriptionNode === null) {
-  throw new Error("head.description not found");
-}
 
 export const setHeadTitle = (titleString: string) => {
-  titleNode.text = titleString;
+  const titleNode: HTMLTitleElement | null = document.head.querySelector("title[app-managed]");
+  if (titleNode === null) {
+    document.head.insertAdjacentHTML("afterbegin", `<title app-managed>${titleString}</title>`);
+  } else {
+    titleNode.text = titleString;
+  }
 };
-export const setHeadDescription = (descriptionString: string) => {
-  descriptionNode.content = descriptionString;
+export const setHeadMeta = (name: string, contentString: string) => {
+  const metaNode: HTMLMetaElement | null = document.head.querySelector(`meta[name="${name}"]`);
+  if (metaNode === null) {
+    document.head.insertAdjacentHTML("beforeend", `<meta name="${name}" content="${contentString}">`);
+  } else {
+    metaNode.content = contentString;
+  }
 };

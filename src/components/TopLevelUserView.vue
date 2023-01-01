@@ -312,7 +312,7 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { eventBus } from "@/main";
-import { setHeadTitle, setHeadDescription } from "@/elements";
+import { setHeadTitle, setHeadMeta } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
@@ -585,7 +585,7 @@ export default class TopLevelUserView extends Vue {
   private updateDescription(description: UserString | null) {
     if (description) {
       const descriptionString = `${this.$ust(description)}`;
-      setHeadDescription(descriptionString);
+      setHeadMeta("description", descriptionString);
     }
   }
 
