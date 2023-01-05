@@ -37,7 +37,7 @@ import { Vue, Component, Prop } from "vue-property-decorator";
 import { dragscroll } from "vue-dragscroll";
 
 import { ICard, default as Column } from "@/components/kanban/Column.vue";
-import { UserString } from "@/translations";
+import { UserString } from "@/state/translations";
 
 export interface IColumn<CardT, ColumnT> {
   title: UserString | null;
