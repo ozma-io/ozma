@@ -45,7 +45,7 @@ import { ISelectOption, default as MultiSelect } from "@/components/multiselect/
 
 import { valueIsNull } from "@/values";
 import type { ColorVariantAttribute } from "@/utils_colors";
-import { UserString } from "@/translations";
+import { UserString } from "@/state/translations";
 
 @Component({
   components: {

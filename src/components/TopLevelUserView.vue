@@ -325,7 +325,7 @@ import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
 import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute, IThemeRef } from "@/utils_colors";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
-import { UserString } from "@/translations";
+import { UserString } from "@/state/translations";
 
 const auth = namespace("auth");
 const staging = namespace("staging");

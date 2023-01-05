@@ -166,7 +166,7 @@ import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGri
 import type { Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
-import { UserString, rawToUserString } from "@/translations";
+import { UserString, rawToUserString } from "@/state/translations";
 
 export interface IButtonAction {
   name: UserString;

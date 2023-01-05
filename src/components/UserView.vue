@@ -342,7 +342,7 @@ import { fetchUserViewData, UserViewError } from "@/user_views/fetch";
 import { baseUserViewHandler } from "@/components/BaseUserView";
 import Errorbox from "@/components/Errorbox.vue";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
-import { rawToUserString, UserString } from "@/translations";
+import { rawToUserString, UserString } from "@/state/translations";
 
 const types: RecordSet<string> = {
   "form": null,

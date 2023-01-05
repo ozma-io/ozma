@@ -8,7 +8,7 @@ export type ButtonDisplay = typeof buttonDisplays[number];
 export const isButtonDisplay = (display: unknown): display is ButtonDisplay => buttonDisplays.includes(display as any);
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
-import { rawToUserString, UserString } from "@/translations";
+import { rawToUserString, UserString } from "@/state/translations";
 
 export interface IButton {
   icon?: string;

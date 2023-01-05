@@ -91,7 +91,7 @@ import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ErrorKey } from "@/state/errors";
-import { UserString } from "@/translations";
+import { UserString } from "@/state/translations";
 
 const staging = namespace("staging");
 const errors = namespace("errors");

@@ -385,7 +385,7 @@ import FormValueControl from "@/components/FormValueControl";
 import type TableCell from "./table/TableCell.vue";
 import { elementWindow, WindowKey } from "@/state/windows";
 import { formatValue } from "@/user_views/format";
-import { rawToUserString, UserString } from "@/translations";
+import { rawToUserString, UserString } from "@/state/translations";
 
 export interface IColumn {
   caption: UserString;
