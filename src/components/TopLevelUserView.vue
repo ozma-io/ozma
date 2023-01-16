@@ -420,6 +420,10 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
+  get stringTitle(): string | null {
+    return this.title ? this.$ust(this.title) : null;
+  }
+
   private get mainButtons(): Button[] {
     return [
       {
@@ -572,9 +576,9 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  @Watch("title", { immediate: true })
-  private updateTitle(title: UserString | null) {
-    const head = title ? `${this.$ust(title)} — Ozma` : "Ozma";
+  @Watch("stringTitle", { immediate: true })
+  private updateTitle(title: string | null) {
+    const head = title ? `${title} — Ozma` : "Ozma";
     setHeadTitle(head);
   }
 

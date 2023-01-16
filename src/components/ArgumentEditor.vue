@@ -64,11 +64,12 @@ import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "oz
 import { fieldToValueType } from "@/values";
 import FormControl from "@/components/FormControl.vue";
 import { ConvertedBoundAttributesMap } from "@/user_views/combined";
+import { UserString, rawToUserString } from "@/state/translations";
 
 interface IArgumentInfo {
   name: ArgumentName;
   defaultValue: any;
-  caption: string;
+  caption: UserString;
   fieldType: FieldType;
   valueType: ValueType;
   isOptional: boolean;
@@ -88,8 +89,7 @@ export default class ArgumentEditor extends Vue {
     return this.params.map(parameter => {
       const attributes = this.attributes[parameter.name] ?? {};
       const attributeMappings = this.attributeMappings[parameter.name] ?? {};
-      const rawCaption = attributes["caption"];
-      const caption = rawCaption ? String(rawCaption) : parameter.name;
+      const caption = rawToUserString(attributes["caption"]) ?? parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
 

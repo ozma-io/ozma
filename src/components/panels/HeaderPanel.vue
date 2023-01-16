@@ -24,8 +24,8 @@
             'is-loading': isLoading,
           }
         ]"
-        :title="title"
-      >{{ title }}</label>
+        :title="$ust(title)"
+      >{{ $ust(title) }}</label>
     </div>
 
     <div class="right-part">
@@ -54,6 +54,7 @@ import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
 import { interfaceButtonVariant } from "@/utils_colors";
+import { UserString } from "@/state/translations";
 
 @Component({
   components: {
@@ -62,7 +63,7 @@ import { interfaceButtonVariant } from "@/utils_colors";
   },
 })
 export default class HeaderPanel extends Vue {
-  @Prop({ type: String }) title!: string | undefined;
+  @Prop() title!: UserString | undefined;
   @Prop({ type: Array, required: true }) buttons!: Button[];
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
   @Prop({ type: Object }) view!: IUserViewType | undefined;
