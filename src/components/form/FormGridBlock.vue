@@ -5,7 +5,13 @@
     class="form_grid_block__column"
   >
     <div
-      :class="firstLevel ? 'first_level_grid_block' : ''"
+      :class="[
+        {
+          'first_level_grid_block': firstLevel,
+          'has-no-content': blockContent.content && blockContent.content.length === 0,
+          'only-nested-userview': blockContent.content && blockContent.content.length === 1 && blockContent.content[0].element.columnInfo.valueType.type === 'json',
+        }
+      ]"
     >
       <slot
         v-if="blockContent.type === 'element'"
@@ -43,19 +49,8 @@ export default class FormGridBlock extends Vue {
   .form_grid_block__column {
     padding: 0;
 
-    &:not(:last-child):has(.row) {
-      margin-bottom: 0.3rem;
-    }
-  }
-
-  .form_grid_block__column:not(:only-child):not(:has(.form_grid_block__column)):has(.nested-userview) {
-    margin-bottom: 0.25rem;
-    border: 1px solid var(--default-borderColor);
-    border-radius: 0.4rem;
-    overflow: hidden;
-
     &:not(:last-child) {
-      margin-bottom: 1rem;
+      margin-bottom: 0.3rem;
     }
   }
 
@@ -64,7 +59,7 @@ export default class FormGridBlock extends Vue {
     box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
     border-radius: 0.5rem;
     height: 98%;
-    display: none;
+    padding: 1rem;
 
     // Remove box shadow from nested .first_level_grid_block
     .first_level_grid_block {
@@ -73,14 +68,9 @@ export default class FormGridBlock extends Vue {
       box-shadow: none;
     }
 
-    // Add paddings if not only nested-userview child
-    &:not(:has(.form_grid_block__column:only-child)), &:not(:has(.nested-userview)) {
-      padding: 1rem;
-    }
-
-    // For example nested form to another form
-    .nested-userview {
-      .first_level_grid_block {
+    &:not(.only-nested-userview) {
+      ::v-deep .nested-userview {
+        margin-top: 0.5rem;
         margin-bottom: 0.25rem;
         border: 1px solid var(--default-borderColor);
         border-radius: 0.4rem;
@@ -89,8 +79,12 @@ export default class FormGridBlock extends Vue {
     }
   }
 
-  .first_level_grid_block:has(.form_grid_block__column) {
-    display: block;
+  .has-no-content {
+    display: none;
+  }
+
+  .only-nested-userview {
+    padding: 0;
   }
 
   .row {
