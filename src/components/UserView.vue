@@ -590,13 +590,11 @@ export default class UserView extends Vue {
       callback: () => {
         this.$bvModal.hide(this.$id("business_mode_edit_view"));
 
+        const link: Link = { query: this.editViewQuery!, target: "modal-auto", type: "query" };
         const linkHandlerParams: ILinkHandlerParams = {
-          store: this.$store,
-          goto: target => this.$emit("goto", target),
-          openQRCodeScanner: () => {},
-          link: { query: this.editViewQuery!, target: "modal-auto", type: "query" },
+          goto: event => this.$emit("goto", event),
         };
-        const handler = linkHandler(linkHandlerParams);
+        const handler = linkHandler(link, linkHandlerParams);
         void handler.handler();
       },
     };
@@ -769,7 +767,7 @@ export default class UserView extends Vue {
       search: "",
       page: null,
     };
-    this.$emit("goto", linkQuery);
+    this.$emit("goto", { query: linkQuery });
   }
 
   @Debounce(500)
@@ -986,13 +984,10 @@ export default class UserView extends Vue {
             return;
           }
           const linkHandlerParams: ILinkHandlerParams = {
-            store: this.$store,
             goto: target => this.$emit("goto", target),
-            openQRCodeScanner: link => this.$root.$emit("open-qrcode-scanner", link),
-            link: newType.link,
-            replace: true,
+            replaceOnGoto: true,
           };
-          const handler = linkHandler(linkHandlerParams);
+          const handler = linkHandler(newType.link, linkHandlerParams);
           this.userViewRedirects++;
           void handler.handler();
         } else if (newType.type === "invalid") {
@@ -1074,13 +1069,13 @@ export default class UserView extends Vue {
   }
 
   private uvErrorMessage(uv: UserViewError): string {
-    if (uv.type === "accessDenied") {
+    if (uv.body.error === "accessDenied") {
       return this.$t("forbidden").toString();
-    } else if (uv.type === "noInstance") {
+    } else if (uv.body.error === "noInstance") {
       return this.$t("no_instance").toString();
-    } else if (uv.type === "notFound") {
+    } else if (uv.body.error === "notFound") {
       return this.$t("not_found").toString();
-    } else if (uv.type === "arguments" || uv.type === "request") {
+    } else if (uv.body.error === "arguments" || uv.body.error === "request") {
       return this.$t("bad_request", { msg: uv.message }).toString();
     } else {
       return this.$t("unknown_error", { msg: uv.message }).toString();
@@ -1153,12 +1148,9 @@ export default class UserView extends Vue {
 
     try {
       const linkHandlerParams: ILinkHandlerParams = {
-        store: this.$store,
         goto: target => this.$emit("goto", target),
-        openQRCodeScanner: qrLink => this.$root.$emit("open-qrcode-scanner", qrLink),
-        link,
       };
-      await linkHandler(linkHandlerParams).handler();
+      await linkHandler(link, linkHandlerParams).handler();
     } catch (e) {
       return false;
     }

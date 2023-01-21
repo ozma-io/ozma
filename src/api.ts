@@ -1,4 +1,4 @@
-import FunDBAPI, { IEntityRef } from "ozma-api";
+import FunDBAPI, { FunDBError, IEntityRef, ClientApiError } from "ozma-api";
 
 const hostnameParts = location.hostname.split(".");
 export const instanceName = (typeof __INSTANCE_NAME__ === "string") ? String(__INSTANCE_NAME__) : hostnameParts[0];
@@ -20,6 +20,26 @@ if (!disableAuth && !(__API_AUTH_URL__ && __API_AUTH_URL_BASE__ && __AUTH_CLIENT
 }
 
 export const funappSchema = "funapp";
+
+const findErrorInfoUserData = (e: ClientApiError): unknown => {
+  if (e.error === "exception") {
+    return e.userData;
+  } else if (e.error === "trigger") {
+    return findErrorInfoUserData(e.inner);
+  } else if (e.error === "transaction") {
+    return findErrorInfoUserData(e.inner);
+  } else {
+    return undefined;
+  }
+};
+
+export const findErrorUserData = (e: Error): unknown => {
+  if (e instanceof FunDBError) {
+    return findErrorInfoUserData(e.body);
+  } else {
+    return undefined;
+  }
+};
 
 const api = new FunDBAPI({ apiUrl });
 export default api;

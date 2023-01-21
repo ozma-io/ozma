@@ -3,7 +3,6 @@ import { redirectClick } from "ozma-api";
 
 import { vueEmit } from "@/utils";
 import { Link, linkHandler, ILinkHandlerParams } from "@/links";
-import { IQuery } from "@/state/query";
 
 export default Vue.component("FunLink", {
   functional: true,
@@ -21,22 +20,11 @@ export default Vue.component("FunLink", {
       }, context.children);
     }
 
-    const emit = (query: IQuery) => {
-      vueEmit(context, "goto", query);
-    };
-
-    const openQRCodeScanner = (qrLink: Link) => {
-      context.parent.$root.$emit("open-qrcode-scanner", qrLink);
-    };
-
     const linkHandlerParams: ILinkHandlerParams = {
-      store: context.parent.$store,
-      goto: emit,
-      openQRCodeScanner,
-      link,
+      goto: event => vueEmit(context, "goto", event),
     };
 
-    const handler = linkHandler(linkHandlerParams);
+    const handler = linkHandler(link, linkHandlerParams);
 
     const onHandlers = { click: (e: MouseEvent) => {
       if (context.props.disabled || !redirectClick(e, handler.href === null)) {

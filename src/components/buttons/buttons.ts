@@ -115,7 +115,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
   }
 
   return {
-    caption: i18n.tc("error_button"),
+    caption: `<${i18n.tc("error")}>`,
     icon: "error_outline",
     tooltip: `${i18n.tc("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
     variant: { type: "existing", className: "outline-danger" },

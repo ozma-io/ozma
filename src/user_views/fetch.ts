@@ -1,18 +1,17 @@
-import { UserViewErrorType, IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts } from "ozma-api";
+import { IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts, UserViewError as UVError } from "ozma-api";
+
 import { Store } from "vuex";
 
 import Api, { developmentMode } from "@/api";
 import { IUserViewArguments, ICombinedUserViewDataParams } from "./combined";
 
-export class UserViewError extends Error {
-  type: UserViewErrorType;
-  description: string;
+export class UserViewError extends FunDBError {
+  body: UVError;
   args: IUserViewArguments;
 
-  constructor(type: UserViewErrorType, description: string, args: IUserViewArguments) {
-    super(description !== "" ? description : type);
-    this.type = type;
-    this.description = description;
+  constructor(body: UVError, args: IUserViewArguments) {
+    super(body);
+    this.body = body;
     this.args = args;
   }
 }
@@ -98,10 +97,10 @@ async (
       throw new Error("Invalid source type");
     }
   } catch (e) {
-    if (e instanceof FunDBError) {
-      throw new UserViewError(e.body.error as UserViewErrorType, e.message, args);
+    if (!(e instanceof FunDBError)) {
+      throw e;
     }
 
-    throw e;
+    throw new UserViewError(e.body as UVError, args);
   }
 };

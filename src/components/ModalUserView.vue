@@ -36,7 +36,7 @@
     :autofocus="autofocus"
     :view="view"
     @close="$emit('close')"
-    @go-back-window="$emit('go-back-window')"
+    @go-back="$emit('go-back')"
   >
     <template #header>
       <HeaderPanel

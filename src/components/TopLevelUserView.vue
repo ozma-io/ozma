@@ -120,21 +120,21 @@
       <ButtonsPanel
         class="main-buttons"
         :buttons="mainButtons"
-        @goto="pushRoot"
+        @goto="push({ ...$event, key: null })"
       />
     </portal>
     <template v-if="query !== null">
       <ModalUserView
-        v-for="(window, i) in query.windows"
+        v-for="window in query.windows"
         ref="modalUserViews"
         :key="window.key"
         is-root
         :view="window.query"
-        :autofocus="query.selectedWindow === i"
-        @close="closeWindow(i)"
-        @go-back-window="goBackWindow(i)"
-        @goto-previous="gotoPreviousWindow(i)"
-        @goto="pushWindow({index: i, query: $event})"
+        :autofocus="query.selectedWindow === window.key"
+        @close="closeWindow(window.key)"
+        @goto-previous="goBack(window.key)"
+        @go-back="$router.back()"
+        @goto="push({ ...$event, key: window.key })"
       />
     </template>
 
@@ -145,13 +145,13 @@
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         :type="'root'"
-        @update:filter-string="replaceRootSearch($event)"
-        @goto="pushRoot"
+        @update:filter-string="replaceSearch({ key: null, search: $event })"
+        @goto="push({ ...$event, key: null })"
       >
         <template #main-buttons>
           <ButtonsPanel
             :buttons="mainButtons"
-            @goto="pushRoot"
+            @goto="push({ ...$event, key: null })"
           />
         </template>
       </HeaderPanel>
@@ -166,14 +166,14 @@
           :filter="filterWords"
           :default-values="query.root.defaultValues"
           scope="root"
-          @goto="pushRoot"
-          @goto-previous="gotoPreviousRoot"
+          @goto="push({ ...$event, key: null })"
+          @goto-previous="goBack(null)"
           @update:buttons="buttons = $event"
           @update:status-line="statusLine = $event"
           @update:enable-filter="enableFilter = $event"
           @update:body-style="styleNode.innerHTML = $event"
           @update:title="title = $event"
-          @update:current-page="replaceRootPage($event)"
+          @update:current-page="replacePage({ key: null, page: $event })"
         />
       </div>
     </div>
@@ -299,7 +299,7 @@
       ref="scanner"
       multi-scan
       :link="currentQRCodeLink"
-      @before-push-root="currentQRCodeLink = null"
+      @before-handler="currentQRCodeLink = null"
     />
   </div>
 </template>
@@ -317,7 +317,7 @@ import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } f
 import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
-import { IQuery, ICurrentQueryHistory } from "@/state/query";
+import { IQuery, ICurrentQueryHistory, QueryKey, QueryWindowKey } from "@/state/query";
 import { convertToWords, homeLink } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
@@ -371,13 +371,11 @@ export default class TopLevelUserView extends Vue {
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
   @query.Action("resetRoute") resetRoute!: (_: Route) => void;
-  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
-  @query.Action("replaceRootSearch") replaceRootSearch!: (_: string) => Promise<void>;
-  @query.Action("replaceRootPage") replaceRootPage!: (_: number) => Promise<void>;
-  @query.Action("closeWindow") closeWindow!: (_: number) => Promise<void>;
-  @query.Action("pushWindow") pushWindow!: (_: { index: number; query: IQuery }) => Promise<void>;
-  @query.Action("goBackRoot") goBackRoot!: () => Promise<void>;
-  @query.Action("goBackWindow") goBackWindow!: (windowIndex: number) => Promise<void>;
+  @query.Action("replaceSearch") replaceSearch!: (_: { search: string; key: QueryKey }) => Promise<void>;
+  @query.Action("replacePage") replacePage!: (_: { page: number | null; key: QueryKey }) => Promise<void>;
+  @query.Action("closeWindow") closeWindow!: (_: QueryWindowKey) => Promise<void>;
+  @query.Action("push") push!: (_: { key: QueryKey; query: IQuery; replace?: boolean }) => Promise<void>;
+  @query.Action("goBack") goBack!: (key: QueryKey) => Promise<void>;
   @errors.Mutation("removeError") removeError!: (params: { key: ErrorKey; index: number }) => void;
   @errors.Mutation("reset") resetErrors!: () => void;
   @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
@@ -430,9 +428,7 @@ export default class TopLevelUserView extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: interfaceButtonVariant,
-        /* disabled: !this.query?.root.previous, */
-        /* callback: () => this.goBackRoot(), */
-        callback: () => this.$router.go(-1),
+        callback: () => this.$router.back(),
       },
       {
         type: "link",
@@ -532,20 +528,6 @@ export default class TopLevelUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
-  }
-
-  private gotoPreviousRoot() {
-    const previous = this.query?.root.previous;
-    if (previous) {
-      void this.pushRoot(previous);
-    }
-  }
-
-  private gotoPreviousWindow(i: number) {
-    const previous = this.query?.windows[i].query.previous;
-    if (previous) {
-      void this.pushWindow({ index: i, query: previous });
-    }
   }
 
   private makeErrorToast() {

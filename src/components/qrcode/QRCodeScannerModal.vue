@@ -25,7 +25,7 @@
       :entries="entries"
       :reference-entity="referenceEntity"
       @select="onSelect"
-      @before-push-root="onBeforePushRoot"
+      @before-handler="onBeforeHandler"
     />
   </b-modal>
 </template>
@@ -61,9 +61,9 @@ export default class QRCodeScannerModal extends Vue {
     this.$emit("select", result);
   }
 
-  private onBeforePushRoot(result: IQuery) {
+  private onBeforeHandler(result: IQuery) {
     (this.$refs.modal as any).hide();
-    this.$emit("before-push-root", result);
+    this.$emit("before-handler", result);
   }
 }
 </script>

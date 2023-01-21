@@ -57,7 +57,7 @@ export default class EmbeddedContainer extends Vue {
   @Prop({ type: String }) src!: string | undefined;
   @Prop({ type: String }) srcdoc!: string | undefined;
   @Prop({ type: Boolean, default: false }) isControl!: boolean;
-  @Prop({ required: true }) value!: unknown;
+  @Prop() value!: unknown;
 
   private apiVersion: SupportedVecrsion | null = null;
 
@@ -130,11 +130,8 @@ export default class EmbeddedContainer extends Vue {
         goto: (request: Embedded.IGotoRequestData) => {
           const link = convertLink(request.link);
           if (link) {
-            void linkHandler({
-              link,
-              store: this.$store,
-              goto: query => this.$emit("goto", query),
-              openQRCodeScanner: qrLink => this.$root.$emit("open-qrcode-scanner", qrLink),
+            void linkHandler(link, {
+              goto: event => this.$emit("goto", event),
             }).handler();
             return { result: undefined };
           } else {

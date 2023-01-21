@@ -71,9 +71,9 @@ import { namespace } from "vuex-class";
 import type { IEntity, IEntityRef } from "ozma-api";
 
 import type { Link } from "@/links";
-import { linkHandler, ILinkHandlerParams } from "@/links";
+import { linkHandler } from "@/links";
 import { inheritedFromEntity } from "@/values";
-import { IQuery } from "@/state/query";
+import { IQuery, QueryKey } from "@/state/query";
 import BaseEntriesView from "@/components/BaseEntriesView";
 import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
 import { EntriesRef } from "@/state/entries";
@@ -94,7 +94,7 @@ const entities = namespace("entities");
   },
 })
 export default class QRCodeScanner extends mixins(BaseEntriesView) {
-  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
+  @query.Action("push") push!: (_: { key?: QueryKey; query: IQuery; replace?: boolean }) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
 
   @Prop({ type: Boolean, default: false }) multiScan!: boolean;
@@ -228,24 +228,9 @@ export default class QRCodeScanner extends mixins(BaseEntriesView) {
       link.args.id = currentContent.id;
     }
 
-    const emit = (target: IQuery) => {
-      this.$emit("before-push-root", target);
-      void this.pushRoot(target);
-    };
-
-    const openQRCodeScanner = (qrLink: Link) => {
-      this.$root.$emit("open-qrcode-scanner", qrLink);
-    };
-
-    const linkHandlerParams: ILinkHandlerParams = {
-      store: this.$store,
-      goto: emit,
-      link,
-      openQRCodeScanner,
-    };
-
-    const { handler, href } = linkHandler(linkHandlerParams);
+    const { handler, href } = linkHandler(link);
     if (handler) {
+      this.$emit("before-handler");
       void handler();
     }
 

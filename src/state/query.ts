@@ -18,6 +18,19 @@ export interface IAttrToQueryOpts {
   infoByDefault?: boolean; // Whether to create new entries by default
 }
 
+export type QueryWindowKey = number;
+
+export type QueryKey = QueryWindowKey | null;
+
+export const elementQueryKey = (el: HTMLElement): QueryKey => {
+  const myWindow = el.closest("[data-query-window]") as HTMLElement | null;
+  if (myWindow === null) {
+    return null;
+  }
+  const rawQueryWindow = myWindow.dataset["query-window"];
+  return Number(rawQueryWindow);
+};
+
 export const attrToRef = (ref: unknown, opts?: IAttrToQueryOpts): { schema: string; name: string } | null => {
   if (typeof ref !== "object" || ref === null) {
     return null;
@@ -187,20 +200,20 @@ export const queryLocation = (query: IQuery): Location => {
   };
 };
 
-let windowKey = 0;
-const getWindowKey = () => {
-  return windowKey++;
+let nextWindowKey: QueryWindowKey = 0;
+const getWindowKey = (): QueryWindowKey => {
+  return nextWindowKey++;
 };
 
 export interface IGenericWindow<T> {
-  key: number;
+  key: QueryWindowKey;
   query: T;
 }
 
 export interface IGenericCurrentQuery<T> {
   root: T;
   windows: IGenericWindow<T>[];
-  selectedWindow: number | null;
+  selectedWindow: QueryWindowKey | null;
 }
 
 export type ICurrentQuery = IGenericCurrentQuery<IQuery>;
@@ -211,6 +224,66 @@ interface IWindowPartialQuery {
   defaultValues: Record<string, unknown>;
   search: string;
 }
+
+const getQueryByKey = <T>(queries: IGenericCurrentQuery<T>, key: QueryKey | undefined): T | undefined => {
+  if (key === undefined) {
+    key = queries.selectedWindow;
+  }
+  if (key === null) {
+    return queries.root;
+  } else {
+    return queries.windows.find(w => w.key === key)?.query;
+  }
+};
+
+// https://github.com/microsoft/TypeScript/issues/34523
+function assertCurrentQuery<T>(queries: IGenericCurrentQuery<T> | null): asserts queries is IGenericCurrentQuery<T> {
+  if (!queries) {
+    throw new Error("No current query");
+  }
+}
+
+const fetchQueryByKey = <T>(queries: IGenericCurrentQuery<T> | null, key: QueryKey | undefined): T => {
+  assertCurrentQuery(queries);
+  const result = getQueryByKey(queries, key);
+  if (result === undefined) {
+    throw new Error("No window with given key");
+  }
+  return result;
+};
+
+const setQueryByKey = <T extends object>(queries: IGenericCurrentQuery<T>, key: QueryKey | undefined, query: T) => {
+  if (key === undefined) {
+    key = queries.selectedWindow;
+  }
+  if (key === null) {
+    deepSyncObject(queries.root, query);
+  } else {
+    const window = queries.windows.find(w => w.key === key);
+    if (window === undefined) {
+      queries.windows.push({ key: getWindowKey(), query });
+    } else {
+      deepSyncObject(window.query, query);
+    }
+  }
+};
+
+const removeWindow = <T>(queries: IGenericCurrentQuery<T>, key: QueryWindowKey) => {
+  if (queries.selectedWindow === key) {
+    if (queries.windows.length === 1) {
+      queries.selectedWindow = null;
+    } else {
+      let windowIndex = queries.windows.findIndex(w => w.key === key);
+      if (windowIndex === queries.windows.length - 1) {
+        windowIndex -= 1;
+      } else {
+        windowIndex += 1;
+      }
+      queries.selectedWindow = queries.windows[windowIndex].key;
+    }
+  }
+  queries.windows = queries.windows.filter(w => w.key !== key);
+};
 
 const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: Record<string, string | (string | null)[]>): ICurrentQueryHistory => {
   const args: Record<string, unknown> | null = createNew ? null : {};
@@ -364,17 +437,21 @@ const rootToCurrentQuery = (source: UserViewSource, createNew: boolean, search: 
     return [id, query];
   }, Object.entries(windows));
   rawWindowsArray.sort(([id1, query1], [id2, query2]) => id1 - id2);
-  let selectedWindowIndex = rawWindowsArray.length > 0 ? rawWindowsArray.length - 1 : null;
+  let selectedWindowKey: QueryWindowKey | null = null;
   const windowsArray = rawWindowsArray.map(([id, query], i) => {
+    const key = getWindowKey();
     if (selectedWindowId === id) {
-      selectedWindowIndex = i;
+      selectedWindowKey = key;
     }
-    return { key: getWindowKey(), query };
+    return { key, query };
   });
+  if (selectedWindowKey === null && windowsArray.length > 0) {
+    selectedWindowKey = windowsArray[windowsArray.length - 1].key;
+  }
   return {
     root,
     windows: windowsArray,
-    selectedWindow: selectedWindowIndex,
+    selectedWindow: selectedWindowKey,
   };
 };
 
@@ -382,7 +459,7 @@ export const currentQueryLocation = (query: ICurrentQuery): Location => {
   const ret = queryLocation(query.root);
   const search = ret.query as Record<string, string>;
 
-  query.windows.forEach(({ query: windowQuery }, i) => {
+  query.windows.forEach(({ key: windowKey, query: windowQuery }, i) => {
     const args = windowQuery.args;
     if (args.source.type !== "named") {
       throw new Error("Anonymous views are not supported");
@@ -401,11 +478,10 @@ export const currentQueryLocation = (query: ICurrentQuery): Location => {
     if (windowQuery.search !== "") {
       search[`__q${i}`] = windowQuery.search;
     }
+    if (query.selectedWindow === windowKey) {
+      search["__w"] = String(i);
+    }
   });
-
-  if (query.windows.length > 1) {
-    search["__w"] = String(query.selectedWindow!);
-  }
 
   return ret;
 };
@@ -425,12 +501,6 @@ const replaceHistory = (current: IQueryHistory, newCurrent: IQuery): IQueryHisto
   return deepClone({ ...newCurrent, previous: current.previous });
 };
 
-const goBackHistory = (current: IQueryHistory): IQueryHistory => {
-  return current.previous
-    ? deepClone({ ...current.previous })
-    : deepClone(current);
-};
-
 const queryWithHistory = (query: IQuery): IQueryHistory => {
   return deepClone({ ...query, previous: null });
 };
@@ -447,12 +517,6 @@ const updateCurrent = (state: IQueryState, current: ICurrentQueryHistory) => {
     state.current = current;
   } else {
     deepSyncObject(state.current, current);
-  }
-};
-
-const assertCurrentQuery: (query: ICurrentQueryHistory | null) => asserts query is ICurrentQueryHistory = query => {
-  if (query === null) {
-    throw new Error("No current query");
   }
 };
 
@@ -494,98 +558,76 @@ const queryModule: Module<IQueryState, {}> = {
     removeResetLock: state => {
       state.resetLocks -= 1;
     },
-    pushRoot: (state, query: IQuery) => {
-      const newCurrent: ICurrentQueryHistory = {
-        root: state.current ? pushHistory(state.current.root, query) : queryWithHistory(query),
-        windows: [],
-        selectedWindow: null,
-      };
-      updateCurrent(state, newCurrent);
-      state.resetLocks += 1;
-    },
-    replaceRoot: (state, query: IQuery) => {
-      const newCurrent: ICurrentQueryHistory = {
-        root: state.current ? replaceHistory(state.current.root, query) : queryWithHistory(query),
-        windows: [],
-        selectedWindow: null,
-      };
-      updateCurrent(state, newCurrent);
-      state.resetLocks += 1;
-    },
-    replaceRootSearch: (state, search: string) => {
-      state.current!.root.search = search;
-      state.resetLocks += 1;
-    },
-    replaceRootPage: (state, page: number | null) => {
-      state.current!.root.page = page;
-      state.resetLocks += 1;
-    },
-    goBackRoot: state => {
-      const newCurrent: ICurrentQueryHistory = {
-        root: goBackHistory(state.current!.root),
-        windows: [],
-        selectedWindow: null,
-      };
-      updateCurrent(state, newCurrent);
-      state.resetLocks += 1;
-    },
-    goBackWindow: (state, windowIndex: number) => {
-      assertCurrentQuery(state.current);
+    push: (state, { query, key, replace }: { query: IQuery; key?: QueryKey; replace?: boolean }) => {
+      if (state.current === null) {
+        state.current = {
+          root: queryWithHistory(query),
+          windows: [],
+          selectedWindow: null,
+        };
+      } else {
+        if (key === undefined) {
+          key = state.current.selectedWindow;
+        }
 
-      const window = state.current.windows[windowIndex];
-      if (!window) {
-        throw new Error("Invalid window");
-      }
-      state.resetLocks += 1;
-    },
-    addWindow: (state, query: IQuery) => {
-      assertCurrentQuery(state.current);
-
-      state.current.windows.push({ key: getWindowKey(), query: queryWithHistory(query) });
-      state.current.selectedWindow = state.current.windows.length - 1;
-      state.resetLocks += 1;
-    },
-    closeWindow: (state, windowIndex: number) => {
-      assertCurrentQuery(state.current);
-
-      if (state.current.windows.splice(windowIndex, 1).length > 0) {
-        if (state.current.windows.length === 0) {
-          state.current.selectedWindow = null;
-        } else if (state.current.selectedWindow! > windowIndex) {
-          state.current.selectedWindow! -= 1;
+        // Special handling for the root window -- we also close all windows.
+        if (key === null) {
+          const newCurrent: ICurrentQueryHistory = {
+            root: (replace ? replaceHistory : pushHistory)(state.current.root, query),
+            windows: [],
+            selectedWindow: null,
+          };
+          deepSyncObject(state.current, newCurrent);
+        } else {
+          const current = getQueryByKey(state.current, key);
+          if (current === undefined) {
+            if (key === null) {
+              throw new Error("Impossible");
+            }
+            state.current.windows.push({ key, query: queryWithHistory(query) });
+            state.current.selectedWindow = key;
+          } else {
+            const updated = (replace ? replaceHistory : pushHistory)(current, query);
+            setQueryByKey(state.current, key, updated);
+          }
         }
       }
       state.resetLocks += 1;
     },
-    selectWindow: (state, windowIndex: number) => {
-      assertCurrentQuery(state.current);
-
-      const window = state.current.windows[windowIndex];
-      if (!window) {
-        throw new Error("Invalid window");
+    replaceSearch: (state, { search, key }: { search: string; key?: QueryKey }) => {
+      const current = fetchQueryByKey(state.current, key);
+      current.search = search;
+      state.resetLocks += 1;
+    },
+    replacePage: (state, { page, key }: { page: number | null; key?: QueryKey }) => {
+      const current = fetchQueryByKey(state.current, key);
+      current.page = page;
+      state.resetLocks += 1;
+    },
+    goBack: (state, key: QueryKey | undefined) => {
+      const current = fetchQueryByKey(state.current, key);
+      if (key === undefined) {
+        key = state.current!.selectedWindow;
       }
-      state.current.selectedWindow = windowIndex;
+      const previous = current.previous;
+      if (!previous) {
+        if (key !== null) {
+          removeWindow(state.current!, key);
+        }
+      } else {
+        current.previous = previous.previous;
+        deepSyncObject(current, previous);
+      }
       state.resetLocks += 1;
     },
-    replaceWindow: (state, { index, query }: { index: number; query: IQuery }) => {
-      assertCurrentQuery(state.current);
-
-      const window = state.current.windows[index];
-      const newQuery = replaceHistory(window.query, query);
-      deepSyncObject(window.query, newQuery);
+    closeWindow: (state, key: QueryWindowKey) => {
+      const current = fetchQueryByKey(state.current, key);
+      removeWindow(state.current!, key);
       state.resetLocks += 1;
     },
-    pushWindow: (state, { index, query }: { index: number; query: IQuery }) => {
-      assertCurrentQuery(state.current);
-
-      const window = state.current.windows[index];
-      const newQuery = pushHistory(window.query, query);
-      deepSyncObject(window.query, newQuery);
-      state.resetLocks += 1;
-    },
-    replaceWindowSearch: (state, { index, search }: { index: number; search: string }) => {
-      const window = state.current!.windows[index];
-      window.query.search = search;
+    selectWindow: (state, key: QueryWindowKey) => {
+      const current = fetchQueryByKey(state.current, key);
+      state.current!.selectedWindow = key;
       state.resetLocks += 1;
     },
   },
@@ -596,66 +638,47 @@ const queryModule: Module<IQueryState, {}> = {
       }
       commit("resetRoute", route);
     },
-    pushRoot: async ({ state, commit, dispatch }, query: IQuery) => {
+    push: async ({ state, commit, dispatch }, args: { query: IQuery; key?: QueryKey; replace?: boolean }) => {
       await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
-      commit("pushRoot", query);
+      commit("push", args);
       try {
         await router.push(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
     },
-    replaceRoot: async ({ state, commit, dispatch }, query: IQuery) => {
-      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
+    replaceSearch: async ({ state, commit }, args: { search: string; key?: QueryKey }) => {
+      const current = fetchQueryByKey(state.current, args.key);
+      if (current.search === args.search) {
+        return;
+      }
 
-      commit("replaceRoot", query);
+      commit("replaceSearch", args);
       try {
         await router.replace(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
     },
-    replaceRootSearch: async ({ state, commit }, search: string) => {
-      assertCurrentQuery(state.current);
-
-      if (state.current.root.search !== search) {
-        commit("replaceRootSearch", search);
-        try {
-          await router.replace(currentQueryLocation(state.current));
-        } finally {
-          commit("removeResetLock");
-        }
+    replacePage: async ({ state, commit }, args: { page: number | null; key?: QueryKey }) => {
+      const current = fetchQueryByKey(state.current, args.key);
+      if (current.page === args.page) {
+        return;
       }
-    },
-    replaceRootPage: async ({ state, commit }, page: number | null) => {
-      assertCurrentQuery(state.current);
-
-      if (state.current.root.page !== page) {
-        commit("replaceRootPage", page);
-        try {
-          await router.replace(currentQueryLocation(state.current));
-        } finally {
-          commit("removeResetLock");
-        }
-      }
-    },
-    goBackRoot: async ({ commit, dispatch }) => {
-      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
-
-      commit("goBackRoot");
+      commit("replacePage", args);
       try {
-        router.go(-1);
+        await router.replace(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
     },
-    goBackWindow: async ({ commit, dispatch }, windowIndex: number) => {
+    goBack: async ({ state, commit, dispatch }, key?: QueryKey) => {
       await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
-      commit("goBackWindow", windowIndex);
+      commit("goBack", key);
       try {
-        router.go(-1);
+        await router.replace(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
@@ -663,62 +686,34 @@ const queryModule: Module<IQueryState, {}> = {
     addWindow: async ({ state, commit, dispatch }, query: IQuery) => {
       await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
-      commit("addWindow", query);
+      commit("push", { query, key: getWindowKey() });
       try {
         await router.push(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
     },
-    closeWindow: async ({ state, commit, dispatch }, windowIndex: number) => {
+    closeWindow: async ({ state, commit, dispatch }, key: QueryWindowKey) => {
       await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
 
-      commit("closeWindow", windowIndex);
+      commit("closeWindow", key);
       try {
         await router.replace(currentQueryLocation(state.current!));
       } finally {
         commit("removeResetLock");
       }
     },
-    selectWindow: async ({ state, commit }, windowIndex: number) => {
-      commit("selectWindow", windowIndex);
-      try {
-        await router.replace(currentQueryLocation(state.current!));
-      } finally {
-        commit("removeResetLock");
-      }
-    },
-    pushWindow: async ({ state, commit, dispatch }, args: { index: number; query: IQuery }) => {
-      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
-
-      commit("pushWindow", args);
-      try {
-        await router.push(currentQueryLocation(state.current!));
-      } finally {
-        commit("removeResetLock");
-      }
-    },
-    replaceWindow: async ({ state, commit, dispatch }, args: { index: number; query: IQuery }) => {
-      await dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
-
-      commit("replaceWindow", args);
-      try {
-        await router.replace(currentQueryLocation(state.current!));
-      } finally {
-        commit("removeResetLock");
-      }
-    },
-    replaceWindowSearch: async ({ state, commit }, args: { index: number; search: string }) => {
+    selectWindow: async ({ state, commit }, key: QueryWindowKey) => {
       assertCurrentQuery(state.current);
+      if (state.current.selectedWindow === key) {
+        return;
+      }
 
-      const window = state.current.windows[args.index];
-      if (window.query.search !== args.search) {
-        commit("replaceWindowSearch", args);
-        try {
-          await router.replace(currentQueryLocation(state.current));
-        } finally {
-          commit("removeResetLock");
-        }
+      commit("selectWindow", key);
+      try {
+        await router.replace(currentQueryLocation(state.current!));
+      } finally {
+        commit("removeResetLock");
       }
     },
   },

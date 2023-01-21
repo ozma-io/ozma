@@ -1,7 +1,7 @@
 import { Store } from "vuex";
 import { IActionRef, IActionResult } from "ozma-api";
 
-import Api from "@/api";
+import Api, { findErrorUserData } from "@/api";
 import { app, eventBus } from "@/main";
 import { i18n } from "@/modules";
 import { ISubmitResult } from "@/state/staging_changes";
@@ -24,7 +24,7 @@ export const saveAndRunAction = async (
   const auth = state.auth.current as CurrentAuth | INoAuth | null;
 
   let ret: IActionResult | undefined;
-  let reloaded = false;
+  let needsReload = false;
   try {
     const submitRet: ISubmitResult = await dispatch("staging/submit", { preReload: async () => {
       try {
@@ -33,8 +33,14 @@ export const saveAndRunAction = async (
           args: [ref, args],
         }, { root: true });
       } catch (e) {
-        // TODO: Return proper messages from backend instead of using regexps.
-        if (settings.getEntry("is_read_only_demo_instance", Boolean, false) && !auth?.refreshToken) {
+        if (!(e instanceof Error)) {
+          throw e;
+        }
+
+        const userData = findErrorUserData(e);
+        if (userData) {
+          ret = { result: userData };
+        } else if (settings.getEntry("is_read_only_demo_instance", Boolean, false) && !auth?.refreshToken) {
           eventBus.emit("show-readonly-demo-modal");
         } else {
           app.$bvToast.toast(dirtyHackGetErrorMessage(e), {
@@ -47,14 +53,14 @@ export const saveAndRunAction = async (
         throw e;
       }
     } }, { root: true });
-    reloaded = submitRet.results.length !== 0;
+    needsReload = submitRet.results.length > 0;
   } catch (e) {
     if (ret === undefined) {
       throw e;
     }
   }
 
-  if (!reloaded) {
+  if (needsReload) {
     void dispatch("reload", undefined, { root: true });
   }
   return ret as IActionResult;

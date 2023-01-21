@@ -9,9 +9,10 @@ import {
 
 import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
 import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals, serializeValue } from "@/values";
-import Api from "@/api";
+import Api, { findErrorUserData } from "@/api";
 import { i18n } from "@/modules";
 import { eventBus } from "@/main";
+import { attrToLink, linkHandler } from "@/links";
 
 export type ScopeName = string;
 
@@ -793,7 +794,11 @@ const stagingModule: Module<IStagingState, {}> = {
       }
 
       if (state.currentSubmit !== null) {
-        await state.currentSubmit;
+        try {
+          await state.currentSubmit;
+        } catch (e) {
+          // pass
+        }
       }
 
       commit("errors/resetErrors", errorKey, { root: true });
@@ -852,7 +857,27 @@ const stagingModule: Module<IStagingState, {}> = {
 
           return { autoSave, results: opResults };
         } else {
-          commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
+          const retLink = attrToLink(findErrorUserData(result), {
+            defaultTarget: "root",
+            defaultToastTitle: i18n.tc("exception_in_action"),
+          });
+          if (retLink !== null) {
+            const handler = linkHandler(retLink, {
+              // Break save cycles in this way.
+              resetChangesOnGoto: true,
+            });
+            // Wait till we finish with the current submit.
+            void (async () => {
+              try {
+                await state.currentSubmit;
+              } catch (e) {
+                // pass
+              }
+              await handler.handler();
+            })();
+          } else {
+            commit("errors/setError", { key: errorKey, error: result.message }, { root: true });
+          }
           throw result;
         }
       })();
