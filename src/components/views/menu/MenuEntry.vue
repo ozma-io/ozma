@@ -10,6 +10,7 @@
           'menuEntry-local-variant',
           {
             'is-mobile': $isMobile,
+            'no-conetent-zero-level': entry.content.length === 0 && level === 1,
           },
         ]"
       >
@@ -144,21 +145,11 @@ export default class MenuEntry extends Vue {
   .menu_category_block {
     margin-top: 1rem;
 
-    &:not(:has(.first_level_entries)) {
-      box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
-      border-radius: 0.5rem;
-      padding: 2rem;
-      height: 90%;
-    }
-
     &.is-mobile {
       margin: 0;
       margin-bottom: 1rem;
     }
 
-    &:not(:has(.menu-entry)) {
-      display: none;
-    }
 
     @media (max-width: 575.98px) {
       margin: 0;
@@ -167,6 +158,9 @@ export default class MenuEntry extends Vue {
     }
   }
 
+  .no-conetent-zero-level {
+    display: none;
+  }
   .menu_category_block h1,
   .menu_category_block h2,
   .menu_category_block h3,
@@ -222,6 +216,13 @@ export default class MenuEntry extends Vue {
 
   .first_level_entries {
     padding-left: 0 !important;
+
+    .menu_category_block {
+      box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      height: 90%;
+    }
   }
 
   .menu_category_title {
