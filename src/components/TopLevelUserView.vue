@@ -582,6 +582,7 @@ export default class TopLevelUserView extends Vue {
       const titleString = `ozma.io - ${this.$ust(title)}`;
       setHeadTitle(titleString);
       setHeadMeta("property", "og:title", titleString);
+      setHeadMeta("property", "twitter:title", titleString);
     }
   }
 
@@ -591,6 +592,7 @@ export default class TopLevelUserView extends Vue {
       const descriptionString = `${this.$ust(description)}`;
       setHeadMeta("name", "description", descriptionString);
       setHeadMeta("property", "og:description", descriptionString);
+      setHeadMeta("property", "twitter:description", descriptionString);
     }
   }
 

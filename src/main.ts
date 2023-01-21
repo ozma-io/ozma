@@ -87,13 +87,13 @@ Modules.router.beforeResolve((to, from, next) => {
   );
   setHeadMeta(
     "property",
-    "og:description",
-    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
+    "og:title",
+    "ozma.io — a low-code platform for CRM and ERP solutions",
   );
   setHeadMeta(
     "property",
-    "og:title",
-    "ozma.io — a low-code platform for CRM and ERP solutions",
+    "og:description",
+    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
   );
   setHeadMeta(
     "property",
@@ -103,6 +103,16 @@ Modules.router.beforeResolve((to, from, next) => {
   setHeadLink(
     "canonical",
     "https://ozma.io",
+  );
+  setHeadMeta(
+    "property",
+    "twitter:title",
+    "ozma.io — a low-code platform for CRM and ERP solutions",
+  );
+  setHeadMeta(
+    "property",
+    "twitter:description",
+    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
   );
   next();
 });
