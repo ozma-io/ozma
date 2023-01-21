@@ -150,7 +150,6 @@ export default class MenuEntry extends Vue {
       margin-bottom: 1rem;
     }
 
-
     @media (max-width: 575.98px) {
       margin: 0;
       margin-top: 1rem;
