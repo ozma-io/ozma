@@ -58,8 +58,6 @@ export const saveAndRunAction = async (
     }
   }
 
-  if (ret !== undefined) {
-    void dispatch("reload", undefined, { root: true });
-  }
+  void dispatch("reload", undefined, { root: true });
   return ret as IActionResult;
 };
