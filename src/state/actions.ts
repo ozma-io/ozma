@@ -24,7 +24,6 @@ export const saveAndRunAction = async (
   const auth = state.auth.current as CurrentAuth | INoAuth | null;
 
   let ret: IActionResult | undefined;
-  let needsReload = false;
   try {
     const submitRet: ISubmitResult = await dispatch("staging/submit", { preReload: async () => {
       try {
@@ -53,14 +52,13 @@ export const saveAndRunAction = async (
         throw e;
       }
     } }, { root: true });
-    needsReload = submitRet.results.length > 0;
   } catch (e) {
     if (ret === undefined) {
       throw e;
     }
   }
 
-  if (needsReload) {
+  if (ret !== undefined) {
     void dispatch("reload", undefined, { root: true });
   }
   return ret as IActionResult;
