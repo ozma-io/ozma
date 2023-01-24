@@ -54,7 +54,7 @@ export const saveAndRunAction = async (
       }
     } }, { root: true });
     // `submit` runs the reload for us if there were any unsubmitted changes.
-    needsReload = submitRet.results.length == 0;
+    needsReload = submitRet.results.length === 0;
   } catch (e) {
     if (ret === undefined) {
       throw e;
