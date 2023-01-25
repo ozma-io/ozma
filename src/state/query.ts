@@ -643,7 +643,11 @@ const queryModule: Module<IQueryState, {}> = {
 
       commit("push", args);
       try {
-        await router.push(currentQueryLocation(state.current!));
+        if (args.replace) {
+          await router.replace(currentQueryLocation(state.current!));
+        } else {
+          await router.push(currentQueryLocation(state.current!));
+        }
       } finally {
         commit("removeResetLock");
       }
