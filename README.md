@@ -10,3 +10,9 @@ $ nix-shell
 $ ./prepare.sh
 $ yarn serve
 ```
+
+## If problems with ```yarn serve```
+
+```bash
+rm -rf node_modules
+```
