@@ -71,7 +71,7 @@ import { Link } from "@/links";
 import { getIconType } from "@/utils";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
-import { UserString } from "@/translations";
+import { UserString } from "@/state/translations";
 
 export type Badge = {
   value: unknown;

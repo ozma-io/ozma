@@ -54,7 +54,7 @@ import BaseUserView, { EmptyBaseUserView } from "@/components/BaseUserView";
 import MenuEntry, { MenuValue, IMenuLink, Badge } from "@/components/views/menu/MenuEntry.vue";
 import { attrToLink, IAttrToLinkOpts } from "@/links";
 import { currentValue, valueToPunnedText } from "@/user_views/combined";
-import { rawToUserString, UserString } from "@/translations";
+import { rawToUserString, UserString } from "@/state/translations";
 
 @UserView()
 @Component({ components: { MenuEntry } })

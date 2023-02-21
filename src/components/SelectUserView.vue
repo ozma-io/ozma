@@ -90,7 +90,7 @@ export default class SelectUserView extends Vue {
     this.unlockScope(this.parentScope);
   }
 
-  private goto(query: IQuery) {
+  private goto({ query }: { query: IQuery; replace?: boolean }) {
     this.currentView = query;
   }
 }

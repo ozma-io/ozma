@@ -17,6 +17,8 @@ export const elementWindow = (el: HTMLElement): WindowKey => {
 // This basic window management is needed so elements that define global shortcuts or
 // react to global events can detect whether they should be ignoring them, because
 // another window is currently active.
+//
+// These may be different from query's windows -- say, dialog boxes which don't have an `IQuery` associated.
 const windowsModule: Module<IWindowsState, {}> = {
   namespaced: true,
   state: {

@@ -1,5 +1,4 @@
 import { IActionRef } from "ozma-api";
-import { Store } from "vuex";
 import { z } from "zod";
 
 import { app } from "@/main";
@@ -9,6 +8,7 @@ import { saveAndRunAction } from "@/state/actions";
 import { router, i18n } from "@/modules";
 import { IValueInfo } from "@/user_views/combined";
 import { documentGeneratorUrl, IDocumentRef, instanceName } from "@/api";
+import { UserString, rawToUserString } from "./state/translations";
 
 export const hrefTargetTypes = ["blank", "self"] as const;
 export type HrefTargetType = typeof hrefTargetTypes[number];
@@ -54,11 +54,20 @@ export interface IDocumentLink {
   args: Record<string, unknown>;
 }
 
-export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink | IDocumentLink;
+export interface IToastLink {
+  type: "toast";
+  variant: string;
+  title: UserString;
+  message: UserString;
+  next: Link | null;
+}
+
+export type Link = IHrefLink | IQueryLink | IActionLink | IQRCodeLink | IDocumentLink | IToastLink;
 
 export interface IAttrToLinkOpts extends IAttrToQueryOpts {
   defaultTarget?: TargetType;
   defaultActionArgs?: Record<string, any>;
+  defaultToastTitle?: string;
 }
 
 export const addLinkDefaultArgs = (link: Link, args: object) => {
@@ -107,8 +116,7 @@ export const attrToActionLink = (linkedAttr: object, opts?: IAttrToLinkOpts): IA
   }
 
   const display = attrDict["display"];
-  const addIds = attrDict["add_selected_entry_ids"]; // TODO: deprecated, delete this.
-  if (addIds || display === "selection_panel" || display === "selectionPanel") {
+  if (display === "selection_panel" || display === "selectionPanel") {
     args = { ...opts?.defaultActionArgs, ...args };
   }
 
@@ -127,22 +135,22 @@ export const attrToQRCodeLink = (linkedAttr: object, opts?: IAttrToLinkOpts): IQ
     return null;
   }
 
-  Object.entries(linksObj).forEach(([schema, sRecoreds]) => {
-    if (typeof sRecoreds !== "object" || sRecoreds === null) {
+  Object.entries(linksObj).forEach(([schema, entities]) => {
+    if (typeof entities !== "object" || entities === null) {
       return;
     }
 
-    const sRecoredsObj = sRecoreds as Record<string, unknown>;
-    Object.entries(sRecoredsObj).forEach(([name, nRercords]) => {
-      if (typeof nRercords !== "object" || nRercords === null) {
+    const entitiesObj = entities as Record<string, unknown>;
+    Object.entries(entitiesObj).forEach(([entity, rawLink]) => {
+      if (typeof rawLink !== "object" || rawLink === null) {
         return;
       }
-      const link = attrToLink(nRercords, opts);
+      const link = attrToLink(rawLink, opts);
       if (link !== null) {
         if (!qrСodeLink.links[schema]) {
           qrСodeLink.links[schema] = {};
         }
-        qrСodeLink.links[schema][name] = link;
+        qrСodeLink.links[schema][entity] = link;
       }
     });
   });
@@ -170,7 +178,17 @@ export const attrToDocumentLink = (linkedAttr: Record<string, unknown>, opts?: I
     ? `${name}.pdf`
     : filenameRaw + (filenameHasExtension(filenameRaw) ? "" : ".pdf");
 
-  return { template: ref.data, filename, args, type: "document" };
+  return { type: "document", template: ref.data, filename, args };
+};
+
+export const attrToToastLink = (linkedAttr: Record<string, unknown>, opts?: IAttrToLinkOpts): IToastLink | null => {
+  const rawMessage = linkedAttr["toast"];
+  const message = rawToUserString(rawMessage);
+  if (message === null) return null;
+  const title = rawToUserString(linkedAttr["title"]) ?? opts?.defaultToastTitle ?? i18n.tc("error");
+  const variant = String(linkedAttr["variant"] ?? "danger");
+  const next = attrToLink(linkedAttr["next"], opts);
+  return { type: "toast", message, title, variant, next };
 };
 
 export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | null => {
@@ -217,6 +235,11 @@ export const attrToLink = (linkedAttr: unknown, opts?: IAttrToLinkOpts): Link | 
     return documentLink;
   }
 
+  const toastLink = attrToToastLink(linkedAttrObj, opts);
+  if (toastLink !== null) {
+    return toastLink;
+  }
+
   return null;
 };
 
@@ -258,98 +281,115 @@ export interface ILinkHandler {
 }
 
 export interface ILinkHandlerParams {
-  store: Store<any>;
-  goto: (query: IQuery) => void;
-  link: Link;
-  openQRCodeScanner: (link: Link) => void;
-  replace?: boolean;
+  goto?: (_: { query: IQuery; replace?: boolean }) => unknown;
+  replaceOnGoto?: boolean;
+  resetChangesOnGoto?: boolean;
 }
 
-export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
+export const linkHandler = (link: Link, params?: ILinkHandlerParams): ILinkHandler => {
   let handler: () => Promise<void>;
   let href: string | undefined;
   // HTML <a> target, with underscores.
   let target: string | undefined;
   let rel: string | undefined;
 
-  if (params.link.type === "query") {
-    const query = params.link.query;
+  const beforeGoto = async () => {
+    if (params?.resetChangesOnGoto) {
+      await app.$store.dispatch("staging/reset");
+    }
+  };
+
+  if (link.type === "query") {
+    const query = link.query;
     // We always point href to just the location itself, for simplicity.
     href = router.resolve(queryLocation(query)).href;
     rel = "noopener";
 
-    if (params.link.target === "modal") {
+    if (link.target === "modal") {
       handler = async () => {
-        await params.store.dispatch("query/addWindow", query);
+        await beforeGoto();
+        await app.$store.dispatch("query/addWindow", query);
       };
-    } else if (params.link.target === "root") {
+    } else if (link.target === "root") {
       /* eslint-disable @typescript-eslint/require-await */
-      handler = params.replace
-        ? async () => params.store.dispatch("query/replaceRoot", query)
-        : async () => params.goto(query);
+      const goto = params?.goto;
+      if (goto) {
+        handler = async () => {
+          await beforeGoto();
+          await goto({ query, replace: params?.replaceOnGoto });
+        };
+      } else {
+        handler = async () => {
+          await beforeGoto();
+          await app.$store.dispatch("query/push", { query, replace: params?.replaceOnGoto });
+        };
+      }
       /* eslint-enable @typescript-eslint/require-await */
-    } else if (params.link.target === "top") {
+    } else if (link.target === "top") {
       handler = async () => {
-        await params.store.dispatch("query/pushRoot", query);
+        await beforeGoto();
+        await app.$store.dispatch("query/push", { key: null, query });
       };
-    } else if (params.link.target === "blank") {
+    } else if (link.target === "blank") {
       target = "_blank";
       // eslint-disable-next-line @typescript-eslint/require-await
       handler = async () => {
+        await beforeGoto();
         window.open(href!, target, rel);
       };
-    } else if (params.link.target === "modal-auto") {
+    } else if (link.target === "modal-auto") {
       handler = async () => {
-        const queryState = params.store.state.query as IQueryState;
+        await beforeGoto();
+        const queryState = app.$store.state.query as IQueryState;
         if (queryState.current?.windows.length === 0) {
-          await params.store.dispatch("query/addWindow", query);
+          await app.$store.dispatch("query/addWindow", query);
         } else {
-          params.goto(query);
+          await app.$store.dispatch("query/push", { query, replace: params?.replaceOnGoto });
         }
       };
     } else {
       throw new Error("Impossible");
     }
-  } else if (params.link.type === "href") {
-    href = params.link.href;
+  } else if (link.type === "href") {
+    href = link.href;
     rel = "noreferrer";
 
-    if (params.link.target === "self") {
+    if (link.target === "self") {
       target = "_self";
-    } else if (params.link.target === "blank") {
+    } else if (link.target === "blank") {
       target = "_blank";
     } else {
       throw new Error("Impossible");
     }
     // eslint-disable-next-line @typescript-eslint/require-await
     handler = async () => {
+      await beforeGoto();
       window.open(href!, target, rel);
     };
-  } else if (params.link.type === "action") {
-    const { action, args } = params.link;
+  } else if (link.type === "action") {
+    const { action, args } = link;
 
     handler = async () => {
-      const ret = await saveAndRunAction(params.store, action, args);
-      const retLink = attrToLink(ret.result, { defaultTarget: "root" });
+      await beforeGoto();
+      const ret = await saveAndRunAction(app.$store, action, args);
+      const retLink = attrToLink(ret.result, {
+        defaultTarget: "root",
+        defaultToastTitle: i18n.tc("exception_in_action"),
+      });
       if (retLink !== null) {
-        const linkHandlerParams: ILinkHandlerParams = {
-          store: params.store,
-          goto: params.goto,
-          link: retLink,
-          openQRCodeScanner: params.openQRCodeScanner,
-          replace: params.replace,
-        };
-        await linkHandler(linkHandlerParams).handler();
+        await linkHandler(retLink, params).handler();
       }
     };
-  } else if (params.link.type === "qrcode") {
-    handler = () => {
-      params.openQRCodeScanner(params.link);
-      return Promise.resolve();
-    };
-  } else if (params.link.type === "document") {
-    const { template, filename, args } = params.link;
+  } else if (link.type === "qrcode") {
+    // eslint-disable-next-line @typescript-eslint/require-await
     handler = async () => {
+      app.$emit("open-qrcode-scanner", link);
+    };
+  } else if (link.type === "document") {
+    const { template, filename, args } = link;
+    handler = async () => {
+      await beforeGoto();
+      await app.$store.dispatch("staging/submit", { errorOnIncomplete: true });
       const id = randomId();
       app.$bvToast.toast(i18n.tc("generation_start_description"), {
         title: i18n.tc("generation_start_title"),
@@ -358,7 +398,7 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         id,
       });
 
-      const token = params.store.state.auth.current.token;
+      const token = app.$store.state.auth.current.token;
       const escapedFilename = encodeURIComponent(filename);
       const url = new URL(`${documentGeneratorUrl}/api/${instanceName}/${template.schema}/${template.name}/generate/${escapedFilename}`);
       url.search = new URLSearchParams(args as Record<string, string>).toString();
@@ -398,6 +438,17 @@ export const linkHandler = (params: ILinkHandlerParams): ILinkHandler => {
         await waitTimeout(100);
         app.$bvToast.hide(id);
       }
+    };
+  } else if (link.type === "toast") {
+    const { message, title, variant } = link;
+    const nextHandler = link.next ? linkHandler(link.next, params) : null;
+    handler = async () => {
+      app.$bvToast.toast(app.$ust(message), {
+        title: app.$ust(title),
+        variant,
+        solid: true,
+      });
+      await nextHandler?.handler();
     };
   } else {
     throw new Error("Impossible");

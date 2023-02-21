@@ -209,7 +209,7 @@ export default class TabbedModal extends Vue {
         type: "callback",
         icon: "arrow_back",
         variant: interfaceButtonVariant,
-        callback: () => this.$emit("go-back-window"),
+        callback: () => this.$emit("go-back"),
       },
     ];
   }

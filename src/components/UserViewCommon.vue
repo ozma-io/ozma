@@ -282,7 +282,15 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
 
       let output = "";
 
-      data.info.columns.forEach((col, index) => {
+      const columnIndices = mapMaybe((col, index) => {
+        if (this.uv.columnAttributes[index]?.["csv_skip"]) {
+          return undefined;
+        }
+        return index;
+      }, data.info.columns);
+
+      columnIndices.forEach(index => {
+        const col = data.info.columns[index];
         const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
         const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
         output += csvCell(csvColumnName ?? col.name);
@@ -293,7 +301,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       output += "\n";
 
       data.rows!.forEach(row => {
-        row.values.forEach((cell, colI) => {
+        columnIndices.forEach(colI => {
+          const cell = row.values[colI];
           const info = this.uv.info.columns[colI];
           // This makes export non-reversible, because we don't export reference IDs. Some clients ask for main fields in these columns though.
           const textValue = formatValue(info.valueType, cell);
@@ -329,7 +338,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
       return [col.mainField!.name, value.value];
     }, this.uv.emptyRow!.values)) as Record<string, unknown>;
     const columnNames = Object.fromEntries(mapMaybe((info, colI) => {
-      if (!info.mainField) {
+      if (!info.mainField || this.uv.columnAttributes[colI]?.["csv_skip"]) {
         return undefined;
       }
 

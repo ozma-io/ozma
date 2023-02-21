@@ -155,7 +155,7 @@ import TabbedModal from "@/components/modal/TabbedModal.vue";
 import Input from "@/components/form/Input.vue";
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
-import type { UserString } from "@/translations";
+import type { UserString } from "@/state/translations";
 
 @Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {

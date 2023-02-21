@@ -8,7 +8,7 @@ export type ButtonDisplay = typeof buttonDisplays[number];
 export const isButtonDisplay = (display: unknown): display is ButtonDisplay => buttonDisplays.includes(display as any);
 import type { ColorVariantAttribute } from "@/utils_colors";
 import { colorVariantFromAttribute, interfaceButtonVariant } from "@/utils_colors";
-import { rawToUserString, UserString } from "@/translations";
+import { rawToUserString, UserString } from "@/state/translations";
 
 export interface IButton {
   icon?: string;
@@ -115,7 +115,7 @@ export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseA
   }
 
   return {
-    caption: i18n.tc("error_button"),
+    caption: `<${i18n.tc("error")}>`,
     icon: "error_outline",
     tooltip: `${i18n.tc("computed_attributes")}: ${JSON.stringify(buttonObj)}`,
     variant: { type: "existing", className: "outline-danger" },

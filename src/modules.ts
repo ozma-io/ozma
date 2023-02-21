@@ -54,7 +54,7 @@ const globalMessages = {
     "exception_in_action": "Exception in action",
     "not_all_values_found_in_options": "Not all references were found in `options_view` or `referenced_entity`",
     "not_found": "Not found",
-    "error_button": "<Error>",
+    "error": "Error",
     "computed_attributes": "Computed attributes",
   },
   "ru": {
@@ -64,9 +64,9 @@ const globalMessages = {
     "generation_fail": "Произошла ошибка при создании файла. Попробуйте снова.",
     "ellipsis": "... (Откройте ячейку, чтобы читать дальше)",
     "exception_in_action": "Исключение в действии",
+    "error": "Ошибка",
     "not_all_values_found_in_options": "Не все значения-отношения были найдены в `options_view` или `referenced_entity`",
     "not_found": "Не найдены",
-    "error_button": "<Ошибка>",
     "computed_attributes": "Вычисленные атрибуты",
   },
   "es": {
@@ -76,9 +76,9 @@ const globalMessages = {
     "generation_fail": "Se produjo un error al generar el archivo. Intentarlo de nuevo.",
     "ellipsis": "... (Abra la celda para verla completa)",
     "exception_in_action": "La excepción está en acción",
+    "error": "El error",
     "not_all_values_found_in_options": "No se encontraron todas las referencias en `options_view` o `referenced_entity`",
     "not_found": "No está encontrado",
-    "error_button": "<El error>",
     "computed_attributes": "Los atributos calculados",
   },
 };

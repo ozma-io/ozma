@@ -1,5 +1,5 @@
 import { Module } from "vuex";
-import { FunDBError, IEntityRef, IUserViewRef, IPermissionsInfo, ITransaction, IViewExprResult, RowKey, goodName } from "ozma-api";
+import { FunDBError, IEntityRef, IPermissionsInfo, ITransaction, IUserViewRef, IViewExprResult, RowKey, goodName } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
 import { funappSchema, default as Api } from "@/api";
@@ -221,9 +221,11 @@ const settingsModule: Module<ISettingsState, {}> = {
           if (state.pending !== pending.ref) {
             throw new CancelledError();
           }
+          const nameColumnIndex = settingsRes.info.columns.findIndex(column => column.name === "name");
+          const valueColumnIndex = settingsRes.info.columns.findIndex(column => column.name === "value");
           const values = Object.fromEntries(settingsRes.result.rows.map(row => {
-            const key = String(row.values[0].value);
-            const value = String(row.values[1].value);
+            const key = String(row.values[nameColumnIndex].value);
+            const value = String(row.values[valueColumnIndex].value);
             return [key, value];
           }));
           const themes = await loadThemes();

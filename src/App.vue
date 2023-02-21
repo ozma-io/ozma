@@ -56,7 +56,7 @@
         @closed="onHelpModalClose"
         @dismiss="dismissHelpPage"
         @dismiss-all="dismissAllHelpPages"
-        @goto="pushRoot"
+        @goto="push({ ...$event, key: null })"
       />
 
       <template v-if="authErrors.length > 0">
@@ -91,7 +91,8 @@ import InviteUserModal from "./components/InviteUserModal.vue";
 import { EntityRef } from "./links";
 import { safeJsonParse } from "./utils";
 import { equalEntityRef } from "./values";
-import { IQuery } from "./state/query";
+import { IQuery, QueryKey } from "./state/query";
+import { Language } from "./state/translations";
 
 const settings = namespace("settings");
 const auth = namespace("auth");
@@ -99,6 +100,7 @@ const errors = namespace("errors");
 const staging = namespace("staging");
 const windows = namespace("windows");
 const query = namespace("query");
+const translations = namespace("translations");
 
 @Component({
   components: {
@@ -121,7 +123,8 @@ export default class App extends Vue {
   @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
   @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
   @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
-  @query.Action("pushRoot") pushRoot!: (_: IQuery) => Promise<void>;
+  @query.Action("push") push!: (_: { key: QueryKey; query: IQuery }) => Promise<void>;
+  @translations.Action("getTranslations") getTranslations!: (_: Language) => Promise<void>;
 
   private helpPageInfo: {
     key: string | null;
@@ -248,7 +251,12 @@ export default class App extends Vue {
   @Watch("language", { immediate: true })
   private updateLanguage() {
     this.$root.$i18n.locale = this.language;
-    moment.locale(this.language);
+  }
+
+  @Watch("$i18n.locale", { immediate: true })
+  private loadLanguage(language: string) {
+    moment.locale(language);
+    void this.getTranslations(language);
   }
 
   @Watch("settings", { immediate: true })

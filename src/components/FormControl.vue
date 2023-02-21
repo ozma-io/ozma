@@ -335,7 +335,7 @@ import { IIframeRef } from "@/api";
 import { ITime } from "@/components/Calendar.vue";
 import type { ConvertedBoundAttributesMap } from "@/user_views/combined";
 import { formatRawValue } from "@/user_views/format";
-import { UserString } from "@/translations";
+import { UserString } from "@/state/translations";
 
 interface ITextType {
   name: "text";
