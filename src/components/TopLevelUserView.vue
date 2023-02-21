@@ -313,7 +313,7 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { eventBus } from "@/main";
-import { setHeadTitle, setHeadMeta, setHeadLink } from "@/elements";
+import { setHeadTitle, setHeadMeta } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
@@ -572,15 +572,6 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  @Watch("url", { immediate: true })
-  private updateUrl(url: UserString | null) {
-    if (url) {
-      const urlString = `${this.$ust(url)}`;
-      setHeadLink("canonical", urlString);
-      setHeadMeta("property", "og:url", urlString);
-    }
-  }
-    
   @Watch("stringTitle", { immediate: true })
   private updateTitle(title: string | null) {
     if (title) {

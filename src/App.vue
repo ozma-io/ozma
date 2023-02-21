@@ -101,6 +101,8 @@ const staging = namespace("staging");
 const windows = namespace("windows");
 const query = namespace("query");
 const translations = namespace("translations");
+import { UserString } from "@/state/translations";
+import { setHeadMeta, setHeadLink } from "@/elements";
 
 @Component({
   components: {
@@ -248,6 +250,10 @@ export default class App extends Vue {
     this.$bvToast.hide();
   }
 
+  get url(): UserString | null {
+    return `${window.location.protocol}://${window.location.host}${this.$route.fullPath}`;
+  }
+
   @Watch("language", { immediate: true })
   private updateLanguage() {
     this.$root.$i18n.locale = this.language;
@@ -283,6 +289,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
 
     this.loadColors();
+  }
+
+  @Watch("url", { immediate: true })
+  private updateUrl(url: UserString | null) {
+    if (url) {
+      const urlString = `${this.$ust(url)}`;
+      setHeadLink("canonical", urlString);
+      setHeadMeta("property", "og:url", urlString);
+    }
   }
 
   /* So, about themeing:

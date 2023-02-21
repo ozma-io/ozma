@@ -1125,11 +1125,6 @@ export default class UserView extends Vue {
     this.$emit("update:description", this.description);
   }
 
-  @Watch("url", { immediate: true })
-  private updateUrl() {
-    this.$emit("update:url", this.url);
-  }
-
   private get argumentEditorHasUpdatedValues() {
     return Object.entries(this.updatedArguments).length > 0 && this.state.state !== "loading";
   }
