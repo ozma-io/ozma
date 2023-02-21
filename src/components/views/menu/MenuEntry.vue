@@ -10,7 +10,7 @@
           'menuEntry-local-variant',
           {
             'is-mobile': $isMobile,
-            'no-conetent-zero-level': entry.content.length === 0 && level === 1,
+            'no-content-zero-level': entry.content.length === 0 && level === 1,
           },
         ]"
       >
@@ -157,7 +157,7 @@ export default class MenuEntry extends Vue {
     }
   }
 
-  .no-conetent-zero-level {
+  .no-content-zero-level {
     display: none;
   }
   .menu_category_block h1,
