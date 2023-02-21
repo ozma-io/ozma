@@ -8,7 +8,7 @@ import mitt from "mitt";
 import TextareaAutosize from "vue-textarea-autosize";
 
 import * as Modules from "@/modules";
-import { setHeadTitle, setHeadMeta, setHeadLink } from "@/elements";
+import { setHeadTitle, setHeadMeta } from "@/elements";
 
 import UserView from "@/components/UserView.vue";
 import FunLink from "@/components/FunLink";
@@ -81,40 +81,33 @@ Vue.directive("visible", (el, bind) => {
 
 Modules.router.beforeResolve((to, from, next) => {
   // Reset page title and meta tags
+  const titleDefault = "ozma.io — a low-code platform for CRM and ERP solutions";
+  const descriptionDefault = "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.";
   setHeadTitle("ozma.io — a low-code platform for CRM and ERP solutions");
   setHeadMeta(
     "name",
     "description",
-    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
+    descriptionDefault,
   );
   setHeadMeta(
     "property",
     "og:title",
-    "ozma.io — a low-code platform for CRM and ERP solutions",
+    titleDefault,
   );
   setHeadMeta(
     "property",
     "og:description",
-    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
-  );
-  setHeadMeta(
-    "property",
-    "og:url",
-    "https://ozma.io",
-  );
-  setHeadLink(
-    "canonical",
-    "https://ozma.io",
+    descriptionDefault,
   );
   setHeadMeta(
     "property",
     "twitter:title",
-    "ozma.io — a low-code platform for CRM and ERP solutions",
+    titleDefault,
   );
   setHeadMeta(
     "property",
     "twitter:description",
-    "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.",
+    descriptionDefault,
   );
   next();
 });
