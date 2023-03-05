@@ -160,7 +160,7 @@ export default class MenuEntry extends Vue {
   .no-content-zero-level {
     display: none;
   }
-  
+
   .menu_category_block h1,
   .menu_category_block h2,
   .menu_category_block h3,
