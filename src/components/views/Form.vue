@@ -458,7 +458,6 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       : null;
   }
 
-  // TODO:
   get gridBlocks(): FormGridElement[] {
     const viewAttrs = this.uv.attributes;
     const blocks: IGridSection<FormElement>[] =
