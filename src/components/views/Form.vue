@@ -458,6 +458,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       : null;
   }
 
+  // TODO:
   get gridBlocks(): FormGridElement[] {
     const viewAttrs = this.uv.attributes;
     const blocks: IGridSection<FormElement>[] =
@@ -498,6 +499,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         },
       };
       blocks[block].content.push(element);
+
+      // TODO: add two checks for 1 block and for type userview
+      // And add property to IElementField and etc...
     });
 
     const formButtons = this.uv.attributes["form_buttons"];

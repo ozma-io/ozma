@@ -31,6 +31,7 @@
             <!-- We pass `value` here and not calculate it in `FormField`; otherwise,
                  weirdly, it gets recomputed when any value in a row changes.
             -->
+            <!-- {{ element }} -->
             <FormField
               v-if="element.type === 'field'"
               :element="element"

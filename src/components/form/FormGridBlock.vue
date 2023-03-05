@@ -13,11 +13,17 @@
         }
       ]"
     >
+      <!-- <div
+        v-if="blockContent.type === 'element'"
+      >
+        {{ blockContent }}
+      </div> -->
       <slot
         v-if="blockContent.type === 'element'"
         :element="blockContent.element"
       />
       <b-row v-else-if="blockContent.type === 'section'">
+        <!-- {{ blockContent.content.length }} -->
         <FormGridBlock
           v-for="(subBlock, subBlockI) in blockContent.content"
           :key="subBlockI"
