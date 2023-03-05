@@ -550,14 +550,6 @@ export default class UserView extends Vue {
     return null;
   }
 
-  get url(): UserString | null {
-    if (this.state.state === "show") {
-      return window.location.href;
-    } else {
-      return null;
-    }
-  }
-
   private get toggleArgumentEditorButton(): Button {
     return {
       icon: "edit_note",
@@ -1113,7 +1105,7 @@ export default class UserView extends Vue {
   }
 
   // FIXME: Do not changed when modal is open — only default values
-  // for title, description and url.
+  // for title and description.
 
   @Watch("title", { immediate: true })
   private updateTitle() {
