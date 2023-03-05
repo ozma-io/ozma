@@ -10,6 +10,8 @@
         v-slot="slotProps"
         :block-content="block"
         :first-level="true"
+        :has-no-content="block.hasNoContent"
+        :single-uservew-section="block.singleUservewSection"
       >
         <slot :element="slotProps.element" />
       </FormGridBlock>
@@ -34,6 +36,8 @@ export interface IGridInput<T> extends IGridBase {
 export interface IGridSection<T> extends IGridBase {
   type: "section";
   content: GridElement<T>[];
+  singleUservewSection?: boolean;
+  hasNoContent?: boolean;
 }
 
 export type GridElement<T> = IGridInput<T> | IGridSection<T>;

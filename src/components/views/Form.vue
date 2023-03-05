@@ -462,7 +462,13 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   get gridBlocks(): FormGridElement[] {
     const viewAttrs = this.uv.attributes;
     const blocks: IGridSection<FormElement>[] =
-      (this.blockSizes ?? [12]).map(size => ({ type: "section", size, content: [] }));
+      (this.blockSizes ?? [12]).map(size => ({
+        type: "section",
+        size,
+        content: [],
+        singleUservewSection: false,
+        hasNoContent: true,
+      }));
     // If 'block_sizes' attribute is not used or invalid,
     // then two-column layout is used.
     const inputWidth = this.blockSizes === null ? 6 : 12;
@@ -500,8 +506,20 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       };
       blocks[block].content.push(element);
 
-      // TODO: add two checks for 1 block and for type userview
-      // And add property to IElementField and etc...
+      if (
+        (blocks[block].content.length === 1)
+        && (element.element.columnInfo.valueType.type === "json")
+      ) {
+        blocks[block].singleUservewSection = true;
+      } else {
+        blocks[block].singleUservewSection = false;
+      }
+
+      if (blocks[block].content.length === 0) {
+        blocks[block].hasNoContent = true;
+      } else {
+        blocks[block].hasNoContent = false;
+      }
     });
 
     const formButtons = this.uv.attributes["form_buttons"];

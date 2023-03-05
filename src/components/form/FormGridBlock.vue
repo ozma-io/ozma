@@ -8,22 +8,16 @@
       :class="[
         {
           'first_level_grid_block': firstLevel,
-          'has-no-content': blockContent.content && blockContent.content.length === 0,
-          'only-nested-userview': blockContent.content && blockContent.content.length === 1 && blockContent.content[0].element.columnInfo.valueType.type === 'json',
+          'has-no-content': hasNoContent,
+          'only-nested-userview': singleUservewSection,
         }
       ]"
     >
-      <!-- <div
-        v-if="blockContent.type === 'element'"
-      >
-        {{ blockContent }}
-      </div> -->
       <slot
         v-if="blockContent.type === 'element'"
         :element="blockContent.element"
       />
       <b-row v-else-if="blockContent.type === 'section'">
-        <!-- {{ blockContent.content.length }} -->
         <FormGridBlock
           v-for="(subBlock, subBlockI) in blockContent.content"
           :key="subBlockI"
@@ -48,6 +42,8 @@ import type { GridElement } from "@/components/form/FormGrid.vue";
 export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement<any>;
   @Prop({ type: Boolean, default: false }) firstLevel!: boolean;
+  @Prop({ type: Boolean, default: false }) hasNoContent!: boolean;
+  @Prop({ type: Boolean, default: false }) singleUservewSection!: boolean;
 }
 </script>
 
