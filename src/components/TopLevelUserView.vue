@@ -574,12 +574,13 @@ export default class TopLevelUserView extends Vue {
 
   @Watch("stringTitle", { immediate: true })
   private updateTitle(title: string | null) {
+    let titleString = "";
     if (title) {
-      const titleString = `ozma.io - ${title}`;
-      setHeadTitle(titleString);
-      setHeadMeta("property", "og:title", titleString);
-      setHeadMeta("property", "twitter:title", titleString);
+      titleString = `ozma.io - ${title}`;
     }
+    setHeadTitle(titleString);
+    setHeadMeta("property", "og:title", titleString);
+    setHeadMeta("property", "twitter:title", titleString);
   }
 
   private created() {

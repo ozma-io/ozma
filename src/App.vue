@@ -293,11 +293,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   @Watch("url", { immediate: true })
   private updateUrl(url: UserString | null) {
+    let urlString = "";
     if (url) {
-      const urlString = `${this.$ust(url)}`;
-      setHeadLink("canonical", urlString);
-      setHeadMeta("property", "og:url", urlString);
+      urlString = `${this.$ust(url)}`;
     }
+    setHeadLink("canonical", urlString);
+    setHeadMeta("property", "og:url", urlString);
   }
 
   /* So, about themeing:
