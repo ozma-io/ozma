@@ -474,6 +474,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
     // Add columns to blocks
     this.uv.info.columns.forEach((columnInfo, i) => {
+
+      // FIXME: check columnAttrs for "type" attribute
+
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
 
