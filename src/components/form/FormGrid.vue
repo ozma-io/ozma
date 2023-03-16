@@ -11,7 +11,7 @@
         :block-content="block"
         :first-level="true"
         :has-no-content="block.hasNoContent"
-        :single-uservew-section="block.singleUservewSection"
+        :single-user-view-section="block.singleUserViewSection"
       >
         <slot :element="slotProps.element" />
       </FormGridBlock>
@@ -36,7 +36,7 @@ export interface IGridInput<T> extends IGridBase {
 export interface IGridSection<T> extends IGridBase {
   type: "section";
   content: GridElement<T>[];
-  singleUservewSection?: boolean;
+  singleUserViewSection?: boolean;
   hasNoContent?: boolean;
 }
 

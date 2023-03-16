@@ -9,7 +9,7 @@
         {
           'first_level_grid_block': firstLevel,
           'has-no-content': hasNoContent,
-          'only-nested-userview': singleUservewSection,
+          'only-nested-userview': singleUserViewSection,
         }
       ]"
     >
@@ -43,7 +43,7 @@ export default class FormGridBlock extends Vue {
   @Prop({ type: Object }) blockContent!: GridElement<any>;
   @Prop({ type: Boolean, default: false }) firstLevel!: boolean;
   @Prop({ type: Boolean, default: false }) hasNoContent!: boolean;
-  @Prop({ type: Boolean, default: false }) singleUservewSection!: boolean;
+  @Prop({ type: Boolean, default: false }) singleUserViewSection!: boolean;
 }
 </script>
 

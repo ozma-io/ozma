@@ -465,7 +465,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         type: "section",
         size,
         content: [],
-        singleUservewSection: false,
+        singleUserViewSection: false,
         hasNoContent: true,
       }));
     // If 'block_sizes' attribute is not used or invalid,
@@ -474,11 +474,9 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
     // Add columns to blocks
     this.uv.info.columns.forEach((columnInfo, i) => {
-
-      // FIXME: check columnAttrs for "type" attribute
-
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
+      const isUserView = Boolean(getColumnAttr("control") === "user_view") ?? false;
 
       const visible = Boolean(getColumnAttr("visible") ?? true);
       if (!visible) {
@@ -510,11 +508,11 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
       if (
         (blocks[block].content.length === 1)
-        && (element.element.columnInfo.valueType.type === "json")
+        && (isUserView)
       ) {
-        blocks[block].singleUservewSection = true;
+        blocks[block].singleUserViewSection = true;
       } else {
-        blocks[block].singleUservewSection = false;
+        blocks[block].singleUserViewSection = false;
       }
 
       if (blocks[block].content.length === 0) {
