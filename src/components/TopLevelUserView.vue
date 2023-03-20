@@ -574,7 +574,7 @@ export default class TopLevelUserView extends Vue {
 
   @Watch("stringTitle", { immediate: true })
   private updateTitle(title: string | null) {
-    let titleString = "";
+    let titleString = "ozma.io";
     if (title) {
       titleString = `ozma.io - ${title}`;
     }

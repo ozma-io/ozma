@@ -101,7 +101,7 @@ const staging = namespace("staging");
 const windows = namespace("windows");
 const query = namespace("query");
 const translations = namespace("translations");
-import { UserString } from "@/state/translations";
+import { type UserString } from "@/state/translations";
 import { setHeadMeta, setHeadLink } from "@/elements";
 
 @Component({
@@ -250,7 +250,7 @@ export default class App extends Vue {
     this.$bvToast.hide();
   }
 
-  get url(): UserString | null {
+  get url(): UserString {
     return `${window.location.protocol}://${window.location.host}${this.$route.fullPath}`;
   }
 
@@ -292,11 +292,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   @Watch("url", { immediate: true })
-  private updateUrl(url: UserString | null) {
-    let urlString = "";
-    if (url) {
-      urlString = `${this.$ust(url)}`;
-    }
+  private updateUrl(url: UserString) {
+    const urlString = `${this.$ust(url)}`;
     setHeadLink("canonical", urlString);
     setHeadMeta("property", "og:url", urlString);
   }
