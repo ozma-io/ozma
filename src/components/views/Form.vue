@@ -461,7 +461,13 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   get gridBlocks(): FormGridElement[] {
     const viewAttrs = this.uv.attributes;
     const blocks: IGridSection<FormElement>[] =
-      (this.blockSizes ?? [12]).map(size => ({ type: "section", size, content: [] }));
+      (this.blockSizes ?? [12]).map(size => ({
+        type: "section",
+        size,
+        content: [],
+        singleUserViewSection: false,
+        hasNoContent: true,
+      }));
     // If 'block_sizes' attribute is not used or invalid,
     // then two-column layout is used.
     const inputWidth = this.blockSizes === null ? 6 : 12;
@@ -470,6 +476,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     this.uv.info.columns.forEach((columnInfo, i) => {
       const columnAttrs = this.uv.columnAttributes[i];
       const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
+      const isUserView = Boolean(getColumnAttr("control") === "user_view") ?? false;
 
       const visible = Boolean(getColumnAttr("visible") ?? true);
       if (!visible) {
@@ -498,6 +505,21 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
         },
       };
       blocks[block].content.push(element);
+
+      if (
+        (blocks[block].content.length === 1)
+        && (isUserView)
+      ) {
+        blocks[block].singleUserViewSection = true;
+      } else {
+        blocks[block].singleUserViewSection = false;
+      }
+
+      if (blocks[block].content.length === 0) {
+        blocks[block].hasNoContent = true;
+      } else {
+        blocks[block].hasNoContent = false;
+      }
     });
 
     const formButtons = this.uv.attributes["form_buttons"];
