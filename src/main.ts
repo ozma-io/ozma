@@ -8,7 +8,7 @@ import mitt from "mitt";
 import TextareaAutosize from "vue-textarea-autosize";
 
 import * as Modules from "@/modules";
-import { setHeadTitle } from "@/elements";
+import { setHeadTitle, setHeadMeta } from "@/elements";
 
 import UserView from "@/components/UserView.vue";
 import FunLink from "@/components/FunLink";
@@ -80,8 +80,35 @@ Vue.directive("visible", (el, bind) => {
 });
 
 Modules.router.beforeResolve((to, from, next) => {
-  // Reset page title
-  setHeadTitle("ozma.io");
+  // Reset page title and meta tags
+  const titleDefault = "ozma.io — a low-code platform for CRM and ERP solutions";
+  const descriptionDefault = "ozma.io — an enterprise-level CRM and ERP platform, less expensive than Salesforce and Microsoft, fully customizable by any developer in a few hours.";
+  setHeadTitle("ozma.io — a low-code platform for CRM and ERP solutions");
+  setHeadMeta(
+    "name",
+    "description",
+    descriptionDefault,
+  );
+  setHeadMeta(
+    "property",
+    "og:title",
+    titleDefault,
+  );
+  setHeadMeta(
+    "property",
+    "og:description",
+    descriptionDefault,
+  );
+  setHeadMeta(
+    "property",
+    "twitter:title",
+    titleDefault,
+  );
+  setHeadMeta(
+    "property",
+    "twitter:description",
+    descriptionDefault,
+  );
   next();
 });
 

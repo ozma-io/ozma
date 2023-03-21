@@ -173,6 +173,8 @@
           @update:enable-filter="enableFilter = $event"
           @update:body-style="styleNode.innerHTML = $event"
           @update:title="title = $event"
+          @update:description="description = $event"
+          @update:url="url = $event"
           @update:current-page="replacePage({ key: null, page: $event })"
         />
       </div>
@@ -311,7 +313,7 @@ import { namespace } from "vuex-class";
 
 import * as Api from "@/api";
 import { eventBus } from "@/main";
-import { setHeadTitle } from "@/elements";
+import { setHeadTitle, setHeadMeta } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
@@ -393,6 +395,8 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
   private title: UserString | null = null;
+  private description: UserString | null = null;
+  private url: UserString | null = null;
 
   private buttons: Button[] = [];
 
@@ -558,10 +562,25 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
+  @Watch("description", { immediate: true })
+  private updateDescription(description: UserString | null) {
+    if (description) {
+      const descriptionString = `${this.$ust(description)}`;
+      setHeadMeta("name", "description", descriptionString);
+      setHeadMeta("property", "og:description", descriptionString);
+      setHeadMeta("property", "twitter:description", descriptionString);
+    }
+  }
+
   @Watch("stringTitle", { immediate: true })
   private updateTitle(title: string | null) {
-    const head = title ? `${title} — Ozma` : "Ozma";
-    setHeadTitle(head);
+    let titleString = "ozma.io";
+    if (title) {
+      titleString = `ozma.io - ${title}`;
+    }
+    setHeadTitle(titleString);
+    setHeadMeta("property", "og:title", titleString);
+    setHeadMeta("property", "twitter:title", titleString);
   }
 
   private created() {
