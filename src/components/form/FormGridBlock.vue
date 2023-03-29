@@ -52,7 +52,7 @@ export default class FormGridBlock extends Vue {
     padding: 0;
 
     &:not(:last-child) {
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.5rem;
     }
   }
 
@@ -60,7 +60,7 @@ export default class FormGridBlock extends Vue {
     margin-bottom: 0.5rem!important;
     box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
     border-radius: 0.5rem;
-    height: 98%;
+    height: 100%;
     padding: 1rem;
 
     // Remove box shadow from nested .first_level_grid_block
