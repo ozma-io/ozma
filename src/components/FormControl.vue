@@ -876,7 +876,7 @@ export default class FormControl extends Vue {
           const timeDefaultRaw = this.attributes["time_default"];
           const timeDefault = (typeof timeDefaultRaw === "string") ? parseTime(timeDefaultRaw) : null;
           const showSecondsRaw = this.attributes["show_seconds"];
-          const format = showSecondsRaw ? "L LTS" : null;
+          const format = showSecondsRaw ? "L HH:MM:SS" : null;
           return { name: "calendar", showTime: true, timeStep, timeDefault, format };
         }
         case "json":
@@ -909,7 +909,7 @@ export default class FormControl extends Vue {
           const timeDefaultRaw = this.attributes["time_default"];
           const timeDefault = (typeof timeDefaultRaw === "string") ? parseTime(timeDefaultRaw) : null;
           const showSecondsRaw = this.attributes["show_seconds"];
-          const format = showSecondsRaw ? "L LTS" : null;
+          const format = showSecondsRaw ? "L HH:MM" : null;
           return { name: "calendar", showTime: true, timeStep, timeDefault, format };
         }
         case "json":

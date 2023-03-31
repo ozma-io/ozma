@@ -7,7 +7,7 @@ import { i18n } from "@/modules";
 // Date/time is stored as Moment objects in UTC.
 export const localDateFormat = "L";
 export const dateFormat = "YYYY-MM-DD";
-export const localDateTimeFormat = "L LT";
+export const localDateTimeFormat = "L HH:MM";
 
 export interface IFieldInfo {
   fieldType: FieldType;

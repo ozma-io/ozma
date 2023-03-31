@@ -176,7 +176,7 @@ export default class Calendar extends Vue {
     if (this.format) {
       return this.format;
     } else if (this.showTime) {
-      return "L LT";
+      return "L HH:MM";
     } else {
       return "L";
     }
