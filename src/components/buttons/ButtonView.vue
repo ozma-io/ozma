@@ -17,7 +17,7 @@
 
   <b-button
     v-else
-    v-b-tooltip.hover.noninteractive.viewport
+    v-b-tooltip.hover.d1000.noninteractive.viewport
     :class="[variantClassName, 'button-local-variant', alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
     :style="variantVariables"
     variant="light"

@@ -35,7 +35,7 @@
       />
       <div class="buttons-container">
         <b-button
-          v-b-tooltip.hover.bottom.noninteractive="{
+          v-b-tooltip.hover.d1000.bottom.noninteractive="{
             title: $t('dismiss_tooltip').toString(),
             disabled: $isMobile,
           }"
@@ -47,7 +47,7 @@
         </b-button>
 
         <b-button
-          v-b-tooltip.hover.bottom.noninteractive="{
+          v-b-tooltip.hover.d1000.bottom.noninteractive="{
             title: $t('dismiss_tooltip').toString(),
             disabled: $isMobile,
           }"

@@ -38,7 +38,7 @@
         </span>
         <span class="column_controls" data-dragscroll>
           <span
-            v-b-tooltip.hover.noninteractive
+            v-b-tooltip.hover.d1000.noninteractive
             class="column_header__count"
             :title="$t('count_tooltip')"
           >

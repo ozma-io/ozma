@@ -24,7 +24,7 @@
     </b>
     <span
       v-if="phenom.type === 'message'"
-      v-b-tooltip.hover.noninteractive
+      v-b-tooltip.hover.d1000.noninteractive
       class="datetime"
       :title="datetimeTooltipText"
     >
@@ -38,7 +38,7 @@
     </span>
     <div
       v-if="phenom.type === 'event'"
-      v-b-tooltip.hover.noninteractive
+      v-b-tooltip.hover.d1000.noninteractive
       class="datetime"
       :title="datetimeTooltipText"
     >
