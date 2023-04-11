@@ -77,6 +77,9 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace, Action } from "vuex-class";
 import { IViewExprResult } from "ozma-api";
 import moment from "moment";
+
+// TODO: import all languages from instance settings
+import "moment/locale/es";
 import "moment/locale/ru";
 
 import { CurrentAuth, INoAuth } from "@/state/auth";

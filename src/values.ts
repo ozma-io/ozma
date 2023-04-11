@@ -2,6 +2,7 @@ import type { ValueType, FieldType, IFieldRef, IEntityRef, IEntity, IExecutedRow
 import moment, { Moment, Duration, MomentInput, DurationInputArg1 } from "moment";
 
 import { deepEquals } from "@/utils";
+import { i18n } from "@/modules";
 
 // Date/time is stored as Moment objects in UTC.
 export const localDateFormat = "L";
@@ -44,9 +45,9 @@ export const valueToText = (valueType: ValueType, value: unknown): string => {
   } else if (value === undefined || value === null) {
     return "";
   } else if (valueType.type === "date") {
-    return (value as Moment).format(localDateFormat);
+    return (value as Moment).locale(i18n.locale).format(localDateFormat);
   } else if (valueType.type === "datetime" || valueType.type === "localdatetime") {
-    return (value as Moment).local().format(localDateTimeFormat);
+    return (value as Moment).locale(i18n.locale).local().format(localDateTimeFormat);
   } else if (valueType.type === "interval") {
     return (value as Duration).asMilliseconds().toString();
   } else if (valueType.type === "json") {
