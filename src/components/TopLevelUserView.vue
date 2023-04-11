@@ -199,7 +199,7 @@
       <transition name="fade-2">
         <button
           v-if="canClearUnsavedChanges"
-          v-b-tooltip.hover.right.noninteractive="{
+          v-b-tooltip.hover.d1000.right.noninteractive="{
             title: $t('clear_changes').toString(),
             disabled: $isMobile,
           }"
@@ -217,7 +217,7 @@
       <transition name="fade-2">
         <button
           v-if="errors.length > 0"
-          v-b-tooltip.hover.right.noninteractive="{
+          v-b-tooltip.hover.d1000.right.noninteractive="{
             title: $t('show_errors').toString(),
             disabled: $isMobile,
           }"
@@ -242,7 +242,7 @@
         >
           <div
             v-if="Object.keys(autoSaveLocks).length > 0"
-            v-b-tooltip.hover.right.noninteractive="{
+            v-b-tooltip.hover.d1000.right.noninteractive="{
               title: $t('auto_save_disabled').toString(),
               disabled: $isMobile,
             }"
@@ -255,7 +255,7 @@
             </span>
           </div>
           <button
-            v-b-tooltip.hover.right.noninteractive="{
+            v-b-tooltip.hover.d1000.right.noninteractive="{
               title: $t('save').toString(),
               disabled: $isMobile,
             }"
@@ -273,7 +273,7 @@
         </div>
         <div
           v-else-if="( !$isMobile || savedRecently.show )"
-          v-b-tooltip.hover.right.noninteractive="{
+          v-b-tooltip.hover.d1000.right.noninteractive="{
             title: $t('saved').toString(),
             disabled: $isMobile,
           }"
@@ -289,7 +289,7 @@
 
       <div
         v-if="allowBusinessMode && !settingsPending && developmentModeEnabled"
-        v-b-tooltip.hover.right.noninteractive="{
+        v-b-tooltip.hover.d1000.right.noninteractive="{
           title: $t('development_mode_indicator').toString(),
         }"
         class="development-mode-indicator"

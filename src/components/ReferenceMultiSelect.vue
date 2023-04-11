@@ -66,7 +66,7 @@
 
           <!-- eslint-disable vue/no-v-html -->
           <span
-            v-b-tooltip.hover.right.noninteractive="{
+            v-b-tooltip.hover.d1000.right.noninteractive="{
               title: select.option.labelHtml.toString(),
               disabled: $isMobile,
             }"

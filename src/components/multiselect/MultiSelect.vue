@@ -174,6 +174,7 @@
                 class="material-button clear-option-button"
                 @click="unselectAll"
               >
+                <i class="material-icons"> highlight_off </i>
                 {{ $t("clear") }}
               </button>
             </div>
@@ -878,6 +879,10 @@ export default class MultiSelect extends Vue {
     align-items: center;
     width: 100%;
     background: var(--default-backgroundColor);
+
+    .material-icons {
+      margin-right: 0.3rem;
+    }
   }
 
   .selected-options-list {

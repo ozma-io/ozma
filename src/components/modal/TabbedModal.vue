@@ -36,7 +36,7 @@
     <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <div v-else slot="top-right">
       <div
-        v-b-tooltip.hover.left.noninteractive="{
+        v-b-tooltip.hover.d1000.left.noninteractive="{
           title: $t('click_anywhere').toString(),
         }"
         class="desktop-close-button-wrapper"
