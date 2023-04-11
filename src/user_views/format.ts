@@ -37,7 +37,7 @@ export const tryFormatRawValue = (valueType: ValueType, rawValue: unknown, opts?
   }
 
   if (moment.isMoment(rawValue) && opts?.getCellAttr?.("show_seconds") === true) {
-    return rawValue.local().format("L HH:MM:SS");
+    return rawValue.local().format("L LTS");
   }
 
   return null;
