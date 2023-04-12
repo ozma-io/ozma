@@ -65,11 +65,11 @@
             small
             label="Next page is loading"
           />
+          <ButtonItem :button="firstPageButton" />
           <ButtonItem :button="prevPageButton" />
           <div class="current-page-wrapper">
             <div class="current-page">
-              {{ currentVisualPage }}
-              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
+              {{ currentVisualPage }}<span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }}</span>
             </div>
           </div>
           <ButtonItem :button="nextPageButton" />
@@ -264,7 +264,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
     return {
       type: "callback",
-      icon: "arrow_right",
+      icon: "navigate_next",
       variant: interfaceButtonVariant,
       disabled: (this.uv.rowLoadState.complete && this.onLastPage)
         || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
@@ -277,10 +277,21 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
 
     return {
       type: "callback",
-      icon: "arrow_left",
+      icon: "navigate_before",
       variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPrevPage(),
+    };
+  }
+
+  private get firstPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+    return {
+      type: "callback",
+      icon: "first_page",
+      variant: interfaceButtonVariant,
+      disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
+      callback: () => this.goToPage(0),
     };
   }
 
@@ -338,7 +349,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
-    return String(this.uv.extra.lazyLoad.pagination?.currentPage ?? 0 + 1);
+    return String((this.uv.extra.lazyLoad.pagination?.currentPage ?? 0) + 1);
   }
 
   @Watch("currentVisualPage")
@@ -720,6 +731,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   .pagination-wrapper {
     display: flex;
     justify-content: flex-end;
+    margin-bottom: 0.7rem;
 
     .pagination {
       display: flex;
