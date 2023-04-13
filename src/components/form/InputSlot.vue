@@ -245,6 +245,12 @@ export default class InputSlot extends Vue {
 
   .input_slot__row {
     flex-direction: row;
+
+    &:hover {
+      ::v-deep .disabled-indicator {
+        display: block!important;
+      }
+    }
   }
 
   .longer-input-label {
@@ -348,6 +354,7 @@ export default class InputSlot extends Vue {
 
       .disabled-indicator {
         line-height: 1;
+        display: none; // to show on input_slot__row hover
 
         .material-icons {
           color: var(--default-foregroundDarkerColor);
