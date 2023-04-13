@@ -781,9 +781,9 @@ const replaceLink = (match: string, email: string, tel: string, url: string) => 
       tel ? "tel:" :
         "";
   const formattedMatch = tel ? telRemoveFormating(match) : match;
-  return `<a \
+  return `${match} <b><a \
 target="_blank" rel="noopener noreferrer" \
-href="${prefix}${formattedMatch}">${match}</a>`;
+href="${prefix}${formattedMatch}">^</a></b>`;
 };
 export const replaceHtmlLinksWithInfo = (text: string): { result: string; hasLinks: boolean } => {
   const sanitized = sanitizeHtml(text, { allowedTags: [], disallowedTagsMode: "escape" });

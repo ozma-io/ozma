@@ -71,7 +71,7 @@
               disabled: $isMobile,
             }"
             class="value-text"
-            v-html="select.option.label"
+            v-html="select.option.labelHtml"
           />
           <!-- eslint-enable vue/no-v-html -->
         </fragment>
