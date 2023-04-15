@@ -52,7 +52,7 @@
       <div
         slot="reference"
         class="calendar_container"
-        @click="togglePopup"
+        @click="openPopup"
       >
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <div class="main-input">
