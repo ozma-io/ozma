@@ -121,14 +121,17 @@ const translationsModule: Module<ITranslationsState, {}> = {
 declare module "vue/types/vue" {
   // eslint-disable-next-line no-shadow
   interface Vue {
-    $ust: (str: UserString) => string;
+    $ustOrEmpty: (str: UserString) => string;
   }
 }
 
 Vue.mixin({
   methods: {
     // eslint-disable-next-line func-names
-    $ust(str: UserString): string {
+    $ustOrEmpty(str: UserString): string {
+      if (str === null || str === undefined || str === "") {
+        return "";
+      }
       if (typeof str === "string") {
         return str;
       } else {

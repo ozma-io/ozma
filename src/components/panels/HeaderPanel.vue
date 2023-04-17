@@ -24,9 +24,9 @@
             'is-loading': isLoading,
           }
         ]"
-        :title="$ust(title)"
+        :title="$ustOrEmpty(title)"
       >
-        {{ $ust(title) }}
+        {{ $ustOrEmpty(title) }}
       </h1>
       <h2
         v-else
@@ -38,9 +38,9 @@
             'is-loading': isLoading,
           }
         ]"
-        :title="$ust(title)"
+        :title="$ustOrEmpty(title)"
       >
-        {{ $ust(title) }}
+        {{ $ustOrEmpty(title) }}
       </h2>
     </div>
 

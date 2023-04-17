@@ -7,7 +7,7 @@
       v-for="(column, columnIndex) in columns"
       :key="column.key"
       data-dragscroll
-      :title="column.title ? $ust(column.title) : undefined"
+      :title="column.title ? $ustOrEmpty(column.title) : undefined"
       :cards="column.cards"
       :width="columnWidth"
       :color-variables="column.colorVariables"

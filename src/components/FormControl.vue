@@ -267,9 +267,9 @@
             v-b-tooltip.click.blur.bottom.noninteractive
             tabindex="0"
             class="input_label not-loaded"
-            :title="$ust(usedCaption)"
+            :title="$ustOrEmpty(usedCaption)"
           >
-            {{ $ust(usedCaption) }}
+            {{ $ustOrEmpty(usedCaption) }}
           </label>
         </div>
         <div class="empty_userview_text">

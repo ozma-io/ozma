@@ -264,11 +264,11 @@
                 'fixed-column' : columns[i].fixed,
               }]"
               :style="columns[i].style"
-              :title="$ust(columns[i].caption)"
+              :title="$ustOrEmpty(columns[i].caption)"
               @click="loadAllRowsAndUpdateSort(i)"
             >
               <span class="table_header__content">
-                {{ $ust(columns[i].caption) }}
+                {{ $ustOrEmpty(columns[i].caption) }}
               </span>
               <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
             </th>

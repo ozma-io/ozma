@@ -443,8 +443,8 @@ export const linkHandler = (link: Link, params?: ILinkHandlerParams): ILinkHandl
     const { message, title, variant } = link;
     const nextHandler = link.next ? linkHandler(link.next, params) : null;
     handler = async () => {
-      app.$bvToast.toast(app.$ust(message), {
-        title: app.$ust(title),
+      app.$bvToast.toast(app.$ustOrEmpty(message), {
+        title: app.$ustOrEmpty(title),
         variant,
         solid: true,
       });

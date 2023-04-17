@@ -146,7 +146,7 @@ export default class ModalUserView extends Vue {
     if (this.view.args.args === null) {
       return this.$t("new_entry").toString();
     } else {
-      return this.title ? this.$ust(this.title) : null;
+      return this.title ? this.$ustOrEmpty(this.title) : null;
     }
   }
 

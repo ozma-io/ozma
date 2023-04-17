@@ -39,7 +39,7 @@
       <div class="modal-content">
         <div class="header">
           <div v-if="label" class="label">
-            {{ $ust(label) }}
+            {{ $ustOrEmpty(label) }}
           </div>
         </div>
 
@@ -78,7 +78,7 @@
             class="input_label"
             :for="inputName"
             :title="label"
-          >{{ $ust(label) }}</label>
+          >{{ $ustOrEmpty(label) }}</label>
         </div>
       </b-col>
       <b-col

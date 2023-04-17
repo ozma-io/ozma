@@ -418,12 +418,12 @@ export default class TopLevelUserView extends Vue {
     if (this.query.root.args.args === null) {
       return this.$t("new_entry").toString();
     } else {
-      return this.title ? this.$ust(this.title) : null;
+      return this.title ? this.$ustOrEmpty(this.title) : null;
     }
   }
 
   get stringTitle(): string | null {
-    return this.title ? this.$ust(this.title) : null;
+    return this.title ? this.$ustOrEmpty(this.title) : null;
   }
 
   private get mainButtons(): Button[] {
@@ -565,7 +565,7 @@ export default class TopLevelUserView extends Vue {
   @Watch("description", { immediate: true })
   private updateDescription(description: UserString | null) {
     if (description) {
-      const descriptionString = `${this.$ust(description)}`;
+      const descriptionString = `${this.$ustOrEmpty(description)}`;
       setHeadMeta("name", "description", descriptionString);
       setHeadMeta("property", "og:description", descriptionString);
       setHeadMeta("property", "twitter:description", descriptionString);
