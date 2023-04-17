@@ -24,9 +24,9 @@
             'is-loading': isLoading,
           }
         ]"
-        :title="titleString"
+        :title="$ust(title)"
       >
-        {{ titleString }}
+        {{ $ust(title) }}
       </h1>
       <h2
         v-else
@@ -38,9 +38,9 @@
             'is-loading': isLoading,
           }
         ]"
-        :title="titleString"
+        :title="$ust(title)"
       >
-        {{ titleString }}
+        {{ $ust(title) }}
       </h2>
     </div>
 
@@ -88,14 +88,6 @@ export default class HeaderPanel extends Vue {
   // Is it TopLevelUserView's header or current tab of modal or component (sub UserView).
   // options: 'component', 'modal' ,'root', null
   @Prop({ type: String }) type!: string | undefined;
-
-  get titleString() {
-    let titleString = "";
-    if (this.title) {
-      titleString = this.$ust(this.title);
-    }
-    return titleString;
-  }
 
   get headerButtons() {
     const buttons = buttonsToPanelButtons(this.buttons);
