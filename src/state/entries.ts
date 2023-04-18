@@ -4,7 +4,7 @@ import Vue from "vue";
 import R from "ramda";
 
 import { app } from "@/main";
-import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
+import { IRef, NeverError, ObjectResourceMap, ReferenceName, debugLog, syncObject, updateObject, waitTimeout } from "@/utils";
 import Api, { developmentMode } from "@/api";
 import { valueToText } from "@/values";
 import { CancelledError, i18n } from "@/modules";
@@ -159,6 +159,7 @@ type AwaitEntriesResult =
   | { result: "pending"; pending: Promise<boolean> };
 
 const waitSearchNode = (node: SearchNode, search: string, limit: number): AwaitEntriesResult => {
+  debugLog("checking node", node, "search", search, "limit", limit);
   if (node.search === search) {
     if (node.status === "pending") {
       return { result: "pending", pending: node.pending };
@@ -812,6 +813,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         let update: UpdateSearchNode;
         try {
+          debugLog("ref", ref, "search", search, "offset", offset, "limit", limit - offset);
           // Because we fetch only the missing entries, we deduct the last known offset
           // from the limit (which starts from 0).
           const ret = await fetchEntries(context, ref, search, offset, limit - offset);
