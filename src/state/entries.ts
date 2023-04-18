@@ -808,6 +808,9 @@ const entriesModule: Module<IEntriesState, {}> = {
         }
       }
 
+      const oldEntries = state.current.getEntries(ref)!.entries;
+      debugLog("old", Object.entries(oldEntries).length);
+
       const pending: IRef<Promise<boolean>> = {};
       pending.ref = (async () => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
@@ -817,7 +820,7 @@ const entriesModule: Module<IEntriesState, {}> = {
           // Because we fetch only the missing entries, we deduct the last known offset
           // from the limit (which starts from 0).
           const ret = await fetchEntries(context, ref, search, offset, limit - offset);
-          debugLog("added more", ret.entries);
+          debugLog("added more", Number(Object.entries(ret.entries).length), ret.entries);
           commit("addEntries", { ref, entries: ret.entries });
           update = {
             status: "ok",
@@ -839,7 +842,8 @@ const entriesModule: Module<IEntriesState, {}> = {
           throw new CancelledError("Pending entries got cancelled, ref " + JSON.stringify(ref));
         }
         commit("updateSearchNode", { ref, search, update });
-        debugLog("current", state.current.getEntries(ref)?.entries);
+        const entries = state.current.getEntries(ref)!.entries;
+        debugLog("current", Object.entries(entries).length, entries);
         if (update.status === "ok") {
           return update.limit !== null;
         } else {
