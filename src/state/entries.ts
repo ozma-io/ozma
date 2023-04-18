@@ -812,7 +812,9 @@ const entriesModule: Module<IEntriesState, {}> = {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         let update: UpdateSearchNode;
         try {
-          const ret = await fetchEntries(context, ref, search, offset, limit);
+          // Because we fetch only the missing entries, we deduct the last known offset
+          // from the limit (which starts from 0).
+          const ret = await fetchEntries(context, ref, search, offset, limit - offset);
           commit("addEntries", { ref, entries: ret.entries });
           update = {
             status: "ok",
