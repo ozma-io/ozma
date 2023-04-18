@@ -808,7 +808,7 @@ const entriesModule: Module<IEntriesState, {}> = {
         }
       }
 
-      const oldEntries = state.current.getEntries(ref)!.entries;
+      const oldEntries = state.current.getEntries(ref)?.entries ?? {};
       debugLog("old", Object.entries(oldEntries).length);
 
       const pending: IRef<Promise<boolean>> = {};
