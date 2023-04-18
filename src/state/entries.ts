@@ -838,6 +838,7 @@ const entriesModule: Module<IEntriesState, {}> = {
           throw new CancelledError("Pending entries got cancelled, ref " + JSON.stringify(ref));
         }
         commit("updateSearchNode", { ref, search, update });
+        debugLog("current", state.current.getEntries(ref)?.entries);
         if (update.status === "ok") {
           return update.limit !== null;
         } else {
