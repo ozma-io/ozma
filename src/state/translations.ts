@@ -128,8 +128,8 @@ declare module "vue/types/vue" {
 Vue.mixin({
   methods: {
     // eslint-disable-next-line func-names
-    $ustOrEmpty(str: UserString): string {
-      if (str === null || str === undefined || str === "") {
+    $ustOrEmpty(str: UserString | null | undefined): string {
+      if (!str) {
         return "";
       }
       if (typeof str === "string") {
