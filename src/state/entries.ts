@@ -817,6 +817,7 @@ const entriesModule: Module<IEntriesState, {}> = {
           // Because we fetch only the missing entries, we deduct the last known offset
           // from the limit (which starts from 0).
           const ret = await fetchEntries(context, ref, search, offset, limit - offset);
+          debugLog("added more", ret.entries);
           commit("addEntries", { ref, entries: ret.entries });
           update = {
             status: "ok",
