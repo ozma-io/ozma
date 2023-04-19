@@ -296,7 +296,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   @Watch("url", { immediate: true })
   private updateUrl(url: UserString) {
-    const urlString = `${this.$ust(url)}`;
+    const urlString = `${this.$ustOrEmpty(url)}`;
     setHeadLink("canonical", urlString);
     setHeadMeta("property", "og:url", urlString);
   }

@@ -15,8 +15,8 @@
         ]"
       >
         <MenuHeading :level="level + 1">
-          <span :title="$ust(entry.name)">
-            {{ $ust(entry.name) }}
+          <span :title="$ustOrEmpty(entry.name)">
+            {{ $ustOrEmpty(entry.name) }}
           </span>
         </MenuHeading>
         <b-row :class="['menu_entries', { 'first_level_entries': level === 0 }]">
@@ -47,8 +47,8 @@
         >
           {{ entry.icon || "chevron_right" }}
         </i>
-        <span class="name" :title="$ust(entry.name)">
-          {{ $ust(entry.name) }}
+        <span class="name" :title="$ustOrEmpty(entry.name)">
+          {{ $ustOrEmpty(entry.name) }}
         </span>
         <b-badge
           v-if="entry.badge !== undefined && entry.badge.value !== undefined"
