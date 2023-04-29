@@ -250,7 +250,9 @@ export const colorVariantsToCssRules = (colorVariants: Record<string, ColorVaria
 };
 
 export const getPreferredTheme = (themes: ThemesMap, defaultSchema?: SchemaName): IThemeRef | null => {
-  const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // FIXME: use prefers-color-scheme for user browser dark theme when we will fix all dark theme design issues
+  // const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const prefersDarkTheme = false;
 
   const storedTheme = ThemeRef.safeParse(safeJsonParse(localStorage.getItem("preferredTheme")));
 
