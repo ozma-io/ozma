@@ -218,7 +218,7 @@ export default class MenuEntry extends Vue {
     padding-left: 0 !important;
 
     .menu_category_block {
-      box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
+      box-shadow: var(--backgroundDarker1Color) 0 0 10px 5px;
       border-radius: 0.5rem;
       padding: 2rem;
       height: 90%;
