@@ -58,7 +58,7 @@ export default class FormGridBlock extends Vue {
 
   .first_level_grid_block {
     margin-bottom: 0.5rem!important;
-    box-shadow: rgb(0 0 0 / 10%) 0 0 10px 5px;
+    box-shadow: var(--backgroundDarker2Color) 0 0 10px 5px;
     border-radius: 0.5rem;
     height: 100%;
     padding: 1rem;
