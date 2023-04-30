@@ -13,44 +13,42 @@
     "lint:style": "stylelint src/"
   },
   "dependencies": {
-    "ozma-api": "file:3rdparty/ozma-api",
-
     "@chenfengyuan/vue-qrcode": "1.0.1",
-    "vue": "^2.7.10",
-    "vue-i18n": "^8.27.2",
-    "vue-router": "^3.6.5",
-    "vuex": "^3.6.2",
-
-    "@toast-ui/vue-editor": "3.1.8",
-    "monaco-editor": "0.31.0",
-    "vue-barcode-reader": "0.0.3",
-
     "@liqueflies/vue-flex-grid": "^0.0.1",
+    "@toast-ui/vue-editor": "3.1.8",
     "bootstrap-vue": "^2.22.0",
     "color2k": "^2.0.0",
     "core-js": "^3.25.1",
     "jwt-decode": "^3.1.2",
     "mitt": "^3.0.0",
     "moment": "^2.29.4",
+    "monaco-editor": "0.31.0",
+    "ozma-api": "file:3rdparty/ozma-api",
     "papaparse": "^5.3.2",
     "portal-vue": "^2.1.6",
+    "postcss": "^8.4.23",
     "ramda": "^0.28.0",
     "sanitize-html": "^2.7.2",
     "uuid": "^9.0.0",
     "v-click-outside": "^3.2.0",
     "v-hotkey": "^0.9.0",
+    "vue": "^2.7.10",
     "vue-barcode": "^1.3.0",
+    "vue-barcode-reader": "0.0.3",
     "vue-class-component": "^7.1.0",
     "vue-dragscroll": "^4.0.4",
     "vue-frag": "1.4.1",
+    "vue-i18n": "^8.27.2",
     "vue-infinite-loading": "^2.4.5",
     "vue-js-modal": "^2.0.1",
     "vue-popperjs": "^2.3.0",
     "vue-property-decorator": "^9.1.2",
+    "vue-router": "^3.6.5",
     "vue-textarea-autosize": "^1.1.1",
     "vue-tsx-support": "^3.0.3",
     "vue-unique-id": "^3.0.0",
     "vuedraggable": "^2.23.2",
+    "vuex": "^3.6.2",
     "vuex-class": "^0.3.2",
     "zod": "^3.19.1"
   },
@@ -58,9 +56,8 @@
     "@toast-ui/editor": "3.1.8"
   },
   "devDependencies": {
-    "@intlify/vue-i18n-loader": "1.1.0",
-
     "@babel/core": "^7.19.1",
+    "@intlify/vue-i18n-loader": "1.1.0",
     "@types/jwt-decode": "^3.1.0",
     "@types/papaparse": "^5.3.5",
     "@types/prosemirror-commands": "^1.0.4",
@@ -87,6 +84,7 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "eslint-plugin-vue": "^9.4.0",
     "fast-async": "^7.0.6",
+    "monaco-editor-webpack-plugin": "^7.0.1",
     "sass": "^1.54.9",
     "sass-loader": "^13.0.2",
     "stylelint": "^14.11.0",
@@ -96,7 +94,6 @@
     "vue-debounce-decorator": "^1.0.1",
     "vue-template-babel-compiler": "^2.0.0",
     "vue-template-compiler": "^2.7.10",
-    "monaco-editor-webpack-plugin": "^7.0.1",
     "webpack-bundle-analyzer": "^4.6.1"
   }
 }

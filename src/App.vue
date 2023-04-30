@@ -77,6 +77,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace, Action } from "vuex-class";
 import { IViewExprResult } from "ozma-api";
 import moment from "moment";
+import postcss from "postcss";
 
 // TODO: import all languages from instance settings
 import "moment/locale/es";
@@ -292,6 +293,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
 
     this.loadColors();
+    this.addCustomCSS();
   }
 
   @Watch("url", { immediate: true })
@@ -457,6 +459,57 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
  *     }
  *  */
     return null;
+  }
+
+  sanitizeCSS(css: string): string {
+    const allowedProperties = [
+      "background-color",
+      "color",
+      "font-size",
+      "padding",
+      "padding-top",
+      "padding-bottom",
+      "padding-left",
+      "padding-right",
+    ];
+
+    try {
+      const result = postcss([]).process(css, { from: undefined });
+      const cssAst = result.root;
+
+      if (cssAst.type !== "root") {
+        throw new Error("Unexpected PostCSS AST type. Expected \"root\", got: " + cssAst.type);
+      }
+
+      cssAst.walkDecls(decl => {
+        if (!allowedProperties.includes(decl.prop)) {
+          decl.remove();
+          console.warn(`Disallowed CSS property in custom_css setting: ${decl.prop}`);
+        }
+      });
+
+      return cssAst.toString();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Invalid CSS:", error.message);
+      } else {
+        console.error("Unknown error:", error);
+      }
+      return "";
+    }
+  }
+
+  private addCustomCSS() {
+    const customCSStext = this.settings.getEntry("custom_css", String, "");
+    try {
+      const cssAst = this.sanitizeCSS(customCSStext);
+      const customCSSElement = document.createElement("style");
+      customCSSElement.type = "text/css";
+      customCSSElement.innerHTML = cssAst;
+      document.head.appendChild(customCSSElement);
+    } catch (error) {
+      console.error("Invalid custom_css setting:", error);
+    }
   }
 }
 </script>
