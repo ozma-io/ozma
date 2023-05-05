@@ -310,6 +310,7 @@
 import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
+import postcss from "postcss";
 
 import * as Api from "@/api";
 import { eventBus } from "@/main";
@@ -394,6 +395,7 @@ export default class TopLevelUserView extends Vue {
   private statusLine = "";
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
+  private customStyle!: HTMLStyleElement | null;
   private title: UserString | null = null;
   private description: UserString | null = null;
   private url: UserString | null = null;
@@ -453,6 +455,9 @@ export default class TopLevelUserView extends Vue {
 
   destroyed() {
     this.styleNode.remove();
+    if (this.customStyle !== null) {
+      this.customStyle.remove();
+    }
 
     /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
@@ -586,6 +591,11 @@ export default class TopLevelUserView extends Vue {
   private created() {
     this.styleNode = document.createElement("style");
     document.head.appendChild(this.styleNode);
+
+    this.customStyle = this.customCSSElement;
+    if (this.customStyle !== null) {
+      document.head.appendChild(this.customStyle);
+    }
   }
 
   private async resetChanges() {
@@ -645,6 +655,91 @@ export default class TopLevelUserView extends Vue {
     if (this.allowBusinessMode && this.userIsRoot) {
       void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
     }
+  }
+
+  sanitizeCSS(css: string): string {
+    const allowedProperties = [
+      "background-color",
+      "color",
+      "font-size",
+
+      "padding",
+      "padding-top",
+      "padding-bottom",
+      "padding-left",
+      "padding-right",
+
+      "margin",
+      "margin-top",
+      "margin-bottom",
+      "margin-left",
+      "margin-right",
+
+      "height",
+      "width",
+      "min-height",
+      "min-width",
+      "max-height",
+      "max-width",
+
+      "border",
+      "border-radius",
+      "border-top",
+      "border-bottom",
+      "border-left",
+      "border-right",
+      "border-color",
+      "border-style",
+
+      "text-align",
+      "text-decoration",
+      "text-transform",
+    ];
+
+    try {
+      const result = postcss([]).process(css, { from: undefined });
+      const cssAst = result.root;
+
+      if (cssAst.type !== "root") {
+        throw new Error("Unexpected PostCSS AST type. Expected \"root\", got: " + cssAst.type);
+      }
+
+      cssAst.walkDecls(decl => {
+        if (!allowedProperties.includes(decl.prop)) {
+          decl.remove();
+          console.warn(`Disallowed CSS property in custom_css setting: ${decl.prop}`);
+        }
+      });
+
+      return cssAst.toString();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Invalid CSS:", error.message);
+      } else {
+        console.error("Unknown error:", error);
+      }
+      return "";
+    }
+  }
+
+  private get customCss() {
+    return this.currentSettings.getEntry("custom_css", String, "");
+  }
+
+  private get customCSSElement() {
+    const customCSStext = this.customCss;
+    let customCSSElement = null;
+    // FIXME: why there is data after code change and there is no data after refresh? 
+    // alert(JSON.stringify(customCSStext));
+    try {
+      const cssAst = this.sanitizeCSS(customCSStext);
+      customCSSElement = document.createElement("style");
+      customCSSElement.type = "text/css";
+      customCSSElement.innerHTML = cssAst;
+    } catch (error) {
+      console.error("Invalid custom_css setting:", error);
+    }
+    return customCSSElement;
   }
 
   get burgerButton() {
