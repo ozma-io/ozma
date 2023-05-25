@@ -795,7 +795,6 @@ export const replaceHtmlLinksWithInfo = (text: string): { result: string; hasLin
 export const replaceHtmlLinks = (text: string): string => {
   return replaceHtmlLinksWithInfo(text).result;
 };
-// snitizeCSS
 export const sanitizeCSS = (css: string) => {
   const allowedProperties = [
     "background-color",
