@@ -320,6 +320,7 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory, QueryKey, QueryWindowKey } from "@/state/query";
+// FIXME: remove sanitizeCSS from here
 import { convertToWords, homeLink, sanitizeCSS } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
@@ -554,10 +555,6 @@ export default class TopLevelUserView extends Vue {
   @Watch("$route", { deep: true, immediate: true })
   private onRouteChanged() {
     this.resetRoute(this.$route);
-
-    if (this.styleNode) {
-      this.styleNode.innerHTML = this.getFinalStyle();
-    }
   }
 
   @Watch("errors")
@@ -590,8 +587,7 @@ export default class TopLevelUserView extends Vue {
 
   private created() {
     this.styleNode = document.createElement("style");
-    // FIXME: Why dose not work for first open?
-    this.styleNode.innerHTML = this.getFinalStyle();
+    this.styleNode.innerHTML = this.finalStyle;
     document.head.appendChild(this.styleNode);
   }
 
@@ -656,6 +652,7 @@ export default class TopLevelUserView extends Vue {
 
   private get customStyle() {
     try {
+      // FIXME: check if not empty, than import sanitizeCSS (a separate file)
       return sanitizeCSS(
         this.currentSettings.getEntry("custom_css", String, ""),
       );
@@ -665,8 +662,7 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  private getFinalStyle() {
-    // FIXME: concat customStyle and bodyStyle
+  private get finalStyle() {
     let finalStyle = "";
     if (this.customStyle) {
       finalStyle += this.customStyle;
@@ -677,10 +673,10 @@ export default class TopLevelUserView extends Vue {
     return finalStyle;
   }
 
-  @Watch("getFinalStyle", { deep: true })
-  private onGetFinalStyleChanged() {
+  @Watch("finalStyle", { deep: true, immediate: true })
+  private onFinalStyleChanged(finalStyle: string) {
     if (this.styleNode) {
-      this.styleNode.innerHTML = this.getFinalStyle();
+      this.styleNode.innerHTML = finalStyle;
     }
   }
 
