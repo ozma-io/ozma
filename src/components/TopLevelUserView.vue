@@ -320,8 +320,7 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory, QueryKey, QueryWindowKey } from "@/state/query";
-// FIXME: remove sanitizeCSS from here
-import { convertToWords, homeLink, sanitizeCSS } from "@/utils";
+import { convertToWords, homeLink } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
@@ -650,16 +649,18 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  private get customStyle() {
-    try {
-      // FIXME: check if not empty, than import sanitizeCSS (a separate file)
-      return sanitizeCSS(
-        this.currentSettings.getEntry("custom_css", String, ""),
-      );
-    } catch (error) {
-      console.error("Invalid custom_css setting:", error);
-      return "";
+  private async customStyle(): Promise<string> {
+    const customCSSSetting = this.currentSettings.getEntry("custom_css", String, "");
+    if (customCSSSetting !== "") {
+      try {
+        // import sanitizeCSS from file custom_css to avoid import for all users
+        const { sanitizeCSS } = await import("@/sanitize_css");
+        return sanitizeCSS(customCSSSetting);
+      } catch (error) {
+        console.error("Invalid custom_css setting:", error);
+      }
     }
+    return "";
   }
 
   private get finalStyle() {
