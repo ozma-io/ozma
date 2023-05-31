@@ -2,7 +2,7 @@
   <iframe
     ref="iframe"
     class="iframe"
-    sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-cookies"
+    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
     allowfullscreen
     :srcdoc="srcdoc"
     :src="src"
