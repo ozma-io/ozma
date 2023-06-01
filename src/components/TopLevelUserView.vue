@@ -171,7 +171,7 @@
           @update:buttons="buttons = $event"
           @update:status-line="statusLine = $event"
           @update:enable-filter="enableFilter = $event"
-          @update:body-style="styleNode.innerHTML = $event"
+          @update:body-style="userViewStyle = $event"
           @update:title="title = $event"
           @update:description="description = $event"
           @update:url="url = $event"
@@ -394,6 +394,8 @@ export default class TopLevelUserView extends Vue {
   private statusLine = "";
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
+  private userViewStyle: string | null = null;
+  private finalSettingsStyle: string | null = null;
   private title: UserString | null = null;
   private description: UserString | null = null;
   private url: UserString | null = null;
@@ -585,6 +587,7 @@ export default class TopLevelUserView extends Vue {
 
   private created() {
     this.styleNode = document.createElement("style");
+    this.onFinalStyleChanged();
     document.head.appendChild(this.styleNode);
   }
 
@@ -645,6 +648,35 @@ export default class TopLevelUserView extends Vue {
     if (this.allowBusinessMode && this.userIsRoot) {
       void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
     }
+  }
+
+  private get settingsStyle(): string {
+    return this.currentSettings.getEntry("custom_css", String, "");
+  }
+
+  // async to import additional sanitizeCSS module
+  @Watch("settingsStyle", { deep: true, immediate: true })
+  private async customStyle(styleString: string): Promise<void> {
+    if (styleString !== "") {
+      try {
+        // import sanitizeCSS from file custom_css to avoid import for all users
+        const { sanitizeCSS } = await import("@/sanitize_css");
+        this.finalSettingsStyle = sanitizeCSS(styleString);
+      } catch (error) {
+        console.error("Invalid custom_css setting:", error);
+      }
+    }
+  }
+
+  @Watch("finalStyle", { deep: true, immediate: true })
+  private onFinalStyleChanged() {
+    if (this.styleNode) {
+      this.styleNode.innerHTML = this.finalStyle;
+    }
+  }
+
+  private get finalStyle() {
+    return this.finalSettingsStyle ?? "" + this.userViewStyle ?? "";
   }
 
   get burgerButton() {
