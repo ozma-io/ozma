@@ -171,7 +171,7 @@
           @update:buttons="buttons = $event"
           @update:status-line="statusLine = $event"
           @update:enable-filter="enableFilter = $event"
-          @update:body-style="bodyStyle = $event"
+          @update:body-style="userViewStyle = $event"
           @update:title="title = $event"
           @update:description="description = $event"
           @update:url="url = $event"
@@ -394,7 +394,8 @@ export default class TopLevelUserView extends Vue {
   private statusLine = "";
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
-  private bodyStyle: HTMLStyleElement | null = null;
+  private userViewStyle: string | null = null;
+  private finalSettingsStyle: string | null = null;
   private title: UserString | null = null;
   private description: UserString | null = null;
   private url: UserString | null = null;
@@ -586,7 +587,7 @@ export default class TopLevelUserView extends Vue {
 
   private created() {
     this.styleNode = document.createElement("style");
-    this.styleNode.innerHTML = this.finalStyle;
+    this.onFinalStyleChanged();
     document.head.appendChild(this.styleNode);
   }
 
@@ -649,36 +650,33 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
-  private async customStyle(): Promise<string> {
-    const customCSSSetting = this.currentSettings.getEntry("custom_css", String, "");
-    if (customCSSSetting !== "") {
+  private get settingsStyle(): string {
+    return this.currentSettings.getEntry("custom_css", String, "");
+  }
+
+  // async to import additional sanitizeCSS module
+  @Watch("settingsStyle", { deep: true, immediate: true })
+  private async customStyle(styleString: string): Promise<void> {
+    if (styleString !== "") {
       try {
         // import sanitizeCSS from file custom_css to avoid import for all users
         const { sanitizeCSS } = await import("@/sanitize_css");
-        return sanitizeCSS(customCSSSetting);
+        this.finalSettingsStyle = sanitizeCSS(styleString);
       } catch (error) {
         console.error("Invalid custom_css setting:", error);
       }
     }
-    return "";
-  }
-
-  private get finalStyle() {
-    let finalStyle = "";
-    if (this.customStyle) {
-      finalStyle += this.customStyle;
-    }
-    if (this.bodyStyle) {
-      finalStyle += this.bodyStyle;
-    }
-    return finalStyle;
   }
 
   @Watch("finalStyle", { deep: true, immediate: true })
-  private onFinalStyleChanged(finalStyle: string) {
+  private onFinalStyleChanged() {
     if (this.styleNode) {
-      this.styleNode.innerHTML = finalStyle;
+      this.styleNode.innerHTML = this.finalStyle;
     }
+  }
+
+  private get finalStyle() {
+    return this.finalSettingsStyle ?? "" + this.userViewStyle ?? "";
   }
 
   get burgerButton() {
