@@ -167,6 +167,7 @@ import type { Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
 import { UserString, rawToUserString } from "@/state/translations";
+import { logError } from "@/helpers/logger";
 
 export interface IButtonAction {
   name: UserString;
@@ -710,6 +711,12 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const end = start + this.uv.extra.lazyLoad.pagination.perPage;
       return this.rowPositions.slice(start, end);
     } else if (this.uv.extra.lazyLoad.type === "infinite_scroll") {
+      const shownRowsLength = this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength;
+      if (this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength === 0) {
+        logError(new Error(`Views :: Form :: Incorrect calculation of shownRowsLength: ${shownRowsLength}`));
+        return this.rowPositions;
+      }
+
       return this.rowPositions.slice(0, this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
     } else {
       throw new Error("Wrong lazyLoad type");

@@ -129,6 +129,8 @@ import { interfaceButtonVariant } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 import { IModalTab } from "./types";
 
+import { logError } from "@/helpers/logger";
+
 const windows = namespace("windows");
 
 @Component({ components: { ModalContent, ModalTabHeader } })
@@ -163,7 +165,7 @@ export default class TabbedModal extends Vue {
     }
   }
 
-  @Watch("startingTab", { immediate: true })
+  @Watch("startingTab")
   private changeStartingTab() {
     this.selectedTab = this.startingTab;
     this.fixupTab();
@@ -187,7 +189,7 @@ export default class TabbedModal extends Vue {
     return this.modalTabs !== undefined;
   }
 
-  @Watch("selectedTab", { immediate: true })
+  @Watch("selectedTab")
   private notifyOnChange() {
     if (!this.modalTabs) {
       return;
@@ -199,7 +201,12 @@ export default class TabbedModal extends Vue {
 
     if (this.modalTabs.length > 0) {
       const tab = this.modalTabs[this.selectedTab];
-      this.activateWindow(tab.key);
+      try {
+        this.activateWindow(tab.key);
+      } catch (err: unknown) {
+        logError(err);
+        this.createWindow(tab.key);
+      }
     }
   }
 
