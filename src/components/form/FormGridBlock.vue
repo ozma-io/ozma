@@ -91,5 +91,9 @@ export default class FormGridBlock extends Vue {
 
   .row {
     margin: 0;
+
+    & div {
+      padding: 0.5rem;
+    }
   }
 </style>
