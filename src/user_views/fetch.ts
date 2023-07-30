@@ -1,15 +1,17 @@
-import { IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts, UserViewError as UVError } from "ozma-api";
+import { IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts, ClientHttpError, UserViewError as UVError } from "ozma-api";
 
 import { Store } from "vuex";
 
 import Api, { developmentMode } from "@/api";
 import { IUserViewArguments, ICombinedUserViewDataParams } from "./combined";
 
+export type ClientUserViewError = UVError | ClientHttpError;
+
 export class UserViewError extends FunDBError {
-  body: UVError;
+  body: ClientUserViewError;
   args: IUserViewArguments;
 
-  constructor(body: UVError, args: IUserViewArguments) {
+  constructor(body: ClientUserViewError, args: IUserViewArguments) {
     super(body);
     this.body = body;
     this.args = args;
