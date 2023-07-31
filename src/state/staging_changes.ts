@@ -274,7 +274,7 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
         const entityInfo = await getEntityInfo(context, entity);
         const updated =
           mapMaybe(([updatedIdStr, updatedFields]) => {
-            const fields = mapMaybe(([name, change]) => {
+            const entries = mapMaybe(([name, change]) => {
               if (change.value === undefined) {
                 if (!errorOnIncomplete) {
                   return undefined;
@@ -289,7 +289,7 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
               type: "update",
               entity,
               id: Number(updatedIdStr),
-              fields: Object.fromEntries(fields),
+              entries: Object.fromEntries(entries),
               entityInfo,
             } as InternalTransactionOp;
           }, Object.entries(entityChanges.updated));
@@ -307,12 +307,12 @@ const entityChangesToOperations = async (context: ActionContext<IStagingState, {
                 }
               }
             }
-            const fields = Object.entries(addedFields.values).map(([name, value]) => [name, value.value]);
+            const entries = Object.entries(addedFields.values).map(([name, value]) => [name, value.value]);
             return {
               type: "insert",
               entity,
               internalId: Number(addedIdStr),
-              fields: Object.fromEntries(fields),
+              entries: Object.fromEntries(entries),
               entityInfo,
             } as InternalTransactionOp;
           }, Object.entries(entityChanges.added));
@@ -340,9 +340,9 @@ const serializeValues = (entityInfo: IEntity, entries: Record<FieldName, unknown
 
 const internalOpToTransactionOp = (op: InternalTransactionOp): TransactionOp => {
   if (op.type === "insert") {
-    return { type: "insert", entity: op.entity, fields: serializeValues(op.entityInfo, op.fields) };
+    return { type: "insert", entity: op.entity, entries: serializeValues(op.entityInfo, op.entries) };
   } else if (op.type === "update") {
-    return { type: "update", entity: op.entity, id: op.id, fields: serializeValues(op.entityInfo, op.fields) };
+    return { type: "update", entity: op.entity, id: op.id, entries: serializeValues(op.entityInfo, op.entries) };
   } else {
     return op;
   }
@@ -740,7 +740,7 @@ const stagingModule: Module<IStagingState, {}> = {
             Object.values(state.handlers).forEach(handler => handler.commitAddedEntry(op.entity, op.internalId, op.id!));
             const addedValues = entityChanges.added[op.internalId];
             await Promise.all(Object.entries(addedValues.values).map(async ([fieldName, newValue]) => {
-              const maybeOldValue = op.fields[fieldName];
+              const maybeOldValue = op.entries[fieldName];
               const valueType = op.entityInfo.columnFields[fieldName].valueType;
               if (!valueEquals(valueType, maybeOldValue, newValue.value)) {
                 await dispatch("updateField", { entityRef: op.entity, id: op.id, value: newValue.rawValue });
@@ -755,7 +755,7 @@ const stagingModule: Module<IStagingState, {}> = {
         } else if (op.type === "update") {
           const updatedValues = entityChanges.updated[op.id];
           await Promise.all(Object.entries(updatedValues).map(async ([fieldName, newValue]) => {
-            const maybeOldValue = op.fields[fieldName];
+            const maybeOldValue = op.entries[fieldName];
             const valueType = op.entityInfo.columnFields[fieldName].valueType;
             if (valueEquals(valueType, maybeOldValue, newValue.value)) {
               await dispatch("resetUpdatedField", { fieldRef: { entity: op.entity, name: fieldName }, id: op.id, dontNotify: true });

@@ -173,14 +173,14 @@ const settingsModule: Module<ISettingsState, {}> = {
           type: "update",
           entity,
           id,
-          fields: { "user_id": state.userId, name, value },
+          entries: { "user_id": state.userId, name, value },
         }],
       };
       const insertTransaction: ITransaction = {
         operations: [{
           type: "insert",
           entity,
-          fields: { "user_id": state.userId, name, value },
+          entries: { "user_id": state.userId, name, value },
         }],
       };
 
