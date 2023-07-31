@@ -428,7 +428,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           operations.push({
             type: "insert",
             entity: entityRef,
-            entries: row,
+            fields: row,
           });
         } catch (e) {
           this.setError({ key: "import_csv", error: String(e) });
