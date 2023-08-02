@@ -68,7 +68,7 @@
           :is-active="index === selectedTab"
           :window-key="tab.key"
           :title="tab.title"
-          :only-tab="modalTabs.length === 1"
+          :only-tab="modalTabs && modalTabs.length === 1"
           @tab-click="switchTab(index)"
           @tab-close="$emit('tab-close', index)"
         >
@@ -146,7 +146,7 @@ export default class TabbedModal extends Vue {
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
 
-  private selectedTab = 0;
+  public selectedTab = 0;
 
   private mounted() {
     if (this.show) {
@@ -165,7 +165,7 @@ export default class TabbedModal extends Vue {
     }
   }
 
-  @Watch("startingTab")
+  @Watch("startingTab", { immediate: true })
   private changeStartingTab() {
     this.selectedTab = this.startingTab;
     this.fixupTab();
@@ -189,7 +189,7 @@ export default class TabbedModal extends Vue {
     return this.modalTabs !== undefined;
   }
 
-  @Watch("selectedTab")
+  @Watch("selectedTab", { immediate: true })
   private notifyOnChange() {
     if (!this.modalTabs) {
       return;
@@ -205,12 +205,11 @@ export default class TabbedModal extends Vue {
         this.activateWindow(tab.key);
       } catch (err: unknown) {
         logError(err);
-        this.createWindow(tab.key);
       }
     }
   }
 
-  private get mainButtons(): Button[] {
+  public get mainButtons(): Button[] {
     return [
       {
         type: "callback",
@@ -222,18 +221,18 @@ export default class TabbedModal extends Vue {
   }
 
   // Event is not typed for vue-js-modal
-  private beforeClose(ev: any) {
+  public beforeClose(ev: any) {
     if (this.show) {
       ev.cancel();
       this.$emit("close");
     }
   }
 
-  private switchTab(index: number) {
+  public switchTab(index: number) {
     this.selectedTab = index;
   }
 
-  private get modalWidth(): string {
+  public get modalWidth(): string {
     return this.$isMobile && this.fullscreen
       ? window.innerWidth > 512 ? `512px` : "100%"
       : this.$isMobile
@@ -241,19 +240,19 @@ export default class TabbedModal extends Vue {
         : this.fullscreen ? "100%" : this.width;
   }
 
-  private get modalHeight(): string {
+  public get modalHeight(): string {
     return (this.fullscreen || this.$isMobile)
       ? "100%"
       : this.height;
   }
 
-  private onOpened() {
+  public onOpened() {
     if (!this.modalTabs) {
       this.createWindow(this.uid);
     }
   }
 
-  private onClosed() {
+  public onClosed() {
     if (!this.modalTabs) {
       this.destroyWindow(this.uid);
     }

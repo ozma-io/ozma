@@ -37,7 +37,7 @@ export default class ModalTabHeader extends Vue {
   @Prop({ type: Boolean, default: false }) onlyTab!: boolean;
   @Prop({ type: String, required: true }) windowKey!: string;
 
-  @Watch("windowKey")
+  @Watch("windowKey", { immediate: true })
   private createWindowByKey(windowKey: string, oldWindowKey: string | undefined) {
     if (windowKey === oldWindowKey) return;
 
@@ -48,7 +48,7 @@ export default class ModalTabHeader extends Vue {
   }
 
   mounted() {
-    if (!this.isActive) {
+    if (this.isActive) {
       this.activateWindow(this.windowKey);
     }
   }
@@ -64,7 +64,7 @@ export default class ModalTabHeader extends Vue {
     }
   }
 
-  private get closeButton(): Button {
+  public get closeButton(): Button {
     return {
       type: "callback",
       icon: "close",
