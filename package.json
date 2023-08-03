@@ -25,7 +25,6 @@
     "monaco-editor": "0.31.0",
     "vue-barcode-reader": "0.0.3",
 
-    "@liqueflies/vue-flex-grid": "^0.0.1",
     "bootstrap-vue": "^2.22.0",
     "color2k": "^2.0.0",
     "core-js": "^3.25.1",

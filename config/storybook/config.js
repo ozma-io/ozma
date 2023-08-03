@@ -4,7 +4,6 @@ import Vue from 'vue';
 import vClickOutside from 'v-click-outside';
 import UniqueId from "vue-unique-id";
 import VueI18n from "vue-i18n";
-import VueGrid from "@liqueflies/vue-flex-grid";
 import BootstrapVue from "bootstrap-vue";
 import VueDragable from "vuedraggable";
 
@@ -13,7 +12,6 @@ import 'bootstrap-vue/dist/bootstrap-vue.css';
 
 Vue.use(vClickOutside);
 Vue.use(VueI18n);
-Vue.use(VueGrid);
 Vue.use(UniqueId);
 Vue.use(BootstrapVue);
 Vue.use(VueDragable);

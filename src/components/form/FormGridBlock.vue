@@ -49,7 +49,9 @@ export default class FormGridBlock extends Vue {
 
 <style lang="scss" scoped>
   .form_grid_block__column {
-    padding: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
 
     &:not(:last-child) {
       margin-bottom: 0.5rem;
@@ -91,9 +93,5 @@ export default class FormGridBlock extends Vue {
 
   .row {
     margin: 0;
-
-    & div {
-      padding: 0.5rem;
-    }
   }
 </style>

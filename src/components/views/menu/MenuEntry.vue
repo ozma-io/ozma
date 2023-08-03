@@ -1,6 +1,7 @@
 <template>
   <b-col
     :md="entry.size || 12"
+    :class="['menu-item-column']"
   >
     <template v-if="entry.content">
       <div
@@ -142,18 +143,29 @@ export default class MenuEntry extends Vue {
   @include variant-to-local("menuEntry");
   @include variant-to-local("badge");
 
+  .menu-item-column {
+    display: flex;
+    flex-direction: column;
+  }
+
   .menu_category_block {
+    height: 100%;
+
     margin-top: 1rem;
 
     &.is-mobile {
       margin: 0;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     @media (max-width: 575.98px) {
       margin: 0;
       margin-top: 1rem;
       margin-bottom: 1rem;
+    }
+
+    h2 {
+      padding: 0.5rem 0;
     }
   }
 
@@ -170,11 +182,6 @@ export default class MenuEntry extends Vue {
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .menu_list {
-    list-style: none;
-    padding-left: 0;
   }
 
   .menu-entry {

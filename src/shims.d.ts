@@ -21,11 +21,6 @@ declare module "*.vue" {
   export default Vue;
 }
 
-declare module "@liqueflies/vue-flex-grid" {
-  const VueGrid: any;
-  export default VueGrid;
-}
-
 declare module "vue-fragment" {
   export const Plugin: any;
 }

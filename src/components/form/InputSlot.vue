@@ -20,6 +20,7 @@
 <template>
   <b-row
     :class="[
+      'row-override',
       variantClassName,
       'cell-local-variant',
       {
@@ -225,6 +226,10 @@ export default class InputSlot extends Vue {
 
 <style lang="scss" scoped>
   @include variant-to-local("cell");
+
+  .row-override {
+    margin: 0px!important;
+  }
 
   .modal-content {
     height: 100%;

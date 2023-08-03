@@ -5,7 +5,6 @@ import Vuex from "vuex";
 import BootstrapVue from "bootstrap-vue";
 import UniqueId from "vue-unique-id";
 import vClickOutside from "v-click-outside";
-import VueGrid from "@liqueflies/vue-flex-grid";
 import { RawLocation, Dictionary } from "vue-router/types/router";
 import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
@@ -26,8 +25,6 @@ Vue.use(BootstrapVue);
 Vue.use(UniqueId);
 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 Vue.use(vClickOutside);
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-Vue.use(VueGrid);
 Vue.use(PortalVue);
 Vue.component("Fragment", Fragment as any);
 Vue.use(VueJSModal, { componentName: "VueModal" });

@@ -253,8 +253,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     display: flex;
     -ms-flex-wrap: wrap;
     flex-wrap: wrap;
-    margin-right: -15px;
-    margin-left: -15px;
   }
 
   @media screen and (orientation: portrait) {
