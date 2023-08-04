@@ -13,6 +13,7 @@
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "creation_not_available": "FOR INSERT INTO clause is required for new entry mode.",
             "no_instance": "Instance not found.",
+            "not_found": "User view not found.",
             "bad_request": "User view request error: {msg}",
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
@@ -42,6 +43,7 @@
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "creation_not_available": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
             "no_instance": "База не найдена.",
+            "not_found": "Представление не найдено.",
             "bad_request": "Неверный запрос для этого представления: {msg}",
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
@@ -1081,7 +1083,9 @@ export default class UserView extends Vue {
       return this.$t("forbidden").toString();
     } else if (uv.body.error === "noInstance") {
       return this.$t("no_instance").toString();
-    } else if (uv.body.error === "request") {
+    } else if (uv.body.error === "notFound") {
+      return this.$t("not_found").toString();
+    } else if (uv.body.error === "arguments" || uv.body.error === "request") {
       return this.$t("bad_request", { msg: uv.message }).toString();
     } else {
       return this.$t("unknown_error", { msg: uv.message }).toString();
