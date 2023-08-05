@@ -18,6 +18,7 @@
         :type="type"
         :value="value"
         :readonly="disabled"
+        :state="validInput"
         @keydown.enter.prevent
         @input="updateInput"
         @focus="onFocus"
@@ -85,8 +86,10 @@ export default class Input extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
   @Prop({ type: String, default: "left" }) textAlign!: string;
+  @Prop({ type: Boolean, default: false }) required!: boolean;
 
   private textLink: TextLink | null = null;
+  public validInput: boolean | null = null;
 
   private get qrCodeButton(): Button {
     return {
@@ -193,6 +196,12 @@ export default class Input extends Vue {
   private updateInput(value: string) {
     if (this.value !== value) {
       this.$emit("input", value);
+    }
+
+    if (value === "" && this.required) {
+      this.validInput = false;
+    } else {
+      this.validInput = true;
     }
   }
 }
