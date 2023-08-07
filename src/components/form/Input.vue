@@ -204,7 +204,7 @@ export default class Input extends Vue {
       this.validInput = true;
     }
 
-    this.$emit("validate-input", this.validInput);
+    this.$root.$emit("validate", this.validInput);
   }
 }
 </script>

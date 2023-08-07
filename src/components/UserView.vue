@@ -205,7 +205,6 @@
           :attribute-mappings="state.uv.argumentAttributeMappings"
           @clear="clearUpdatedArguments"
           @update="updateArgument"
-          @validate-argument-editor="validateValue"
           @apply="applyUpdatedArguments"
         />
       </div>
@@ -1197,10 +1196,6 @@ export default class UserView extends Vue {
         await this.reloadIfRoot(ret.autoSave);
       }
     })();
-  }
-
-  public validateValue(name: ArgumentName, value: unknown) {
-    this.$emit("validate-user-view", name, value);
   }
 }
 </script>
