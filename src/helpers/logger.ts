@@ -1,8 +1,6 @@
-import { parse } from "psl";
-
 type Operand = keyof Pick<Console, "info" | "warn" | "error" | "debug">;
 
-const { NODE_ENV, LOG_ENABLED_DOMAINS } = process.env;
+const { NODE_ENV } = process.env;
 
 /**
  * @function Common function, which makes all the logging job. With Console as the inheritance type, it"s meant to work
@@ -14,23 +12,12 @@ const { NODE_ENV, LOG_ENABLED_DOMAINS } = process.env;
 const log = (operand: Operand, content: unknown): void | null => {
   const {
     // @ts-expect-error hidden inside features object, which is not usual Window object
-    features: {
-      logLevels = [],
-    } = {},
-    location: {
-      hostname,
-    },
+    logLevels = [],
   } = window;
-  const parsedHostname = parse(hostname);
-  const allowedLogDomains = LOG_ENABLED_DOMAINS?.split(",") || [];
-
-  const isLogEnabledByDomain = !parsedHostname.error
-    && parsedHostname.domain !== null
-    && allowedLogDomains.includes(parsedHostname.domain);
   const isLogEnabledByFeature = logLevels.includes(operand);
   const isLogEnabledByEnv = NODE_ENV === "development" || NODE_ENV === "test";
 
-  if (isLogEnabledByDomain || isLogEnabledByEnv || isLogEnabledByFeature) {
+  if (isLogEnabledByEnv || isLogEnabledByFeature) {
     // eslint-disable-next-line no-console
     return console[operand](content);
   }
