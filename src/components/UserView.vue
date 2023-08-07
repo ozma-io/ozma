@@ -205,6 +205,7 @@
           :attribute-mappings="state.uv.argumentAttributeMappings"
           @clear="clearUpdatedArguments"
           @update="updateArgument"
+          @invalidate="clearUpdatedArguments"
           @apply="applyUpdatedArguments"
         />
       </div>
@@ -741,7 +742,7 @@ export default class UserView extends Vue {
     }
   }
 
-  private clearUpdatedArguments() {
+  public clearUpdatedArguments() {
     this.updatedArguments = {};
   }
 

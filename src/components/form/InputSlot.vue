@@ -68,8 +68,8 @@
       <b-col
         v-if="label"
         :class="{
-          'longer-input-label': !(required || disabled) && inline,
-          'input-label-with-indicator': (required || disabled) && inline,
+          'longer-input-label': !disabled && inline,
+          'input-label-with-indicator': disabled && inline,
         }"
         :cols="inline ? 4 : 12"
       >
@@ -77,6 +77,10 @@
           <label
             v-if="label"
             class="input_label"
+            :class="[
+              'input_lable',
+              { 'required': required }
+            ]"
             :for="inputName"
             :title="label"
           >{{ $ustOrEmpty(label) }}</label>
@@ -98,7 +102,6 @@
             variantClassName,
             'cell-local-variant',
             {
-              'required': required,
               'empty': empty,
               'inline': !label || inline,
             },
@@ -116,22 +119,11 @@
               'indicator-container',
               {
                 'cell-edit': isCellEdit,
-                'required': required,
                 'inline': !label || inline,
               },
             ]"
             :title="$t(required ? 'required_field' : 'readonly_field')"
           >
-            <div
-              v-if="required && !disabled"
-              :class="[
-                'required-indicator',
-                {
-                  'empty': empty,
-                },
-              ]"
-            />
-
             <div
               v-if="disabled"
               class="disabled-indicator"
@@ -179,7 +171,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, required: true }) empty!: boolean;
   @Prop({ type: Boolean, required: false }) hideRequiredAndDisabledIcons!: boolean;
 
-  private isModalOpen = false;
+  public isModalOpen = false;
 
   private created() {
     if (this.modalOnly && this.modal) {
@@ -187,11 +179,11 @@ export default class InputSlot extends Vue {
     }
   }
 
-  private get variantClassName(): string | null {
+  public get variantClassName(): string | null {
     return getColorVariantAttributeClassName(this.colorVariantAttribute);
   }
 
-  private get variantVariables(): Record<string, string> | null {
+  public get variantVariables(): Record<string, string> | null {
     return getColorVariantAttributeVariables(this.colorVariantAttribute);
   }
 
@@ -199,26 +191,26 @@ export default class InputSlot extends Vue {
     return `${this.uid}-input`;
   }
 
-  private onModalOpen() {
+  public onModalOpen() {
   }
 
-  private onModalClose() {
+  public onModalClose() {
     this.isModalOpen = false;
     this.$emit("close-modal-input");
   }
 
-  private onModalFocus() {
+  public onModalFocus() {
     this.$emit("focus");
   }
 
-  private onNonmodalFocus() {
+  public onNonmodalFocus() {
     if (this.modal) {
       this.isModalOpen = true;
     }
     this.$emit("focus");
   }
 
-  private closeModal() {
+  public closeModal() {
     this.isModalOpen = false;
   }
 }
@@ -226,7 +218,14 @@ export default class InputSlot extends Vue {
 
 <style lang="scss" scoped>
   @include variant-to-local("cell");
-
+  .required {
+    font-weight: bold;
+  }
+  .required:after {
+    color: rgba(255, 120, 100, 0.9);
+    content: ' *';
+    display:inline;
+  }
   .row-override {
     margin: 0px!important;
   }
