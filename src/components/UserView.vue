@@ -205,7 +205,6 @@
           :attribute-mappings="state.uv.argumentAttributeMappings"
           @clear="clearUpdatedArguments"
           @update="updateArgument"
-          @invalidate="clearUpdatedArguments"
           @apply="applyUpdatedArguments"
         />
       </div>
