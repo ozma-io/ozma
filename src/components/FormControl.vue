@@ -66,7 +66,7 @@
           :text-align="textAlign"
           :background-color="cellColor"
           @input="updateValue"
-          @invalidate="invalidateValue"
+          @validate-input="validateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
@@ -95,7 +95,7 @@
           :autofocus="autofocus || iSlot.autofocus"
           :background-color="cellColor"
           @input="updateValue"
-          @invalidate="invalidateValue"
+          @validate-input="validateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
@@ -306,6 +306,7 @@
           @update:enable-filter="enableFilter = $event"
           @update:is-loading="isUserViewLoading = $event"
           @update:title="title = $event"
+          @validate-nested-user-view="validateValue"
           @goto="$emit('goto', $event)"
         />
       </div>
@@ -983,8 +984,8 @@ export default class FormControl extends Vue {
     }
   }
 
-  public invalidateValue(current: unknown) {
-    this.$emit("invalidate", current);
+  public validateValue(current: unknown) {
+    this.$emit("validate-form-control", current);
   }
 
   private removeAutoSaveLockFormControl() {

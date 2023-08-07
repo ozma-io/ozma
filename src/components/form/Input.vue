@@ -199,11 +199,12 @@ export default class Input extends Vue {
     }
 
     if (value === "" && this.required) {
-      this.$emit("invalidate", value);
       this.validInput = false;
     } else {
       this.validInput = true;
     }
+
+    this.$emit("validate-input", this.validInput);
   }
 }
 </script>

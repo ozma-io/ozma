@@ -98,7 +98,8 @@ export class CurrentChanges {
   deletedCount = 0;
 
   get isEmpty() {
-    return Object.entries(this.changes).length === 0;
+    const empty = Object.entries(this.changes).length === 0;
+    return empty;
   }
 
   get addedCount() {

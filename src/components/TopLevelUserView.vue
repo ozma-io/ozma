@@ -135,6 +135,7 @@
         @goto-previous="goBack(window.key)"
         @go-back="$router.back()"
         @goto="push({ ...$event, key: window.key })"
+        @validate-modal-user-view="isValidValue = $event"
       />
     </template>
 
@@ -176,6 +177,7 @@
           @update:description="description = $event"
           @update:url="url = $event"
           @update:current-page="replacePage({ key: null, page: $event })"
+          @validate-user-view="isValidValue = $event"
         />
       </div>
     </div>
@@ -238,7 +240,7 @@
           class="saving-spinner spinner-border"
         />
         <div
-          v-else-if="!changes.isEmpty"
+          v-else-if="!changes.isEmpty && isValidValue"
         >
           <div
             v-if="Object.keys(autoSaveLocks).length > 0"
@@ -399,6 +401,8 @@ export default class TopLevelUserView extends Vue {
   private title: UserString | null = null;
   private description: UserString | null = null;
   private url: UserString | null = null;
+
+  public isValidValue = true;
 
   private buttons: Button[] = [];
 

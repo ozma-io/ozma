@@ -11,6 +11,7 @@
     @update:enable-filter="$emit('update:enable-filter', $event)"
     @update:title="$emit('update:title', $event)"
     @update:is-loading="$emit('update:is-loading', $event)"
+    @validate-user-view="validateValue"
   />
 </template>
 
@@ -35,6 +36,10 @@ export default class NestedUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
+  }
+
+  public validateValue(value: unknown) {
+    this.$emit("validate-nested-user-view", value);
   }
 }
 

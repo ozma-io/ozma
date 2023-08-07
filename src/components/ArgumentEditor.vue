@@ -49,7 +49,7 @@
               :home-schema="homeSchema"
               :level="0"
               @update="updateArgument(argument, $event)"
-              @invalidate="resetChanges(argument, $event)"
+              @validate-form-control="validateValue"
             />
           </b-col>
         </b-row>
@@ -111,8 +111,8 @@ export default class ArgumentEditor extends Vue {
     this.$emit("update", argument.name, rawValue);
   }
 
-  public resetChanges(argument: IArgumentInfo, rawValue: unknown) {
-    this.$emit("invalidate", argument.name, rawValue);
+  public validateValue(argument: unknown, rawValue: unknown) {
+    this.$emit("validate-argument-editor", rawValue);
   }
 }
 </script>

@@ -72,6 +72,7 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
+          @validate-user-view="validateValue"
         />
       </div>
     </section>
@@ -164,6 +165,10 @@ export default class ModalUserView extends Vue {
 
   private destroyed() {
     void this.clearAdded({ scope: this.uid });
+  }
+
+  public validateValue(params: unknown) {
+    this.$emit("validate-modal-user-view", params);
   }
 }
 </script>
