@@ -32,19 +32,10 @@ const windowsModule: Module<IWindowsState, {}> = {
       state.stack.push(key);
     },
     destroyWindow: (state, key) => {
-      const windowPos = state.stack.findIndex(w => w === key);
-      if (windowPos === -1) {
-        return;
-      }
-      state.stack.splice(windowPos, 1);
+      state.stack = state.stack.filter(w => w === key);
     },
     activateWindow: (state, key) => {
-      const windowPos = state.stack.findIndex(w => w === key);
-      if (windowPos === -1) {
-        throw new Error("Window not found");
-      }
-      state.stack.splice(windowPos, 1);
-      state.stack.push(key);
+      state.stack = [...state.stack.filter(w => w !== key), key];
     },
   },
   getters: {

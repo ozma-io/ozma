@@ -64,7 +64,7 @@ export default class ModalTabHeader extends Vue {
     }
   }
 
-  private get closeButton(): Button {
+  public get closeButton(): Button {
     return {
       type: "callback",
       icon: "close",
