@@ -741,7 +741,7 @@ export default class UserView extends Vue {
     }
   }
 
-  private clearUpdatedArguments() {
+  public clearUpdatedArguments() {
     this.updatedArguments = {};
   }
 
