@@ -66,7 +66,6 @@
           :text-align="textAlign"
           :background-color="cellColor"
           @input="updateValue"
-          @invalidate="invalidateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
@@ -95,7 +94,6 @@
           :autofocus="autofocus || iSlot.autofocus"
           :background-color="cellColor"
           @input="updateValue"
-          @invalidate="invalidateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
@@ -973,7 +971,7 @@ export default class FormControl extends Vue {
     }
   }
 
-  public updateValue(newValue: unknown) {
+  private updateValue(newValue: unknown) {
     if (this.value !== newValue) {
       this.$emit("update", newValue);
     }
@@ -981,10 +979,6 @@ export default class FormControl extends Vue {
     if (closeAfterUpdateTypes.has(this.inputType.name)) {
       this.$emit("close-modal-input");
     }
-  }
-
-  public invalidateValue(current: unknown) {
-    this.$emit("invalidate", current);
   }
 
   private removeAutoSaveLockFormControl() {
