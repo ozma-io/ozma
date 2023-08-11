@@ -198,10 +198,8 @@ export default class Input extends Vue {
       this.$emit("input", value);
     }
 
-    if (value === "" && this.required) {
-      this.validInput = false;
-    } else {
-      this.validInput = true;
+    if (this.required) {
+      this.validInput = Boolean(value !== "");
     }
 
     this.$root.$emit("validate", this.validInput, this.uid);
