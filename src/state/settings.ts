@@ -1,8 +1,8 @@
 import { Module } from "vuex";
-import { FunDBError, IEntityRef, IPermissionsInfo, ITransaction, IUserViewRef, IViewExprResult, RowKey, goodName } from "ozma-api";
+import FunDBAPI, { FunDBError, IEntityRef, IPermissionsInfo, ITransaction, IUserViewRef, IViewExprResult, RowKey, goodName } from "ozma-api";
 
 import { IRef, convertString, waitTimeout } from "@/utils";
-import { funappSchema, default as Api } from "@/api";
+import { funappSchema } from "@/api";
 import { CancelledError } from "@/modules";
 import { ThemesMap, loadThemes, getPreferredTheme, IThemeRef } from "@/utils_colors";
 
@@ -185,16 +185,14 @@ const settingsModule: Module<ISettingsState, {}> = {
       };
 
       try {
-        await dispatch("callProtectedApi", {
-          func: Api.runTransaction,
-          args: [updateTransaction],
+        await dispatch("callApi", {
+          func: (api: FunDBAPI) => api.runTransaction(updateTransaction),
         }, { root: true });
       } catch (e) { // If we can't update entry because it doesn't exist, we insert it.
         if (!(e instanceof FunDBError) || e.body.error !== "transaction" || (e.body as any)?.details.error !== "notFound") throw e;
 
-        await dispatch("callProtectedApi", {
-          func: Api.runTransaction,
-          args: [insertTransaction],
+        await dispatch("callApi", {
+          func: (api: FunDBAPI) => api.runTransaction(insertTransaction),
         }, { root: true });
       }
     },
@@ -209,9 +207,8 @@ const settingsModule: Module<ISettingsState, {}> = {
           const promises =
             ["settings", "my_user_id"]
               .map(name =>
-                dispatch("callProtectedApi", {
-                  func: Api.getNamedUserView,
-                  args: [{ schema: funappSchema, name }, {}],
+                dispatch("callApi", {
+                  func: (api: FunDBAPI) => api.getNamedUserView({ schema: funappSchema, name }),
                 }, { root: true }));
           const [settingsRes, userIdRes] = await Promise.all(promises) as [IViewExprResult, IViewExprResult];
 
@@ -235,8 +232,8 @@ const settingsModule: Module<ISettingsState, {}> = {
           commit("setSettings", settings);
 
           if (settings.getEntry("allow_business_mode", Boolean, false)) {
-            const userPermissions: IPermissionsInfo = await dispatch("callProtectedApi", {
-              func: Api.getPermissions,
+            const userPermissions: IPermissionsInfo = await dispatch("callApi", {
+              func: (api: FunDBAPI) => api.getPermissions(),
             }, { root: true });
             const savedDisplayMode = localStorage.getItem("display-mode");
 

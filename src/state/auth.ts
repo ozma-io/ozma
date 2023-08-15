@@ -2,10 +2,10 @@ import { Module, ActionContext } from "vuex";
 import { v4 as uuidv4 } from "uuid";
 import jwtDecode from "jwt-decode";
 import { z } from "zod";
-import { FunDBError } from "ozma-api";
+import FunDBAPI, { FunDBError } from "ozma-api";
 
 import { IRef } from "@/utils";
-import { disableAuth, authClientId, authUrl, developmentMode } from "@/api";
+import { disableAuth, authClientId, authUrl, developmentMode, apiUrl } from "@/api";
 import * as Utils from "@/utils";
 import { router, getQueryValue, CancelledError } from "@/modules";
 
@@ -61,6 +61,7 @@ export interface IAuthState {
   renewalTimeoutId: NodeJS.Timeout | null;
   pending: Promise<void> | null;
   protectedCalls: number; // Used for tracking fetch requests and displaying a progress bar.
+  api: FunDBAPI;
 }
 
 export interface INoAuth {
@@ -317,16 +318,15 @@ const requestLogin = (context: ActionContext<IAuthState, {}>, opts: { tryExistin
   return goAway(context, `${authUrl}/auth?${paramsString}`);
 };
 
-const runProtectedCall = async <Args extends unknown[], Ret>(context: ActionContext<IAuthState, {}>, func: (token: string | null, ...args: Args) => Promise<Ret>, ...args: Args) => {
+const runApiCall = async <Ret>(context: ActionContext<IAuthState, {}>, func: (api: FunDBAPI) => Promise<Ret>) => {
   const { state, commit, dispatch } = context;
   commit("increaseProtectedCalls");
 
   try {
     while (true) {
       try {
-        const token = state.current?.refreshToken ? state.current.token : null;
         // eslint-disable-next-line no-await-in-loop
-        return await func(token, ...args);
+        return await func(context.state.api);
       } catch (e) {
         if (e instanceof FunDBError) {
           if (e.body.error === "unauthorized") {
@@ -369,6 +369,10 @@ export const getAuthedLink = (auth: CurrentAuth): string => {
 
 const errorKey = "auth";
 
+export interface ICallApi {
+  <Ret>({ func }: { func: (api: FunDBAPI) => Promise<Ret> }): Promise<Ret>;
+}
+
 export const authModule: Module<IAuthState, {}> = {
   namespaced: true,
   state: {
@@ -376,10 +380,12 @@ export const authModule: Module<IAuthState, {}> = {
     pending: null,
     renewalTimeoutId: null,
     protectedCalls: 0,
+    api: new FunDBAPI({ apiUrl }),
   },
   mutations: {
     setAuth: (state, auth: CurrentAuth | INoAuth) => {
       state.current = auth;
+      state.api.token = auth.refreshToken ? auth.token : null;
     },
     setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
       state.renewalTimeoutId = renewalTimeoutId;
@@ -387,6 +393,7 @@ export const authModule: Module<IAuthState, {}> = {
     resetToken: state => {
       if (state.current?.refreshToken) {
         state.current.resetToken();
+        state.api.token = null;
       }
     },
     setPending: (state, pending: Promise<void> | null) => {
@@ -531,9 +538,9 @@ export const authModule: Module<IAuthState, {}> = {
       commit("setPending", pending.ref);
       return pending.ref;
     },
-    callProtectedApi: {
+    callApi: {
       root: true,
-      handler: async (context, { func, args }: { func: (token: string | null, ...funcArgs: unknown[]) => Promise<any>; args?: unknown[] }): Promise<any> => {
+      handler: async <Ret>(context: ActionContext<IAuthState, {}>, { func }: { func: (api: FunDBAPI) => Promise<Ret> }): Promise<Ret> => {
         const { state, commit } = context;
         while (state.pending !== null) {
           try {
@@ -547,13 +554,13 @@ export const authModule: Module<IAuthState, {}> = {
         }
 
         if (state.current !== null) {
-          return runProtectedCall(context, func, ...(args ?? []));
+          return runApiCall(context, func);
         } else {
           // Try to perform operation anyway, see if it fails and set the token to empty if not.
           const pending: IRef<Promise<any>> = {};
           pending.ref = (async () => {
             await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
-            const ret = await runProtectedCall(context, func, ...(args ?? []));
+            const ret = await runApiCall(context, func);
             // Apparently we can proceed with no auth at all!
             if (state.pending === pending.ref) {
               updateAuth(context, { refreshToken: null });

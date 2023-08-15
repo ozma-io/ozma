@@ -1,9 +1,9 @@
-import FunDBAPI, { FunDBError, IEntityRef, ClientApiError } from "ozma-api";
+import { FunDBError, IEntityRef, ClientApiError } from "ozma-api";
 
 const hostnameParts = location.hostname.split(".");
 export const instanceName = (typeof __INSTANCE_NAME__ === "string") ? String(__INSTANCE_NAME__) : hostnameParts[0];
 export const instancesHost = hostnameParts.length >= 2 ? hostnameParts[hostnameParts.length - 2] + "." + hostnameParts[hostnameParts.length - 1] : null;
-const apiUrl = String(__API_URL__);
+export const apiUrl = String(__API_URL__);
 export const documentGeneratorUrl = String(__DOCUMENT_GENERATOR_URL__);
 export const invitesServiceUrl = typeof __INVITES_SERVICE_URL__ === "string" ? __INVITES_SERVICE_URL__ : undefined;
 export const developmentMode = Boolean(__DEVELOPMENT_MODE__);
@@ -40,9 +40,6 @@ export const findErrorUserData = (e: Error): unknown => {
     return undefined;
   }
 };
-
-const api = new FunDBAPI({ apiUrl });
-export default api;
 
 export type IDocumentRef = IEntityRef;
 export type IEmbeddedPageRef = IEntityRef;

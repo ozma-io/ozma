@@ -82,6 +82,7 @@ import moment from "moment";
 import "moment/locale/es";
 import "moment/locale/ru";
 
+import type { ICallApi } from "@/state/auth";
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { CurrentSettings } from "@/state/settings";
 import type { WindowKey } from "@/state/windows";
@@ -89,7 +90,7 @@ import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
 import { ErrorKey } from "@/state/errors";
 import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
 import { eventBus, IShowHelpModalArgs } from "@/main";
-import Api, { IEmbeddedPageRef } from "@/api";
+import { IEmbeddedPageRef } from "@/api";
 import InviteUserModal from "./components/InviteUserModal.vue";
 import { EntityRef } from "./links";
 import { safeJsonParse } from "./utils";
@@ -117,7 +118,7 @@ import { setHeadMeta, setHeadLink } from "@/elements";
   },
 })
 export default class App extends Vue {
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("callApi") callApi!: ICallApi;
   @settings.State("current") settings!: CurrentSettings;
   @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
   @settings.Getter("language") language!: string;
@@ -131,7 +132,7 @@ export default class App extends Vue {
   @query.Action("push") push!: (_: { key: QueryKey; query: IQuery }) => Promise<void>;
   @translations.Action("getTranslations") getTranslations!: (_: Language) => Promise<void>;
 
-  private helpPageInfo: {
+  helpPageInfo: {
     key: string | null;
     ref: IEmbeddedPageRef;
     markup: string;
@@ -181,11 +182,11 @@ export default class App extends Vue {
     this.$root.$emit("paste", event);
   }
 
-  private get isReadonlyDemoInstance() {
+  get isReadonlyDemoInstance() {
     return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.hasAuth;
   }
 
-  private get hasAuth() {
+  get hasAuth() {
     return Boolean(this.currentAuth?.refreshToken);
   }
 
@@ -221,9 +222,8 @@ export default class App extends Vue {
       }
 
       const uvRef = { schema: "funapp", name: "embedded_page_by_name" };
-      const res: IViewExprResult = await this.callProtectedApi({
-        func: Api.getNamedUserView.bind(Api),
-        args: [uvRef, args.ref],
+      const res: IViewExprResult = await this.callApi({
+        func: api => api.getNamedUserView(uvRef, args.ref as any),
       });
 
       const markupRaw = (res.result.rows[0]?.values[0].value as string | undefined) ?? null;
@@ -232,11 +232,11 @@ export default class App extends Vue {
     })();
   }
 
-  private onHelpModalClose() {
+  onHelpModalClose() {
     this.helpPageInfo = null;
   }
 
-  private dismissHelpPage() {
+  dismissHelpPage() {
     if (!this.helpPageInfo) return;
 
     localStorage.setItem(`watchedHelpPage_${this.helpPageInfo.key}`, JSON.stringify(this.helpPageInfo.ref));
@@ -244,7 +244,7 @@ export default class App extends Vue {
     this.helpPageInfo = null;
   }
 
-  private dismissAllHelpPages() {
+  dismissAllHelpPages() {
     localStorage.setItem("dismissHelpPages", "true");
     this.helpPageInfo = null;
   }
@@ -364,15 +364,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
   }
 
-  private get showContactButtonInBanner() {
+  get showContactButtonInBanner() {
     return this.settings.getEntry("show_contact_button_in_banner", Boolean, false);
   }
 
-  private get showSignUpButtonInBanner() {
+  get showSignUpButtonInBanner() {
     return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false);
   }
 
-  private get showInviteButtonInBanner() {
+  get showInviteButtonInBanner() {
     return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.hasAuth;
   }
 
@@ -432,7 +432,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }, {} as Record<string, unknown>);
   }
 
-  private get bannerMessage() {
+  get bannerMessage() {
     const message = this.settings.getEntry("banner_message", String, "");
     const isImportant = this.settings.getEntry("banner_important", Boolean, false);
     const viewedMessage = localStorage.getItem("viewed-banner-message");
@@ -440,11 +440,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     return message;
   }
 
-  private onBannerClose() {
+  onBannerClose() {
     localStorage.setItem("viewed-banner-message", this.bannerMessage);
   }
 
-  private get bannerColorVariables() {
+  get bannerColorVariables() {
     // TODO FIXME
     /*     const variant = this.settings.getEntry("banner_variant", String, null);
  *     if (variant) {

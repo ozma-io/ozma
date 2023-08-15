@@ -1,11 +1,11 @@
 import { ActionContext, Module } from "vuex";
-import { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IViewExprResult, IEntriesRequestOpts, ValueType } from "ozma-api";
+import FunDBAPI, { RowId, IQueryChunk, IFieldRef, IEntityRef, IChunkWhere, IDomainValuesResult, IViewExprResult, IEntriesRequestOpts, ValueType } from "ozma-api";
 import Vue from "vue";
 import R from "ramda";
 
 import { app } from "@/main";
 import { IRef, NeverError, ObjectResourceMap, ReferenceName, syncObject, updateObject, waitTimeout } from "@/utils";
-import Api, { developmentMode } from "@/api";
+import { developmentMode } from "@/api";
 import { valueToText } from "@/values";
 import { CancelledError, i18n } from "@/modules";
 import { ICombinedUserViewAny } from "@/user_views/combined";
@@ -358,9 +358,8 @@ const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, r
   const view = `"${ref.schema}"."${ref.name}"`;
   const query = `SELECT id, __main :: string AS main FROM ${view}`;
   const chunk: IQueryChunk = { offset, limit: limit + 1, where };
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { search: likeSearch }, { chunk }],
+  const res = await context.dispatch("callApi", {
+    func: (api : FunDBAPI) => api.getAnonymousUserView(query, { search: likeSearch }, { chunk }),
   }, { root: true }) as IViewExprResult;
   const mainType = res.info.columns[1].valueType;
   const entries = Object.fromEntries(res.result.rows.map<[number, string]>(row => {
@@ -402,9 +401,8 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
     chunk,
   };
 
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getDomainValues.bind(Api),
-    args: [referencedBy.field, referencedBy.rowId ?? undefined, opts],
+  const res = await context.dispatch("callApi", {
+    func: (api: FunDBAPI) => api.getDomainValues(referencedBy.field, referencedBy.rowId ?? undefined, opts),
   }, { root: true }) as IDomainValuesResult;
   const entries = Object.fromEntries(res.values.map<[number, string]>(row => {
     const main = punToText(row.pun, row.value, res.punType);
@@ -418,7 +416,8 @@ const fetchEntriesByDomain = async (context: ActionContext<IEntriesState, {}>, r
 };
 
 const fetchEntriesByOptionsView = async (context: ActionContext<IEntriesState, {}>, optionsView: IQuery, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
-  if (optionsView.args.source.type !== "named") {
+  const source = optionsView.args.source;
+  if (source.type !== "named") {
     throw new Error("Unnamed user views aren't supported");
   }
   const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
@@ -443,9 +442,8 @@ const fetchEntriesByOptionsView = async (context: ActionContext<IEntriesState, {
     chunk,
   };
 
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getNamedUserView.bind(Api),
-    args: [optionsView.args.source.ref, optionsView.args.args, opts],
+  const res = await context.dispatch("callApi", {
+    func: (api: FunDBAPI) => api.getNamedUserView(source.ref, optionsView.args.args ?? undefined, opts),
   }, { root: true }) as IViewExprResult;
 
   const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
@@ -492,9 +490,8 @@ const fetchEntriesByDomainByIds = async (context: ActionContext<IEntriesState, {
     chunk: { where },
   };
 
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getDomainValues.bind(Api),
-    args: [referencedBy.field, referencedBy.rowId ?? undefined, req],
+  const res = await context.dispatch("callApi", {
+    func: (api : FunDBAPI) => api.getDomainValues(referencedBy.field, referencedBy.rowId ?? undefined, req),
   }, { root: true }) as IDomainValuesResult;
 
   return Object.fromEntries(res.values.map<[number, string]>(row => {
@@ -507,9 +504,8 @@ const fetchEntriesByEntityByIds = async (context: ActionContext<IEntriesState, {
   const { schema, name } = entity;
   const view = `"${schema}"."${name}"`;
   const query = `{ $ids array(int) }: SELECT id, __main AS main FROM ${view} WHERE id = ANY ($ids)`;
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getAnonymousUserView.bind(Api),
-    args: [query, { ids }],
+  const res = await context.dispatch("callApi", {
+    func: (api : FunDBAPI) => api.getAnonymousUserView(query, { ids }),
   }, { root: true }) as IViewExprResult;
   const mainType = res.info.columns[0].valueType;
 
@@ -521,7 +517,8 @@ const fetchEntriesByEntityByIds = async (context: ActionContext<IEntriesState, {
 };
 
 const fetchEntriesByOptionsViewByIds = async (context: ActionContext<IEntriesState, {}>, optionsView: IQuery, ids: RowId[]): Promise<Record<string, string>> => {
-  if (optionsView.args.source.type === "anonymous") {
+  const source = optionsView.args.source;
+  if (source.type === "anonymous") {
     throw new Error("Anonymous options_view is not supported");
   }
   const where: IChunkWhere = {
@@ -537,9 +534,8 @@ const fetchEntriesByOptionsViewByIds = async (context: ActionContext<IEntriesSta
     chunk: { where },
   };
 
-  const res = await context.dispatch("callProtectedApi", {
-    func: Api.getNamedUserView.bind(Api),
-    args: [optionsView.args.source.ref, optionsView.args.args, req],
+  const res = await context.dispatch("callApi", {
+    func: (api: FunDBAPI) => api.getNamedUserView(source.ref, optionsView.args.args ?? undefined, req),
   }, { root: true }) as IViewExprResult;
   const idColumnIndex = res.info.columns.findIndex(column => column.name === "value" || column.name === "id"); // "id" is deprecated.
   const nameColumnIndex = res.info.columns.findIndex(column => column.name === "pun" || column.name === "name"); // "name" is deprecated.

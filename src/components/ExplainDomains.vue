@@ -43,7 +43,7 @@
         {{ $t('schema_name') }}:
         <input
           v-model="schema"
-          :placeholder="$t('schema_name')"
+          :placeholder="$tc('schema_name')"
         >
       </label>
     </p>
@@ -52,7 +52,7 @@
         {{ $t('entity_name') }}:
         <input
           v-model="entity"
-          :placeholder="$t('entity_name')"
+          :placeholder="$tc('entity_name')"
         >
       </label>
     </p>
@@ -61,7 +61,7 @@
         {{ $t('field_name') }}:
         <input
           v-model="field"
-          :placeholder="$t('field_name')"
+          :placeholder="$tc('field_name')"
         >
       </label>
     </p>
@@ -70,7 +70,7 @@
         {{ $t('user_name') }}:
         <input
           v-model="userName"
-          :placeholder="$t('user_name')"
+          :placeholder="$tc('user_name')"
         >
       </label>
     </p>
@@ -79,7 +79,7 @@
         {{ $t('role_schema') }}:
         <input
           v-model="roleSchema"
-          :placeholder="$t('role_schema')"
+          :placeholder="$tc('role_schema')"
         >
       </label>
     </p>
@@ -88,7 +88,7 @@
         {{ $t('role_name') }}:
         <input
           v-model="roleName"
-          :placeholder="$t('role_name')"
+          :placeholder="$tc('role_name')"
         >
       </label>
     </p>
@@ -97,7 +97,7 @@
         {{ $t('row_id') }}:
         <input
           v-model="rowId"
-          :placeholder="$t('row_id')"
+          :placeholder="$tc('row_id')"
         >
       </label>
     </p>
@@ -106,7 +106,7 @@
         {{ $t('limit') }}:
         <input
           v-model="limit"
-          :placeholder="$t('limit')"
+          :placeholder="$tc('limit')"
         >
       </label>
     </p>
@@ -164,11 +164,11 @@ import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
 import { IEntityRef, IEntriesExplainOpts, IQueryChunk, IFieldRef, IExplainedQuery } from "ozma-api";
 
-import Api from "@/api";
+import type { ICallApi } from "@/state/auth";
 
 @Component
 export default class ExplainDomains extends Vue {
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("callApi") callApi!: ICallApi;
 
   schema = "";
   entity = "";
@@ -217,9 +217,8 @@ export default class ExplainDomains extends Vue {
         verbose: this.verbose,
         costs: this.costs,
       };
-      const res: IExplainedQuery = await this.callProtectedApi({
-        func: Api.getDomainExplain,
-        args: [ref, rowId, opts],
+      const res: IExplainedQuery = await this.callApi({
+        func: api => api.getDomainExplain(ref, rowId, opts),
       });
 
       this.rowsQuery = res.query;

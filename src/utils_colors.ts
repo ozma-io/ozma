@@ -1,8 +1,7 @@
 import { rgba, toRgba, parseToRgba, readableColor, mix } from "color2k";
 import { z } from "zod";
-import { IViewExprResult, SchemaName, RowId } from "ozma-api";
+import FunDBAPI, { IViewExprResult, SchemaName, RowId } from "ozma-api";
 import { store } from "@/main";
-import { default as Api } from "@/api";
 import { mapMaybe, objectMap, safeJsonParse } from "@/utils";
 
 const ThemeRef = z.object({
@@ -125,9 +124,8 @@ export const bootstrapVariantAttribute = (name: BootstrapVariantName) => ({ type
 
 const loadColorThemeHeaders = async (): Promise<Record<SchemaName, Record<ThemeName, { id: RowId; theme: ITheme }>>> => {
   const uvRef = { schema: "funapp", name: "color_themes" };
-  const res: IViewExprResult = await store.dispatch("callProtectedApi", {
-    func: Api.getNamedUserView,
-    args: [uvRef],
+  const res: IViewExprResult = await store.dispatch("callApi", {
+    func: (api: FunDBAPI) => api.getNamedUserView(uvRef),
   }, { root: true });
 
   const idColumnIndex = res.info.columns.findIndex(column => column.name === "id");
@@ -156,9 +154,8 @@ const loadColorThemeHeaders = async (): Promise<Record<SchemaName, Record<ThemeN
 
 const loadColorVariants = async (): Promise<Record<RowId, Record<string, ColorVariant>>> => {
   const ref = { schema: "funapp", name: "color_variants" };
-  const res: IViewExprResult = await store.dispatch("callProtectedApi", {
-    func: Api.getNamedUserView,
-    args: [ref],
+  const res: IViewExprResult = await store.dispatch("callApi", {
+    func: (api: FunDBAPI) => api.getNamedUserView(ref),
   }, { root: true });
 
   const idColumnIndex = res.info.columns.findIndex(column => column.name === "theme_id");

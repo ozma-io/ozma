@@ -40,7 +40,7 @@
         {{ $t('schema_name') }}:
         <input
           v-model="schema"
-          :placeholder="$t('schema_name')"
+          :placeholder="$tc('schema_name')"
         >
       </label>
     </p>
@@ -49,7 +49,7 @@
         {{ $t('view_name') }}:
         <input
           v-model="view"
-          :placeholder="$t('view_name')"
+          :placeholder="$tc('view_name')"
         >
       </label>
     </p>
@@ -58,7 +58,7 @@
         {{ $t('user_name') }}:
         <input
           v-model="userName"
-          :placeholder="$t('user_name')"
+          :placeholder="$tc('user_name')"
         >
       </label>
     </p>
@@ -67,7 +67,7 @@
         {{ $t('role_schema') }}:
         <input
           v-model="roleSchema"
-          :placeholder="$t('role_schema')"
+          :placeholder="$tc('role_schema')"
         >
       </label>
     </p>
@@ -76,7 +76,7 @@
         {{ $t('role_name') }}:
         <input
           v-model="roleName"
-          :placeholder="$t('role_name')"
+          :placeholder="$tc('role_name')"
         >
       </label>
     </p>
@@ -85,7 +85,7 @@
         {{ $t('arguments') }}:
         <input
           v-model="rawArguments"
-          :placeholder="$t('arguments')"
+          :placeholder="$tc('arguments')"
         >
       </label>
     </p>
@@ -94,7 +94,7 @@
         {{ $t('limit') }}:
         <input
           v-model="limit"
-          :placeholder="$t('limit')"
+          :placeholder="$tc('limit')"
         >
       </label>
     </p>
@@ -163,11 +163,11 @@ import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
 import { IEntityRef, IUserViewRef, IViewExplainResult, IEntriesExplainOpts, ArgumentName, IQueryChunk } from "ozma-api";
 
-import Api from "@/api";
+import type { ICallApi } from "@/state/auth";
 
 @Component
 export default class ExplainQuery extends Vue {
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("callApi") callApi!: ICallApi;
 
   schema = "";
   view = "";
@@ -216,9 +216,8 @@ export default class ExplainQuery extends Vue {
         verbose: this.verbose,
         costs: this.costs,
       };
-      const res: IViewExplainResult = await this.callProtectedApi({
-        func: Api.getNamedUserViewExplain,
-        args: [ref, args, opts],
+      const res: IViewExplainResult = await this.callApi({
+        func: api => api.getNamedUserViewExplain(ref, args, opts),
       });
 
       if (res.attributes) {

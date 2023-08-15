@@ -1,8 +1,8 @@
-import { IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts, ClientHttpError, UserViewError as UVError } from "ozma-api";
+import FunDBAPI, { IViewInfoResult, IViewExprResult, FunDBError, IInfoRequestOpts, IEntriesRequestOpts, ClientHttpError, UserViewError as UVError } from "ozma-api";
 
 import { Store } from "vuex";
 
-import Api, { developmentMode } from "@/api";
+import { developmentMode } from "@/api";
 import { IUserViewArguments, ICombinedUserViewDataParams } from "./combined";
 
 export type ClientUserViewError = UVError | ClientHttpError;
@@ -29,7 +29,8 @@ async (
   opts: IEntriesRequestOpts = defaultViewOpts,
 ): Promise<ICombinedUserViewDataParams> => {
   try {
-    if (args.source.type === "named") {
+    const source = args.source;
+    if (source.type === "named") {
       if (args.args === null) {
         // Always recompile user views if development mode is enabled.
         let reqOpts: IInfoRequestOpts = {};
@@ -37,9 +38,8 @@ async (
           // Hack `chunk` to pass undocumented call argument.
           reqOpts = { ...reqOpts, forceRecompile: true } as any;
         }
-        const res: IViewInfoResult = await store.dispatch("callProtectedApi", {
-          func: Api.getNamedUserViewInfo.bind(Api),
-          args: [args.source.ref, reqOpts],
+        const res: IViewInfoResult = await store.dispatch("callApi", {
+          func: (api: FunDBAPI) => api.getNamedUserViewInfo(source.ref, reqOpts),
         }, { root: true });
         return {
           args,
@@ -61,9 +61,8 @@ async (
         if (developmentMode) {
           reqOpts = { ...reqOpts, forceRecompile: true } as any;
         }
-        const res: IViewExprResult = await store.dispatch("callProtectedApi", {
-          func: Api.getNamedUserView.bind(Api),
-          args: [args.source.ref, args.args, reqOpts],
+        const res: IViewExprResult = await store.dispatch("callApi", {
+          func: (api: FunDBAPI) => api.getNamedUserView(source.ref, args.args ?? undefined, reqOpts),
         }, { root: true });
 
         const complete = realLimit === undefined || res.result.rows.length <= realLimit;
@@ -81,9 +80,8 @@ async (
       if (args.args === null) {
         throw new Error("Getting information about anonymous views is not supported");
       } else {
-        const res: IViewExprResult = await store.dispatch("callProtectedApi", {
-          func: Api.getAnonymousUserView.bind(Api),
-          args: [args.source.query, args.args, opts],
+        const res: IViewExprResult = await store.dispatch("callApi", {
+          func: (api: FunDBAPI) => api.getAnonymousUserView(source.query, args.args ?? undefined, opts),
         }, { root: true });
         return {
           args,

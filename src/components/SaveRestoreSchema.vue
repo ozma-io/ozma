@@ -113,12 +113,11 @@
 import { Component, Vue } from "vue-property-decorator";
 import { Action } from "vuex-class";
 import type { IRestoreSchemasOptions, ISaveSchemasOptions } from "ozma-api";
-
-import Api from "@/api";
+import type { ICallApi } from "@/state/auth";
 
 @Component
 export default class SaveRestoreSchema extends Vue {
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("callApi") callApi!: ICallApi;
 
   schema = "";
   fileForRestore: File | null = null;
@@ -132,9 +131,8 @@ export default class SaveRestoreSchema extends Vue {
       const opts: ISaveSchemasOptions = {
         skipPreloaded: this.skipPreloaded,
       };
-      const res: Blob = await this.callProtectedApi({
-        func: Api.saveSchemas,
-        args: [schemas, opts],
+      const res: Blob = await this.callApi({
+        func: api => api.saveSchemas(schemas, opts),
       });
 
       const url = URL.createObjectURL(res);
@@ -179,9 +177,8 @@ export default class SaveRestoreSchema extends Vue {
       forceAllowBroken: this.forceAllowBroken,
     };
     try {
-      await this.callProtectedApi({
-        func: Api.restoreSchemas,
-        args: [this.fileForRestore, opts],
+      await this.callApi({
+        func: api => api.restoreSchemas(this.fileForRestore!, opts),
       });
 
       this.$bvToast.toast(this.$t("success").toString(), {

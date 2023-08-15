@@ -1,7 +1,7 @@
 import Vue from "vue";
 import { Module, ActionContext } from "vuex";
 import R from "ramda";
-import {
+import FunDBAPI, {
   ITransaction, ITransactionResult, IEntityRef, IFieldRef, IEntity, RowId, SchemaName, FieldName, EntityName,
   IInsertEntityOp, IUpdateEntityOp, IDeleteEntityOp, IInsertEntityResult, IUpdateEntityResult, IDeleteEntityResult,
   TransactionOp,
@@ -9,7 +9,7 @@ import {
 
 import { RecordSet, deepClone, mapMaybe, waitTimeout } from "@/utils";
 import { IUpdatedValue, IFieldInfo, valueFromRaw, valueEquals, serializeValue } from "@/values";
-import Api, { findErrorUserData } from "@/api";
+import { findErrorUserData } from "@/api";
 import { i18n } from "@/modules";
 import { eventBus } from "@/main";
 import { attrToLink, linkHandler } from "@/links";
@@ -824,9 +824,8 @@ const stagingModule: Module<IStagingState, {}> = {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         let result: ITransactionResult | Error;
         try {
-          result = await dispatch("callProtectedApi", {
-            func: Api.runTransaction,
-            args: [action],
+          result = await dispatch("callApi", {
+            func: (api: FunDBAPI) => api.runTransaction(action),
           }, { root: true });
         } catch (e) {
           if (e instanceof Error) {

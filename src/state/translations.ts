@@ -1,10 +1,10 @@
 import { Module } from "vuex";
-import { IViewExprResult, SchemaName } from "ozma-api";
+import FunDBAPI, { IViewExprResult, SchemaName } from "ozma-api";
 import { z } from "zod";
 import Vue from "vue";
 
 import { IRef, waitTimeout } from "@/utils";
-import { funappSchema, default as Api } from "@/api";
+import { funappSchema } from "@/api";
 import { CancelledError } from "@/modules";
 
 const userString = z.union([z.string(), z.record(z.string(), z.string())]);
@@ -72,12 +72,11 @@ const translationsModule: Module<ITranslationsState, {}> = {
       pending.ref = (async () => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         try {
-          const res = await dispatch("callProtectedApi", {
-            func: Api.getNamedUserView,
-            args: [
+          const res = await dispatch("callApi", {
+            func: (api: FunDBAPI) => api.getNamedUserView(
               { schema: funappSchema, name: "translations_by_language" },
               { language },
-            ],
+            ),
           }, { root: true }) as IViewExprResult;
 
           if (state.pending !== pending.ref) {

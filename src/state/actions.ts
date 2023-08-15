@@ -1,7 +1,7 @@
 import { Store } from "vuex";
-import { IActionRef, IActionResult } from "ozma-api";
+import FunDBAPI, { IActionRef, IActionResult } from "ozma-api";
 
-import Api, { findErrorUserData } from "@/api";
+import { findErrorUserData } from "@/api";
 import { app, eventBus } from "@/main";
 import { i18n } from "@/modules";
 import { ISubmitResult } from "@/state/staging_changes";
@@ -28,9 +28,8 @@ export const saveAndRunAction = async (
   try {
     const submitRet: ISubmitResult = await dispatch("staging/submit", { preReload: async () => {
       try {
-        ret = await dispatch("callProtectedApi", {
-          func: Api.runAction,
-          args: [ref, args],
+        ret = await dispatch("callApi", {
+          func: (api: FunDBAPI) => api.runAction(ref, args),
         }, { root: true });
       } catch (e) {
         if (!(e instanceof Error)) {

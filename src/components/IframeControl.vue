@@ -45,9 +45,10 @@ import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { Action } from "vuex-class";
 import { IViewExprResult } from "ozma-api";
 
-import Api, { IIframeRef } from "@/api";
+import { IIframeRef } from "@/api";
 import Errorbox from "@/components/Errorbox.vue";
 import EmbeddedContainer from "./EmbeddedContainer.vue";
+import type { ICallApi } from "@/state/auth";
 
 @Component({ components: { Errorbox, EmbeddedContainer } })
 export default class IframeControl extends Vue {
@@ -57,10 +58,10 @@ export default class IframeControl extends Vue {
   @Prop({ required: true }) value!: unknown;
   @Prop({ type: Number }) height!: number;
 
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("callApi") callApi!: ICallApi;
 
   private requestedHeight: number | null = null;
-  private markup: string | null | undefined = null; // `undefined` here means that markup is not found.
+  markup: string | null | undefined = null; // `undefined` here means that markup is not found.
 
   @Watch("iframeRef", { immediate: true })
   private async loadMarkup() {
@@ -68,14 +69,13 @@ export default class IframeControl extends Vue {
     this.requestedHeight = null;
 
     const uvRef = { schema: "funapp", name: "iframe_markup_by_name" };
-    const res = await this.callProtectedApi({
-      func: Api.getNamedUserView.bind(Api),
-      args: [uvRef, this.iframeRef],
+    const res = await this.callApi({
+      func: api => api.getNamedUserView(uvRef, this.iframeRef as Record<string, unknown> | undefined),
     }) as IViewExprResult;
     this.markup = res.result.rows[0]?.values[0].value as string | undefined;
   }
 
-  private updateHeight(newHeight: number) {
+  updateHeight(newHeight: number) {
     this.requestedHeight = newHeight;
   }
 
@@ -86,13 +86,13 @@ export default class IframeControl extends Vue {
     this.requestedHeight = null;
   }
 
-  private get style() {
+  get style() {
     if (this.height || this.requestedHeight) {
       return {
         height: `${this.requestedHeight ?? this.height}px`,
       };
     }
-    return null;
+    return undefined;
   }
 }
 </script>

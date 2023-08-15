@@ -1,8 +1,7 @@
 import { Module } from "vuex";
-import { IEntityRef, IEntity } from "ozma-api";
+import FunDBAPI, { IEntityRef, IEntity } from "ozma-api";
 
 import { IRef, ObjectMap, waitTimeout } from "@/utils";
-import Api from "@/api";
 import { CancelledError } from "@/modules";
 
 // For each entity contains array of all accessible entries (main fields) identified by id
@@ -74,9 +73,8 @@ const entitiesModule: Module<IEntitiesState, {}> = {
       pending.ref = (async () => {
         await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
         try {
-          const entity: IEntity = await dispatch("callProtectedApi", {
-            func: Api.getEntityInfo.bind(Api),
-            args: [ref],
+          const entity: IEntity = await dispatch("callApi", {
+            func: (api : FunDBAPI) => api.getEntityInfo(ref),
           }, { root: true });
           const currPending = state.current.entities.get(ref);
           if (currPending !== pending.ref) {

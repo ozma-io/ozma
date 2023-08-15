@@ -108,11 +108,11 @@ import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/compone
 import { EntityRef, IAttrToLinkOpts } from "@/links";
 import { deserializeParsedRows, serializeValue, valueFromRaw } from "@/values";
 
-import Api from "@/api";
 import { fetchUserViewData } from "@/user_views/fetch";
 import { eventBus, IShowHelpModalArgs } from "@/main";
 import { formatValue } from "@/user_views/format";
 import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
+import type { ICallApi } from "@/state/auth";
 
 interface IModalReferenceField {
   field: ValueRef;
@@ -140,14 +140,14 @@ const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
   },
 })
 export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
-  @Action("callProtectedApi") callProtectedApi!: (_: { func: ((_1: string, ..._2: any[]) => Promise<any>); args?: any[] }) => Promise<any>;
+  @Action("callApi") callApi!: ICallApi;
   @Action("reload") reload!: () => Promise<void>;
   @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
   @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
   @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
   @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
 
-  private modalView: IQuery | null = null;
+  modalView: IQuery | null = null;
   private showDeleteEntiesButton = false;
   private autoSaveLock: AutoSaveLock | null = null;
 
@@ -381,9 +381,8 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
           while (true) {
             try {
               // eslint-disable-next-line no-await-in-loop
-              await this.callProtectedApi({
-                func: Api.runTransaction,
-                args: [transaction],
+              await this.callApi({
+                func: api => api.runTransaction(transaction),
               });
               break;
             } catch (e) {
@@ -442,7 +441,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     });
   }
 
-  private get loadedRowsCount(): string {
+  get loadedRowsCount(): string {
     return `${this.uv.rowLoadState.fetchedRowCount}${this.uv.rowLoadState.complete ? "" : "+"}`;
   }
 
@@ -702,7 +701,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     return modalReferenceField.pop() ?? null;
   }
 
-  private selectFromUserView(id: number) {
+  selectFromUserView(id: number) {
     if (this.modalReferenceField === null) {
       throw new Error("Impossible");
     }
@@ -711,7 +710,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     this.modalView = null;
   }
 
-  private selectFromScanner(columnIndex: number, result: IQRResultContent[]) {
+  selectFromScanner(columnIndex: number, result: IQRResultContent[]) {
     result.forEach(r => {
       void this.updateValue({ type: "new", column: columnIndex }, r.id);
     });
