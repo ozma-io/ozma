@@ -143,7 +143,7 @@
         :title="titleOrNewEntry ?? undefined"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
-        :filter-string="query ? query.root.search : null"
+        :filter-string="query.root.search"
         :type="'root'"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
@@ -162,9 +162,9 @@
           is-root
           is-top-level
           in-container
-          :args="query ? query.root.args : null"
+          :args="query.root.args"
           :filter="filterWords"
-          :default-values="query ? query.root.defaultValues : null"
+          :default-values="query.root.defaultValues"
           scope="root"
           @goto="push({ ...$event, key: null })"
           @goto-previous="goBack(null)"
@@ -238,7 +238,7 @@
           class="saving-spinner spinner-border"
         />
         <div
-          v-else-if="!changes.isEmpty && isValidValues"
+          v-else-if="!changes.isEmpty"
         >
           <div
             v-if="Object.keys(autoSaveLocks).length > 0"
@@ -391,9 +391,76 @@ export default class TopLevelUserView extends Vue {
   @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
   @settings.Action("writeUserSettings") writeUserSettings!: (setting: { name: string; value: string }) => Promise<void>;
 
+  private statusLine = "";
+  private enableFilter = false;
   private styleNode!: HTMLStyleElement;
+  private userViewStyle: string | null = null;
   private finalSettingsStyle: string | null = null;
-  private validationResults: Map<string, string | boolean> = new Map();
+  private title: UserString | null = null;
+  private description: UserString | null = null;
+  private url: UserString | null = null;
+
+  private buttons: Button[] = [];
+
+  private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
+    show: false,
+    timeoutId: null,
+  };
+
+  private currentQRCodeLink: Link | null = null;
+
+  private get isSaving(): boolean {
+    return this.protectedCalls > 0;
+  }
+
+  get titleOrNewEntry(): string | null {
+    if (this.query === null) {
+      return null;
+    }
+    if (this.query.root.args.args === null) {
+      return this.$t("new_entry").toString();
+    } else {
+      return this.title ? this.$ustOrEmpty(this.title) : null;
+    }
+  }
+
+  get stringTitle(): string | null {
+    return this.title ? this.$ustOrEmpty(this.title) : null;
+  }
+
+  private get mainButtons(): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "arrow_back",
+        variant: interfaceButtonVariant,
+        callback: () => this.$router.back(),
+      },
+      {
+        type: "link",
+        icon: "home",
+        variant: interfaceButtonVariant,
+        link: homeLink,
+      },
+      this.burgerButton,
+    ];
+  }
+
+  mounted() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
+    document.addEventListener("keydown", this.onKeydown);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  destroyed() {
+    this.styleNode.remove();
+
+    /* eslint-disable @typescript-eslint/unbound-method */
+    this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
+    document.removeEventListener("keydown", this.onKeydown);
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
 
   private get themeButtons(): Button[] {
     const locale = this.$i18n.locale;
@@ -421,41 +488,25 @@ export default class TopLevelUserView extends Vue {
     });
   }
 
-  private get settingsStyle(): string {
-    return this.currentSettings.getEntry("custom_css", String, "");
-  }
-
-  private get finalStyle() {
-    return this.finalSettingsStyle ?? "" + this.userViewStyle ?? "";
-  }
-
-  public statusLine = "";
-  public enableFilter = false;
-  public userViewStyle: string | null = null;
-  public title: UserString | null = null;
-  public description: UserString | null = null;
-  public url: UserString | null = null;
-  public isValidValues = true;
-  public buttons: Button[] = [];
-  public currentQRCodeLink: Link | null = null;
-  public savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
-    show: false,
-    timeoutId: null,
-  };
-
-  get titleOrNewEntry(): string | null {
-    if (this.query === null) {
-      return null;
+  private onKeydown(event: KeyboardEvent) {
+    // 83 is code for `s`/`ы` key.
+    if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
+      event.preventDefault();
+      void this.saveView();
     }
-    if (this.query.root.args.args === null) {
-      return this.$t("new_entry").toString();
-    } else {
-      return this.title ? this.$ustOrEmpty(this.title) : null;
+
+    if (event.ctrlKey && event.key === "D") {
+      event.preventDefault();
+
+      this.toggleDeveloperMode();
     }
   }
 
-  get stringTitle(): string | null {
-    return this.title ? this.$ustOrEmpty(this.title) : null;
+  private openQRCodeScanner(link: Link | null) {
+    if (link !== null) {
+      this.currentQRCodeLink = link;
+      (this.$refs.scanner as QRCodeScannerModal).scan();
+    }
   }
 
   get errors() {
@@ -483,6 +534,149 @@ export default class TopLevelUserView extends Vue {
       return Array.from(new Set(convertToWords(value.toString())));
     }
     return [];
+  }
+
+  private makeErrorToast() {
+    this.$bvToast.hide();
+    this.errors.forEach(error => {
+      this.$bvToast.toast(error.toString(), {
+        title: this.$t("error").toString(),
+        variant: "danger",
+        solid: true,
+        autoHideDelay: 10000,
+      });
+    });
+  }
+
+  private get canClearUnsavedChanges() {
+    return this.errors.length !== 0 && !this.changes.isEmpty;
+  }
+
+  @Watch("$route", { deep: true, immediate: true })
+  private onRouteChanged() {
+    this.resetRoute(this.$route);
+  }
+
+  @Watch("errors")
+  private errorsChanged() {
+    if (this.errors.length > 0) {
+      this.makeErrorToast();
+    }
+  }
+
+  @Watch("description", { immediate: true })
+  private updateDescription(description: UserString | null) {
+    if (description) {
+      const descriptionString = `${this.$ustOrEmpty(description)}`;
+      setHeadMeta("name", "description", descriptionString);
+      setHeadMeta("property", "og:description", descriptionString);
+      setHeadMeta("property", "twitter:description", descriptionString);
+    }
+  }
+
+  @Watch("stringTitle", { immediate: true })
+  private updateTitle(title: string | null) {
+    let titleString = "ozma.io";
+    if (title) {
+      titleString = `ozma.io - ${title}`;
+    }
+    setHeadTitle(titleString);
+    setHeadMeta("property", "og:title", titleString);
+    setHeadMeta("property", "twitter:title", titleString);
+  }
+
+  private created() {
+    this.styleNode = document.createElement("style");
+    this.onFinalStyleChanged();
+    document.head.appendChild(this.styleNode);
+  }
+
+  private async resetChanges() {
+    try {
+      await this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
+        okTitle: this.$t("clear_changes_ok").toString(),
+        cancelTitle: this.$t("cancel").toString(),
+        okVariant: "danger",
+        cancelVariant: "outline-secondary",
+        centered: true,
+      });
+    } catch (e) {
+      return;
+    }
+    await this.clearChanges();
+    this.resetErrors();
+    this.$bvToast.hide();
+  }
+
+  private async saveChanges(): Promise<CombinedTransactionResult[]> {
+    const scopes = Object.keys(this.changes.scopes);
+    if (scopes.length === 0) {
+      const ret = await this.submitChanges({ errorOnIncomplete: true });
+      return ret.results;
+    } else {
+      const results: CombinedTransactionResult[] = [];
+      for (const scope of scopes) {
+        // eslint-disable-next-line no-await-in-loop
+        const ret = await this.submitChanges({ scope, errorOnIncomplete: true });
+        results.push(...ret.results);
+      }
+      return results;
+    }
+  }
+
+  private async saveView() {
+    await this.saveChanges();
+
+    if (this.errors.length === 0) {
+      this.$bvToast.hide();
+    }
+
+    if (this.savedRecently.timeoutId !== null) {
+      clearTimeout(this.savedRecently.timeoutId);
+    }
+    this.savedRecently.show = true;
+    this.savedRecently.timeoutId = setTimeout(() => {
+      this.savedRecently.show = false;
+    }, 5000);
+  }
+
+  private get allowBusinessMode() {
+    return this.currentSettings.getEntry("allow_business_mode", Boolean, false);
+  }
+
+  private toggleDeveloperMode() {
+    if (this.allowBusinessMode && this.userIsRoot) {
+      void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
+    }
+  }
+
+  private get settingsStyle(): string {
+    return this.currentSettings.getEntry("custom_css", String, "");
+  }
+
+  // async to import additional sanitizeCSS module
+  @Watch("settingsStyle", { deep: true, immediate: true })
+  private async customStyle(styleString: string): Promise<void> {
+    if (styleString !== "") {
+      try {
+        // import sanitizeCSS from file custom_css to avoid import for all users
+        const { sanitizeCSS } = await import("@/sanitize_css");
+        this.finalSettingsStyle = sanitizeCSS(styleString);
+      } catch (error) {
+        console.error("Invalid custom_css setting:", error);
+      }
+    }
+  }
+
+  @Watch("finalStyle", { deep: true, immediate: true })
+  private onFinalStyleChanged() {
+    if (this.styleNode) {
+      this.styleNode.innerHTML = this.finalStyle;
+    }
+  }
+
+  private get finalStyle() {
+    return this.finalSettingsStyle ?? "" + this.userViewStyle ?? "";
   }
 
   get burgerButton() {
@@ -621,210 +815,6 @@ export default class TopLevelUserView extends Vue {
 
   get bottomBarNeeded() {
     return this.statusLine !== "";
-  }
-
-  get canClearUnsavedChanges() {
-    return this.errors.length !== 0 && !this.changes.isEmpty;
-  }
-
-  get isSaving(): boolean {
-    return this.protectedCalls > 0;
-  }
-
-  get allowBusinessMode() {
-    return this.currentSettings.getEntry("allow_business_mode", Boolean, false);
-  }
-
-  get mainButtons(): Button[] {
-    return [
-      {
-        type: "callback",
-        icon: "arrow_back",
-        variant: interfaceButtonVariant,
-        callback: () => this.$router.back(),
-      },
-      {
-        type: "link",
-        icon: "home",
-        variant: interfaceButtonVariant,
-        link: homeLink,
-      },
-      this.burgerButton,
-    ];
-  }
-
-  mounted() {
-    /* eslint-disable @typescript-eslint/unbound-method */
-    this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
-    this.$root.$on("validate", (result: boolean | string, componentId: string) => {
-      if (result) {
-        this.validationResults.delete(componentId);
-      } else {
-        this.validationResults.set(componentId, result);
-      }
-
-      this.isValidValues = Boolean(this.validationResults.size === 0);
-    });
-    document.addEventListener("keydown", this.onKeydown);
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  destroyed() {
-    this.styleNode.remove();
-
-    /* eslint-disable @typescript-eslint/unbound-method */
-    this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
-    this.$root.$off("validate");
-    document.removeEventListener("keydown", this.onKeydown);
-    /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  created() {
-    this.styleNode = document.createElement("style");
-    this.onFinalStyleChanged();
-    document.head.appendChild(this.styleNode);
-  }
-
-  private onKeydown(event: KeyboardEvent) {
-    // 83 is code for `s`/`ы` key.
-    if ((event.ctrlKey || event.metaKey) && (event.key === "s" || event.keyCode === 83)) {
-      event.preventDefault();
-      void this.saveView();
-    }
-
-    if (event.ctrlKey && event.key === "D") {
-      event.preventDefault();
-
-      this.toggleDeveloperMode();
-    }
-  }
-
-  private openQRCodeScanner(link: Link | null) {
-    if (link !== null) {
-      this.currentQRCodeLink = link;
-      (this.$refs.scanner as QRCodeScannerModal).scan();
-    }
-  }
-
-  private toggleDeveloperMode() {
-    if (this.allowBusinessMode && this.userIsRoot) {
-      void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
-    }
-  }
-
-  private async saveChanges(): Promise<CombinedTransactionResult[]> {
-    const scopes = Object.keys(this.changes.scopes);
-    if (scopes.length === 0) {
-      const ret = await this.submitChanges({ errorOnIncomplete: true });
-      return ret.results;
-    } else {
-      const results: CombinedTransactionResult[] = [];
-      for (const scope of scopes) {
-        // eslint-disable-next-line no-await-in-loop
-        const ret = await this.submitChanges({ scope, errorOnIncomplete: true });
-        results.push(...ret.results);
-      }
-      return results;
-    }
-  }
-
-  public makeErrorToast() {
-    this.$bvToast.hide();
-    this.errors.forEach(error => {
-      this.$bvToast.toast(error.toString(), {
-        title: this.$t("error").toString(),
-        variant: "danger",
-        solid: true,
-        autoHideDelay: 10000,
-      });
-    });
-  }
-
-  public async resetChanges() {
-    try {
-      await this.$bvModal.msgBoxConfirm(this.$t("clear_changes_confirm").toString(), {
-        okTitle: this.$t("clear_changes_ok").toString(),
-        cancelTitle: this.$t("cancel").toString(),
-        okVariant: "danger",
-        cancelVariant: "outline-secondary",
-        centered: true,
-      });
-    } catch (e) {
-      return;
-    }
-    await this.clearChanges();
-    this.resetErrors();
-    this.$bvToast.hide();
-  }
-
-  public async saveView() {
-    await this.saveChanges();
-
-    if (this.errors.length === 0) {
-      this.$bvToast.hide();
-    }
-
-    if (this.savedRecently.timeoutId !== null) {
-      clearTimeout(this.savedRecently.timeoutId);
-    }
-    this.savedRecently.show = true;
-    this.savedRecently.timeoutId = setTimeout(() => {
-      this.savedRecently.show = false;
-    }, 5000);
-  }
-
-  @Watch("$route", { deep: true, immediate: true })
-  private onRouteChanged() {
-    this.resetRoute(this.$route);
-  }
-
-  @Watch("errors")
-  private errorsChanged() {
-    if (this.errors.length > 0) {
-      this.makeErrorToast();
-    }
-  }
-
-  @Watch("description", { immediate: true })
-  private updateDescription(description: UserString | null) {
-    if (description) {
-      const descriptionString = `${this.$ustOrEmpty(description)}`;
-      setHeadMeta("name", "description", descriptionString);
-      setHeadMeta("property", "og:description", descriptionString);
-      setHeadMeta("property", "twitter:description", descriptionString);
-    }
-  }
-
-  @Watch("stringTitle", { immediate: true })
-  private updateTitle(title: string | null) {
-    let titleString = "ozma.io";
-    if (title) {
-      titleString = `ozma.io - ${title}`;
-    }
-    setHeadTitle(titleString);
-    setHeadMeta("property", "og:title", titleString);
-    setHeadMeta("property", "twitter:title", titleString);
-  }
-
-  // async to import additional sanitizeCSS module
-  @Watch("settingsStyle", { deep: true, immediate: true })
-  private async customStyle(styleString: string): Promise<void> {
-    if (styleString !== "") {
-      try {
-        // import sanitizeCSS from file custom_css to avoid import for all users
-        const { sanitizeCSS } = await import("@/sanitize_css");
-        this.finalSettingsStyle = sanitizeCSS(styleString);
-      } catch (error) {
-        console.error("Invalid custom_css setting:", error);
-      }
-    }
-  }
-
-  @Watch("finalStyle", { deep: true, immediate: true })
-  private onFinalStyleChanged() {
-    if (this.styleNode) {
-      this.styleNode.innerHTML = this.finalStyle;
-    }
   }
 }
 </script>

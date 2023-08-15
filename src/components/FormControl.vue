@@ -43,7 +43,7 @@
       :color-variant-attribute="colorVariantAttribute"
       :text-align="textAlign"
       :modal="$isMobile && (forceModalOnMobile || isMultiline)"
-      :required="!isNullable || attributes.required"
+      :required="!isNullable"
       :disabled="isDisabled"
       :hide-required-and-disabled-icons="hideRequiredAndDisabledIcons"
       :empty="valueIsNull"
@@ -61,7 +61,7 @@
           :qrcode-input="isQRCodeInput"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           :autofocus="autofocus || iSlot.autofocus"
           :text-align="textAlign"
           :background-color="cellColor"
@@ -77,7 +77,7 @@
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
           :height="customHeight"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           :autofocus="autofocus || iSlot.autofocus"
           :text-align="textAlign"
           :background-color="cellColor"
@@ -90,7 +90,7 @@
           :value="textValue"
           :is-cell-edit="isCellEdit"
           :disabled="isDisabled"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           :autofocus="autofocus || iSlot.autofocus"
           :background-color="cellColor"
           @input="updateValue"
@@ -109,7 +109,7 @@
           :time-step="inputType.timeStep ? inputType.timeStep : undefined"
           :time-default="inputType.timeDefault ? inputType.timeDefault : undefined"
           :format="inputType.format ? inputType.format : undefined"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           :disabled="isDisabled"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
@@ -127,7 +127,7 @@
           :options="inputType.options"
           :height="customHeight"
           :autofocus="autofocus || iSlot.autofocus"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           :disabled="isDisabled"
           :is-cell-edit="isCellEdit"
           :background-color="cellColor"
@@ -145,7 +145,7 @@
           :reference-entity="inputType.entity"
           :height="customHeight"
           :autofocus="autofocus || iSlot.autofocus"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           :disabled="isDisabled"
           :background-color="cellColor"
           :home-schema="homeSchema"
@@ -164,7 +164,7 @@
           :content="textValue"
           :read-only="isDisabled"
           :autofocus="autofocus || iSlot.autofocus"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
@@ -177,7 +177,7 @@
           :content="textValue"
           :read-only="isDisabled"
           :autofocus="autofocus || iSlot.autofocus"
-          :required="!isNullable || attributes.required"
+          :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
           @blur="onBlur"
@@ -191,7 +191,7 @@
           :class="['form-control-panel_checkbox',
                    {'form-control-panel_checkbox_req': isAwaited && !disableColor}]"
           :disabled="isDisabled"
-          :required="!isNullable || Boolean(attributes.required)"
+          :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
           @blur="onBlur"
@@ -290,7 +290,7 @@
       />
       <div
         v-if="inputType.name === 'user_view'"
-        :style="{ backgroundColor: cellColor ?? '', height: `${customHeight}px` }"
+        :style="{ backgroundColor: cellColor, height: `${customHeight}px` }"
       >
         <NestedUserView
           ref="control"
@@ -596,14 +596,12 @@ export default class FormControl extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: Boolean, default: false }) forceModalOnMobile!: boolean;
 
+  private buttons: Button[] = [];
+  private filterString = "";
+  private title: UserString | null = null;
+  private enableFilter = false;
+  private isUserViewLoading = false;
   private autoSaveLock: AutoSaveLock | null = null;
-
-  public actions: unknown;
-  public buttons: Button[] = [];
-  public filterString = "";
-  public title: UserString | null = null;
-  public enableFilter = false;
-  public isUserViewLoading = false;
 
   get valueIsNull() {
     return valueIsNull(this.value);
@@ -677,7 +675,7 @@ export default class FormControl extends Vue {
     else return null;
   }
 
-  public get colorVariantAttribute(): ColorVariantAttribute {
+  private get colorVariantAttribute(): ColorVariantAttribute {
     if (this.attributes["cell_variant"]) {
       return colorVariantFromAttribute(this.attributes["cell_variant"]);
     } else if (this.cellColor) {
@@ -687,7 +685,7 @@ export default class FormControl extends Vue {
     }
   }
 
-  public get optionColorVariantAttribute(): ColorVariantAttribute {
+  private get optionColorVariantAttribute(): ColorVariantAttribute {
     return colorVariantFromAttribute(this.attributes["option_variant"], { type: "existing", className: "option" });
   }
 
@@ -973,7 +971,7 @@ export default class FormControl extends Vue {
     }
   }
 
-  public updateValue(newValue: unknown) {
+  private updateValue(newValue: unknown) {
     if (this.value !== newValue) {
       this.$emit("update", newValue);
     }
@@ -990,7 +988,7 @@ export default class FormControl extends Vue {
     this.autoSaveLock = null;
   }
 
-  public async onFocus() {
+  private async onFocus() {
     if (!this.isCellEdit) {
       this.$root.$emit("form-input-focused");
     }
@@ -1003,7 +1001,7 @@ export default class FormControl extends Vue {
     this.$emit("focus");
   }
 
-  public onBlur() {
+  private onBlur() {
     this.removeAutoSaveLockFormControl();
     this.$emit("blur");
   }
@@ -1087,7 +1085,6 @@ export default class FormControl extends Vue {
     border-color: var(--NavigationBackColor);
     border-radius: 0;
     box-shadow: none;
-    appearance: none;
     -webkit-appearance: none;
     background: white;
   }
