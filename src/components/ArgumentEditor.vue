@@ -85,7 +85,7 @@ export default class ArgumentEditor extends Vue {
   @Prop({ type: Object, required: true }) attributeMappings!: Record<ArgumentName, ConvertedBoundAttributesMap>;
   @Prop({ type: String }) homeSchema!: string | undefined;
 
-  public get args(): IArgumentInfo[] {
+  private get args(): IArgumentInfo[] {
     return this.params.map(parameter => {
       const attributes = this.attributes[parameter.name] ?? {};
       const attributeMappings = this.attributeMappings[parameter.name] ?? {};
@@ -106,7 +106,7 @@ export default class ArgumentEditor extends Vue {
     });
   }
 
-  public updateArgument(argument: IArgumentInfo, rawValue: unknown) {
+  private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
     this.$emit("update", argument.name, rawValue);
   }
 }

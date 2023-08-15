@@ -198,10 +198,7 @@ export default class TableRow extends Vue {
 
   /* !importants was used because styles for fixed columns have priority otherwise. */
   td.required-cell {
-    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'><circle cx='6' cy='6' r='4.5'/><path stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/><circle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1.25rem;
+    background-color: var(--WarningColor) !important;
   }
 
   td.selected {
