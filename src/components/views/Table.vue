@@ -2831,11 +2831,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     switch (this.uv.extra.lazyLoad.type) {
       case "infinite_scroll": {
         const totalAdded = Object.keys(this.uv.newRows).length;
-        const rowsToRemove = totalAdded + this.uv.rowsCount;
+        const rowsToRemove = totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength;
         if (rowsToRemove === 0) {
           logError(new Error(`Views :: Table :: Incorrect calculation of rows to remove, rowsToRemove: ${rowsToRemove}`));
           return this.allRows;
         }
+
         return this.allRows.slice(0, rowsToRemove);
       }
       case "pagination":
