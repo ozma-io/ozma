@@ -1749,7 +1749,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return Boolean(this.uv.attributes["soft_disabled"]);
   }
 
-  @Watch("uv.info.mainEntity", { deep: true, immediate: true })
+  @Watch("uv.info.mainEntity", { deep: true })
   private async updateShowAddRowButtons() {
     // Don't reset it here to avoid button flickering.
     // this.showAddRowButtons = false;
