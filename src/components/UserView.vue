@@ -608,7 +608,7 @@ export default class UserView extends Vue {
     };
   }
 
-  public get businessModeEditViewText(): string {
+  private get businessModeEditViewText(): string {
     const common = this.$t("edit_view_modal_text_common").toString();
     const root = this.userIsRoot ? this.$t("edit_view_modal_text_for_roots").toString() : "";
     return `${common} ${root}`;

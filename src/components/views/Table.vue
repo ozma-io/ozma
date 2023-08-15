@@ -87,7 +87,7 @@
       }]"
   >
     <TableCellEdit
-      v-if="editingValue && editing"
+      v-if="editingValue"
       ref="tableCellEdit"
       v-click-outside="{ 'handler': removeCellEditing, 'middleware': checkWindow }"
       :width="editing.width"
@@ -160,7 +160,7 @@
       >
         <div
           :class="['pagination', { 'ml-auto': !uv.info.mainEntity?.forInsert }]"
-          :style="{ top: `${(parentScrollTop && parentScrollTop > 30) ? 2.5 : 0}rem` }"
+          :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
         >
           <b-spinner
             v-if="uv.extra.lazyLoad.pagination.loading"
@@ -190,12 +190,12 @@
       </div>
 
       <div
-        v-if="(showAddRowButtons && uv && uv.rows && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
+        v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
         class="button-container"
-        :style="{ width: `${parentWidth && typeof parentWidth === 'number' ? (parentWidth - 20) : 0}px`, minHeight: `25px` }"
+        :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
       >
         <ButtonItem
-          v-visible="showAddRowButtons && uv && uv.rows && uv.rows.length > 5"
+          v-visible="showAddRowButtons && uv.rows.length > 5"
           :button="topAddButton"
           align-right
         />
@@ -334,7 +334,7 @@
         v-if="showAddRowButtons"
         ref="bottomButtonContainer"
         class="button-container"
-        :style="{ width: `${parentWidth ? parentWidth - 20 : 0}px` }"
+        :style="{ width: `${parentWidth - 20}px` }"
       >
         <ButtonItem
           :button="bottomAddButton"
@@ -357,6 +357,7 @@ import { IResultColumnInfo, ValueType, RowId, IFieldRef, IEntity, IEntityRef, At
 import Popper from "vue-popperjs";
 
 import { deepEquals, mapMaybe, nextRender, ObjectSet, tryDicts, ReferenceName, NeverError, parseFromClipboard, waitTimeout, ClipboardParseValue } from "@/utils";
+import { valueIsNull } from "@/values";
 import { UserView } from "@/components";
 import { maxPerFetch } from "@/components/UserView.vue";
 import { AddedRowId } from "@/state/staging_changes";
@@ -385,7 +386,6 @@ import type TableCell from "./table/TableCell.vue";
 import { elementWindow, WindowKey } from "@/state/windows";
 import { formatValue } from "@/user_views/format";
 import { rawToUserString, UserString } from "@/state/translations";
-import { logError } from "@/helpers/logger";
 
 export interface IColumn {
   caption: UserString;
@@ -457,10 +457,9 @@ export interface IVisualPosition {
   row: number;
 }
 
-// FIXME: Remove from bundle as unused function to lower bundle size
-// const equalVisualPosition = (a: IVisualPosition, b: IVisualPosition): boolean => {
-//   return a.column === b.column && a.row === b.row;
-// };
+const equalVisualPosition = (a: IVisualPosition, b: IVisualPosition): boolean => {
+  return a.column === b.column && a.row === b.row;
+};
 
 const showStep = 15;
 const doubleClickTime = 700;
@@ -1018,10 +1017,9 @@ const newRowIndicesCompare = (aIndex: NewRowRef, bIndex: NewRowRef, uv: ITableCo
   }
 };
 
-// FIXME: unused, remove from bundle as a comment to lower size
-// const isEmptyRow = (row: IRowCommon) => {
-//   return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === undefined);
-// };
+const isEmptyRow = (row: IRowCommon) => {
+  return row.values.every(cell => valueIsNull(cell.rawValue) || cell.info === undefined);
+};
 
 interface ITableEditing {
   ref: ValueRef;
@@ -1401,7 +1399,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public get currentVisualPage() {
+  private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
     return String(this.uv.extra.lazyLoad.pagination.currentPage + 1);
@@ -1415,13 +1413,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.$emit("update:current-page", this.uv.extra.lazyLoad.pagination.currentPage);
   }
 
-  public get pagesCount(): number | null {
+  private get pagesCount(): number | null {
     if (this.uv.extra.lazyLoad.type !== "pagination" || !this.uv.rowLoadState.complete) return null;
 
     return Math.ceil(this.uv.rowLoadState.fetchedRowCount / this.uv.extra.lazyLoad.pagination.perPage);
   }
 
-  public updatePageSize(newPageSize: number) {
+  private updatePageSize(newPageSize: number) {
     if (this.uv.extra.lazyLoad.type !== "pagination") return;
 
     this.uv.extra.lazyLoad.pagination.perPage = newPageSize;
@@ -1453,7 +1451,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       : false;
   }
 
-  public async infiniteHandler(ev: StateChanger) {
+  private async infiniteHandler(ev: StateChanger) {
     if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
 
     // FIXME: Dirty hack.
@@ -1493,7 +1491,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public get topAddButton(): Button {
+  private get topAddButton(): Button {
     return {
       type: "callback",
       icon: "add",
@@ -1503,7 +1501,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  public get bottomAddButton(): Button {
+  private get bottomAddButton(): Button {
     return {
       type: "callback",
       icon: "add",
@@ -1522,7 +1520,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return { row: rowI, column: this.getVisualColumnIndex(ref.column) };
   }
 
-  public get selectedCells(): ValueRef[] {
+  private get selectedCells(): ValueRef[] {
     const { cursorValue } = this.uv.extra;
     return cursorValue
       ? [cursorValue, ...this.uv.extra.selectedValues.keys().filter(ref => !deepEquals(ref, cursorValue))]
@@ -1657,7 +1655,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return Boolean(this.uv.extra.hasRowLinks || this.createEntryButton || this.createEntryButtons);
   }
 
-  public get createEntryButtons(): Button | null {
+  private get createEntryButtons(): Button | null {
     return this.creationButtons
       ? {
         type: "button-group",
@@ -1669,7 +1667,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       : null;
   }
 
-  public get createEntryButton(): Button | null {
+  private get createEntryButton(): Button | null {
     return this.creationLink && !this.createEntryButtons
       ? {
         type: "link",
@@ -1749,7 +1747,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return Boolean(this.uv.attributes["soft_disabled"]);
   }
 
-  @Watch("uv.info.mainEntity", { deep: true })
+  @Watch("uv.info.mainEntity", { immediate: true, deep: true })
   private async updateShowAddRowButtons() {
     // Don't reset it here to avoid button flickering.
     // this.showAddRowButtons = false;
@@ -2021,12 +2019,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   /* Actually table does't change its width for now,
    * but ResizeObserver rather than one-time-calculation seems like more robust solution.  */
   private tableWidthObserver: ResizeObserver | null = null;
-  public tableWidth: number | null = null;
+  private tableWidth: number | null = null;
 
   private parentWidthObserver: ResizeObserver | null = null;
-  public parentWidth: number | null = null;
-  public parentScrollLeft: number | null = null;
-  public parentScrollTop: number | null = null;
+  private parentWidth: number | null = null;
+  private parentScrollLeft: number | null = null;
+  private parentScrollTop: number | null = null;
 
   private onTableResize() {
     this.tableWidth = (this.$refs["table"] as HTMLElement | undefined)?.offsetWidth ?? null;
@@ -2063,7 +2061,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
-  @Watch("showTree")
+  @Watch("showTree", { immediate: true })
   private watchShowTree() {
     if (this.showTree && !this.uv.rowLoadState.complete) {
       this.$emit("load-all-chunks", () => {});
@@ -2099,7 +2097,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.releaseEntries();
   }
 
-  @Watch("filter")
+  @Watch("filter", { immediate: true })
   protected updateFilter() {
     if (this.dirtyHackPreventEntireReloads) return;
 
@@ -2178,7 +2176,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     void nextRender().then(() => {
       const row = this.getVisualIndexOfAddedRow(rowId);
       if (row === null || this.autofocusColumnIndex === null) {
-        logError("Unable to autofocus to new row");
+        console.error("Unable to autofocus to new row");
         return;
       }
       const column = this.getVisualColumnIndex(this.autofocusColumnIndex);
@@ -2211,7 +2209,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     row.extra.tree!.children.forEach(ref => this.hideTreeChildren(ref));
   }
 
-  public async addChild(parentRef: CommittedRowRef) {
+  private async addChild(parentRef: CommittedRowRef) {
     if (this.uv.extra.treeParentColumnIndex === null) {
       throw new Error("Impossible");
     }
@@ -2227,7 +2225,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     await this.updateValue({ ...newRef, column: this.uv.extra.treeParentColumnIndex }, this.uv.rows![parentRef.position].mainId);
   }
 
-  public toggleChildren(ref: CommittedRowRef, visible: boolean) {
+  private toggleChildren(ref: CommittedRowRef, visible: boolean) {
     if (visible) {
       this.showTreeChildren(ref);
     } else {
@@ -2278,7 +2276,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.sortRows();
   }
 
-  removeCellEditing() {
+  private removeCellEditing() {
     this.editing = null;
   }
 
@@ -2356,15 +2354,15 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return elementWindow(this.$el as HTMLElement);
   }
 
-  public checkWindow() {
+  private checkWindow() {
     return this.activeWindow === this.parentWindow;
   }
 
-  public closeCellContextMenu() {
+  private closeCellContextMenu() {
     this.cellContextMenu = null;
   }
 
-  public openCellContextMenu(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+  private openCellContextMenu(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     const ref = this.getValueRefByVisualPosition(pos);
     this.setCursorCell(ref);
 
@@ -2435,7 +2433,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     );
   }
 
-  public cellMouseDown(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+  private cellMouseDown(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (event.shiftKey || event.ctrlKey) return;
 
     const ref = this.getValueRefByVisualPosition(pos);
@@ -2447,7 +2445,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.closeCellContextMenu();
   }
 
-  public continueCellSelection(cursorPosition: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+  private continueCellSelection(cursorPosition: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (!(event.buttons & 1) || !this.uv.extra.oldCursorValue) return;
     const oldCursorPosition = this.getCellVisualPosition(this.uv.extra.oldCursorValue);
     if (!oldCursorPosition) {
@@ -2465,7 +2463,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public endCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+  private endCellSelection(ref: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     this.uv.extra.oldCursorValue = this.uv.extra.cursorValue;
   }
 
@@ -2489,7 +2487,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public clickCell(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
+  private clickCell(pos: IVisualPosition, element: HTMLElement, event: MouseEvent) {
     if (event.ctrlKey) {
       this.removeCellEditing();
       if (this.uv.extra.cursorValue) {
@@ -2557,7 +2555,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.lastSelectedRow = null;
   }
 
-  public selectTableRow(pos: number, event: MouseEvent) {
+  private selectTableRow(pos: number, event: MouseEvent) {
     const row = this.allRows[pos];
 
     // If we are in a selection mode, just emit selected row.
@@ -2614,7 +2612,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public toggleAllRows() {
+  private toggleAllRows() {
     this.selectAll(!this.selectedSome);
     this.$root.$emit("row-select", this.uid);
   }
@@ -2648,7 +2646,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.buildRowPositions();
   }
 
-  public loadAllRowsAndUpdateSort(sortColumn: number) {
+  private loadAllRowsAndUpdateSort(sortColumn: number) {
     if (this.dirtyHackPreventEntireReloads) return;
 
     if (!this.uv.rowLoadState.complete) {
@@ -2811,12 +2809,12 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return this.uv.rowLoadState.complete ? `${totalAdded + middleRowsLength}` : "";
   }
 
-  @Watch("statusLine")
+  @Watch("statusLine", { immediate: true })
   private updateStatusLine() {
     this.$emit("update:status-line", this.statusLine);
   }
 
-  public get allRows() {
+  get allRows() {
     if (this.uv.extra.lazyLoad.type === "pagination") {
       const start = this.uv.extra.lazyLoad.pagination.currentPage * this.uv.extra.lazyLoad.pagination.perPage;
       const end = start + this.uv.extra.lazyLoad.pagination.perPage;
@@ -2827,17 +2825,11 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public get shownRows() {
+  get shownRows() {
     switch (this.uv.extra.lazyLoad.type) {
       case "infinite_scroll": {
         const totalAdded = Object.keys(this.uv.newRows).length;
-        const rowsToRemove = totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength;
-        if (rowsToRemove === 0) {
-          logError(new Error(`Views :: Table :: Incorrect calculation of rows to remove, rowsToRemove: ${rowsToRemove}`));
-          return this.allRows;
-        }
-
-        return this.allRows.slice(0, rowsToRemove);
+        return this.allRows.slice(0, totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
       }
       case "pagination":
         return this.allRows;
@@ -2846,7 +2838,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
-  public async updateCurrentValue(rawValue: unknown) {
+  private async updateCurrentValue(rawValue: unknown) {
     const editing = this.editing!;
     const ref = editing.ref;
     const newRef = await this.updateValue(ref, rawValue);
