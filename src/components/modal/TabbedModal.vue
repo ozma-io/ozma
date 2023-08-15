@@ -68,7 +68,7 @@
           :is-active="index === selectedTab"
           :window-key="tab.key"
           :title="tab.title"
-          :only-tab="modalTabs && modalTabs.length === 1"
+          :only-tab="modalTabs.length === 1"
           @tab-click="switchTab(index)"
           @tab-close="$emit('tab-close', index)"
         >
@@ -129,8 +129,6 @@ import { interfaceButtonVariant } from "@/utils_colors";
 import { Button } from "../buttons/buttons";
 import { IModalTab } from "./types";
 
-import { logError } from "@/helpers/logger";
-
 const windows = namespace("windows");
 
 @Component({ components: { ModalContent, ModalTabHeader } })
@@ -146,7 +144,7 @@ export default class TabbedModal extends Vue {
   @Prop({ type: String }) height!: string;
   @Prop({ type: Number, default: 0 }) startingTab!: number;
 
-  public selectedTab = 0;
+  private selectedTab = 0;
 
   private mounted() {
     if (this.show) {
@@ -201,15 +199,11 @@ export default class TabbedModal extends Vue {
 
     if (this.modalTabs.length > 0) {
       const tab = this.modalTabs[this.selectedTab];
-      try {
-        this.activateWindow(tab.key);
-      } catch (err: unknown) {
-        logError(err);
-      }
+      this.activateWindow(tab.key);
     }
   }
 
-  public get mainButtons(): Button[] {
+  private get mainButtons(): Button[] {
     return [
       {
         type: "callback",
@@ -221,18 +215,18 @@ export default class TabbedModal extends Vue {
   }
 
   // Event is not typed for vue-js-modal
-  public beforeClose(ev: any) {
+  private beforeClose(ev: any) {
     if (this.show) {
       ev.cancel();
       this.$emit("close");
     }
   }
 
-  public switchTab(index: number) {
+  private switchTab(index: number) {
     this.selectedTab = index;
   }
 
-  public get modalWidth(): string {
+  private get modalWidth(): string {
     return this.$isMobile && this.fullscreen
       ? window.innerWidth > 512 ? `512px` : "100%"
       : this.$isMobile
@@ -240,19 +234,19 @@ export default class TabbedModal extends Vue {
         : this.fullscreen ? "100%" : this.width;
   }
 
-  public get modalHeight(): string {
+  private get modalHeight(): string {
     return (this.fullscreen || this.$isMobile)
       ? "100%"
       : this.height;
   }
 
-  public onOpened() {
+  private onOpened() {
     if (!this.modalTabs) {
       this.createWindow(this.uid);
     }
   }
 
-  public onClosed() {
+  private onClosed() {
     if (!this.modalTabs) {
       this.destroyWindow(this.uid);
     }

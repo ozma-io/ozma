@@ -114,7 +114,7 @@
         :class="shownRowPositions.length > 1 ? 'border-bottom p-3' : ''"
         :uv="uv"
         :blocks="gridBlocks"
-        :row="uv.rows !== null ? uv.rows[rowI] : null"
+        :row="uv.rows[rowI]"
         :scope="scope"
         :level="level"
         :is-top-level="isTopLevel"
@@ -167,7 +167,6 @@ import type { Button } from "@/components/buttons/buttons";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
 import { UserString, rawToUserString } from "@/state/translations";
-import { logError } from "@/helpers/logger";
 
 export interface IButtonAction {
   name: UserString;
@@ -247,20 +246,20 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   @query.State("current") query!: ICurrentQueryHistory | null;
   @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
   private deletedOne = false;
-  public toBeDeletedRef: RowRef | null = null;
+  private toBeDeletedRef: RowRef | null = null;
 
-  public get showPagination() {
+  private get showPagination() {
     return this.uv.extra.lazyLoad.type === "pagination"
       && this.uv.rowLoadState.fetchedRowCount >= this.uv.extra.lazyLoad.pagination.perPage;
   }
 
-  public get useInfiniteScrolling() {
+  private get useInfiniteScrolling() {
     return this.uv.extra.lazyLoad.type === "infinite_scroll"
       && (!this.uv.rowLoadState.complete
       || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
   }
 
-  public get nextPageButton(): Button | null {
+  private get nextPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -273,7 +272,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     };
   }
 
-  public get prevPageButton(): Button | null {
+  private get prevPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
@@ -285,7 +284,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     };
   }
 
-  public get firstPageButton(): Button | null {
+  private get firstPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
     return {
       type: "callback",
@@ -347,7 +346,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     }
   }
 
-  public get currentVisualPage() {
+  private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
     return String((this.uv.extra.lazyLoad.pagination?.currentPage ?? 0) + 1);
@@ -380,13 +379,13 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return this.pageRequiresLoading(this.uv.extra.lazyLoad.pagination.currentPage + 1);
   }
 
-  public get pagesCount(): number | null {
+  private get pagesCount(): number | null {
     if (this.uv.extra.lazyLoad.type !== "pagination" || !this.uv.rowLoadState.complete) return null;
 
     return Math.ceil(this.uv.rowLoadState.fetchedRowCount / this.uv.extra.lazyLoad.pagination.perPage);
   }
 
-  public infiniteHandler(ev: StateChanger) {
+  private infiniteHandler(ev: StateChanger) {
     if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
 
     this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
@@ -641,12 +640,12 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     return buttons;
   }
 
-  public confirmDelete(ref: RowRef) {
+  private confirmDelete(ref: RowRef) {
     this.toBeDeletedRef = ref;
     this.$bvModal.show(this.$id("confirmDelete"));
   }
 
-  public deleteRowAndSignal() {
+  private deleteRowAndSignal() {
     this.deleteRow(this.toBeDeletedRef!);
     this.deletedOne = true;
   }
@@ -711,12 +710,6 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       const end = start + this.uv.extra.lazyLoad.pagination.perPage;
       return this.rowPositions.slice(start, end);
     } else if (this.uv.extra.lazyLoad.type === "infinite_scroll") {
-      const { shownRowsLength } = this.uv.extra.lazyLoad.infiniteScroll;
-      if (shownRowsLength === 0) {
-        logError(new Error(`Views :: Form :: Incorrect calculation of shownRowsLength: ${shownRowsLength}`));
-        return this.rowPositions;
-      }
-
       return this.rowPositions.slice(0, this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
     } else {
       throw new Error("Wrong lazyLoad type");

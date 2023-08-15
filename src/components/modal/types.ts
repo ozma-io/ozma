@@ -5,5 +5,4 @@ export interface IModalTab {
   autofocus: boolean;
   header: VNode | VNode[] | null;
   content: VNode | VNode[];
-  title?: string;
 }

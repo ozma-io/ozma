@@ -81,21 +81,21 @@ export default class ButtonItem extends Vue {
   @Prop({ type: Boolean, default: false }) listItemHasRightMargin!: boolean;
   @Prop({ type: Boolean, default: false }) alignRight!: boolean;
 
-  public uploadFile(input: HTMLInputElement, next: (file: File) => void) {
+  private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
     const files = input.files as FileList;
     next(files[0]);
   }
 
-  public onClickCallback() {
+  private onClickLink() {
+    this.$emit("button-click", this.button);
+  }
+
+  private onClickCallback() {
     this.$emit("button-click", this.button);
 
     if (this.button.type === "callback") {
       this.button.callback();
     }
-  }
-
-  public onClickLink() {
-    this.$emit("button-click", this.button);
   }
 }
 </script>
