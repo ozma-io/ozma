@@ -115,6 +115,7 @@ export default class Textarea extends Vue {
 
   private updateInput(value: string) {
     this.$emit("update:value", value);
+    this.$root.$emit("validate", Boolean(this.required && value !== ""), this.uid);
   }
 
   private get textareaRows(): number | null {
