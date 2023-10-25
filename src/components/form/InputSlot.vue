@@ -71,7 +71,7 @@
           'longer-input-label': !(required || disabled) && inline,
           'input-label-with-indicator': (required || disabled) && inline,
         }"
-        :cols="inline ? 4 : 12"
+        :cols="12"
       >
         <div class="input_label__container">
           <label
@@ -83,7 +83,7 @@
         </div>
       </b-col>
       <b-col
-        :cols="(!!label && inline) ? 8 : 12"
+        :cols="12"
         :class="[
           'input_container',
           `text_align_${textAlign}`,
@@ -228,7 +228,7 @@ export default class InputSlot extends Vue {
   @include variant-to-local("cell");
 
   .row-override {
-    margin: 0px!important;
+    /* margin: 0px!important; */
   }
 
   .modal-content {
@@ -249,7 +249,7 @@ export default class InputSlot extends Vue {
   }
 
   .input_slot__row {
-    flex-direction: row;
+    flex-direction: column;
 
     &:hover {
       ::v-deep .disabled-indicator {
@@ -300,7 +300,7 @@ export default class InputSlot extends Vue {
 
   .input-slot {
     position: relative;
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
 
     .indicator-container {
       $indicator-size: calc((18 / 12) * 1rem); /* 12px is preferred font size and 18px is like in `.md-18` */

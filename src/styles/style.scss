@@ -242,6 +242,10 @@ input.with-clear-content-button {
       color: var(--cell-foregroundDarkerColor);
     }
   }
+
+  .form-control {
+    border-radius: 0.5rem;
+  }
 }
 
 $input-focus-border-color: #80bdff;

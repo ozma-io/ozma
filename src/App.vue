@@ -408,7 +408,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       "OldMainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
       "SecondaryBackgroundColor": this.settings.getEntry("secondary_background_color", String, "#f8f9fa"),
       "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "rgba(153, 153, 153, 1)"),
-      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "rgb(204, 204, 204)"),
+      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "#EFEFEF"),
       "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "#68766d"),
 
       // Dark Theme, do not remove
