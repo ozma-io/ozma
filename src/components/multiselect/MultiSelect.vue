@@ -736,7 +736,7 @@ export default class MultiSelect extends Vue {
     border: 1px solid var(--cell-borderColor);
     background: var(--cell-backgroundColor);
     color: var(--cell-foregroundColor);
-    border-radius: 0.5rem;
+    border-radius: 0.2rem;
     cursor: pointer;
 
     &:focus-within,
