@@ -5,7 +5,7 @@ pipelines:
     - parallel: &build_steps
       - step:
           name: Build FunApp
-          image: node:lts
+          image: node:18
           size: 2x
           caches:
             - yarn
@@ -16,7 +16,7 @@ pipelines:
             - dist/**
       - step:
           name: Lint FunApp
-          image: node:lts
+          image: node:18
           caches:
             - yarn
           script:
