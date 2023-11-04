@@ -131,7 +131,7 @@ export default class HeaderPanel extends Vue {
     color: var(--default-foregroundColor);
 
     &.is-root {
-      border-bottom: 1px solid var(--borderColor);
+      border-bottom: 1px solid var(--backgroundDarker1Color);
     }
 
   }

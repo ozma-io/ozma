@@ -221,6 +221,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
   .menu_container {
     max-height: 100%;
     overflow-y: auto;
+    background: var(--backgroundDarker1Color);
   }
 
   .menu_container__centered {
