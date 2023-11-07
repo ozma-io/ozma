@@ -2,7 +2,6 @@
     {
         "en": {
             "new_entry": "New entry",
-            "search_placeholder": "Type to search",
             "pending_changes": "Saving",
             "loading": "Now loading",
             "save": "Save (Ctrl+S)",
@@ -13,33 +12,14 @@
             "clear_changes_confirm": "Reset changes after last save?",
             "clear_changes_ok": "Clear",
             "cancel": "Cancel",
-            "account": "Account",
-            "theme": "Theme",
-            "invite_user": "Invite",
-            "workspaces": "Workspaces",
-            "documentation": "Documentation",
-            "login": "Login",
-            "logout": "Logout",
-            "auth_error": "Authentication error: {msg}",
-            "user_view_error": "Failed to fetch user view: {msg}",
-            "staging_error": "Error while submitting changes: {msg}",
             "settings_error": "Failed to fetch settings: {msg}",
             "select_user_view_error": "Failed to select an entry: {msg}",
             "base_user_view_error": "Failed to perform an operation: {msg}",
             "error": "Error",
-            "forget_dismissed_help_pages": "Forget dismissed help pages",
-            "enable_development_mode": "Enable development mode",
-            "disable_development_mode": "Disable development mode",
-            "development_mode_indicator": "Development mode is on",
-            "change_language": "Language",
-            "en": "English",
-            "es": "Spanish (Español)",
-            "ru": "Russian (Русский)",
-            "authed_link": "Copy link with authorization"
+            "development_mode_indicator": "Development mode is on"
         },
         "ru": {
             "new_entry": "Новая запись",
-            "search_placeholder": "Поиск",
             "pending_changes": "Сохраняется",
             "loading": "Загрузка данных",
             "save": "Сохранить (Ctrl+S)",
@@ -50,33 +30,14 @@
             "clear_changes_confirm": "Сбросить все изменения с последнего сохранения?",
             "clear_changes_ok": "Сбросить",
             "cancel": "Отмена",
-            "account": "Профиль",
-            "theme": "Тема",
-            "invite_user": "Пригласить",
-            "workspaces": "Базы",
-            "documentation": "Документация",
-            "login": "Войти",
-            "logout": "Выйти",
-            "auth_error": "Ошибка авторизации: {msg}",
-            "user_view_error": "Ошибка получения представления: {msg}",
-            "staging_error": "Ошибка сохранения изменений: {msg}",
             "settings_error": "Ошибка получения настроек: {msg}",
             "select_user_view_error": "Ошибка выбора записи: {msg}",
             "base_user_view_error": "Ошибка выполнения операции: {msg}",
             "error": "Ошибка",
-            "forget_dismissed_help_pages": "Сбросить пропущенные страницы помощи",
-            "enable_development_mode": "Включить режим разработки",
-            "disable_development_mode": "Выключить режим разработки",
-            "development_mode_indicator": "Включён режим разработки",
-            "change_language": "Язык",
-            "en": "Английский (English)",
-            "es": "Испанский (Español)",
-            "ru": "Русский",
-            "authed_link": "Скопировать ссылку с авторизацией"
+            "development_mode_indicator": "Включён режим разработки"
         },
         "es": {
             "new_entry": "La nueva entrada",
-            "search_placeholder": "Teclea para buscar",
             "pending_changes": "La grabación",
             "loading": "Ahora está cargando",
             "save": "Guarder (Ctrl+S)",
@@ -87,42 +48,17 @@
             "clear_changes_confirm": "¿Restablecer los cambios después del último guardado?",
             "clear_changes_ok": "Eliminar",
             "cancel": "Cancelar",
-            "account": "La cuenta",
-            "theme": "El tema",
-            "invite_user": "Invitar",
-            "workspaces": "Espacios de Trabajo",
-            "documentation": "La documentación",
-            "login": "La sesión",
-            "logout": "Cerrar la sesión",
-            "auth_error": "El error de la autenticación: {msg}",
-            "user_view_error": "El error al recuperar la vista de usuario: {msg}",
-            "staging_error": "El error al enviar cambios: {msg}",
             "settings_error": "El error al recuperar la configuración: {msg}",
             "select_user_view_error": "El error al seleccionar una entrada: {msg}",
             "base_user_view_error": "El error al realizar una operación: {msg}",
             "error": "El error",
-            "forget_dismissed_help_pages": "Olvidar de las páginas de ayuda",
-            "enable_development_mode": "Habilitar el modo de desarrollo",
-            "disable_development_mode": "Deshabilitar el modo de desarrollo",
-            "development_mode_indicator": "El modo de desarrollo está activado",
-            "change_language": "El idioma",
-            "en": "Inglés (English)",
-            "es": "Español",
-            "ru": "Ruso (Русский)",
-            "authed_link": "Copiar el enlace con autorización"
+            "development_mode_indicator": "El modo de desarrollo está activado"
         }
     }
 </i18n>
 
 <template>
   <div class="main-div">
-    <portal to="main-buttons">
-      <ButtonsPanel
-        class="main-buttons"
-        :buttons="mainButtons"
-        @goto="push({ ...$event, key: null })"
-      />
-    </portal>
     <template v-if="query !== null">
       <ModalUserView
         v-for="window in query.windows"
@@ -147,14 +83,7 @@
         :type="'root'"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
-      >
-        <template #main-buttons>
-          <ButtonsPanel
-            :buttons="mainButtons"
-            @goto="push({ ...$event, key: null })"
-          />
-        </template>
-      </HeaderPanel>
+      />
       <div
         class="userview-div"
       >
@@ -311,21 +240,18 @@ import { Route } from "vue-router";
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { namespace } from "vuex-class";
 
-import * as Api from "@/api";
-import { eventBus } from "@/main";
 import { setHeadTitle, setHeadMeta } from "@/elements";
 import { ErrorKey } from "@/state/errors";
 import { CombinedTransactionResult, CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
 import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
-import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
+import { CurrentAuth, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory, QueryKey, QueryWindowKey } from "@/state/query";
-import { convertToWords, homeLink } from "@/utils";
+import { convertToWords } from "@/utils";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
-import { interfaceButtonVariant, defaultVariantAttribute, bootstrapVariantAttribute, IThemeRef } from "@/utils_colors";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 import { UserString } from "@/state/translations";
 
@@ -386,7 +312,6 @@ export default class TopLevelUserView extends Vue {
   @settings.State("pending") settingsPending!: Promise<CurrentSettings> | null;
   @settings.State("userIsRoot") userIsRoot!: boolean;
   @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
-  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: IThemeRef) => Promise<void>;
   @staging.State("autoSaveLocks") autoSaveLocks!: Object | null;
   @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
   @settings.Action("writeUserSettings") writeUserSettings!: (setting: { name: string; value: string }) => Promise<void>;
@@ -428,24 +353,6 @@ export default class TopLevelUserView extends Vue {
     return this.title ? this.$ustOrEmpty(this.title) : null;
   }
 
-  private get mainButtons(): Button[] {
-    return [
-      {
-        type: "callback",
-        icon: "arrow_back",
-        variant: interfaceButtonVariant,
-        callback: () => this.$router.back(),
-      },
-      {
-        type: "link",
-        icon: "home",
-        variant: interfaceButtonVariant,
-        link: homeLink,
-      },
-      this.burgerButton,
-    ];
-  }
-
   mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
     this.$root.$on("open-qrcode-scanner", this.openQRCodeScanner);
@@ -460,32 +367,6 @@ export default class TopLevelUserView extends Vue {
     this.$root.$off("open-qrcode-scanner", this.openQRCodeScanner);
     document.removeEventListener("keydown", this.onKeydown);
     /* eslint-enable @typescript-eslint/unbound-method */
-  }
-
-  private get themeButtons(): Button[] {
-    const locale = this.$i18n.locale;
-    return Object.entries(this.currentSettings.themes).flatMap(([schemaName, themesSchema]) => {
-      return Object.entries(themesSchema).map(([themeName, theme]) => {
-        const ref = {
-          schema: schemaName,
-          name: themeName,
-        };
-        let name: string;
-        if (locale in theme.localized) {
-          name = theme.localized[locale];
-        } else if ("en" in theme.localized) {
-          name = theme.localized["en"];
-        } else {
-          name = `${schemaName}.${themeName}`;
-        }
-        return {
-          caption: name,
-          variant: defaultVariantAttribute,
-          type: "callback",
-          callback: () => this.setCurrentTheme(ref),
-        };
-      });
-    });
   }
 
   private onKeydown(event: KeyboardEvent) {
@@ -677,136 +558,6 @@ export default class TopLevelUserView extends Vue {
 
   private get finalStyle() {
     return this.finalSettingsStyle ?? "" + this.userViewStyle ?? "";
-  }
-
-  get burgerButton() {
-    const buttons: Button[] = [];
-
-    if (this.currentAuth?.refreshToken) {
-      buttons.push({
-        icon: "person_add",
-        caption: this.$t("invite_user").toString(),
-        variant: defaultVariantAttribute,
-        type: "callback",
-        callback: () => eventBus.emit("show-invite-user-modal"),
-      });
-    }
-
-    if (this.themeButtons.length > 0) {
-      buttons.push({
-        icon: "palette",
-        caption: this.$t("theme").toString(),
-        type: "button-group",
-        buttons: this.themeButtons,
-        variant: defaultVariantAttribute,
-      });
-    }
-
-    buttons.push({
-      icon: "language",
-      caption: this.$t("change_language").toString(),
-      variant: defaultVariantAttribute,
-      type: "button-group",
-      buttons: ["en", "es", "ru"].map(language =>
-        ({
-          caption: this.$t(language).toString(),
-          variant: defaultVariantAttribute,
-          type: "callback",
-          callback: () => {
-            void this.writeUserSettings({ name: "language", value: language });
-          },
-        })),
-    });
-
-    if (this.currentAuth?.refreshToken) {
-      if (this.allowBusinessMode && this.userIsRoot) {
-        buttons.push({
-          icon: "developer_mode",
-          caption: this.$t(this.developmentModeEnabled ? "disable_development_mode" : "enable_development_mode").toString() + " (Ctrl+Shift+D)",
-          type: "callback",
-          callback: () => this.toggleDeveloperMode(),
-          variant: this.developmentModeEnabled ? bootstrapVariantAttribute("warning") : bootstrapVariantAttribute("info"),
-          keepButtonGroupOpened: true,
-        });
-      }
-
-      if (this.developmentModeEnabled) {
-        buttons.push({
-          icon: "help_center",
-          caption: this.$t("documentation").toString(),
-          variant: bootstrapVariantAttribute("info"),
-          type: "link",
-          link: { type: "href", href: "https://wiki.ozma.io", target: "blank" },
-        });
-
-        buttons.push({
-          icon: "view_list",
-          caption: this.$t("workspaces").toString(),
-          variant: bootstrapVariantAttribute("info"),
-          type: "link",
-          link: { type: "href", href: "https://admin.ozma.io", target: "blank" },
-        });
-
-        if (Api.developmentMode) {
-          const currentAuth = this.currentAuth;
-          buttons.push({
-            icon: "link",
-            caption: this.$t("authed_link").toString(),
-            variant: bootstrapVariantAttribute("info"),
-            type: "callback",
-            callback: () => {
-              const link = getAuthedLink(currentAuth);
-              void navigator.clipboard.writeText(link);
-            },
-          });
-        }
-
-        buttons.push({
-          icon: "layers_clear",
-          caption: this.$t("forget_dismissed_help_pages").toString(),
-          variant: bootstrapVariantAttribute("info"),
-          type: "callback",
-          callback: () => {
-            const allKeys = Object.keys(localStorage);
-            const keys = ["dismissHelpPages", ...allKeys.filter(key => key.startsWith("watchedHelpPage_"))];
-            for (const key of keys) {
-              localStorage.removeItem(key);
-            }
-          },
-        });
-      }
-      buttons.push({
-        icon: "perm_identity",
-        caption: this.$t("account").toString(),
-        type: "link",
-        link: { href: Api.accountUrl, type: "href", target: "blank" },
-        variant: defaultVariantAttribute,
-      });
-      buttons.push({
-        icon: "exit_to_app",
-        caption: this.$t("logout").toString(),
-        type: "callback",
-        callback: () => void this.logout(),
-        variant: defaultVariantAttribute,
-      });
-    } else {
-      buttons.push({
-        icon: "login",
-        caption: this.$t("login").toString(),
-        type: "callback",
-        callback: () => void this.login(),
-        variant: defaultVariantAttribute,
-      });
-    }
-
-    const burgerButton: Button = {
-      icon: "menu",
-      variant: interfaceButtonVariant,
-      buttons,
-      type: "button-group",
-    };
-
-    return burgerButton;
   }
 
   get isMainView() {

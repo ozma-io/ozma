@@ -118,10 +118,9 @@ export default class HeaderPanel extends Vue {
 
 <style lang="scss" scoped>
   .header-panel {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding: 0.5rem;
     padding-top: 0.65rem;
-    padding-bottom: 0.5rem;
+    padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
     flex-grow: 1;
     display: flex;
     flex-direction: row;
@@ -129,11 +128,6 @@ export default class HeaderPanel extends Vue {
     align-items: stretch;
     overflow-x: hidden;
     color: var(--default-foregroundColor);
-
-    &.is-root {
-      border-bottom: 1px solid var(--backgroundDarker1Color);
-    }
-
   }
 
   .left-part {
@@ -164,7 +158,7 @@ export default class HeaderPanel extends Vue {
   }
 
   .input_label {
-    margin: 0.25rem;
+    margin: 0.5rem;
     margin-left: 0;
     margin-right: auto;
     font-weight: 600;

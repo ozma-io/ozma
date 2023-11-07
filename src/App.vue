@@ -29,6 +29,8 @@
       @banner-close="onBannerClose"
     />
 
+    <AppHeader />
+
     <div class="app-container">
       <div v-if="!bannerMessage" class="main-buttons-wrapper">
         <portal-target name="main-buttons" />
@@ -92,6 +94,7 @@ import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, t
 import { eventBus, IShowHelpModalArgs } from "@/main";
 import { IEmbeddedPageRef } from "@/api";
 import InviteUserModal from "./components/InviteUserModal.vue";
+import AppHeader from "./AppHeader.vue";
 import { EntityRef } from "./links";
 import { safeJsonParse } from "./utils";
 import { equalEntityRef } from "./values";
@@ -112,6 +115,7 @@ import { setHeadMeta, setHeadLink } from "@/elements";
   components: {
     ModalPortalTarget,
     InviteUserModal,
+    AppHeader,
     AlertBanner: () => import("@/components/AlertBanner.vue"),
     ReadonlyDemoInstanceModal: () => import("@/components/ReadonlyDemoInstanceModal.vue"),
     HelpModal: () => import("@/components/HelpModal.vue"),

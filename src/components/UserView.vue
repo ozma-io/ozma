@@ -1264,8 +1264,6 @@ export default class UserView extends Vue {
   }
 
   .userview-argument-editor-container {
-    border-bottom: 1px solid var(--borderColor);
-
     .filter-button-container {
       padding: 0.7rem;
 
