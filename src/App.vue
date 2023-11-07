@@ -345,9 +345,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       foregroundContrast: defaultVariant.foregroundContrast,
       foregroundDarker: defaultVariant.foregroundDarker,
     };
+    const outlinedInterfaceButton = {
+      ...interfaceButton,
+      border: defaultVariant.border,
+    };
     const defaultColorVariants = {
       default: defaultVariant,
       interfaceButton,
+      outlinedInterfaceButton,
       menuEntry: interfaceButton,
     };
     const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };

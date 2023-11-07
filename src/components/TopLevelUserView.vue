@@ -81,6 +81,9 @@
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         :type="'root'"
+        :view="query.root"
+        :showFiltersButton="showFiltersButton"
+        @filters-button-clicked="$refs.userViewRef?.openFiltersModal?.()"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
       />
@@ -88,6 +91,7 @@
         class="userview-div"
       >
         <UserView
+          ref="userViewRef"
           is-root
           is-top-level
           in-container
@@ -105,6 +109,7 @@
           @update:description="description = $event"
           @update:url="url = $event"
           @update:current-page="replacePage({ key: null, page: $event })"
+          @update:show-filters-button="showFiltersButton = $event"
         />
       </div>
     </div>
@@ -326,6 +331,7 @@ export default class TopLevelUserView extends Vue {
   private url: UserString | null = null;
 
   private buttons: Button[] = [];
+  private showFiltersButton = false;
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,

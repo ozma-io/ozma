@@ -1,5 +1,6 @@
 <template>
   <UserView
+    ref="ref"
     :args="args"
     :default-values="defaultValues"
     :scope="scope"
@@ -11,12 +12,14 @@
     @update:enable-filter="$emit('update:enable-filter', $event)"
     @update:title="$emit('update:title', $event)"
     @update:is-loading="$emit('update:is-loading', $event)"
+    @update:show-filters-button="$emit('update:show-filters-button', $event)"
   />
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { convertToWords } from "@/utils";
+import UserView from "./UserView.vue";
 
 @Component
 export default class NestedUserView extends Vue {
@@ -28,6 +31,10 @@ export default class NestedUserView extends Vue {
   @Prop({ type: Boolean, default: false }) inContainer!: boolean;
 
   private isLoading = true;
+
+  openFiltersModal() {
+    (this.$refs["ref"] as UserView | undefined)?.openFiltersModal?.();
+  }
 
   get filterWords() {
     const value = this.filterString;

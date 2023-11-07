@@ -307,7 +307,6 @@ export default class AppHeader extends Vue {
 
     .logo {
       margin-left: 1rem;
-      font-family: Poppins;
       font-size: 1.2rem;
     }
 

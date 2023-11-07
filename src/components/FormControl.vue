@@ -285,6 +285,8 @@
         :filter-string="filterString"
         :is-loading="isUserViewLoading"
         :type="'component'"
+        :showFiltersButton="showFiltersButton"
+        @filters-button-clicked="$refs.control?.openFiltersModal?.()"
         @update:filter-string="filterString = $event"
         @goto="$emit('goto', $event)"
       />
@@ -305,6 +307,7 @@
           @update:is-loading="isUserViewLoading = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
+          @update:show-filters-button="showFiltersButton = $event"
         />
       </div>
     </div>
@@ -602,6 +605,8 @@ export default class FormControl extends Vue {
   private enableFilter = false;
   private isUserViewLoading = false;
   private autoSaveLock: AutoSaveLock | null = null;
+
+  private showFiltersButton = false;
 
   get valueIsNull() {
     return valueIsNull(this.value);
