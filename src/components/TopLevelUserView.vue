@@ -81,7 +81,6 @@
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         :type="'root'"
-        :view="query.root"
         :showFiltersButton="showFiltersButton"
         @filters-button-clicked="$refs.userViewRef?.openFiltersModal?.()"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
