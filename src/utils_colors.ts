@@ -119,6 +119,7 @@ export const transparentVariant = Object.fromEntries(variantKeys.map(key => [key
 
 export const defaultVariantAttribute: ColorVariantAttribute = ({ type: "existing", className: "default" }) as const;
 export const interfaceButtonVariant: ColorVariantAttribute = ({ type: "existing", className: "interfaceButton" }) as const;
+export const outlinedInterfaceButtonVariant: ColorVariantAttribute = ({ type: "existing", className: "outlinedInterfaceButton" }) as const;
 
 export const bootstrapVariantAttribute = (name: BootstrapVariantName) => ({ type: "existing", className: name }) as const;
 

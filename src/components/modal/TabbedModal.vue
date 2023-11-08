@@ -315,10 +315,6 @@ export default class TabbedModal extends Vue {
     max-height: 95% !important;
   }
 
-  .tabbed-modal .header {
-    border-bottom: 1px solid var(--borderColor);
-  }
-
   .tab-content {
     height: 100%;
 

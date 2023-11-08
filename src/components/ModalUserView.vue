@@ -47,6 +47,8 @@
         :view="view"
         :is-loading="isUserViewLoading"
         :type="'modal'"
+        :showFiltersButton="showFiltersButton"
+        @filters-button-clicked="$refs.userViewRef?.openFiltersModal?.()"
         @update:filter-string="filterString = $event"
         @goto="$emit('goto', $event)"
       />
@@ -57,6 +59,7 @@
         class="view-container"
       >
         <UserView
+          ref="userViewRef"
           is-root
           in-container
           :args="view.args"
@@ -72,6 +75,7 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
+          @update:show-filters-button="showFiltersButton = $event"
         />
       </div>
     </section>
@@ -114,6 +118,8 @@ export default class ModalUserView extends Vue {
   private enableFilter = false;
   private filterString = "";
   private isUserViewLoading = false;
+
+  private showFiltersButton = false;
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,

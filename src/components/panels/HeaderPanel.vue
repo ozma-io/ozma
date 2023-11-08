@@ -1,3 +1,17 @@
+<i18n>
+  {
+    "en": {
+      "filters": "Filters"
+    },
+    "ru": {
+      "filters": "Фильтры"
+    },
+    "es": {
+      "filters": "Filtros"
+    }
+  }
+</i18n>
+
 <template>
   <div
     :class="[
@@ -13,35 +27,49 @@
       <div v-if="$slots['main-buttons']" class="main-buttons">
         <slot name="main-buttons" />
       </div>
-      <!-- `tabindex` is required for closing tooltip on blur -->
-      <h1
-        v-if="title && type === 'root'"
-        v-b-tooltip.click.blur.bottom.noninteractive.viewport
-        tabindex="0"
-        :class="[
-          'input_label',
-          {
-            'is-loading': isLoading,
-          }
-        ]"
-        :title="$ustOrEmpty(title)"
-      >
-        {{ $ustOrEmpty(title) }}
-      </h1>
-      <h2
+      <div v-if="title && type === 'root'" class="middle-part">
+        <!-- `tabindex` is required for closing tooltip on blur -->
+        <h1
+          v-b-tooltip.click.blur.bottom.noninteractive.viewport
+          tabindex="0"
+          :class="[
+            'userview-title',
+            {
+              'is-loading': isLoading,
+            }
+          ]"
+        >
+          {{ $ustOrEmpty(title) }}
+        </h1>
+        <ButtonItem
+          v-if="filtersButton"
+          class="filters-button"
+          :button="filtersButton"
+        />
+      </div>
+      <div
         v-else
-        v-b-tooltip.click.blur.bottom.noninteractive.viewport
-        tabindex="0"
-        :class="[
-          'input_label',
-          {
-            'is-loading': isLoading,
-          }
-        ]"
-        :title="$ustOrEmpty(title)"
+        class="userview-title-wrapper"
       >
-        {{ $ustOrEmpty(title) }}
-      </h2>
+        <h2
+          v-b-tooltip.click.blur.bottom.noninteractive.viewport
+          tabindex="0"
+          :title="$ustOrEmpty(title)"
+          :class="[
+            'userview-title',
+            {
+              'is-loading': isLoading,
+            }
+          ]"
+        >
+          {{ $ustOrEmpty(title) }}
+        </h2>
+        <ButtonItem
+          v-if="filtersButton"
+          class="filters-button"
+          :button="filtersButton"
+        />
+      </div>
     </div>
 
     <div class="right-part">
@@ -69,7 +97,7 @@ import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
-import { interfaceButtonVariant } from "@/utils_colors";
+import { interfaceButtonVariant, outlinedInterfaceButtonVariant } from "@/utils_colors";
 import { UserString } from "@/state/translations";
 
 @Component({
@@ -85,6 +113,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Object }) view!: IUserViewType | undefined;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
+  @Prop({ type: Boolean, default: false }) showFiltersButton!: boolean;
   // Is it TopLevelUserView's header or current tab of modal or component (sub UserView).
   // options: 'component', 'modal' ,'root', null
   @Prop({ type: String }) type!: string | undefined;
@@ -95,6 +124,21 @@ export default class HeaderPanel extends Vue {
       buttons.push(this.fullscreenButton);
     }
     return buttons;
+  }
+
+  private get filtersButton(): Button | null {
+    if (!this.showFiltersButton) {
+      return null;
+    }
+
+    return {
+      // TODO: Add 'expand' icon on the right to match design from Figma.
+      type: "callback",
+      variant: outlinedInterfaceButtonVariant,
+      icon: "tune",
+      caption: this.$t("filters").toString(),
+      callback: () => this.$emit("filters-button-clicked"),
+    };
   }
 
   private get fullscreenButton(): Button | null {
@@ -118,10 +162,9 @@ export default class HeaderPanel extends Vue {
 
 <style lang="scss" scoped>
   .header-panel {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding: 0.5rem;
     padding-top: 0.65rem;
-    padding-bottom: 0.5rem;
+    padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
     flex-grow: 1;
     display: flex;
     flex-direction: row;
@@ -129,11 +172,6 @@ export default class HeaderPanel extends Vue {
     align-items: stretch;
     overflow-x: hidden;
     color: var(--default-foregroundColor);
-
-    &.is-root {
-      border-bottom: 1px solid var(--backgroundDarker1Color);
-    }
-
   }
 
   .left-part {
@@ -145,6 +183,23 @@ export default class HeaderPanel extends Vue {
          see https://foobartel.com/tilrs/overflow-x-and-borders */
       margin: 0.25rem;
       flex-shrink: 0;
+    }
+  }
+
+  .middle-part {
+    padding: 0.25rem;
+
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: hidden;
+
+    .userview-title {
+      flex: 0 1 auto;
+    }
+
+    .filters-button {
+      flex: 0 0 auto;
     }
   }
 
@@ -163,8 +218,15 @@ export default class HeaderPanel extends Vue {
     flex-shrink: 0;
   }
 
-  .input_label {
-    margin: 0.25rem;
+  .userview-title-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: hidden;
+  }
+
+  .userview-title {
+    margin: 0.5rem;
     margin-left: 0;
     margin-right: auto;
     font-weight: 600;

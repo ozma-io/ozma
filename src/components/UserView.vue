@@ -17,17 +17,11 @@
             "unknown_error": "Unknown user view fetch error: {msg}",
             "anonymous_query": "(anonymous query)",
             "edit_view": "Edit",
-            "arguments_updated": "Apply or reset arguments changes to continue",
-            "reset_updated_arguments": "Reset",
-            "apply_updated_arguments": "Apply",
-            "show_argument_editor": "Show filters",
-            "hide_argument_editor": "Hide filters",
             "invalid_user_view_link": "User view link is invalid.",
             "user_view_loop": "User view loop is detected.",
             "edit_view_modal_text_common": "To edit this view contact your integrator using links below.",
             "edit_view_modal_text_for_roots": "If you feel comfortable editing view source code by yourself, press button below to open the editor. This confirmation is skipped when development mode is enabled (in top left menu). Read more on editing user views:",
-            "open_editor": "Open editor",
-            "switch_argument_editor": "Filters"
+            "open_editor": "Open editor"
         },
         "ru": {
             "edit_form": "Редактировать форму",
@@ -46,17 +40,11 @@
             "unknown_error": "Неизвестная ошибка загрузки представления: {msg}",
             "anonymous_query": "(анонимный запрос)",
             "edit_view": "Редактировать",
-            "arguments_updated": "Примените или сбросьте изменения аргументов, чтобы продолжить",
-            "reset_updated_arguments": "Сбросить",
-            "apply_updated_arguments": "Применить",
-            "show_argument_editor": "Показать фильтры",
-            "hide_argument_editor": "Скрыть фильтры",
             "invalid_user_view_link": "Неверная ссылка в представлении.",
             "user_view_loop": "Обнаружен цикл из ссылок в представлениях.",
             "edit_view_modal_text_common": "Для изменения представления, обратитесь к вашему интегратору по контактам ниже.",
             "edit_view_modal_text_for_roots": "Если вы желаете самостоятельно отредактировать исходный код представления, нажмите кнопку внизу, чтобы открыть редактор. Это подтверждение не показывается, когда включён режим разработки (в верхнем левом меню). Больше информации про редактирование представлений:",
-            "open_editor": "Открыть редактор",
-            "switch_argument_editor": "Фильтры"
+            "open_editor": "Открыть редактор"
         },
         "es": {
             "edit_form": "Editar el formulario",
@@ -76,17 +64,11 @@
             "unknown_error": "El error de recuperación de vista de usuario desconocido: {msg}",
             "anonymous_query": "(La consulta anónima)",
             "edit_view": "Editar",
-            "arguments_updated": "Aplique o restablezca los cambios para continuar",
-            "reset_updated_arguments": "Restablecer",
-            "apply_updated_arguments": "Aplicar",
-            "show_argument_editor": "Mostrar los filtros",
-            "hide_argument_editor": "Ocultar los  filtros",
             "invalid_user_view_link": "El enlace de vista de usuario no es válido.",
             "user_view_loop": "Se detecta un bucle de vista de usuario.",
             "edit_view_modal_text_common": "Para editar esta vista, póngase en contacto con su integrador mediante los enlaces que aparecen a continuación.",
             "edit_view_modal_text_for_roots": "Si se siente cómodo editando el código fuente de la vista usted mismo, presione el botón de abajo para abrir el editor. Esta confirmación se omite cuando el modo de desarrollo está habilitado (en el menú superior izquierdo). Más información sobre la edición de vistas de usuario:",
-            "open_editor": "Abrir el editor",
-            "switch_argument_editor": "Los filtros"
+            "open_editor": "Abrir el editor"
         }
     }
 </i18n>
@@ -161,51 +143,19 @@
     <template
       v-if="state.state === 'show'"
     >
-      <div
-        v-if="(showArgumentEditorButton || argumentEditorVisible)"
-        class="userview-argument-editor-container"
-      >
-        <div
-          v-if="showArgumentEditorButton"
-          class="filter-button-container"
-        >
-          <button
-            class="filter-button list-group-item list-group-item-action list-group-item-default"
-            @click.prevent="showArgumentEditor = !showArgumentEditor;"
-          >
-            <span
-              v-if="argumentEditorVisible"
-              class="icon material-icons md-14"
-            >
-              filter_alt_off
-            </span>
-            <span
-              v-else
-              class="icon material-icons md-14"
-            >
-              filter_alt
-            </span>
-            <span
-              class="filter-button-text mx-2"
-            >
-              {{ $t("switch_argument_editor").toString() }}
-            </span>
-          </button>
-        </div>
-
-        <ArgumentEditor
-          v-if="argumentEditorVisible"
-          class="userview-argument-editor-content"
-          :home-schema="state.uv.homeSchema"
-          :params="state.uv.info.arguments"
-          :values="currentArguments"
-          :attributes="state.uv.argumentAttributes"
-          :attribute-mappings="state.uv.argumentAttributeMappings"
-          @clear="clearUpdatedArguments"
-          @update="updateArgument"
-          @apply="applyUpdatedArguments"
-        />
-      </div>
+      <ArgumentEditor
+        ref="argumentEditorRef"
+        class="userview-argument-editor-content"
+        :home-schema="state.uv.homeSchema"
+        :params="state.uv.info.arguments"
+        :values="currentArguments"
+        :attributes="state.uv.argumentAttributes"
+        :attribute-mappings="state.uv.argumentAttributeMappings"
+        @clear="clearUpdatedArguments"
+        @update="updateArgument"
+        @apply="applyUpdatedArguments"
+        @close="$modal.hide(uid)"
+      />
 
       <UserViewCommon
         :uv="state.uv"
@@ -220,63 +170,33 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <FunOverlay
-        ref="overlayRef"
-        :show="argumentEditorVisible && argumentEditorHasUpdatedValues && !autoApplyArguments"
-        :infinite-wrapper="inContainer"
-      >
-        <template #overlay>
-          <div class="overlay-content">
-            <div class="overlay-text">
-              {{ $t("arguments_updated") }}
-            </div>
-
-            <div class="overlay-buttons">
-              <b-button
-                class="mr-3"
-                variant="light"
-                @click="clearUpdatedArguments"
-              >
-                {{ $t("reset_updated_arguments") }}
-              </b-button>
-              <b-button
-                variant="primary"
-                @click="applyUpdatedArguments"
-              >
-                {{ $t("apply_updated_arguments") }}
-              </b-button>
-            </div>
-          </div>
-        </template>
-
-        <transition name="fade-1" mode="out-in">
-          <component
-            :is="`UserView${state.componentName}`"
-            ref="userViewRef"
-            :key="transitionKey"
-            :uv="state.uv"
-            :is-root="isRoot"
-            :is-top-level="isTopLevel"
-            :filter="filter"
-            :scope="scope"
-            :level="level"
-            :selection-mode="selectionMode"
-            :default-values="defaultValues"
-            :auto-saved="state.autoSaved"
-            @goto="$emit('goto', $event)"
-            @goto-previous="$emit('goto-previous')"
-            @select="$emit('select', $event)"
-            @update:buttons="componentButtons = $event"
-            @update:status-line="$emit('update:status-line', $event)"
-            @update:enable-filter="$emit('update:enable-filter', $event)"
-            @update:current-page="$emit('update:current-page', $event)"
-            @update:body-style="$emit('update:body-style', $event)"
-            @load-next-chunk="loadNextChunk"
-            @load-all-chunks="loadAllChunks"
-            @load-entries="loadEntries"
-          />
-        </transition>
-      </FunOverlay>
+      <transition name="fade-1" mode="out-in">
+        <component
+          :is="`UserView${state.componentName}`"
+          ref="userViewRef"
+          :key="transitionKey"
+          :uv="state.uv"
+          :is-root="isRoot"
+          :is-top-level="isTopLevel"
+          :filter="filter"
+          :scope="scope"
+          :level="level"
+          :selection-mode="selectionMode"
+          :default-values="defaultValues"
+          :auto-saved="state.autoSaved"
+          @goto="$emit('goto', $event)"
+          @goto-previous="$emit('goto-previous')"
+          @select="$emit('select', $event)"
+          @update:buttons="componentButtons = $event"
+          @update:status-line="$emit('update:status-line', $event)"
+          @update:enable-filter="$emit('update:enable-filter', $event)"
+          @update:current-page="$emit('update:current-page', $event)"
+          @update:body-style="$emit('update:body-style', $event)"
+          @load-next-chunk="loadNextChunk"
+          @load-all-chunks="loadAllChunks"
+          @load-entries="loadEntries"
+        />
+      </transition>
     </template>
 
     <Errorbox
@@ -489,8 +409,11 @@ export default class UserView extends Vue {
   private state: UserViewLoadingState = loadingState;
   private nextUv: Promise<void> | null = null;
   private updatedArguments: Record<ArgumentName, unknown> = {};
-  private showArgumentEditor = false;
   private userViewRedirects = 0;
+
+  openFiltersModal() {
+    (this.$refs["argumentEditorRef"] as ArgumentEditor | undefined)?.show();
+  }
 
   protected created() {
     if (this.isRoot) {
@@ -546,18 +469,6 @@ export default class UserView extends Vue {
       }
     }
     return null;
-  }
-
-  private get toggleArgumentEditorButton(): Button {
-    return {
-      icon: "edit_note",
-      caption: this.argumentEditorVisible ? this.$t("hide_argument_editor").toString() : this.$t("show_argument_editor").toString(),
-      variant: this.argumentEditorVisible ? bootstrapVariantAttribute("secondary") : defaultVariantAttribute,
-      callback: () => {
-        this.showArgumentEditor = !this.showArgumentEditor;
-      },
-      type: "callback",
-    };
   }
 
   private get editViewQuery(): IQuery | null {
@@ -642,12 +553,6 @@ export default class UserView extends Vue {
           page: null,
         };
 
-        if (this.state.state === "show") {
-          if (this.hasArguments) {
-            buttons.push(this.toggleArgumentEditorButton);
-          }
-        }
-
         if (this.developmentModeEnabled) {
           buttons.push({
             icon: "code",
@@ -675,6 +580,11 @@ export default class UserView extends Vue {
 
   private get hasArguments() {
     return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
+  }
+
+  @Watch("hasArguments", { immediate: true })
+  private emitShowFilterButton() {
+    this.$emit("update:show-filters-button", this.hasArguments);
   }
 
   get allButtons() {
@@ -962,7 +872,6 @@ export default class UserView extends Vue {
             key: this.uid,
             handler: uv,
           });
-          const oldShowArgumentEditor = this.showArgumentEditor;
           this.setState({
             state: "show",
             uv,
@@ -973,12 +882,6 @@ export default class UserView extends Vue {
           // Don't reset argument editor state if we didn't switch user views.
           if (!oldLocal) {
             this.scrollToTop();
-          }
-
-          if (oldArgs && deepEquals(oldArgs.source, uv.args.source)) {
-            this.showArgumentEditor = oldShowArgumentEditor;
-          } else {
-            this.showArgumentEditor = Boolean(uv.attributes["show_argument_editor"]);
           }
           this.nextUv = null;
         } else if (newType.type === "link") {
@@ -1028,10 +931,6 @@ export default class UserView extends Vue {
     (this.$refs.overlayRef as Vue)?.$el.scrollTo(0, 0);
   }
 
-  private get showArgumentEditorButton() {
-    return this.hasArguments && this.state.state === "show" && Boolean(this.state.uv.attributes["show_argument_button"]);
-  }
-
   private destroyCurrentUserView() {
     if (this.state.state !== "show") {
       return;
@@ -1040,7 +939,6 @@ export default class UserView extends Vue {
     this.state = loadingState;
     this.componentButtons = [];
     this.updatedArguments = {};
-    this.showArgumentEditor = false;
     this.$emit("update:status-line", "");
     this.$emit("update:enable-filter", false);
     this.$emit("update:body-style", "");
@@ -1120,10 +1018,6 @@ export default class UserView extends Vue {
   private get autoApplyArguments() {
     if (this.state.state !== "show") return false;
     return !this.state.uv.attributes["confirm_argument_changes"];
-  }
-
-  private get argumentEditorVisible() {
-    return this.hasArguments && this.showArgumentEditor;
   }
 
   // Returns whether we need to reload.
@@ -1264,8 +1158,6 @@ export default class UserView extends Vue {
   }
 
   .userview-argument-editor-container {
-    border-bottom: 1px solid var(--borderColor);
-
     .filter-button-container {
       padding: 0.7rem;
 
