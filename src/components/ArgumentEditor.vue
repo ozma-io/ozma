@@ -171,7 +171,7 @@ export default class ArgumentEditor extends Vue {
       type: "callback",
       icon: "close",
       variant: interfaceButtonVariant,
-      callback: () => this.$emit("close"),
+      callback: () => this.hide(),
     };
   }
 }

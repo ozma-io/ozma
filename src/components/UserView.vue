@@ -154,7 +154,6 @@
         @clear="clearUpdatedArguments"
         @update="updateArgument"
         @apply="applyUpdatedArguments"
-        @close="$modal.hide(uid)"
       />
 
       <UserViewCommon
