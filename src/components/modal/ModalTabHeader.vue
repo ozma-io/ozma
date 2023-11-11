@@ -127,8 +127,9 @@ export default class ModalTabHeader extends Vue {
 
       ::v-deep {
         .button-element,
+        .filters-button,
         .search-wrapper {
-          display: none;
+          display: none !important;
         }
       }
     }
