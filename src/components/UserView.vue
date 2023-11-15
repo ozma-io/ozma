@@ -9,6 +9,7 @@
             "edit_timeline": "Edit timeline",
             "edit_cancel": "Close",
             "edit_user_view": "Edit user view",
+            "show_argument_editor": "Show filters",
             "loading": "Now loading",
             "forbidden": "Sorry, you are not authorized to use this user view. Contact your administrator.",
             "creation_not_available": "FOR INSERT INTO clause is required for new entry mode.",
@@ -32,6 +33,7 @@
             "edit_timeline": "Редактировать таймлайн",
             "edit_cancel": "Закрыть",
             "edit_user_view": "Редактировать пользовательское представление",
+            "show_argument_editor": "Показать фильтры",
             "loading": "Загрузка данных",
             "forbidden": "К сожалению у вас нет прав доступа для просмотра этого представления. Свяжитесь с администратором.",
             "creation_not_available": "Для режима создания новой записи должна использоваться конструкция FOR INSERT INTO.",
@@ -55,6 +57,7 @@
             "edit_timeline": "Editar la línea de tiempo",
             "edit_cancel": "Cerrar",
             "edit_user_view": "Editar la vista de usuario",
+            "show_argument_editor": "Mostrar los filtros",
             "loading": "Ahora está cargando",
             "forbidden": "Lo sentimos, no está autorizado para usar esta vista de usuario. Póngase en contacto con su administrador.",
             "creation_not_available": "Para INSERTAR EN la cláusula se requiere para el nuevo modo de entrada.",
@@ -154,7 +157,6 @@
         @clear="clearUpdatedArguments"
         @update="updateArgument"
         @apply="applyUpdatedArguments"
-        @close="$modal.hide(uid)"
       />
 
       <UserViewCommon
@@ -525,6 +527,16 @@ export default class UserView extends Vue {
     return `${common} ${root}`;
   }
 
+  private get openFiltersModalButton(): Button {
+    return {
+      type: "callback",
+      callback: () => this.openFiltersModal(),
+      caption: this.$t("show_argument_editor").toString(),
+      variant: defaultVariantAttribute,
+      icon: "edit_note",
+    };
+  }
+
   get uvButtons() {
     const buttons: Button[] = [];
 
@@ -552,6 +564,10 @@ export default class UserView extends Vue {
           search: "",
           page: null,
         };
+
+        if (this.hasArguments) {
+          buttons.push(this.openFiltersModalButton);
+        }
 
         if (this.developmentModeEnabled) {
           buttons.push({
@@ -582,9 +598,15 @@ export default class UserView extends Vue {
     return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
   }
 
-  @Watch("hasArguments", { immediate: true })
+  private get showFiltersButton() {
+    return this.state.state === "show"
+      && this.hasArguments
+      && (this.state.uv.attributes["show_argument_button"] || this.state.uv.attributes["show_argument_editor"]);
+  }
+
+  @Watch("showFiltersButton", { immediate: true })
   private emitShowFilterButton() {
-    this.$emit("update:show-filters-button", this.hasArguments);
+    this.$emit("update:show-filters-button", this.showFiltersButton);
   }
 
   get allButtons() {
