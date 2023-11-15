@@ -697,17 +697,24 @@ export default class UserView extends Vue {
         return [name, serialized];
       }
     }, Object.entries(this.currentArguments!)));
-    // TODO: In nested views this opens view in fullscreen, it's not good, but not such frequent case either, I suppose.
-    const linkQuery: IQuery = {
-      args: {
-        source: this.args.source,
-        args,
-      },
-      defaultValues: {},
-      search: "",
-      page: null,
-    };
-    this.$emit("goto", { query: linkQuery });
+
+    if (this.isRoot) {
+      const linkQuery: IQuery = {
+        args: {
+          source: this.args.source,
+          args,
+        },
+        defaultValues: {},
+        search: "",
+        page: null,
+      };
+      this.$emit("goto", { query: linkQuery });
+    } else {
+      const { source } = this.state.uv.args;
+      // TODO: Store args in URL query parameters maybe?
+      // Also it's not a good way to solve this, `this.args.args` still has initial values.
+      void this.reload({ newArgs: { source, args } });
+    }
   }
 
   @Debounce(500)
@@ -786,8 +793,9 @@ export default class UserView extends Vue {
     loadAllChunksLimitless?: boolean; // Load ALL rows.
     limit?: number;
     autoSaved?: boolean;
+    newArgs?: IUserViewArguments;
   }): Promise<void> {
-    const args = deepClone(this.args);
+    const args = options?.newArgs ?? deepClone(this.args);
     if (this.level >= maxLevel) {
       this.setState({
         state: "error",
