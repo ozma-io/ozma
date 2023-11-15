@@ -8,7 +8,7 @@
       />
     </div>
     <div class="logo">
-      Ozma
+      ozma.io
     </div>
     <div class="profile-button-wrapper">
       <ProfileButton />
@@ -62,6 +62,7 @@ export default class AppHeader extends Vue {
     .logo {
       margin-left: 1rem;
       font-size: 1.2rem;
+      user-select: none;
     }
 
     .profile-button-wrapper {
