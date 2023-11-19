@@ -1,17 +1,3 @@
-<i18n>
-  {
-    "en": {
-      "filters": "Filters"
-    },
-    "ru": {
-      "filters": "Фильтры"
-    },
-    "es": {
-      "filters": "Filtros"
-    }
-  }
-</i18n>
-
 <template>
   <div
     :class="[
@@ -41,10 +27,10 @@
         >
           {{ $ustOrEmpty(title) }}
         </h1>
-        <ButtonItem
-          v-if="filtersButton"
-          class="filters-button"
-          :button="filtersButton"
+        <ArgumentEditor
+          v-if="argumentEditorProps"
+          :userView="argumentEditorProps.userView"
+          :applyArguments="argumentEditorProps.applyArguments"
         />
       </div>
       <div
@@ -64,10 +50,10 @@
         >
           {{ $ustOrEmpty(title) }}
         </h2>
-        <ButtonItem
-          v-if="filtersButton"
-          class="filters-button"
-          :button="filtersButton"
+        <ArgumentEditor
+          v-if="argumentEditorProps"
+          :userView="argumentEditorProps.userView"
+          :applyArguments="argumentEditorProps.applyArguments"
         />
       </div>
     </div>
@@ -92,18 +78,23 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
+import Popper from "vue-popperjs";
+
 import type { IUserViewType } from "@/components/FormControl.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import type { Button } from "@/components/buttons/buttons";
 import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
-import { interfaceButtonVariant, outlinedInterfaceButtonVariant } from "@/utils_colors";
+import { interfaceButtonVariant } from "@/utils_colors";
 import { UserString } from "@/state/translations";
+import ArgumentEditor, { IArgumentEditorProps } from "@/components/ArgumentEditor.vue";
 
 @Component({
   components: {
     SearchPanel,
     ButtonItem,
+    Popper,
+    ArgumentEditor,
   },
 })
 export default class HeaderPanel extends Vue {
@@ -113,7 +104,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: Object }) view!: IUserViewType | undefined;
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
-  @Prop({ type: Boolean, default: false }) showFiltersButton!: boolean;
+  @Prop({ type: Object }) argumentEditorProps!: IArgumentEditorProps | null;
   // Is it TopLevelUserView's header or current tab of modal or component (sub UserView).
   // options: 'component', 'modal' ,'root', null
   @Prop({ type: String }) type!: string | undefined;
@@ -124,21 +115,6 @@ export default class HeaderPanel extends Vue {
       buttons.push(this.fullscreenButton);
     }
     return buttons;
-  }
-
-  private get filtersButton(): Button | null {
-    if (!this.showFiltersButton) {
-      return null;
-    }
-
-    return {
-      // TODO: Add 'expand' icon on the right to match design from Figma.
-      type: "callback",
-      variant: outlinedInterfaceButtonVariant,
-      icon: "tune",
-      caption: this.$t("filters").toString(),
-      callback: () => this.$emit("filters-button-clicked"),
-    };
   }
 
   private get fullscreenButton(): Button | null {
@@ -191,15 +167,12 @@ export default class HeaderPanel extends Vue {
 
     display: flex;
     flex-direction: row;
+    align-items: center;
     gap: 0.5rem;
     overflow-x: hidden;
 
     .userview-title {
       flex: 0 1 auto;
-    }
-
-    .filters-button {
-      flex: 0 0 auto;
     }
   }
 
@@ -219,8 +192,10 @@ export default class HeaderPanel extends Vue {
   }
 
   .userview-title-wrapper {
+    padding-right: 0.25rem;
     display: flex;
     flex-direction: row;
+    align-items: center;
     gap: 0.5rem;
     overflow-x: hidden;
   }

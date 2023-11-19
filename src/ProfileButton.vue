@@ -72,7 +72,6 @@
       positionFixed: true,
       modifiers: {
         offset: { offset: '0, 10' },
-        // Nested poppers cannot appear outside the parent element if overflow is enabled.
         preventOverflow: { enabled: true, boundariesElement: 'viewport' },
         hide: { enabled: true },
       }

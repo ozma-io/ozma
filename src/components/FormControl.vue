@@ -278,15 +278,14 @@
       </div>
       <HeaderPanel
         v-else-if="inputType.name === 'user_view'"
+        :type="'component'"
         :title="usedCaption"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :view="inputType"
         :filter-string="filterString"
         :is-loading="isUserViewLoading"
-        :type="'component'"
-        :showFiltersButton="showFiltersButton"
-        @filters-button-clicked="$refs.control?.openFiltersModal?.()"
+        :argument-editor-props="argumentEditorProps"
         @update:filter-string="filterString = $event"
         @goto="$emit('goto', $event)"
       />
@@ -302,12 +301,13 @@
           :level="level + 1"
           :filter-string="filterString"
           :in-container="customHeight !== null"
+          :argumentEditorProps="argumentEditorProps"
           @update:buttons="buttons = $event"
           @update:enable-filter="enableFilter = $event"
           @update:is-loading="isUserViewLoading = $event"
           @update:title="title = $event"
           @goto="$emit('goto', $event)"
-          @update:show-filters-button="showFiltersButton = $event"
+          @update:argument-editor-props="argumentEditorProps = $event"
         />
       </div>
     </div>
@@ -339,6 +339,7 @@ import { ITime } from "@/components/Calendar.vue";
 import type { ConvertedBoundAttributesMap } from "@/user_views/combined";
 import { formatRawValue } from "@/user_views/format";
 import { UserString } from "@/state/translations";
+import { IArgumentEditorProps } from "./ArgumentEditor.vue";
 
 interface ITextType {
   name: "text";
@@ -606,7 +607,7 @@ export default class FormControl extends Vue {
   private isUserViewLoading = false;
   private autoSaveLock: AutoSaveLock | null = null;
 
-  private showFiltersButton = false;
+  private argumentEditorProps: IArgumentEditorProps | null = null;
 
   get valueIsNull() {
     return valueIsNull(this.value);
