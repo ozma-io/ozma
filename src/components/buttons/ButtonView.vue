@@ -21,7 +21,7 @@
     :class="[variantClassName, 'button-local-variant', alignRight ? '' : 'd-flex justify-content-center', buttonClass]"
     :style="variantVariables"
     variant="light"
-    :title="button.tooltip ? $ustOrEmpty(button.tooltip) : button.caption ? $ustOrEmpty(button.caption) : undefined"
+    :title="(button.tooltip !== undefined) ? $ustOrEmpty(button.tooltip) : button.caption ? $ustOrEmpty(button.caption) : undefined"
     :disabled="button.disabled"
     :tabindex="tabindex"
     @click="$emit('click')"

@@ -21,85 +21,99 @@
   }
 </i18n>
 
+// TODO: popper closes when "Clear" button in multiselect clicked.
 <template>
-  <ModalWindow
-    adaptive
-    transition="none"
-    height="auto"
-    :shiftX="0.98"
-    :shiftY="0.2"
-    class="filters-modal"
-    :width="modalWidth"
-    :name="uid"
-  >
-    <div
-      class="arguments-editor"
-      @keyup.enter="apply"
-      @keyup.escape="$emit('clear')"
+  <fragment>
+    <!-- eslint-disable vue/v-on-event-hyphenation -->
+    <popper
+      v-if="button"
+      ref="popup"
+      trigger="clickToOpen"
+      :visible-arrow="false"
+      :options="{
+        placement: 'bottom-start',
+        positionFixed: true,
+        modifiers: {
+          offset: { offset: '0, 10' },
+          preventOverflow: { enabled: true, boundariesElement: 'viewport' },
+          hide: { enabled: true },
+          computeStyle: {
+            // GPU Acceleration breaks inner modals we use for selects on small devices.
+            gpuAcceleration: false,
+          },
+        },
+      }"
+      :disabled="!visible"
+      :force-show="visible"
+      @documentClick="visible = false"
     >
-      <div class="header">
-        <div class="left">
-          <i class="material-icons">tune</i>
-          <div class="title">
-            {{ $t("filters").toString() }}
+      <div class="popper shadow">
+        <div
+          class="arguments-editor"
+          @keyup.enter="apply"
+          @keyup.escape="updatedArguments = {}"
+        >
+          <b-container fluid>
+            <b-row class="no-gutters">
+              <b-col
+                v-for="argument in args"
+                :key="argument.name"
+                cols="12"
+              >
+                <FormControl
+                  :value="currentArguments[argument.name] ?? null"
+                  :is-nullable="argument.isOptional"
+                  :field-type="argument.fieldType"
+                  :type="argument.valueType"
+                  :attributes="argument.attributes"
+                  :attribute-mappings="argument.attributeMappings"
+                  :caption="argument.caption"
+                  force-multiline
+                  compact-mode
+                  :home-schema="userView.homeSchema"
+                  :level="0"
+                  @update="updateArgument(argument, $event)"
+                />
+              </b-col>
+            </b-row>
+          </b-container>
+
+          <div v-if="!autoApply" class="footer">
+            <b-button
+              block
+              variant="primary"
+              class="apply-button"
+              @click="apply"
+            >
+              {{ $t("apply") }}
+            </b-button>
           </div>
         </div>
-        <div class="right">
-          <ButtonItem :button="closeButton" />
-        </div>
       </div>
-
-      <b-container fluid>
-        <b-row class="no-gutters">
-          <b-col
-            v-for="argument in args"
-            :key="argument.name"
-            cols="12"
-          >
-            <FormControl
-              :value="values[argument.name] ?? null"
-              :is-nullable="argument.isOptional"
-              :field-type="argument.fieldType"
-              :type="argument.valueType"
-              :attributes="argument.attributes"
-              :attribute-mappings="argument.attributeMappings"
-              :caption="argument.caption"
-              force-multiline
-              compact-mode
-              :home-schema="homeSchema"
-              :level="0"
-              @update="updateArgument(argument, $event)"
-            />
-          </b-col>
-        </b-row>
-      </b-container>
-
-      <div class="footer">
-        <b-button
-          block
-          variant="primary"
-          class="apply-button"
-          @click="apply"
-        >
-          {{ $t("apply") }}
-        </b-button>
-      </div>
-    </div>
-  </ModalWindow>
+      <!-- eslint-disable vue/no-deprecated-slot-attribute -->
+      <ButtonItem
+        slot="reference"
+        class="filters-button"
+        :button="button"
+      />
+    </popper>
+  </fragment>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-property-decorator";
+import Popper from "vue-popperjs";
+import { Debounce } from "vue-debounce-decorator";
 
-import { ArgumentName, AttributesMap, FieldType, IArgument, ValueType } from "ozma-api";
-import { fieldToValueType } from "@/values";
+import { ArgumentName, AttributesMap, FieldType, ValueType } from "ozma-api";
+import { deserializeValueFunction, fieldToValueType } from "@/values";
 import FormControl from "@/components/FormControl.vue";
-import { ConvertedBoundAttributesMap } from "@/user_views/combined";
+import { ConvertedBoundAttributesMap, ICombinedUserViewAny } from "@/user_views/combined";
 import { UserString, rawToUserString } from "@/state/translations";
-import { interfaceButtonVariant } from "@/utils_colors";
+import { outlinedInterfaceButtonVariant } from "@/utils_colors";
 import { Button } from "./buttons/buttons";
 import ButtonItem from "./buttons/ButtonItem.vue";
-import ModalWindow from "./modal/ModalWindow.vue";
+import { mapMaybe } from "@/utils";
 
 interface IArgumentInfo {
   name: ArgumentName;
@@ -112,39 +126,109 @@ interface IArgumentInfo {
   attributeMappings: ConvertedBoundAttributesMap;
 }
 
-@Component({ components: { FormControl, ButtonItem, ModalWindow } })
-export default class ArgumentEditor extends Vue {
-  @Prop({ type: Array, required: true }) params!: IArgument[];
-  @Prop({ type: Object, required: true }) values!: Record<ArgumentName, unknown>;
-  @Prop({ type: Object, required: true }) attributes!: Record<ArgumentName, AttributesMap>;
-  @Prop({ type: Object, required: true }) attributeMappings!: Record<ArgumentName, ConvertedBoundAttributesMap>;
-  @Prop({ type: String }) homeSchema!: string | undefined;
+export interface IApplyArgumentsParams {
+  defaultArguments: Record<string, any>;
+  currentArguments: Record<string, any>;
+}
+export interface IArgumentEditorProps {
+  userView: ICombinedUserViewAny;
+  applyArguments: (params: IApplyArgumentsParams) => void;
+}
 
-  show() {
-    this.$modal.show(this.uid);
+@Component({ components: { FormControl, ButtonItem, Popper } })
+export default class ArgumentEditor extends Vue {
+  @Prop({ type: Object, required: true }) userView!: ICombinedUserViewAny;
+  @Prop({ type: Function, required: true }) applyArguments!: (params: IApplyArgumentsParams) => void;
+
+  private visible = false;
+  private updatedArguments: Record<ArgumentName, unknown> = {};
+
+  get defaultArguments() {
+    if (this.userView.args.args === null) return null;
+
+    return Object.fromEntries(mapMaybe(argInfo => {
+      if (argInfo.defaultValue !== undefined) {
+        const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
+        const value = argInfo.defaultValue && convertFunc ? convertFunc(argInfo.defaultValue) : argInfo.defaultValue;
+        console.assert(value !== undefined);
+        return [argInfo.name, value];
+      } else if (argInfo.optional) {
+        return [argInfo.name, null];
+      } else {
+        return [argInfo.name, undefined];
+      }
+    }, this.userView.info.arguments));
   }
 
-  hide() {
-    this.$modal.hide(this.uid);
+  get initialArguments() {
+    if (this.userView.args.args === null) return null;
+
+    return Object.fromEntries(mapMaybe(([name, rawValue]) => {
+      const argInfo = this.userView.argumentsMap[name];
+      if (argInfo === undefined) {
+        return undefined;
+      }
+      const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
+      const value = rawValue && convertFunc ? convertFunc(rawValue) : rawValue;
+      return [name, value];
+    }, Object.entries(this.userView.args.args)));
+  }
+
+  get currentArguments() {
+    if (this.initialArguments === null) return null;
+
+    return { ...this.defaultArguments, ...this.initialArguments, ...this.updatedArguments };
+  }
+
+  private get button(): Button | null {
+    if (this.userView.attributes["show_argument_editor"] || this.userView.attributes["show_argument_button"]) {
+      return {
+        // TODO: Add 'expand' icon on the right to match design from Figma.
+        type: "callback",
+        variant: outlinedInterfaceButtonVariant,
+        icon: "filter_alt",
+        caption: this.$t("filters").toString(),
+        tooltip: "",
+        callback: () => {
+          this.visible = !this.visible;
+        },
+      };
+    }
+
+    return null;
   }
 
   apply() {
-    this.hide();
-    this.$emit("apply");
+    if (this.defaultArguments === null || this.currentArguments === null) return;
+
+    this.applyArguments({
+      defaultArguments: this.defaultArguments,
+      currentArguments: this.currentArguments,
+    });
   }
 
-  private get modalWidth() {
-    return this.$isMobile ? "100%" : "300px";
+  @Debounce(500)
+  private debouncedApply() {
+    this.apply();
   }
 
-  private get modalHeight() {
-    return this.$isMobile ? "95%" : "600px";
+  private get autoApply() {
+    return this.userView.attributes["confirm_argument_chanes"] === undefined
+      || !this.userView.attributes["confirm_argument_chanes"];
+  }
+
+  private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
+    Vue.set(this.updatedArguments, argument.name, rawValue);
+
+    if (this.autoApply) {
+      this.debouncedApply();
+    }
   }
 
   private get args(): IArgumentInfo[] {
-    return this.params.map(parameter => {
-      const attributes = this.attributes[parameter.name] ?? {};
-      const attributeMappings = this.attributeMappings[parameter.name] ?? {};
+    return this.userView.info.arguments.map(parameter => {
+      const attributes = this.userView.argumentAttributes[parameter.name] ?? {};
+      const attributeMappings = this.userView.argumentAttributeMappings[parameter.name] ?? {};
       const caption = rawToUserString(attributes["caption"]) ?? parameter.name;
       const type = parameter.argType;
       const isOptional = parameter.optional || parameter.defaultValue !== undefined;
@@ -161,50 +245,24 @@ export default class ArgumentEditor extends Vue {
       };
     });
   }
-
-  private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
-    this.$emit("update", argument.name, rawValue);
-  }
-
-  private get closeButton(): Button {
-    return {
-      type: "callback",
-      icon: "close",
-      variant: interfaceButtonVariant,
-      callback: () => this.hide(),
-    };
-  }
 }
 </script>
 
 <style lang="scss" scoped>
+.popper {
+  border-radius: 1rem;
+}
+
 .arguments-editor {
-  height: 100%;
-  padding: 1.5rem;
+  max-height: 30rem;
+  width: min(30rem, 90vw);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-
-    .left {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 0.375rem;
-
-      .title {
-        font-weight: 600;
-      }
-    }
-  }
+  text-align: left;
 
   .container-fluid {
-    padding: 0;
+    padding: 1rem;
     overflow: auto;
 
     ::v-deep .col-12 {

@@ -7,19 +7,20 @@
     :level="level"
     :filter="filterWords"
     :in-container="inContainer"
+    :argument-editor-props="argumentEditorProps"
     @update:buttons="$emit('update:buttons', $event)"
     @goto="$emit('goto', $event)"
     @update:enable-filter="$emit('update:enable-filter', $event)"
     @update:title="$emit('update:title', $event)"
     @update:is-loading="$emit('update:is-loading', $event)"
-    @update:show-filters-button="$emit('update:show-filters-button', $event)"
+    @update:argument-editor-props="$emit('update:argument-editor-props', $event)"
   />
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
 import { convertToWords } from "@/utils";
-import UserView from "./UserView.vue";
+import { IArgumentEditorProps } from "./ArgumentEditor.vue";
 
 @Component
 export default class NestedUserView extends Vue {
@@ -29,12 +30,7 @@ export default class NestedUserView extends Vue {
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Object, required: true }) defaultValues!: Record<string, unknown>;
   @Prop({ type: Boolean, default: false }) inContainer!: boolean;
-
-  private isLoading = true;
-
-  openFiltersModal() {
-    (this.$refs["ref"] as UserView | undefined)?.openFiltersModal?.();
-  }
+  @Prop() argumentEditorProps!: IArgumentEditorProps | null;
 
   get filterWords() {
     const value = this.filterString;

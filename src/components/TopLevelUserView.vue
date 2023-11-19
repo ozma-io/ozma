@@ -81,8 +81,7 @@
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         :type="'root'"
-        :showFiltersButton="showFiltersButton"
-        @filters-button-clicked="$refs.userViewRef?.openFiltersModal?.()"
+        :argumentEditorProps="argumentEditorProps"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
       />
@@ -108,7 +107,7 @@
           @update:description="description = $event"
           @update:url="url = $event"
           @update:current-page="replacePage({ key: null, page: $event })"
-          @update:show-filters-button="showFiltersButton = $event"
+          @update:argument-editor-props="argumentEditorProps = $event"
         />
       </div>
     </div>
@@ -258,6 +257,7 @@ import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 import { UserString } from "@/state/translations";
+import { IArgumentEditorProps } from "./ArgumentEditor.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -330,7 +330,7 @@ export default class TopLevelUserView extends Vue {
   private url: UserString | null = null;
 
   private buttons: Button[] = [];
-  private showFiltersButton = false;
+  private argumentEditorProps: IArgumentEditorProps | null = null;
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,

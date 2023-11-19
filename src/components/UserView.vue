@@ -146,19 +146,6 @@
     <template
       v-if="state.state === 'show'"
     >
-      <ArgumentEditor
-        ref="argumentEditorRef"
-        class="userview-argument-editor-content"
-        :home-schema="state.uv.homeSchema"
-        :params="state.uv.info.arguments"
-        :values="currentArguments"
-        :attributes="state.uv.argumentAttributes"
-        :attribute-mappings="state.uv.argumentAttributeMappings"
-        @clear="clearUpdatedArguments"
-        @update="updateArgument"
-        @apply="applyUpdatedArguments"
-      />
-
       <UserViewCommon
         :uv="state.uv"
         :is-root="isRoot"
@@ -240,18 +227,17 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 import { namespace } from "vuex-class";
-import { ArgumentName, AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
-import { Debounce } from "vue-debounce-decorator";
+import { AttributesMap, IEntityRef, IEntriesRequestOpts } from "ozma-api";
 
 import { RecordSet, deepEquals, snakeToPascal, deepClone, IRef, waitTimeout, NeverError, mapMaybe } from "@/utils";
 import { defaultVariantAttribute, bootstrapVariantAttribute } from "@/utils_colors";
-import { deserializeValueFunction, equalEntityRef, fieldToValueType, serializeValue, valueEquals, valueFromRaw } from "@/values";
+import { equalEntityRef, fieldToValueType, serializeValue, valueEquals, valueFromRaw } from "@/values";
 import { AddedRowId, ICombinedInsertEntityResult, IStagingEventHandler, ISubmitResult, StagingKey } from "@/state/staging_changes";
 import type { ScopeName } from "@/state/staging_changes";
 import { ICurrentQueryHistory, IQuery } from "@/state/query";
 import { IUserViewConstructor } from "@/components";
 import UserViewCommon from "@/components/UserViewCommon.vue";
-import ArgumentEditor from "@/components/ArgumentEditor.vue";
+import ArgumentEditor, { IApplyArgumentsParams, IArgumentEditorProps } from "@/components/ArgumentEditor.vue";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import FunOverlay from "@/components/FunOverlay.vue";
 import type { Button } from "@/components/buttons/buttons";
@@ -340,13 +326,13 @@ interface IUserViewError {
   message: string;
 }
 
+type UserViewLoadingState = IUserViewShow | IUserViewLoading | IUserViewError;
+
 // Check is two user views are "compatible" comparing their arguments, so that we can
 // use data from the older combined user view (new rows, selected rows etc).
 const argsAreCompatible = (a: IUserViewArguments, b: IUserViewArguments): boolean => {
   return deepEquals(a.source, b.source) && (a.args === null || b.args === null || deepEquals(a.args, b.args));
 };
-
-type UserViewLoadingState = IUserViewShow | IUserViewLoading | IUserViewError;
 
 const maxLevel = 4;
 const maxUserViewRedirects = 3;
@@ -410,12 +396,7 @@ export default class UserView extends Vue {
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState;
   private nextUv: Promise<void> | null = null;
-  private updatedArguments: Record<ArgumentName, unknown> = {};
   private userViewRedirects = 0;
-
-  openFiltersModal() {
-    (this.$refs["argumentEditorRef"] as ArgumentEditor | undefined)?.show();
-  }
 
   protected created() {
     if (this.isRoot) {
@@ -442,10 +423,6 @@ export default class UserView extends Vue {
     return this.state.state === "show"
       ? JSON.stringify(this.state.uv.args.source)
       : "none";
-  }
-
-  private get hasArgumentEditor() {
-    return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
   }
 
   get title(): UserString {
@@ -527,16 +504,6 @@ export default class UserView extends Vue {
     return `${common} ${root}`;
   }
 
-  private get openFiltersModalButton(): Button {
-    return {
-      type: "callback",
-      callback: () => this.openFiltersModal(),
-      caption: this.$t("show_argument_editor").toString(),
-      variant: defaultVariantAttribute,
-      icon: "edit_note",
-    };
-  }
-
   get uvButtons() {
     const buttons: Button[] = [];
 
@@ -565,10 +532,6 @@ export default class UserView extends Vue {
           page: null,
         };
 
-        if (this.hasArguments) {
-          buttons.push(this.openFiltersModalButton);
-        }
-
         if (this.developmentModeEnabled) {
           buttons.push({
             icon: "code",
@@ -594,21 +557,6 @@ export default class UserView extends Vue {
     return buttons;
   }
 
-  private get hasArguments() {
-    return this.state.state === "show" && Object.keys(this.state.uv.info.arguments).length > 0;
-  }
-
-  private get showFiltersButton() {
-    return this.state.state === "show"
-      && this.hasArguments
-      && (this.state.uv.attributes["show_argument_button"] || this.state.uv.attributes["show_argument_editor"]);
-  }
-
-  @Watch("showFiltersButton", { immediate: true })
-  private emitShowFilterButton() {
-    this.$emit("update:show-filters-button", this.showFiltersButton);
-  }
-
   get allButtons() {
     return [...this.uvCommonButtons, ...this.componentButtons, ...this.uvButtons];
   }
@@ -618,64 +566,21 @@ export default class UserView extends Vue {
     this.$emit("update:buttons", this.allButtons);
   }
 
-  get defaultArguments() {
+  @Watch("state", { immediate: true })
+  private watchState() {
     if (this.state.state !== "show") {
-      return null;
-    } else {
-      const uv = this.state.uv;
-      if (uv.args.args === null) {
-        return null;
-      } else {
-        return Object.fromEntries(mapMaybe(argInfo => {
-          if (argInfo.defaultValue !== undefined) {
-            const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
-            const value = argInfo.defaultValue && convertFunc ? convertFunc(argInfo.defaultValue) : argInfo.defaultValue;
-            console.assert(value !== undefined);
-            return [argInfo.name, value];
-          } else if (argInfo.optional) {
-            return [argInfo.name, null];
-          } else {
-            return [argInfo.name, undefined];
-          }
-        }, uv.info.arguments));
-      }
+      this.$emit("update:argument-editor-props", null);
+      return;
     }
+
+    const argumentEditorProps: IArgumentEditorProps = {
+      userView: this.state.uv,
+      applyArguments: params => this.applyUpdatedArguments(params),
+    };
+    this.$emit("update:argument-editor-props", argumentEditorProps);
   }
 
-  get initialArguments() {
-    if (this.state.state !== "show") {
-      return null;
-    } else {
-      const uv = this.state.uv;
-      if (uv.args.args === null) {
-        return null;
-      } else {
-        return Object.fromEntries(mapMaybe(([name, rawValue]) => {
-          const argInfo = uv.argumentsMap[name];
-          if (argInfo === undefined) {
-            return undefined;
-          }
-          const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
-          const value = rawValue && convertFunc ? convertFunc(rawValue) : rawValue;
-          return [name, value];
-        }, Object.entries(uv.args.args)));
-      }
-    }
-  }
-
-  get currentArguments() {
-    if (this.initialArguments === null) {
-      return null;
-    } else {
-      return { ...this.defaultArguments, ...this.initialArguments, ...this.updatedArguments };
-    }
-  }
-
-  private clearUpdatedArguments() {
-    this.updatedArguments = {};
-  }
-
-  private applyUpdatedArguments() {
+  private applyUpdatedArguments({ defaultArguments, currentArguments }: IApplyArgumentsParams) {
     if (this.state.state !== "show") {
       throw new Error("Unexpected state");
     }
@@ -689,14 +594,14 @@ export default class UserView extends Vue {
         throw new Error(`Invalid value for argument "${name}"`);
       }
 
-      const defaultValue = this.defaultArguments![name];
+      const defaultValue = defaultArguments![name];
       if (valueEquals(fieldToValueType(argInfo.argType), defaultValue, value)) {
         return undefined;
       } else {
         const serialized = serializeValue(argInfo.argType, value);
         return [name, serialized];
       }
-    }, Object.entries(this.currentArguments!)));
+    }, Object.entries(currentArguments!)));
 
     if (this.isRoot) {
       const linkQuery: IQuery = {
@@ -714,19 +619,6 @@ export default class UserView extends Vue {
       // TODO: Store args in URL query parameters maybe?
       // Also it's not a good way to solve this, `this.args.args` still has initial values.
       void this.reload({ newArgs: { source, args } });
-    }
-  }
-
-  @Debounce(500)
-  private debouncedApplyUpdatedArguments() {
-    this.applyUpdatedArguments();
-  }
-
-  private updateArgument(name: ArgumentName, value: unknown) {
-    Vue.set(this.updatedArguments, name, value);
-
-    if (this.autoApplyArguments) {
-      this.debouncedApplyUpdatedArguments();
     }
   }
 
@@ -968,7 +860,6 @@ export default class UserView extends Vue {
 
     this.state = loadingState;
     this.componentButtons = [];
-    this.updatedArguments = {};
     this.$emit("update:status-line", "");
     this.$emit("update:enable-filter", false);
     this.$emit("update:body-style", "");
@@ -982,7 +873,6 @@ export default class UserView extends Vue {
     this.destroyCurrentUserView();
     this.state = state;
     if (state.state === "show") {
-      this.updatedArguments = {};
       this.setStagingHandler({
         key: this.uid,
         handler: state.uv,
@@ -1039,15 +929,6 @@ export default class UserView extends Vue {
   @Watch("description", { immediate: true })
   private updateDescription() {
     this.$emit("update:description", this.description);
-  }
-
-  private get argumentEditorHasUpdatedValues() {
-    return Object.entries(this.updatedArguments).length > 0 && this.state.state !== "loading";
-  }
-
-  private get autoApplyArguments() {
-    if (this.state.state !== "show") return false;
-    return !this.state.uv.attributes["confirm_argument_changes"];
   }
 
   // Returns whether we need to reload.

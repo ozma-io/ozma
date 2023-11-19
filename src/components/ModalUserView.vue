@@ -40,16 +40,14 @@
   >
     <template #header>
       <HeaderPanel
+        :type="'modal'"
         :title="titleOrNewEntry ?? undefined"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="filterString"
         :view="view"
         :is-loading="isUserViewLoading"
-        :type="'modal'"
-        :showFiltersButton="showFiltersButton"
-        @filters-button-clicked="$refs.userViewRef?.openFiltersModal?.()"
-        @update:filter-string="filterString = $event"
+        :argument-editor-props="argumentEditorProps"
         @goto="$emit('goto', $event)"
       />
     </template>
@@ -75,7 +73,7 @@
           @goto="$emit('goto', $event)"
           @goto-previous="$emit('goto-previous')"
           @select="$emit('select', $event)"
-          @update:show-filters-button="showFiltersButton = $event"
+          @update:argument-editor-props="argumentEditorProps = $event"
         />
       </div>
     </section>
@@ -96,6 +94,7 @@ import HeaderPanel from "@/components/panels/HeaderPanel.vue";
 import { convertToWords } from "@/utils";
 import { ErrorKey } from "@/state/errors";
 import { UserString } from "@/state/translations";
+import { IArgumentEditorProps } from "./ArgumentEditor.vue";
 
 const staging = namespace("staging");
 const errors = namespace("errors");
@@ -119,7 +118,7 @@ export default class ModalUserView extends Vue {
   private filterString = "";
   private isUserViewLoading = false;
 
-  private showFiltersButton = false;
+  private argumentEditorProps: IArgumentEditorProps | null = null;
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,
