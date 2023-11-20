@@ -618,7 +618,7 @@ export default class UserView extends Vue {
       const { source } = this.state.uv.args;
       // TODO: Store args in URL query parameters maybe?
       // Also it's not a good way to solve this, `this.args.args` still has initial values.
-      void this.reload({ newArgs: { source, args } });
+      void this.reload({ differentComponent: true, newArgs: { source, args } });
     }
   }
 
