@@ -114,6 +114,7 @@ import { outlinedInterfaceButtonVariant } from "@/utils_colors";
 import { Button } from "./buttons/buttons";
 import ButtonItem from "./buttons/ButtonItem.vue";
 import { mapMaybe } from "@/utils";
+import { namespace } from "vuex-class";
 
 interface IArgumentInfo {
   name: ArgumentName;
@@ -135,10 +136,14 @@ export interface IArgumentEditorProps {
   applyArguments: (params: IApplyArgumentsParams) => void;
 }
 
+const settings = namespace("settings");
+
 @Component({ components: { FormControl, ButtonItem, Popper } })
 export default class ArgumentEditor extends Vue {
   @Prop({ type: Object, required: true }) userView!: ICombinedUserViewAny;
   @Prop({ type: Function, required: true }) applyArguments!: (params: IApplyArgumentsParams) => void;
+
+  @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
 
   private visible = false;
   private updatedArguments: Record<ArgumentName, unknown> = {};
@@ -181,7 +186,8 @@ export default class ArgumentEditor extends Vue {
   }
 
   private get button(): Button | null {
-    if (this.userView.attributes["show_argument_editor"] || this.userView.attributes["show_argument_button"]) {
+    if (this.userView.attributes["show_argument_editor"] || this.userView.attributes["show_argument_button"]
+      || this.developmentModeEnabled && Object.keys(this.userView.argumentsMap).length > 0) {
       return {
         // TODO: Add 'expand' icon on the right to match design from Figma.
         type: "callback",
