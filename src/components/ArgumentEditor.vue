@@ -104,6 +104,7 @@
 import { Vue, Component, Prop } from "vue-property-decorator";
 import Popper from "vue-popperjs";
 import { Debounce } from "vue-debounce-decorator";
+import { namespace } from "vuex-class";
 
 import { ArgumentName, AttributesMap, FieldType, ValueType } from "ozma-api";
 import { deserializeValueFunction, fieldToValueType } from "@/values";
@@ -114,7 +115,6 @@ import { outlinedInterfaceButtonVariant } from "@/utils_colors";
 import { Button } from "./buttons/buttons";
 import ButtonItem from "./buttons/ButtonItem.vue";
 import { mapMaybe } from "@/utils";
-import { namespace } from "vuex-class";
 
 interface IArgumentInfo {
   name: ArgumentName;
@@ -187,7 +187,7 @@ export default class ArgumentEditor extends Vue {
 
   private get button(): Button | null {
     if (this.userView.attributes["show_argument_editor"] || this.userView.attributes["show_argument_button"]
-      || this.developmentModeEnabled && Object.keys(this.userView.argumentsMap).length > 0) {
+      || (this.developmentModeEnabled && Object.keys(this.userView.argumentsMap).length > 0)) {
       return {
         // TODO: Add 'expand' icon on the right to match design from Figma.
         type: "callback",
@@ -219,8 +219,8 @@ export default class ArgumentEditor extends Vue {
   }
 
   private get autoApply() {
-    return this.userView.attributes["confirm_argument_chanes"] === undefined
-      || !this.userView.attributes["confirm_argument_chanes"];
+    return this.userView.attributes["confirm_argument_changes"] === undefined
+      || !this.userView.attributes["confirm_argument_changes"];
   }
 
   private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
@@ -275,6 +275,10 @@ export default class ArgumentEditor extends Vue {
       padding: 0;
     }
   }
+}
+
+.footer {
+  padding: 0 1rem 1rem 1rem;
 }
 
 .apply-button {
