@@ -1061,6 +1061,7 @@ export default class FormControl extends Vue {
     &:not(.mobile):not(:hover) ::v-deep {
       .header-panel .button-element,
       .button-container,
+      .filters-button,
       .search-wrapper {
         opacity: 0.1;
       }
