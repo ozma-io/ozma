@@ -27,11 +27,6 @@
         >
           {{ $ustOrEmpty(title) }}
         </h1>
-        <ArgumentEditor
-          v-if="argumentEditorProps"
-          :userView="argumentEditorProps.userView"
-          :applyArguments="argumentEditorProps.applyArguments"
-        />
       </div>
       <div
         v-else
@@ -50,15 +45,15 @@
         >
           {{ $ustOrEmpty(title) }}
         </h2>
-        <ArgumentEditor
-          v-if="argumentEditorProps"
-          :userView="argumentEditorProps.userView"
-          :applyArguments="argumentEditorProps.applyArguments"
-        />
       </div>
     </div>
 
     <div class="right-part">
+      <ArgumentEditor
+        v-if="argumentEditorProps"
+        :userView="argumentEditorProps.userView"
+        :applyArguments="argumentEditorProps.applyArguments"
+      />
       <ButtonsPanel
         :buttons="headerButtons"
         @goto="$emit('goto', $event)"
@@ -177,9 +172,12 @@ export default class HeaderPanel extends Vue {
   }
 
   .right-part {
+    padding-left: 0.25rem;
     overflow-x: auto;
     overflow-y: hidden;
     display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
     ::v-deep .button-element {
       flex-shrink: 0;

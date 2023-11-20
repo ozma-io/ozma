@@ -31,7 +31,7 @@
       trigger="clickToOpen"
       :visible-arrow="false"
       :options="{
-        placement: 'bottom-start',
+        placement: 'bottom-end',
         positionFixed: true,
         modifiers: {
           offset: { offset: '0, 10' },
