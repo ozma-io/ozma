@@ -101,7 +101,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import Popper from "vue-popperjs";
 import { Debounce } from "vue-debounce-decorator";
 import { namespace } from "vuex-class";
@@ -147,6 +147,11 @@ export default class ArgumentEditor extends Vue {
 
   private visible = false;
   private updatedArguments: Record<ArgumentName, unknown> = {};
+
+  @Watch("userView")
+  propsChanged() {
+    this.updatedArguments = {};
+  }
 
   get defaultArguments() {
     if (this.userView.args.args === null) return null;
