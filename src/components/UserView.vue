@@ -86,6 +86,7 @@
 <template>
   <div
     class="userview-wrapper"
+    :infinite-wrapper="inContainer"
   >
     <b-modal
       :id="$id('business_mode_edit_view')"
