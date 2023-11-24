@@ -58,7 +58,7 @@
         <div
           slot="reference"
           class="input-field-wrapper"
-          @click="$emit('update:show', true)"
+          @click="$emit('update:show', !show)"
         >
           <slot
             :mode="mode"
