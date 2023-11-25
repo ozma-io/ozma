@@ -24,9 +24,7 @@
       variantClassName,
       'cell-local-variant',
       {
-        'input_slot__row': inline,
         'input-slot_cell-edit': isCellEdit,
-        'smaller-label': smallerLabel,
       },
     ]"
   >
@@ -48,6 +46,7 @@
           <div class="input_modal__input">
             <slot
               :onFocus="onModalFocus"
+              :onBlur="onBlur"
               modal
               :autofocus="isModalOpen"
             />
@@ -66,24 +65,7 @@
     </TabbedModal>
     <template v-if="!(modalOnly && modal)">
       <b-col
-        v-if="label"
-        :class="{
-          'longer-input-label': !(required || disabled) && inline,
-          'input-label-with-indicator': (required || disabled) && inline,
-        }"
-        :cols="inline ? 4 : 12"
-      >
-        <div class="input_label__container">
-          <label
-            v-if="label"
-            class="input_label"
-            :for="inputName"
-            :title="label"
-          >{{ $ustOrEmpty(label) }}</label>
-        </div>
-      </b-col>
-      <b-col
-        :cols="(!!label && inline) ? 8 : 12"
+        :cols="12"
         :class="[
           'input_container',
           `text_align_${textAlign}`,
@@ -92,6 +74,9 @@
           }
         ]"
       >
+        <div :class="['border-label', { 'focused': focused }]">
+          {{ $ustOrEmpty(label) }}
+        </div>
         <div
           :class="[
             'input-slot',
@@ -100,7 +85,6 @@
             {
               'required': required,
               'empty': empty,
-              'inline': !label || inline,
             },
           ]"
           :style="[
@@ -117,7 +101,6 @@
               {
                 'cell-edit': isCellEdit,
                 'required': required,
-                'inline': !label || inline,
               },
             ]"
             :title="$t(required ? 'required_field' : 'readonly_field')"
@@ -142,6 +125,7 @@
 
           <slot
             :onFocus="onNonmodalFocus"
+            :onBlur="onBlur"
           />
         </div>
       </b-col>
@@ -161,8 +145,6 @@ import type { UserString } from "@/state/translations";
 @Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {
   @Prop({ required: true }) label!: UserString;
-  @Prop({ type: Boolean, default: false }) smallerLabel!: boolean;
-  @Prop({ type: Boolean, default: true }) inline!: boolean;
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
   @Prop({ type: String }) backgroundColor!: string;
@@ -180,6 +162,7 @@ export default class InputSlot extends Vue {
   @Prop({ type: Boolean, required: false }) hideRequiredAndDisabledIcons!: boolean;
 
   private isModalOpen = false;
+  private focused = false;
 
   private created() {
     if (this.modalOnly && this.modal) {
@@ -208,14 +191,21 @@ export default class InputSlot extends Vue {
   }
 
   private onModalFocus() {
+    this.focused = true;
     this.$emit("focus");
   }
 
   private onNonmodalFocus() {
+    this.focused = true;
     if (this.modal) {
       this.isModalOpen = true;
     }
     this.$emit("focus");
+  }
+
+  private onBlur() {
+    this.focused = false;
+    this.$emit("blur");
   }
 
   private closeModal() {
@@ -229,6 +219,12 @@ export default class InputSlot extends Vue {
 
   .row-override {
     margin: 0px!important;
+
+    &:hover {
+      ::v-deep .disabled-indicator {
+        display: block!important;
+      }
+    }
   }
 
   .modal-content {
@@ -248,13 +244,19 @@ export default class InputSlot extends Vue {
     text-overflow: ellipsis;
   }
 
-  .input_slot__row {
-    flex-direction: row;
+  .border-label {
+    position: absolute;
+    top: -0.5rem;
+    left: 1.65rem;
+    z-index: 40;
+    font-size: 0.75rem;
+    border-radius: 1rem;
+    padding: 0 0.25rem;
+    background-color: var(--default-backgroundColor);
+    pointer-events: none;
 
-    &:hover {
-      ::v-deep .disabled-indicator {
-        display: block!important;
-      }
+    &.focused {
+      z-index: 42;
     }
   }
 
@@ -272,10 +274,6 @@ export default class InputSlot extends Vue {
     padding: 0;
     display: flex;
     height: 100%;
-
-    .smaller-label & {
-      height: initial;
-    }
   }
 
   .input_label {
@@ -314,22 +312,14 @@ export default class InputSlot extends Vue {
       align-items: center;
       justify-content: center;
 
-      &.inline {
-        left: -1 * ($indicator-size  + 2 * $indicator-padding);
-        top: calc($indicator-size / 6);
+      left: -1 * ($indicator-size  + 2 * $indicator-padding);
+      top: calc($indicator-size / 6);
 
-        &.cell-edit {
-          /* False-positive */
-          /* stylelint-disable-next-line */
-          left: calc(#{-1 * ($indicator-size + 2 * $indicator-padding)} + 1px);
-          top: 0;
-        }
-      }
-
-      &:not(.inline):not(.cell-edit) {
-        left: unset;
-        top: -1.75rem;
-        right: 0.25rem;
+      &.cell-edit {
+        /* False-positive */
+        /* stylelint-disable-next-line */
+        left: calc(#{-1 * ($indicator-size + 2 * $indicator-padding)} + 1px);
+        top: 0;
       }
 
       &.cell-edit {

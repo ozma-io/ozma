@@ -15,7 +15,6 @@ export default Vue.extend({
     homeSchema: { type: String },
     caption: { type: String },
     forceCaption: { type: Boolean },
-    forceMultiline: { type: Boolean },
     compactMode: { type: Boolean },
     disableColor: { type: Boolean },
     scope: { type: String },

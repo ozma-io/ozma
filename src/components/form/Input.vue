@@ -2,7 +2,6 @@
   <fragment>
     <b-input-group
       v-if="!isCellEdit"
-      size="sm"
     >
       <b-input
         :id="inputId"
@@ -25,6 +24,7 @@
       />
       <b-input-group-append
         v-if="qrcodeInput || textLink"
+        class="append-button"
       >
         <ButtonItem v-if="textLink" :button="textLinkButton" />
         <ButtonItem v-if="qrcodeInput" :button="qrCodeButton" />
@@ -200,6 +200,7 @@ export default class Input extends Vue {
 
 <style lang="scss" scoped>
   ::v-deep .form-control {
+    padding: 0.5rem 0.75rem;
     background-color: transparent;
     color: var(--cell-foregroundColor);
 
@@ -230,5 +231,9 @@ export default class Input extends Vue {
 
   .input-textarea:focus {
     outline: none;
+  }
+
+  .append-button ::v-deep .btn {
+    padding: 0.4rem 0.3rem;
   }
 </style>
