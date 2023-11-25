@@ -361,7 +361,7 @@ export default class Calendar extends Vue {
     border-radius: 0.2rem;
 
     &.is-open {
-      z-index: 31; /* To be above other components with popups */
+      z-index: 41; /* To be above other components with popups */
     }
   }
 

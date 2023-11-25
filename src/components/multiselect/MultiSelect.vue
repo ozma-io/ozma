@@ -702,7 +702,8 @@ export default class MultiSelect extends Vue {
     z-index: 30;
 
     &.is-open {
-      z-index: 31; /* To be above other components with popups */
+      position: relative;
+      z-index: 41; /* To be above other components with popups */
     }
   }
 
@@ -791,7 +792,7 @@ export default class MultiSelect extends Vue {
     display: flex;
     flex-direction: row;
     width: 100%;
-    padding: 0.25rem 0.5rem;
+    padding: 0.55rem 0.5rem;
 
     &:focus-within {
       /* TODO: Move this to one file! */

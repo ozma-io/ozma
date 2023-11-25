@@ -34,11 +34,9 @@
   <div>
     <InputSlot
       v-if="inputType.name !== 'user_view' && inputType.name !== 'empty_user_view'"
-      :inline="!isMultiline && !forceMultiline"
       :modal-only="modalOnly"
       :is-cell-edit="isCellEdit"
       :label="usedCaption"
-      :smaller-label="forceMultiline"
       :background-color="cellColor"
       :color-variant-attribute="colorVariantAttribute"
       :text-align="textAlign"
@@ -67,7 +65,7 @@
           :background-color="cellColor"
           @input="updateValue"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
           @tab-pressed="$emit('close-modal-input', $event)"
         />
@@ -83,7 +81,7 @@
           :background-color="cellColor"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
         />
         <Input
           v-else-if="inputType.name === 'array'"
@@ -95,7 +93,7 @@
           :background-color="cellColor"
           @input="updateValue"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
           @tab-pressed="$emit('close-modal-input', $event)"
         />
@@ -113,7 +111,7 @@
           :disabled="isDisabled"
           :background-color="cellColor"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
           @enter-pressed="$emit('close-modal-input', $event)"
           @tab-pressed="$emit('close-modal-input', $event)"
           @update:value="updateValue"
@@ -134,7 +132,7 @@
           :option-color-variant-attribute="optionColorVariantAttribute"
           @update:value="updateValue"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
         />
         <ArrayReferenceField
           v-else-if="inputType.name === 'array_select'"
@@ -153,7 +151,7 @@
           :option-color-variant-attribute="optionColorVariantAttribute"
           @update:value="updateValue"
           @popup-opened="iSlot.onFocus"
-          @popup-closed="onBlur"
+          @popup-closed="iSlot.onBlur"
         />
         <CodeEditor
           v-else-if="inputType.name === 'codeeditor'"
@@ -167,7 +165,7 @@
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
         />
         <MarkdownEditor
           v-else-if="inputType.name === 'markdown'"
@@ -180,7 +178,7 @@
           :required="!isNullable"
           @update:content="updateValue"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
         />
         <input
           v-else-if="inputType.name === 'check'"
@@ -194,7 +192,7 @@
           :required="!isNullable"
           @input="updateValue($event.target.value)"
           @focus="iSlot.onFocus"
-          @blur="onBlur"
+          @blur="iSlot.onBlur"
         >
         <QRCode
           v-else-if="inputType.name === 'qrcode'"
@@ -253,7 +251,7 @@
           @update:actions="actions = $event"
           @update:buttons="buttons = $event"
           @popup-opened="iSlot.onFocus"
-          @popup-closed="onBlur"
+          @popup-closed="iSlot.onBlur"
           @update:value="updateValue($event)"
           @goto="$emit('goto', $event)"
         />
@@ -587,7 +585,6 @@ export default class FormControl extends Vue {
   @Prop({ type: String }) homeSchema!: string | undefined;
   @Prop() caption!: UserString | undefined;
   @Prop({ type: Boolean, default: false }) forceCaption!: boolean;
-  @Prop({ type: Boolean, default: false }) forceMultiline!: boolean;
   @Prop({ type: Boolean, default: false }) compactMode!: boolean;
   @Prop({ type: Boolean, default: false }) disableColor!: boolean;
   @Prop({ type: String }) scope!: string | undefined; // this.scope

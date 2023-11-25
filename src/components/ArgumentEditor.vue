@@ -68,7 +68,6 @@
                   :attributes="argument.attributes"
                   :attribute-mappings="argument.attributeMappings"
                   :caption="argument.caption"
-                  force-multiline
                   compact-mode
                   :home-schema="userView.homeSchema"
                   :level="0"
@@ -273,11 +272,14 @@ export default class ArgumentEditor extends Vue {
   text-align: left;
 
   .container-fluid {
-    padding: 1rem;
+    padding: 1.25rem 0.5rem;
     overflow: auto;
 
-    ::v-deep .col-12 {
-      padding: 0;
+    ::v-deep .row > .col-12 {
+
+      &:not(:last-child) {
+        margin-bottom: 0.75rem;
+      }
     }
   }
 }
