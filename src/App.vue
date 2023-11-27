@@ -32,10 +32,6 @@
     <AppHeader />
 
     <div class="app-container">
-      <div v-if="!bannerMessage" class="main-buttons-wrapper">
-        <portal-target name="main-buttons" />
-      </div>
-
       <ModalPortalTarget
         name="tabbed-modal"
         multiple
@@ -487,18 +483,5 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     position: relative;
     height: 100%;
     overflow: auto;
-  }
-
-  .main-buttons-wrapper {
-    position: absolute;
-    padding-top: 0.75rem;
-    padding-bottom: 0.6rem;
-    padding-left: 0.9rem;
-    padding-right: 0.5rem;
-    top: 0;
-    left: 0;
-    background-color: var(--backgroundColor);
-    border-bottom-right-radius: 0.25rem;
-    z-index: 1000;
   }
 </style>
