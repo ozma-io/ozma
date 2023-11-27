@@ -74,7 +74,7 @@
           }
         ]"
       >
-        <div :class="['border-label', { 'focused': focused }]">
+        <div :class="['border-label', { 'increase-z-index': focused && !$isMobile }]">
           {{ $ustOrEmpty(label) }}
         </div>
         <div
@@ -255,7 +255,7 @@ export default class InputSlot extends Vue {
     background-color: var(--default-backgroundColor);
     pointer-events: none;
 
-    &.focused {
+    &.increase-z-index {
       z-index: 42;
     }
   }
