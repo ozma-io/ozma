@@ -37,6 +37,11 @@
         multiple
       />
 
+      <portal-target
+        name="input-popup-portal"
+        multiple
+      />
+
       <ReadonlyDemoInstanceModal
         v-if="isReadonlyDemoInstance"
         ref="readonlyDemoInstanceModal"

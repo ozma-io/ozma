@@ -2,33 +2,35 @@
   <fragment>
     <template v-if="mode === 'modal'">
       <fragment>
-        <TabbedModal
-          :show="show"
-          fullscreen
-          @close="onClose"
-        >
-          <div class="modal-slots">
-            <div class="header">
-              <div class="label">
-                {{ label }}
+        <portal to="input-popup-portal">
+          <TabbedModal
+            :show="show"
+            fullscreen
+            @close="onClose"
+          >
+            <div class="modal-slots">
+              <div class="header">
+                <div class="label">
+                  {{ label }}
+                </div>
+              </div>
+
+              <div class="modal-field-slot">
+                <slot
+                  :mode="mode"
+                  :isOpen="true"
+                />
+              </div>
+              <div class="modal-inner-slot">
+                <slot
+                  name="inner"
+                  modal
+                  :autofocus="show"
+                />
               </div>
             </div>
-
-            <div class="modal-field-slot">
-              <slot
-                :mode="mode"
-                :isOpen="true"
-              />
-            </div>
-            <div class="modal-inner-slot">
-              <slot
-                name="inner"
-                modal
-                :autofocus="show"
-              />
-            </div>
-          </div>
-        </TabbedModal>
+          </TabbedModal>
+        </portal>
 
         <div class="input-field-wrapper" @click="$emit('update:show', true)">
           <slot
