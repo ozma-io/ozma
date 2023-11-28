@@ -22,7 +22,7 @@ export default class BarCodePrint extends Vue {
 <style lang="scss" scoped>
   .barcode {
     border: 1px solid var(--cell-borderColor);
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
     overflow: hidden;
   }
 </style>

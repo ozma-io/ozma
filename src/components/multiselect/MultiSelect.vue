@@ -716,6 +716,7 @@ export default class MultiSelect extends Vue {
   .empty-message-text {
     display: inline-flex;
     width: 100%;
+    height: 1.3rem;
     cursor: pointer;
     align-self: center;
     align-items: center;
@@ -737,7 +738,7 @@ export default class MultiSelect extends Vue {
     border: 1px solid var(--cell-borderColor);
     background: var(--cell-backgroundColor);
     color: var(--cell-foregroundColor);
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
     cursor: pointer;
 
     &:focus-within,
@@ -801,7 +802,7 @@ export default class MultiSelect extends Vue {
 
       border-color: $input-focus-border-color !important;
       box-shadow: $input-focus-shadow !important;
-      border-radius: 0.2rem;
+      border-radius: 0.5rem;
     }
   }
 
@@ -925,13 +926,13 @@ export default class MultiSelect extends Vue {
     border: 1px solid var(--option-borderColor);
     background-color: var(--option-backgroundColor);
     color: var(--option-foregroundColor);
-    border-radius: 0.333rem;
-    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.5rem;
     line-height: 0.9rem;
     word-break: break-word;
     overflow: hidden;
     white-space: pre;
-    height: calc(1.5em + 0.5rem - 7px);
+    height: 1.3rem;
 
     > span {
       text-align: left;

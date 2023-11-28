@@ -58,7 +58,6 @@
         <div class="main-input">
           <b-input-group
             class="focus-entire"
-            size="sm"
           >
             <b-input
               ref="control"
@@ -358,7 +357,7 @@ export default class Calendar extends Vue {
     width: 100%;
     position: relative;
     z-index: 30;
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
 
     &.is-open {
       z-index: 41; /* To be above other components with popups */
@@ -392,12 +391,17 @@ export default class Calendar extends Vue {
   .main-input {
     display: flex;
     flex-direction: row;
-    border-radius: 0.25rem;
+    border-radius: 0.5rem;
     background-color: var(--cell-backgroundColor);
     color: var(--cell-foregroundColor);
 
     ::v-deep .form-control {
       background-color: var(--cell-backgroundColor);
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+    ::v-deep .input-group-text {
+      background-color: var(--cell-backgroundColor);
+      border-radius: 0 0.5rem 0.5rem 0;
     }
   }
 

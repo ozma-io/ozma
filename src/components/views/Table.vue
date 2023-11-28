@@ -3230,7 +3230,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     padding: 0.25rem 0.5rem;
     opacity: 0.7;
     border: 1px solid var(--MainBorderColor);
-    border-radius: 0.2rem;
+    border-radius: 0.625rem;
     color: var(--MainTextColor);
   }
 </style>

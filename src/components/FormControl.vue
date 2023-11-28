@@ -1046,7 +1046,7 @@ export default class FormControl extends Vue {
     padding: 0.25rem 0.5rem;
     opacity: 0.7;
     border: 1px dashed var(--MainBorderColor);
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
     color: var(--MainTextColorLight);
   }
 

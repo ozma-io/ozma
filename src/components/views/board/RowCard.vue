@@ -123,7 +123,7 @@ export default class RowCard extends Vue {
   .card-col {
     padding: 0 0.25rem 0 0.25rem;
     background-color: var(--backgroundColor);
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
   }
 
   .card-text {

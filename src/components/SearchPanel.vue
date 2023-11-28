@@ -156,7 +156,7 @@ export default class SearchPanel extends Vue {
 
   .input-group {
     background-color: var(--MainBackgroundColor);
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
   }
 
   .resize-fade-enter-active {

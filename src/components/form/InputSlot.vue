@@ -247,13 +247,15 @@ export default class InputSlot extends Vue {
   .border-label {
     position: absolute;
     top: -0.5rem;
-    left: 1.65rem;
-    z-index: 40;
-    font-size: 0.75rem;
-    border-radius: 1rem;
+    left: 1.5rem;
     padding: 0 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1;
+    border-radius: 0.5rem;
     background-color: var(--default-backgroundColor);
+    color: var(--default-foregroundDarkerColor);
     pointer-events: none;
+    z-index: 40;
 
     &.increase-z-index {
       z-index: 42;
@@ -298,7 +300,7 @@ export default class InputSlot extends Vue {
 
   .input-slot {
     position: relative;
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
 
     .indicator-container {
       $indicator-size: calc((18 / 12) * 1rem); /* 12px is preferred font size and 18px is like in `.md-18` */
