@@ -2,7 +2,7 @@
   <b-col
     cols="12"
     :lg="blockContent.size"
-    class="form_grid_block__column"
+    :class="['form_grid_block__column', { 'element-block': blockContent.type === 'element' }]"
   >
     <div
       :class="[
@@ -55,6 +55,14 @@ export default class FormGridBlock extends Vue {
 
     &:not(:last-child) {
       margin-bottom: 0.75rem;
+    }
+
+    &.element-block.col-lg-12 ::v-deep .col-12 {
+      padding: 0;
+
+      .border-label {
+        left: 0.5rem;
+      }
     }
   }
 

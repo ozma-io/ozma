@@ -60,7 +60,7 @@ const lightenOrDarken = (color: string, amount: number): string => mix(color, re
 export const colorVariantFromRaw = (raw: RawColorVariant): ColorVariant => {
   const background = toRgbaOrNull(raw.background) ?? rgba(0, 0, 0, 1);
   const foreground = toRgbaOrNull(raw.foreground) ?? darkenOrLighten(background, 0.8);
-  const border = toRgbaOrNull(raw.border) ?? mix(background, "black", 0.2);
+  const border = toRgbaOrNull(raw.border) ?? mix(background, "black", 0.06);
   const backgroundDarker1 = mix(background, foreground, 0.05);
   const backgroundDarker2 = mix(background, foreground, 0.15);
   const foregroundContrast = readableColor(background);

@@ -218,11 +218,11 @@ export default class InputSlot extends Vue {
   @include variant-to-local("cell");
 
   .row-override {
-    margin: 0px!important;
+    margin: 0px !important;
 
     &:hover {
       ::v-deep .disabled-indicator {
-        display: block!important;
+        display: block !important;
       }
     }
   }
@@ -303,19 +303,19 @@ export default class InputSlot extends Vue {
     border-radius: 0.5rem;
 
     .indicator-container {
-      $indicator-size: calc((18 / 12) * 1rem); /* 12px is preferred font size and 18px is like in `.md-18` */
-      $indicator-padding: 0.2rem;
+      $indicator-size: 1rem; /* 12px is preferred font size and 18px is like in `.md-18` */
+      $indicator-padding: 0.125rem;
+      $input-height: 2.5rem;
 
       position: absolute;
       height: $indicator-size + $indicator-padding * 2;
       width: $indicator-size + $indicator-padding * 2;
-      padding: $indicator-padding;
       display: flex;
       align-items: center;
       justify-content: center;
 
       left: -1 * ($indicator-size  + 2 * $indicator-padding);
-      top: calc($indicator-size / 6);
+      top: calc($input-height / 2 - $indicator-size / 2);
 
       &.cell-edit {
         /* False-positive */

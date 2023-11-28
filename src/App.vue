@@ -336,7 +336,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     const background = this.styleSettings["--OldMainBackgroundColor"];
     const foreground = this.styleSettings["--OldMainTextColor"];
     const border = this.styleSettings["--OldMainBorderColor"];
-    const oldDefaultVariant = colorVariantFromRaw({ background, foreground, border });
+    const oldDefaultVariant = colorVariantFromRaw({ background });
     const defaultVariant = currentTheme?.colorVariants["default"] ?? oldDefaultVariant;
     const interfaceButton = {
       ...transparentVariant,
