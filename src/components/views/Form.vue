@@ -32,7 +32,7 @@
 
 <template>
   <div
-    class="view-form"
+    :class="['view-form', { 'contains-only-one-iframe': containsOnlyOneIframe }]"
   >
     <Errorbox
       v-if="rowPositions.length === 0 && firstRow === null"
@@ -715,6 +715,10 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
       throw new Error("Wrong lazyLoad type");
     }
   }
+
+  get containsOnlyOneIframe() {
+    return this.uv.columnAttributes.length === 1 && this.uv.columnAttributes[0].control === "iframe";
+  }
 }
 </script>
 
@@ -726,6 +730,14 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     overflow-x: hidden;
     background-color: var(--backgroundDarker1Color);
     color: var(--form-foregroundColor);
+
+    &.contains-only-one-iframe {
+      padding: 0 !important;
+
+      ::v-deep .first_level_grid_block {
+        margin-bottom: 0 !important;
+      }
+    }
   }
 
   .pagination-wrapper {
