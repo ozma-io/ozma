@@ -223,7 +223,7 @@ export default class KanbanColumn extends Vue {
     display: flex;
     flex-direction: column;
     color: var(--MainTextColor);
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
 
     &:hover {
       ::-webkit-scrollbar {

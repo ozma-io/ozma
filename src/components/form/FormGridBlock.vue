@@ -77,7 +77,7 @@ export default class FormGridBlock extends Vue {
         margin-top: 0.5rem;
         margin-bottom: 0.25rem;
         border: 1px solid var(--default-borderColor);
-        border-radius: 0.4rem;
+        border-radius: 0.625rem;
         overflow: hidden;
       }
     }

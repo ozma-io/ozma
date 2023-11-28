@@ -104,6 +104,6 @@ export default class ReferenceField extends Vue {
 
 <style lang="scss" scoped>
   .reference-field {
-    border-radius: 0.2rem;
+    border-radius: 0.5rem;
   }
 </style>

@@ -205,6 +205,10 @@ input.with-clear-content-button {
   border-right-width: 0;
 }
 
+.btn {
+  border-radius: 0.625rem;
+}
+
 .btn.clear-content-button {
   border-left-width: 0;
   border-right-width: 0;
@@ -255,7 +259,7 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 .input-group.focus-entire:focus-within {
   border-color: $input-focus-border-color !important;
   box-shadow: $input-focus-shadow !important;
-  border-radius: 0.2rem;
+  border-radius: 0.5rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 
   .form-control,

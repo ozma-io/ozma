@@ -555,7 +555,7 @@ export default class UserViewBoard extends mixins<EmptyBaseUserView, BaseEntries
 
     &.nested {
       border: 1px solid var(--cell-borderColor, var(--form-borderColor, var(--default-borderColor)));
-      border-radius: 0.2rem;
+      border-radius: 0.625rem;
       overflow: hidden;
     }
   }

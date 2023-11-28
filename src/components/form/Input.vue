@@ -201,6 +201,7 @@ export default class Input extends Vue {
 <style lang="scss" scoped>
   ::v-deep .form-control {
     padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
     background-color: transparent;
     color: var(--cell-foregroundColor);
 
@@ -235,5 +236,6 @@ export default class Input extends Vue {
 
   .append-button ::v-deep .btn {
     padding: 0.4rem 0.3rem;
+    border-radius: 0 0.5rem 0.5rem 0;
   }
 </style>
