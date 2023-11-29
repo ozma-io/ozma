@@ -86,7 +86,6 @@
 <template>
   <div
     class="userview-wrapper"
-    :infinite-wrapper="inContainer"
   >
     <b-modal
       :id="$id('business_mode_edit_view')"
@@ -160,33 +159,41 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <transition name="fade-1" mode="out-in">
-        <component
-          :is="`UserView${state.componentName}`"
-          ref="userViewRef"
-          :key="transitionKey"
-          :uv="state.uv"
-          :is-root="isRoot"
-          :is-top-level="isTopLevel"
-          :filter="filter"
-          :scope="scope"
-          :level="level"
-          :selection-mode="selectionMode"
-          :default-values="defaultValues"
-          :auto-saved="state.autoSaved"
-          @goto="$emit('goto', $event)"
-          @goto-previous="$emit('goto-previous')"
-          @select="$emit('select', $event)"
-          @update:buttons="componentButtons = $event"
-          @update:status-line="$emit('update:status-line', $event)"
-          @update:enable-filter="$emit('update:enable-filter', $event)"
-          @update:current-page="$emit('update:current-page', $event)"
-          @update:body-style="$emit('update:body-style', $event)"
-          @load-next-chunk="loadNextChunk"
-          @load-all-chunks="loadAllChunks"
-          @load-entries="loadEntries"
-        />
-      </transition>
+      <!-- We don't use FunOverlay anymore basically but we need it for `infinite-wrapper`,
+        just <div> doesn't work somehow (in nested views).
+        TODO: Remove FunOverlay and do it another way -->
+      <FunOverlay
+        ref="overlayRef"
+        :infinite-wrapper="inContainer"
+      >
+        <transition name="fade-1" mode="out-in">
+          <component
+            :is="`UserView${state.componentName}`"
+            ref="userViewRef"
+            :key="transitionKey"
+            :uv="state.uv"
+            :is-root="isRoot"
+            :is-top-level="isTopLevel"
+            :filter="filter"
+            :scope="scope"
+            :level="level"
+            :selection-mode="selectionMode"
+            :default-values="defaultValues"
+            :auto-saved="state.autoSaved"
+            @goto="$emit('goto', $event)"
+            @goto-previous="$emit('goto-previous')"
+            @select="$emit('select', $event)"
+            @update:buttons="componentButtons = $event"
+            @update:status-line="$emit('update:status-line', $event)"
+            @update:enable-filter="$emit('update:enable-filter', $event)"
+            @update:current-page="$emit('update:current-page', $event)"
+            @update:body-style="$emit('update:body-style', $event)"
+            @load-next-chunk="loadNextChunk"
+            @load-all-chunks="loadAllChunks"
+            @load-entries="loadEntries"
+          />
+        </transition>
+      </FunOverlay>
     </template>
 
     <Errorbox
@@ -1102,6 +1109,5 @@ export default class UserView extends Vue {
     .userview-argument-editor-content {
       flex: 0 0 auto;
     }
-
   }
 </style>
