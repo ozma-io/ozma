@@ -189,7 +189,7 @@ const settingsModule: Module<ISettingsState, {}> = {
           func: (api: FunDBAPI) => api.runTransaction(updateTransaction),
         }, { root: true });
       } catch (e) { // If we can't update entry because it doesn't exist, we insert it.
-        if (!(e instanceof FunDBError) || e.body.error !== "transaction" || (e.body as any)?.details.error !== "notFound") throw e;
+        if (!(e instanceof FunDBError) || e.body.error !== "transaction" || e.body.inner.error !== "entryNotFound") throw e;
 
         await dispatch("callApi", {
           func: (api: FunDBAPI) => api.runTransaction(insertTransaction),
