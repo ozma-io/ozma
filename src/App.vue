@@ -398,7 +398,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   get styleSettings() {
     const values = {
       // "NavigationBackColor": this.settings.getEntry("navigation_back_color", String, "white"),
-      "Font": this.settings.getEntry("font", String, "Open Sans"),
       "FontSize": `${this.fontSize}px`,
       "MenuColor": this.settings.getEntry("menu_color", String, "#F5C700"),
       "TableBackColor": this.settings.getEntry("table_back_color", String, "white"),

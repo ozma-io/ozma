@@ -1,8 +1,8 @@
 $enable-rounded: true;
 $enable-shadows: false;
 $enable-gradients: false;
-$font-family-sans-serif: var(--Font);
-$font-family-serif: var(--Font);
+$font-family-sans-serif: Inter;
+$font-family-serif: Inter;
 $input-color: var(--cell-foregroundColor);
 $input-placeholder-color: var(--cell-foregroundDarkerColor);
 $border-color: var(--MainBorderColor);
@@ -51,7 +51,7 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    font-family: var(--Font);
+    font-family: Inter;
   }
 }
 
