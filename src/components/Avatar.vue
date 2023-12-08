@@ -46,8 +46,8 @@ export default class Avatar extends Vue {
 
 <style lang="scss" scoped>
   .avatar-box {
-    width: 2rem;
-    height: 2rem;
+    width: 1.875rem;
+    height: 1.875rem;
     overflow: hidden;
 
     .placeholder-avatar {
@@ -59,10 +59,6 @@ export default class Avatar extends Vue {
       font-weight: bold;
       color: white;
       user-select: none;
-
-      .letter {
-        transform: translateY(0.1rem);
-      }
     }
   }
 </style>

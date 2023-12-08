@@ -84,10 +84,21 @@
         :argumentEditorProps="argumentEditorProps"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
-      />
-      <div
-        class="userview-div"
       >
+        <template #left-slot>
+          <ButtonsPanel
+            :buttons="navigationButtons"
+            @goto="push({ ...$event, key: null })"
+          />
+        </template>
+
+        <template #right-slot>
+          <div class="profile-button-wrapper">
+            <ProfileButton />
+          </div>
+        </template>
+      </HeaderPanel>
+      <div class="userview-div">
         <UserView
           ref="userViewRef"
           is-root
@@ -250,7 +261,8 @@ import ModalUserView from "@/components/ModalUserView.vue";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { CurrentAuth, INoAuth } from "@/state/auth";
 import { IQuery, ICurrentQueryHistory, QueryKey, QueryWindowKey } from "@/state/query";
-import { convertToWords } from "@/utils";
+import { convertToWords, homeLink } from "@/utils";
+import { interfaceButtonVariant } from "@/utils_colors";
 import { Link } from "@/links";
 import type { Button } from "@/components/buttons/buttons";
 import HeaderPanel from "@/components/panels/HeaderPanel.vue";
@@ -258,6 +270,7 @@ import { CurrentSettings, DisplayMode } from "@/state/settings";
 import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 import { UserString } from "@/state/translations";
 import { IArgumentEditorProps } from "./ArgumentEditor.vue";
+import ProfileButton from "./ProfileButton.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -271,6 +284,7 @@ const errors = namespace("errors");
     ProgressBar,
     QRCodeScannerModal,
     HeaderPanel,
+    ProfileButton,
   },
   /* Two hooks below catches only browser navigation buttons,
    * other ways of changing current page are handled in query module.
@@ -341,6 +355,23 @@ export default class TopLevelUserView extends Vue {
 
   private get isSaving(): boolean {
     return this.protectedCalls > 0;
+  }
+
+  private get navigationButtons(): Button[] {
+    return [
+      {
+        type: "callback",
+        icon: "arrow_back",
+        variant: interfaceButtonVariant,
+        callback: () => this.$router.back(),
+      },
+      {
+        type: "link",
+        icon: "home",
+        variant: interfaceButtonVariant,
+        link: homeLink,
+      },
+    ];
   }
 
   get titleOrNewEntry(): string | null {
@@ -576,6 +607,13 @@ export default class TopLevelUserView extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .profile-button-wrapper {
+    padding-left: 1rem;
+    padding-right: 1.75rem;
+    display: flex;
+    align-items: center;
+  }
+
   .main-div {
     padding: 0;
     height: 100%;

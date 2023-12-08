@@ -108,7 +108,7 @@ import { namespace } from "vuex-class";
 import { ArgumentName, AttributesMap, FieldType, ValueType } from "ozma-api";
 import { deserializeValueFunction, fieldToValueType } from "@/values";
 import FormControl from "@/components/FormControl.vue";
-import { ConvertedBoundAttributesMap, ICombinedUserViewAny } from "@/user_views/combined";
+import type { ConvertedBoundAttributesMap, ICombinedUserViewAny } from "@/user_views/combined";
 import { UserString, rawToUserString } from "@/state/translations";
 import { outlinedInterfaceButtonVariant } from "@/utils_colors";
 import { Button } from "./buttons/buttons";

@@ -7,11 +7,9 @@
       },
     ]"
   >
-    <div
-      class="left-part d-flex align-items-center"
-    >
-      <div v-if="$slots['main-buttons']" class="main-buttons">
-        <slot name="main-buttons" />
+    <div class="left-part d-flex align-items-center">
+      <div v-if="$slots['left-slot']" class="left-slot">
+        <slot name="left-slot" />
       </div>
       <div v-if="title && type === 'root'" class="middle-part">
         <!-- `tabindex` is required for closing tooltip on blur -->
@@ -40,7 +38,7 @@
             'userview-title',
             {
               'is-loading': isLoading,
-            }
+            },
           ]"
         >
           {{ $ustOrEmpty(title) }}
@@ -54,10 +52,7 @@
         :userView="argumentEditorProps.userView"
         :applyArguments="argumentEditorProps.applyArguments"
       />
-      <ButtonsPanel
-        :buttons="headerButtons"
-        @goto="$emit('goto', $event)"
-      >
+      <ButtonsPanel :buttons="headerButtons" @goto="$emit('goto', $event)">
         <template #search-panel>
           <SearchPanel
             v-if="isEnableFilter"
@@ -67,6 +62,9 @@
           />
         </template>
       </ButtonsPanel>
+      <div v-if="$slots['right-slot']" class="right-slot">
+        <slot name="right-slot" />
+      </div>
     </div>
   </div>
 </template>
@@ -82,7 +80,9 @@ import { buttonsToPanelButtons } from "@/components/buttons/buttons";
 import SearchPanel from "@/components/SearchPanel.vue";
 import { interfaceButtonVariant } from "@/utils_colors";
 import { UserString } from "@/state/translations";
-import ArgumentEditor, { IArgumentEditorProps } from "@/components/ArgumentEditor.vue";
+import ArgumentEditor, {
+  IArgumentEditorProps,
+} from "@/components/ArgumentEditor.vue";
 
 @Component({
   components: {
@@ -122,112 +122,112 @@ export default class HeaderPanel extends Vue {
       icon: "fullscreen",
       link: {
         type: "query",
-        target: (this.type === "modal") ? "top" : "root",
+        target: this.type === "modal" ? "top" : "root",
         query: this.view,
       },
     };
   }
 }
-
 </script>
 
 <style lang="scss" scoped>
-  .header-panel {
-    padding: 0.5rem;
-    padding-top: 0.65rem;
-    padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: stretch;
-    overflow-x: hidden;
-    color: var(--default-foregroundColor);
-  }
+.header-panel {
+  padding: 0.5rem;
+  padding-top: 0.65rem;
+  padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: stretch;
+  overflow-x: hidden;
+  color: var(--default-foregroundColor);
+}
 
-  .left-part {
-    overflow: hidden;
-    flex: 1 0 13rem;
+.left-part {
+  overflow: hidden;
+  flex: 1 0 13rem;
 
-    > .main-buttons {
-      /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
+  > .left-slot {
+    /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
          see https://foobartel.com/tilrs/overflow-x-and-borders */
-      margin: 0.25rem;
-      flex-shrink: 0;
-    }
-  }
-
-  .middle-part {
-    padding: 0.25rem;
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    overflow-x: hidden;
-
-    .userview-title {
-      flex: 0 1 auto;
-    }
-  }
-
-  .right-part {
-    padding-left: 0.25rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    ::v-deep .button-element {
-      flex-shrink: 0;
-    }
-  }
-
-  ::v-deep .buttons-panel {
-    margin: 0 0.25rem;
+    margin: 0.25rem;
+    margin-left: 0.5rem;
     flex-shrink: 0;
   }
+}
 
-  .userview-title-wrapper {
-    padding-right: 0.25rem;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    overflow-x: hidden;
-  }
+.middle-part {
+  padding: 0.25rem;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: hidden;
 
   .userview-title {
-    margin: 0.5rem;
-    margin-left: 0;
-    margin-right: auto;
-    font-weight: 600;
-    font-size: 1.25em;
-    color: var(--MainTextColor);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: pre;
+    flex: 0 1 auto;
+  }
+}
 
-    &.is-loading {
-      color: var(--MainTextColorLight);
-      opacity: 0.6;
-    }
+.right-part {
+  padding-left: 0.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 
-    .header-panel:not(.is-root) & {
-      padding-left: 0.7rem;
-      white-space: nowrap;
-    }
+  ::v-deep .button-element {
+    flex-shrink: 0;
+  }
+}
+
+::v-deep .buttons-panel {
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+.userview-title-wrapper {
+  padding-right: 0.25rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: hidden;
+}
+
+.userview-title {
+  margin: 0.5rem;
+  margin-left: 0;
+  margin-right: auto;
+  font-weight: 600;
+  font-size: 1.25em;
+  color: var(--MainTextColor);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+
+  &.is-loading {
+    color: var(--MainTextColorLight);
+    opacity: 0.6;
   }
 
-  .search-panel {
-    margin-right: 0.25rem;
+  .header-panel:not(.is-root) & {
+    padding-left: 0.7rem;
+    white-space: nowrap;
   }
+}
 
-  .fullscreen_button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--MainTextColor);
-  }
+.search-panel {
+  margin-right: 0.25rem;
+}
+
+.fullscreen_button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--MainTextColor);
+}
 </style>

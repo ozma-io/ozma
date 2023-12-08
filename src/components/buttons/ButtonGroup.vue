@@ -8,7 +8,7 @@
       placement: (listItem && !$isMobile) ? 'left-start' : 'bottom-end',
       positionFixed: true,
       modifiers: {
-        offset: { offset: '0, 0' },
+        offset: { offset: '0, 10' },
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
         preventOverflow: { enabled: !listItem, boundariesElement: 'viewport' },
         hide: { enabled: !listItem },

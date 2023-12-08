@@ -68,7 +68,7 @@
     :style="{ height: '2rem' }"
     :visible-arrow="false"
     :options="{
-      placement: 'bottom-start',
+      placement: 'bottom-end',
       positionFixed: true,
       modifiers: {
         offset: { offset: '0, 10' },
@@ -108,13 +108,13 @@ import { Component, Vue } from "vue-property-decorator";
 import Popper from "vue-popperjs";
 
 import * as Api from "@/api";
-import { Button } from "./components/buttons/buttons";
-import { bootstrapVariantAttribute, defaultVariantAttribute, IThemeRef } from "./utils_colors";
-import { CurrentAuth, getAuthedLink, INoAuth } from "./state/auth";
+import { Button } from "@/components/buttons/buttons";
+import { bootstrapVariantAttribute, defaultVariantAttribute, IThemeRef } from "@/utils_colors";
+import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { eventBus } from "@/main";
-import { CurrentSettings, DisplayMode } from "./state/settings";
-import ButtonList from "./components/buttons/ButtonList.vue";
-import Avatar from "./components/Avatar.vue";
+import { CurrentSettings, DisplayMode } from "@/state/settings";
+import ButtonList from "@/components/buttons/ButtonList.vue";
+import Avatar from "@/components/Avatar.vue";
 
 const auth = namespace("auth");
 const settings = namespace("settings");
