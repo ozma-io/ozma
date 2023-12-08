@@ -377,7 +377,7 @@ import {
   currentValue,
   equalRowRef,
 } from "@/user_views/combined";
-import { interfaceButtonVariant, defaultVariantAttribute } from "@/utils_colors";
+import { interfaceButtonVariant, defaultVariantAttribute, outlinedInterfaceButtonVariant } from "@/utils_colors";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import ButtonList from "@/components/buttons/ButtonList.vue";
 import { Button } from "@/components/buttons/buttons";
@@ -1495,7 +1495,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "add",
-      variant: interfaceButtonVariant,
+      variant: outlinedInterfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () => void this.loadAllRowsAndAddNewRowOnPosition("top_front"),
     };
@@ -1505,7 +1505,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "add",
-      variant: interfaceButtonVariant,
+      variant: outlinedInterfaceButtonVariant,
       caption: this.$t("add_entry").toString(),
       callback: () =>
         void this.loadAllRowsAndAddNewRowOnPosition("bottom_back").then(() =>

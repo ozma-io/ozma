@@ -111,10 +111,20 @@ export default class MarkdownEditor extends Vue {
 
 <style lang="scss" scoped>
   ::v-deep {
-    .tui-editor-defaultUI {
-      border-color: var(--MainBorderColor);
-      border-radius: 4px;
+    .toastui-editor-defaultUI {
+      border-color: var(--cell-borderColor);
+      border-radius: 0.5rem;
       overflow: hidden;
+    }
+
+    .toastui-editor-mode-switch {
+      border-color: var(--cell-borderColor);
+      .tab-item {
+        border: 1px solid var(--cell-borderColor);
+        &.active {
+          border-top: 1px solid #fff;
+        }
+      }
     }
 
     .te-mode-switch-section {
