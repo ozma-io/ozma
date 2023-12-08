@@ -164,6 +164,7 @@
         TODO: Remove FunOverlay and do it another way -->
       <FunOverlay
         ref="overlayRef"
+        :show="false"
         :infinite-wrapper="inContainer"
       >
         <transition name="fade-1" mode="out-in">

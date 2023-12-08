@@ -267,10 +267,15 @@
               :title="$ustOrEmpty(columns[i].caption)"
               @click="loadAllRowsAndUpdateSort(i)"
             >
-              <span class="table_header__content">
+              <span>
                 {{ $ustOrEmpty(columns[i].caption) }}
               </span>
               <span v-if="uv.extra.sortColumn === i">{{ uv.extra.sortAsc ? "▲" : "▼" }}</span>
+              <span
+                class="resize-column-thumb"
+                @mousedown="(event) => handleColumnResizeMouseDown(i, event)"
+                @click.stop
+              />
             </th>
           </tr>
         </thead>
@@ -346,7 +351,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Watch } from "vue-property-decorator";
+import { Vue, Component, Watch } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 import { namespace } from "vuex-class";
 import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
@@ -1173,7 +1178,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       const style: Record<string, unknown> = {};
 
       const columnWidthAttr = Number(getColumnAttr("column_width"));
-      const columnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
+      const rawColumnWidth = Number.isNaN(columnWidthAttr) ? 200 : columnWidthAttr;
+      const minColumnWidth = 50;
+      const columnWidth = Math.max(rawColumnWidth + (this.resizedColumnDeltaXs[i] ?? 0), minColumnWidth);
       style["width"] = `${columnWidth}px`;
 
       const textAlignRightTypes: (ValueType["type"])[] = ["int", "decimal"];
@@ -2041,9 +2048,30 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.parentScrollTop = parentElement?.scrollTop ?? null;
   }
 
+  private resizedColumnDeltaXs: Record<number, number> = {};
+  private columnResizeState: { type: "idle" } | { type: "resizing"; columnIndex: number; startX: number; oldDeltaX: number } = { type: "idle" };
+  private handleColumnResizeMouseDown(columnIndex: number, event: MouseEvent) {
+    const oldDeltaX = this.resizedColumnDeltaXs[columnIndex] ?? 0;
+    this.columnResizeState = { type: "resizing", columnIndex, startX: event.pageX, oldDeltaX };
+  }
+  private handleColumnResizeMouseMove(event: MouseEvent) {
+    if (this.columnResizeState.type === "idle") return;
+
+    const deltaX = this.columnResizeState.oldDeltaX + event.pageX - this.columnResizeState.startX;
+    Vue.set(this.resizedColumnDeltaXs, this.columnResizeState.columnIndex, deltaX);
+  }
+
+  private handleColumnResizeMouseUp() {
+    if (this.columnResizeState.type === "idle") return;
+
+    this.columnResizeState = { type: "idle" };
+  }
+
   protected mounted() {
     /* eslint-disable @typescript-eslint/unbound-method */
     (this.$el as HTMLElement).addEventListener("scroll", this.removeCellEditing);
+    document.addEventListener("mousemove", this.handleColumnResizeMouseMove);
+    document.addEventListener("mouseup", this.handleColumnResizeMouseUp);
     /* window.addEventListener("scroll", this.removeCellEditing, true); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$on(name, callback));
     if (this.$refs["table"]) {
@@ -2071,6 +2099,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   protected beforeDestroy() {
     /* eslint-disable @typescript-eslint/unbound-method */
     (this.$el as HTMLElement).removeEventListener("scroll", this.removeCellEditing);
+    document.removeEventListener("mousemove", this.handleColumnResizeMouseMove);
+    document.removeEventListener("mouseup", this.handleColumnResizeMouseUp);
     /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) => this.$root.$off(name, callback));
     if (this.$refs["table"]) {
@@ -2986,6 +3016,16 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
 
   .table-th:last-child {
     border-right: none;
+  }
+
+  .resize-column-thumb {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1rem;
+    height: 100%;
+    cursor: col-resize;
   }
 
   ::v-deep td > p {
