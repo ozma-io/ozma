@@ -2974,11 +2974,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     max-width: 100vw !important;
   }
 
-  .tabl {
-    /* width: 100%; */
-    padding: 0;
-  }
-
   .custom-table {
     font-size: 0.90rem;
     border-collapse: separate !important;
@@ -3056,15 +3051,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   @media screen and (max-device-width: 650px) {
-    .tabl {
-      flex: 1;
-      height: none;
-      margin-bottom: 0;
-    }
-
     .table-block {
-      display: flex;
-      flex-direction: column;
       height: 100%;
     }
 
@@ -3099,12 +3086,6 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   @media print {
-    .tabl {
-      height: 100%;
-      float: none !important; /* при печати для правильной масштабируемости */
-      overflow: visible !important; /* чтобы при печати была возможность видеть таблицу */
-    }
-
     .custom-table {
       /* max-width: 100% !important; */
       page-break-inside: auto;
