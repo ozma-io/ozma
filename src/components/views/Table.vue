@@ -1,6 +1,8 @@
 <i18n>
   {
     "en": {
+      "pagination_select": "Rows per page",
+      "of": "of",
       "cut": "Cut",
       "copy": "Copy",
       "paste": "Paste",
@@ -22,6 +24,8 @@
       "no_columns": "This query lacks visible columns"
     },
     "ru": {
+      "pagination_select": "Строк на странице",
+      "of": "из",
       "cut": "Вырезать",
       "copy": "Копировать",
       "paste": "Вставить",
@@ -151,51 +155,12 @@
       </popper>
 
       <div
-        v-if="uv.extra.lazyLoad.type === 'pagination'"
-        class="pagination-wrapper"
-        :style="{
-          // It's very bad, but I was unable to do this without JS.
-          right: `${(tableWidth || 0) - (parentWidth || 0) - (parentScrollLeft || 0) + 5}px`,
-        }"
-      >
-        <div
-          :class="['pagination', { 'ml-auto': !uv.info.mainEntity?.forInsert }]"
-          :style="{ top: `${parentScrollTop > 30 ? 2.5 : 0}rem` }"
-        >
-          <b-spinner
-            v-if="uv.extra.lazyLoad.pagination.loading"
-            class="mr-1"
-            small
-            label="Next page is loading"
-          />
-          <div class="select-wrapper">
-            <b-select
-              class="page-select"
-              :value="uv.extra.lazyLoad.pagination.perPage"
-              :options="pageSizes"
-              size="sm"
-              @input="updatePageSize"
-            />
-          </div>
-          <ButtonItem :button="firstPageButton" />
-          <ButtonItem :button="prevPageButton" />
-          <div class="current-page-wrapper">
-            <div class="current-page">
-              {{ currentVisualPage }}
-              <span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }} </span>
-            </div>
-          </div>
-          <ButtonItem :button="nextPageButton" />
-        </div>
-      </div>
-
-      <div
-        v-if="(showAddRowButtons && uv.rows.length > 5) || uv.extra.lazyLoad.type === 'pagination'"
+        v-if="showAddRowButtons && uv.rows.length > 5"
         class="button-container"
-        :style="{ width: `${parentWidth - 20}px`, minHeight: `25px` }"
       >
         <ButtonItem
           v-visible="showAddRowButtons && uv.rows.length > 5"
+          class="add-row-button"
           :button="topAddButton"
           align-right
         />
@@ -335,16 +300,61 @@
           <span />
         </template>
       </InfiniteLoading>
+
       <div
         v-if="showAddRowButtons"
         ref="bottomButtonContainer"
         class="button-container"
-        :style="{ width: `${parentWidth - 20}px` }"
       >
         <ButtonItem
+          class="add-row-button"
           :button="bottomAddButton"
           align-right
         />
+      </div>
+
+      <div
+        v-if="uv.extra.lazyLoad.type === 'pagination'"
+        class="footer"
+      >
+        <div class="pagination-wrapper">
+          <div class="pagination">
+            <b-spinner
+              v-if="uv.extra.lazyLoad.pagination.loading"
+              class="mr-1"
+              small
+              label="Next page is loading"
+            />
+            <div class="current-rows">
+              {{ currentRows }}
+            </div>
+            <div class="select-wrapper">
+              <div class="select-label">
+                {{ $t("pagination_select").toString() }}:
+              </div>
+              <b-select
+                class="page-select"
+                :value="uv.extra.lazyLoad.pagination.perPage"
+                :options="pageSizes"
+                size="sm"
+                @input="updatePageSize"
+              />
+            </div>
+            <ButtonItem
+              class="pagination-arrow-button"
+              :button="prevPageButton"
+            />
+            <div class="current-page-wrapper">
+              <div class="current-page">
+                {{ currentVisualPage }}
+              </div>
+            </div>
+            <ButtonItem
+              class="pagination-arrow-button"
+              :button="nextPageButton"
+            />
+          </div>
+        </div>
       </div>
     </template>
   </div>
@@ -1295,25 +1305,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     };
   }
 
-  get firstPageButton(): Button | null {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
-
-    return {
-      type: "callback",
-      icon: "skip_previous",
-      variant: interfaceButtonVariant,
-      disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
-      callback: () => this.goToFirstPage(),
-    };
-  }
-
   get prevPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== "pagination") return null;
 
     return {
       type: "callback",
       icon: "arrow_left",
-      variant: interfaceButtonVariant,
+      variant: outlinedInterfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPrevPage(),
     };
@@ -1325,7 +1323,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     return {
       type: "callback",
       icon: "arrow_right",
-      variant: interfaceButtonVariant,
+      variant: outlinedInterfaceButtonVariant,
       disabled: (this.uv.rowLoadState.complete && this.onLastPage) || this.uv.extra.lazyLoad.pagination.loading,
       callback: () => this.goToNextPage(),
     };
@@ -1406,10 +1404,20 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     }
   }
 
+  private get currentRows() {
+    if (this.uv.extra.lazyLoad.type !== "pagination") return "";
+
+    const fromRow = this.uv.extra.lazyLoad.pagination.currentPage * this.uv.extra.lazyLoad.pagination.perPage + 1;
+    const toRow = (this.uv.extra.lazyLoad.pagination.currentPage + 1) * this.uv.extra.lazyLoad.pagination.perPage;
+    const rowCount = this.uv.rowLoadState.complete ? ` ${this.$t("of").toString()} ${this.uv.rowLoadState.fetchedRowCount}` : "";
+    return `${fromRow}-${toRow}${rowCount}`;
+  }
+
   private get currentVisualPage() {
     if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
 
-    return String(this.uv.extra.lazyLoad.pagination.currentPage + 1);
+    const allPages = this.pagesCount ? `/${this.pagesCount}` : "";
+    return `${this.uv.extra.lazyLoad.pagination.currentPage + 1}${allPages}`;
   }
 
   @Watch("currentVisualPage")
@@ -2899,11 +2907,17 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   .button-container {
-    position: sticky;
-    left: 0;
+    padding: 0.75rem 0;
     display: flex;
-    padding: 0.25rem;
+    flex-direction: column;
+    align-items: flex-start;
     transition: opacity 0.2s;
+
+    .add-row-button {
+      position: sticky;
+      left: 1.25rem;
+      font-size: 0.875rem;
+    }
   }
 
   .context-menu-wrapper {
@@ -2912,45 +2926,57 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     z-index: 25;
   }
 
+  .footer {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
   .pagination-wrapper {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    width: fit-content;
+    position: sticky;
+    right: 1.25rem;
     z-index: 30;
-    pointer-events: none;
-    margin: 0.2rem;
   }
 
   .pagination {
-    position: sticky;
-    top: 0;
-    right: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--default-backgroundDarker1Color);
-    pointer-events: all;
+
+    .current-rows {
+      font-size: 0.75rem;
+      margin-right: 1.25rem;
+    }
 
     .current-page-wrapper {
       min-width: 3rem; /* To fit at least `99/99` without changing width */
       display: flex;
       justify-content: center;
       align-items: center;
+      font-size: 0.75rem;
+    }
+
+    .pagination-arrow-button {
+      width: 1.5rem;
+      height: 1.25rem;
     }
 
     .select-wrapper {
-      width: 4.5rem; /* To fit any option text */
+      display: flex;
+      align-items: center;
+      font-size: 0.75rem;
 
       .page-select {
-        background-color: var(--default-backgroundDarker1Color);
-        border-color: var(--default-borderColor);
-      }
-    }
+        width: 3.5rem; /* To fit any option text */
+        background-color: var(--default-backgroundColor);
+        border-color: var(--default-backgroundColor);
+        font-size: 0.75rem;
 
-    .pages-count {
-      color: var(--default-foregroundDarkerColor);
+        ::v-deep select {
+          padding-right: 1rem;
+        }
+      }
     }
   }
 

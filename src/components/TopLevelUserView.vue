@@ -177,8 +177,8 @@
 
       <transition name="fade-2" mode="out-in">
         <div
-          v-if="( !changes.isEmpty && isSaving ) || isLoading"
-          class="saving-spinner spinner-border"
+          v-if="isLoading"
+          :class="['spinner-border', 'loading-spinner', { 'saving-spinner': savingInProgress }]"
         />
         <div
           v-else-if="!changes.isEmpty"
@@ -215,7 +215,7 @@
           </button>
         </div>
         <div
-          v-else-if="( !$isMobile || savedRecently.show )"
+          v-else-if="savedRecently.show"
           v-b-tooltip.hover.d1000.right.noninteractive="{
             title: $t('saved').toString(),
             disabled: $isMobile,
@@ -541,8 +541,11 @@ export default class TopLevelUserView extends Vue {
     }
   }
 
+  private savingInProgress = false;
   private async saveView() {
+    this.savingInProgress = true;
     await this.saveChanges();
+    this.savingInProgress = false;
 
     if (this.errors.length === 0) {
       this.$bvToast.hide();
@@ -748,13 +751,17 @@ export default class TopLevelUserView extends Vue {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
   }
 
-  .saving-spinner {
+  .loading-spinner {
     height: 3rem;
     width: 3rem;
-    border-color: #39ac00;
     border-right-color: transparent;
     border-width: 0.5rem;
     opacity: 0.5;
+
+    &.saving-spinner {
+      border-color: #39ac00;
+      border-right-color: transparent;
+    }
   }
 
   .development-mode-indicator {
