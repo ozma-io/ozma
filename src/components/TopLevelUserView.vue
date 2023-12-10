@@ -146,7 +146,7 @@
             title: $t('clear_changes').toString(),
             disabled: $isMobile,
           }"
-          class="save-cluster-button reset-changes-button shadow"
+          class="save-cluster-button reset-changes-button"
           @click="resetChanges"
         >
           <span
@@ -164,7 +164,7 @@
             title: $t('show_errors').toString(),
             disabled: $isMobile,
           }"
-          class="save-cluster-button show-errors-button shadow"
+          class="save-cluster-button show-errors-button"
           @click="makeErrorToast"
         >
           <span
@@ -177,56 +177,26 @@
 
       <transition name="fade-2" mode="out-in">
         <div
-          v-if="isLoading"
-          :class="['spinner-border', 'loading-spinner', { 'saving-spinner': savingInProgress }]"
-        />
+          v-if="autoSaveInProgress || savingInProgress"
+          class="save-cluster-button saving-indicator"
+        >
+          <div class="spinner-border saving-indicator-spinner" />
+        </div>
         <div
           v-else-if="!changes.isEmpty"
         >
-          <div
-            v-if="Object.keys(autoSaveLocks).length > 0"
-            v-b-tooltip.hover.d1000.right.noninteractive="{
-              title: $t('auto_save_disabled').toString(),
-              disabled: $isMobile,
-            }"
-            class="auto-save-indicator"
-          >
-            <span
-              class="material-icons md-36"
-            >
-              timer_off
-            </span>
-          </div>
           <button
             v-b-tooltip.hover.d1000.right.noninteractive="{
               title: $t('save').toString(),
               disabled: $isMobile,
             }"
-            :class="['save-cluster-button save-button shadow', {
-              'save': !changes.isEmpty,
-            }]"
+            class="save-cluster-button save-button save"
             @click.capture.stop="saveView"
           >
-            <span
-              class="material-icons md-36"
-            >
+            <span class="material-icons md-36">
               save
             </span>
           </button>
-        </div>
-        <div
-          v-else-if="savedRecently.show"
-          v-b-tooltip.hover.d1000.right.noninteractive="{
-            title: $t('saved').toString(),
-            disabled: $isMobile,
-          }"
-          class="save-cluster-indicator"
-        >
-          <span
-            class="material-icons md-36"
-          >
-            cloud_done
-          </span>
         </div>
       </transition>
 
@@ -313,6 +283,7 @@ export default class TopLevelUserView extends Vue {
   @auth.Action("login") login!: () => Promise<void>;
   @auth.Action("logout") logout!: () => Promise<void>;
   @staging.State("current") changes!: CurrentChanges;
+  @staging.State("currentSubmit") autoSaveInProgress!: true | null;
   @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
   @staging.Action("reset") clearChanges!: () => Promise<void>;
   @query.State("current") query!: ICurrentQueryHistory | null;
@@ -345,11 +316,6 @@ export default class TopLevelUserView extends Vue {
 
   private buttons: Button[] = [];
   private argumentEditorProps: IArgumentEditorProps | null = null;
-
-  private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
-    show: false,
-    timeoutId: null,
-  };
 
   private currentQRCodeLink: Link | null = null;
 
@@ -550,14 +516,6 @@ export default class TopLevelUserView extends Vue {
     if (this.errors.length === 0) {
       this.$bvToast.hide();
     }
-
-    if (this.savedRecently.timeoutId !== null) {
-      clearTimeout(this.savedRecently.timeoutId);
-    }
-    this.savedRecently.show = true;
-    this.savedRecently.timeoutId = setTimeout(() => {
-      this.savedRecently.show = false;
-    }, 5000);
   }
 
   private get allowBusinessMode() {
@@ -675,8 +633,8 @@ export default class TopLevelUserView extends Vue {
 
   .save-cluster {
     position: absolute;
-    bottom: 1rem;
-    right: 1rem;
+    bottom: 3rem;
+    right: 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -697,58 +655,26 @@ export default class TopLevelUserView extends Vue {
     border-radius: 50%;
   }
 
-  .save-cluster-indicator {
-    height: 3rem;
-    width: 3rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    color: var(--default-backgroundDarker2Color);
-
-    .material-icons {
-      font-size: 2rem;
-    }
-  }
-
   .reset-changes-button {
-    height: 3rem;
-    width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #df4151;
-    color: #831721;
+    background-color: #F2F4F7;
+    color: #777C87;
   }
 
   .show-errors-button {
-    height: 3rem;
-    width: 3rem;
     margin-bottom: 0.5rem;
-    background-color: #6c757d;
-    color: #2b2e31;
-  }
-
-  .auto-save-indicator {
-    position: absolute;
-    height: 3rem;
-    width: 3rem;
-    transform: translateX(-100%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    color: var(--default-backgroundDarker2Color);
+    background-color: #F2F4F7;
+    color: #777C87;
   }
 
   .save-button {
-    color: var(--StateTextColor);
-
-    &.save {
-      background-color: #39ac00;
-    }
+    color: white;
+    background-color: #2361FF;
   }
 
-  .shadow {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+  .saving-indicator {
+    color: white;
+    background-color: #2361FF;
   }
 
   .loading-spinner {
@@ -759,7 +685,7 @@ export default class TopLevelUserView extends Vue {
     opacity: 0.5;
 
     &.saving-spinner {
-      border-color: #39ac00;
+      border-color: #2361FF;
       border-right-color: transparent;
     }
   }
