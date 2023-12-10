@@ -177,14 +177,12 @@
 
       <transition name="fade-2" mode="out-in">
         <div
-          v-if="autoSaveInProgress || savingInProgress"
+          v-if="(autoSaveInProgress || savingInProgress) && errors.length === 0"
           class="save-cluster-button saving-indicator"
         >
           <div class="spinner-border saving-indicator-spinner" />
         </div>
-        <div
-          v-else-if="!changes.isEmpty"
-        >
+        <div v-else-if="!changes.isEmpty">
           <button
             v-b-tooltip.hover.d1000.right.noninteractive="{
               title: $t('save').toString(),
