@@ -187,6 +187,7 @@ export default class AppHeader extends Vue {
       });
     }
 
+    /*
     if (this.themeButtons.length > 0) {
       buttons.push({
         icon: "palette",
@@ -196,6 +197,7 @@ export default class AppHeader extends Vue {
         variant: defaultVariantAttribute,
       });
     }
+    */
 
     buttons.push({
       icon: "language",

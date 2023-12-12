@@ -2,7 +2,7 @@ import { rgba, toRgba, parseToRgba, readableColor, mix } from "color2k";
 import { z } from "zod";
 import FunDBAPI, { IViewExprResult, SchemaName, RowId } from "ozma-api";
 import { store } from "@/main";
-import { mapMaybe, objectMap, safeJsonParse } from "@/utils";
+import { mapMaybe, objectMap } from "@/utils";
 
 const ThemeRef = z.object({
   schema: z.string(),
@@ -252,6 +252,7 @@ export const getPreferredTheme = (themes: ThemesMap, defaultSchema?: SchemaName)
   // const prefersDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const prefersDarkTheme = false;
 
+  /*
   const storedTheme = ThemeRef.safeParse(safeJsonParse(localStorage.getItem("preferredTheme")));
 
   if (storedTheme.success) {
@@ -261,6 +262,7 @@ export const getPreferredTheme = (themes: ThemesMap, defaultSchema?: SchemaName)
     }
     console.error(`User theme ${storedTheme.data.schema}.${storedTheme.data.name} is not defined`);
   }
+  */
 
   const myDefaultSchema = defaultSchema ?? "user";
 
