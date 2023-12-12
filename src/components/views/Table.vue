@@ -1272,7 +1272,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
   }
 
   get useInfiniteScrolling() {
-    return this.uv.extra.lazyLoad.type === "infinite_scroll";
+    // If search is used we load all rows so no need for infinite scrolling.
+    return this.uv.extra.lazyLoad.type === "infinite_scroll" && this.currentFilter.length === 0;
   }
 
   get pageSizes() {
@@ -2867,6 +2868,9 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     switch (this.uv.extra.lazyLoad.type) {
       case "infinite_scroll": {
         const totalAdded = Object.keys(this.uv.newRows).length;
+        if (this.currentFilter.length > 0) {  // If we use search we load all rows and then no infinite scroll.
+          return this.allRows;
+        }
         return this.allRows.slice(0, totalAdded + this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
       }
       case "pagination":
