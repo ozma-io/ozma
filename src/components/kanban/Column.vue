@@ -257,7 +257,7 @@ export default class KanbanColumn extends Vue {
   .column_header__count {
     position: relative;
     bottom: 0.25rem;
-    left: 0.5rem; 
+    left: 0.5rem;
     font-size: 0.75rem;
     color: var(--kanban-foregroundDarkerColor);
   }
