@@ -11,7 +11,7 @@
     <b-row
       v-for="(row, rowIndex) in card.rows"
       :key="rowIndex"
-      class="card-row"
+      class="card-row no-gutters"
     >
       <b-col
         v-for="(col, colIndex) in row"
@@ -110,19 +110,19 @@ export default class RowCard extends Vue {
 
 <style lang="scss" scoped>
   .card-link {
-    padding: 0.5rem;
+    padding: 0.75rem;
     display: block;
     cursor: pointer;
     user-select: none;
   }
 
-  .card-row {
-    margin: 0;
+  .card-row:not(:last-child) {
+    margin-bottom: 0.5rem;
   }
 
   .card-col {
     padding: 0 0.25rem 0 0.25rem;
-    background-color: var(--backgroundColor);
+    background-color: var(--backgroundDarker1Color);
     border-radius: 0.5rem;
   }
 

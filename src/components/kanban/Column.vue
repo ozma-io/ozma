@@ -36,19 +36,19 @@
         >
           {{ title ?? ". . ." }}
         </span>
+        <span
+          v-b-tooltip.hover.d1000.noninteractive
+          class="column_header__count"
+          :title="$t('count_tooltip')"
+        >
+          {{ cardCount }}
+        </span>
         <span class="column_controls" data-dragscroll>
-          <span
-            v-b-tooltip.hover.d1000.noninteractive
-            class="column_header__count"
-            :title="$t('count_tooltip')"
-          >
-            {{ cardCount }}
-          </span>
           <i
             v-if="createButton"
             class="material-icons material-button add-button"
             @click="$emit('create')"
-          >add_box</i>
+          >add</i>
         </span>
       </div>
     </div>
@@ -69,7 +69,7 @@
       fallback-tolerance="5"
       animation="200"
       data-dragscroll
-      draggable=".card_container"
+      draggable=".card-container"
       handle=".handle"
       :style="[{ width }, colorVariables]"
       :value="shownCards"
@@ -218,12 +218,15 @@ export default class KanbanColumn extends Vue {
 
 <style lang="scss" scoped>
   .column_container {
-    margin-right: 0.25rem;
-    margin-left: 0.25rem;
+    height: fit-content;
+    max-height: 100%;
+    padding: 1.25rem 0.5rem 0.25rem 0.5rem;
     display: flex;
     flex-direction: column;
+    gap: 0.75rem;
+    background-color: var(--kanban-backgroundColor);
     color: var(--MainTextColor);
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
 
     &:hover {
       ::-webkit-scrollbar {
@@ -233,7 +236,7 @@ export default class KanbanColumn extends Vue {
   }
 
   .column_header {
-    padding: 0.5rem;
+    padding: 0 0.5rem;
     display: flex;
   }
 
@@ -252,9 +255,11 @@ export default class KanbanColumn extends Vue {
   }
 
   .column_header__count {
+    position: relative;
+    bottom: 0.25rem;
+    left: 0.5rem; 
+    font-size: 0.75rem;
     color: var(--kanban-foregroundDarkerColor);
-    font-weight: normal;
-    margin-right: 0.5rem;
   }
 
   .column_select_checkbox {
@@ -262,7 +267,6 @@ export default class KanbanColumn extends Vue {
   }
 
   .column_body {
-    padding: 0.4rem;
     padding-bottom: 0;
     overflow-x: hidden;
     height: 100%;
@@ -281,7 +285,6 @@ export default class KanbanColumn extends Vue {
 
   .add-button {
     border: 0;
-    margin-right: -0.2rem;
   }
 
   .no-card {

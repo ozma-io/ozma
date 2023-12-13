@@ -74,19 +74,16 @@ export default class Board extends Vue {
   .board_container {
     width: 100%;
     height: 100%;
-    overflow-y: hidden;
-    overflow-x: auto;
+    padding: 1.5rem 2.25rem;
     display: flex;
     flex-direction: row;
+    gap: 0.625rem;
+    background-color: var(--kanban-backgroundDarker1Color);
+    overflow-y: hidden;
+    overflow-x: auto;
 
     &.dragging {
       cursor: grabbing !important;
     }
-  }
-
-  ::v-deep .column_container {
-    border-left: 0;
-    border-top: 0;
-    border-bottom: 0;
   }
 </style>

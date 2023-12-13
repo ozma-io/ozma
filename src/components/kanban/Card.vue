@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="[ variantClassName, 'kanbanCard-variant', 'kanbanCard-local-variant', 'card_container', 'shadow-sm' ]"
+    :class="[variantClassName, 'kanbanCard-variant', 'kanbanCard-local-variant', 'card-container']"
     :style="variantVariables"
   >
     <slot />
@@ -38,19 +38,18 @@ export default class KanbanCard extends Vue {
 <style lang="scss" scoped>
   @include variant-to-local("kanbanCard");
 
-  .card_container {
+  .card-container {
     display: block;
-    border-radius: 0.25rem;
-    box-shadow: var(--backgroundDarker2Color) 0 0 3px 2px!important;
-    background-color: var(--kanbanCard-backgroundColor);
+    border-radius: 0.5rem;
+    background-color: var(--kanbanCard-backgroundDarker1Color);
     color: var(--kanbanCard-foregroundColor);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
     user-select: none;
     min-height: 3.6rem;
   }
 
   @media screen and (max-width: 700px) {
-    .card_container {
+    .card-container {
       width: unset;
       max-width: 50vw;
       user-select: none;
@@ -58,7 +57,7 @@ export default class KanbanCard extends Vue {
   }
 
   @media screen and (max-width: 490px) {
-    .card_container {
+    .card-container {
       max-width: 80vw;
     }
   }
