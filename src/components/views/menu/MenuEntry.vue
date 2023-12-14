@@ -12,6 +12,7 @@
           {
             'is-mobile': $isMobile,
             'no-content-zero-level': entry.content.length === 0 && level === 1,
+            'two_levels_max': twoLevelsMax,
           },
         ]"
       >
@@ -106,7 +107,7 @@ export default class MenuEntry extends Vue {
   @Prop({ type: Object, required: true }) entry!: MenuValue;
 
   get titleStyle(): { fontSize: string } {
-    if (this.level) {
+    if (this.level > 0) {
       const divider = (this.level / scaleFactor);
       const fontSize = initialSize / divider;
       return { fontSize: `${fontSize}px` };
@@ -121,6 +122,16 @@ export default class MenuEntry extends Vue {
 
   private isMenuLink(entry: MenuValue): entry is IMenuLink {
     return "link" in entry;
+  }
+
+  private isMenuCategory(entry: MenuValue): entry is IMenuCategory {
+    return "content" in entry;
+  }
+
+  private get twoLevelsMax() {
+    if (this.level > 0) return false;
+    if (this.isMenuCategory(this.entry) && this.entry.content.some(entry => this.isMenuCategory(entry))) return false;
+    return true;
   }
 
   private get badgeVariantClassName(): string | null {
@@ -223,13 +234,14 @@ export default class MenuEntry extends Vue {
 
   .first_level_entries {
     padding-left: 0 !important;
+  }
 
-    .menu_category_block {
-      border-radius: 0.75rem;
-      padding: 2rem;
-      background: var(--default-backgroundColor);
-      border: 1px solid var(--default-backgroundDarker1Color);
-    }
+  .first_level_entries .menu_category_block,
+  .two_levels_max {
+    border-radius: 0.75rem;
+    padding: 2rem;
+    background: var(--default-backgroundColor);
+    border: 1px solid var(--default-backgroundDarker1Color);
   }
 
   .menu_category_title {
