@@ -1,7 +1,7 @@
 <template>
   <b-col
     :md="entry.size || 12"
-    :class="['menu-item-column']"
+    class="menu-item-column"
   >
     <template v-if="entry.content">
       <div
@@ -21,7 +21,7 @@
             {{ $ustOrEmpty(entry.name) }}
           </span>
         </MenuHeading>
-        <b-row :class="['menu_entries', { 'first_level_entries': level === 0 }]">
+        <b-row :class="['menu_entries', 'no-gutters', { 'first_level_entries': level === 0 }]">
           <MenuEntry
             v-for="(subEntry, index) in entry.content"
             :key="index"
@@ -157,12 +157,13 @@ export default class MenuEntry extends Vue {
   .menu-item-column {
     display: flex;
     flex-direction: column;
+    padding: 0 calc(0.625rem / 2);
   }
 
   .menu_category_block {
     height: 100%;
 
-    margin-top: 1rem;
+    margin-top: 0.625rem;
 
     &.is-mobile {
       margin: 0;
@@ -173,10 +174,6 @@ export default class MenuEntry extends Vue {
       margin: 0;
       margin-top: 1rem;
       margin-bottom: 1rem;
-    }
-
-    h2 {
-      padding: 0.5rem 0;
     }
   }
 
@@ -193,6 +190,7 @@ export default class MenuEntry extends Vue {
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 1.25rem;
   }
 
   .menu-entry {
@@ -238,8 +236,8 @@ export default class MenuEntry extends Vue {
 
   .first_level_entries .menu_category_block,
   .two_levels_max {
-    border-radius: 0.75rem;
-    padding: 2rem;
+    border-radius: 0.5rem;
+    padding: 1.875rem;
     background: var(--default-backgroundColor);
     border: 1px solid var(--default-backgroundDarker1Color);
   }
