@@ -182,6 +182,10 @@
         >
           <div class="spinner-border saving-indicator-spinner" />
         </div>
+        <div
+          v-else-if="isLoading"
+          class="spinner-border loading-spinner"
+        />
         <div v-else-if="!changes.isEmpty">
           <button
             v-b-tooltip.hover.d1000.right.noninteractive="{
