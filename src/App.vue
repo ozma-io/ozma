@@ -342,6 +342,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       foregroundContrast: defaultVariant.foregroundContrast,
       foregroundDarker: defaultVariant.foregroundDarker,
     };
+    const menuEntry = {
+      ...interfaceButton,
+      foreground: "#3D3D3D",
+    };
     const outlinedInterfaceButton = {
       ...interfaceButton,
       border: defaultVariant.border,
@@ -350,7 +354,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       default: defaultVariant,
       interfaceButton,
       outlinedInterfaceButton,
-      menuEntry: interfaceButton,
+      menuEntry: menuEntry,
     };
     const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
     return colorVariantsToCssRules(colorVariants);
