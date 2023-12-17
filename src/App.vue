@@ -354,7 +354,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       default: defaultVariant,
       interfaceButton,
       outlinedInterfaceButton,
-      menuEntry: menuEntry,
+      menuEntry,
     };
     const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
     return colorVariantsToCssRules(colorVariants);

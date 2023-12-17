@@ -343,21 +343,13 @@ export interface IEntriesState {
 
 const fetchEntriesByEntity = async (context: ActionContext<IEntriesState, {}>, ref: IEntityRef, search: string, offset: number, limit: number): Promise<{ entries: Entries; complete: boolean }> => {
   const likeSearch = search === "" ? "%" : `%${search.replaceAll(/\\|%|_/g, "\\$&")}%`; // Escape characters.
-  const where: IChunkWhere | undefined =
-    search === ""
-      ? undefined
-      : {
-        expression: "main ILIKE $search",
-        arguments: {
-          search: {
-            type: "string",
-            value: likeSearch,
-          },
-        },
-      };
   const view = `"${ref.schema}"."${ref.name}"`;
   const query = `SELECT id, __main :: string AS main FROM ${view}`;
-  const chunk: IQueryChunk = { offset, limit: limit + 1, where };
+  const chunk: IQueryChunk = {
+    offset,
+    limit: limit + 1,
+    search: search === "" ? undefined : search,
+  };
   const res = await context.dispatch("callApi", {
     func: (api : FunDBAPI) => api.getAnonymousUserView(query, { search: likeSearch }, { chunk }),
   }, { root: true }) as IViewExprResult;
