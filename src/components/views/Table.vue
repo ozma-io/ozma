@@ -1080,6 +1080,8 @@ export const TableLazyLoad =
 
 export type ITableLazyLoad = z.infer<typeof TableLazyLoad>;
 
+const stringArraySchema = z.array(z.string());
+
 type MoveDirection = "up" | "right" | "down" | "left";
 
 type ReferenceForPopper = {
@@ -2136,26 +2138,41 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     this.releaseEntries();
   }
 
+  private get filterType(): "local" | "remote" {
+    return "remote"; // TODO: Make it `"local"` on some conditions.
+  }
+
   @Watch("filter", { immediate: true })
   protected updateFilter() {
-    if (this.dirtyHackPreventEntireReloads) return;
+    if (this.filterType === "remote") {
+      // const columns = this.uv.info.columns.map(column => column.name);
+      // const searchInColumnsParsed = stringArraySchema.safeParse(this.uv.attributes["search_in_columns"]);
+      // const rawSearchInColumns = searchInColumnsParsed.success ? searchInColumnsParsed.data : [];
+      // const searchInColumns = R.intersection(columns, rawSearchInColumns);
 
-    if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
-      this.$emit("load-all-chunks");
-    }
+      this.$emit("load-entries-with-remote-search", this.filter.join(" "));
+    } else if (this.filterType === "local") {
+      if (this.dirtyHackPreventEntireReloads) return;
 
-    // Check if current filter contained this one
-    const contained = !this.showTree && this.currentFilter.every(oldWord => this.filter.some(newWord => newWord.startsWith(oldWord)));
+      if (this.filter.length !== 0 && this.uv.rowLoadState.complete === false) {
+        this.$emit("load-all-chunks");
+      }
 
-    const oldFilter = this.currentFilter;
-    this.currentFilter = this.filter;
+      // Check if current filter contained this one
+      const contained = !this.showTree && this.currentFilter.every(oldWord => this.filter.some(newWord => newWord.startsWith(oldWord)));
 
-    if (!contained) {
-      this.buildRowPositions();
+      const oldFilter = this.currentFilter;
+      this.currentFilter = this.filter;
+
+      if (!contained) {
+        this.buildRowPositions();
+      } else {
+        // Filter existing rows when we filter a subset of already filtered ones.
+        const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
+        this.rowPositions = this.rowPositions.filter(rowI => rowI.type === "existing" && rowContains(this.uv.rows![rowI.position], newWords));
+      }
     } else {
-      // Filter existing rows when we filter a subset of already filtered ones.
-      const newWords = this.currentFilter.filter(newWord => !oldFilter.some(oldWord => oldWord.startsWith(newWord)));
-      this.rowPositions = this.rowPositions.filter(rowI => rowI.type === "existing" && rowContains(this.uv.rows![rowI.position], newWords));
+      throw new NeverError(this.filterType);
     }
   }
 
