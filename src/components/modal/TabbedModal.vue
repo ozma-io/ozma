@@ -67,7 +67,6 @@
           :key="tab.key"
           :is-active="index === selectedTab"
           :window-key="tab.key"
-          :title="tab.title"
           :only-tab="modalTabs.length === 1"
           @tab-click="switchTab(index)"
           @tab-close="$emit('tab-close', index)"
@@ -153,7 +152,7 @@ export default class TabbedModal extends Vue {
   }
 
   @Watch("show")
-  private watchIsOpen(show: boolean, oldShow: boolean) {
+  private watchShow(show: boolean, oldShow: boolean) {
     if (show === oldShow) return;
 
     if (show) {
@@ -164,22 +163,22 @@ export default class TabbedModal extends Vue {
   }
 
   @Watch("startingTab", { immediate: true })
-  private changeStartingTab() {
+  private watchStartingTab() {
     this.selectedTab = this.startingTab;
-    this.fixupTab();
+    this.fixSelectedTab();
   }
 
   @Watch("modalTabs")
-  private changeModalTabs() {
-    this.fixupTab();
+  private watchModalTabs() {
+    this.fixSelectedTab();
   }
 
-  private fixupTab() {
-    const maxLength = this.modalTabs?.length ?? 0;
-    if (maxLength === 0 || this.selectedTab < 0) {
+  private fixSelectedTab() {
+    const tabsCount = this.modalTabs?.length ?? 0;
+    if (tabsCount === 0 || this.selectedTab < 0) {
       this.selectedTab = 0;
-    } else if (this.selectedTab >= maxLength) {
-      this.selectedTab = maxLength - 1;
+    } else if (this.selectedTab >= tabsCount) {
+      this.selectedTab = tabsCount - 1;
     }
   }
 
@@ -188,18 +187,12 @@ export default class TabbedModal extends Vue {
   }
 
   @Watch("selectedTab", { immediate: true })
-  private notifyOnChange() {
-    if (!this.modalTabs) {
-      return;
-    }
-
-    if (this.selectedTab !== this.startingTab) {
-      this.$emit("tab-changed", this.selectedTab);
-    }
+  private watchSelectedTab() {
+    if (!this.modalTabs) return;
 
     if (this.modalTabs.length > 0) {
       const tab = this.modalTabs[this.selectedTab];
-      this.activateWindow(tab.key);
+      this.activateWindow(tab.key); // TODO: This activation happens before window creation.
     }
   }
 

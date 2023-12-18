@@ -61,7 +61,7 @@
                 cols="12"
               >
                 <FormControl
-                  :value="currentArguments[argument.name] ?? null"
+                  :value="currentArguments?.[argument.name] ?? null"
                   :is-nullable="argument.isOptional"
                   :field-type="argument.fieldType"
                   :type="argument.valueType"

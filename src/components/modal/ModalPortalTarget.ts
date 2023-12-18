@@ -5,6 +5,7 @@ import { PortalTarget } from "portal-vue";
 import TabbedModal from "@/components/modal/TabbedModal.vue";
 import ModalPortal from "./ModalPortal";
 import { IModalTab } from "./types";
+import { app } from "@/main";
 
 @Component
 export default class ModalPortalTarget extends mixins(PortalTarget) {
@@ -30,7 +31,7 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
   }
 
   private get modalTabs(): IModalTab[] {
-    return this.passengers.map((node, index) => {
+    return this.passengers.map(node => {
       const modalPortal = node.context!.$children[0] as ModalPortal;
       const order: number = modalPortal.order;
       const autofocus: boolean = modalPortal.autofocus;
@@ -69,7 +70,12 @@ export default class ModalPortalTarget extends mixins(PortalTarget) {
     modalPortal.$emit("go-back");
   }
 
-  private closeAll() {
+  private async closeAll() {
+    // If several tabs are open and user closes the modal it calls "submit" several times,
+    // which leads to double entry creation in some cases, this is the fix for this case.
+    // TODO: Solve it better.
+    await app.$store.dispatch("staging/submitIfNeeded", { errorOnIncomplete: true }, { root: true });
+
     this.passengers.slice().reverse().forEach(node => {
       const modalPortal = node.context!.$children[0];
       modalPortal.$emit("close");
