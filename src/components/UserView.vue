@@ -192,6 +192,7 @@
             @load-next-chunk="loadNextChunk"
             @load-all-chunks="loadAllChunks"
             @load-entries="loadEntries"
+            @load-entries-with-remote-search="loadEntriesWithRemoteSearch"
           />
         </transition>
       </FunOverlay>
@@ -687,7 +688,13 @@ export default class UserView extends Vue {
     }
   }
 
-  private reload(options?: {
+  private async loadEntriesWithRemoteSearch(search: string) {
+    if (this.state.state !== "show") return;
+
+    await this.reload({ search });
+  }
+
+  private reload(options: {
     differentComponent?: boolean;
     loadNextChunk?: boolean;
     loadAllChunks?: boolean; // With `fetchAllLimit`.
@@ -695,14 +702,12 @@ export default class UserView extends Vue {
     limit?: number;
     autoSaved?: boolean;
     newArgs?: IUserViewArguments;
-  }): Promise<void> {
-    const args = options?.newArgs ?? deepClone(this.args);
+    search?: string;
+  } = {}): Promise<void> {
+    const { differentComponent, loadNextChunk, loadAllChunks, loadAllChunksLimitless, newArgs, search } = options;
+    const args = newArgs ?? deepClone(this.args);
     if (this.level >= maxLevel) {
-      this.setState({
-        state: "error",
-        args,
-        message: "Too many levels of nested user views",
-      });
+      this.setState({ state: "error", args, message: "Too many levels of nested user views" });
       return Promise.resolve();
     }
 
@@ -716,14 +721,14 @@ export default class UserView extends Vue {
       await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
       try {
         let limit: number | undefined;
-        if (this.state.state === "show" && !options?.differentComponent) {
+        if (this.state.state === "show" && !differentComponent) {
           if (this.state.uv.rowLoadState === null) {
             limit = fetchAllLimit;
             allFetched = true;
           } else {
-            const delta = (options?.loadNextChunk ? 1 : 0) * this.state.uv.rowLoadState.perFetch;
-            const fetchAll = options?.loadAllChunks || this.state.uv.rowLoadState.complete;
-            limit = options?.loadAllChunksLimitless
+            const delta = (loadNextChunk ? 1 : 0) * this.state.uv.rowLoadState.perFetch;
+            const fetchAll = loadAllChunks || this.state.uv.rowLoadState.complete;
+            limit = loadAllChunksLimitless
               ? undefined
               : fetchAll
                 ? fetchAllLimit
@@ -732,33 +737,24 @@ export default class UserView extends Vue {
         } else {
           limit = maxPerFetch;
         }
-        const opts: IEntriesRequestOpts = {
-          chunk: {
-            limit,
-          },
-        };
-
+        const opts: IEntriesRequestOpts = { chunk: { limit, search } };
         let uvData = await fetchUserViewData(this.$store, args, opts);
+
         if (pending.ref !== this.nextUv) return;
+
         if (uvData.rows && (limit === undefined || uvData.rows.length < limit)) {
           allFetched = true;
         }
         const newType = userViewType(uvData.attributes);
         if (newType.type === "component") {
           if (uvData.rows === null && (!uvData.info.mainEntity || !uvData.info.mainEntity.forInsert)) {
-            this.setState({
-              state: "error",
-              args,
-              message: this.$t("creation_not_available").toString(),
-            });
+            this.setState({ state: "error", args, message: this.$t("creation_not_available").toString() });
             this.nextUv = null;
           }
 
           const component: IUserViewConstructor<Vue> = (await import(`@/components/views/${newType.component}.vue`)).default;
           // Check we weren't restarted.
-          if (pending.ref !== this.nextUv) {
-            return;
-          }
+          if (pending.ref !== this.nextUv) return;
 
           const handler = component.handler ?? baseUserViewHandler;
 
