@@ -17,7 +17,7 @@
         ]"
       >
         <MenuHeading :level="level + 1">
-          <span :title="$ustOrEmpty(entry.name)">
+          <span class="menu-header menuHeader-variant menuHeader-local-variant" :title="$ustOrEmpty(entry.name)">
             {{ $ustOrEmpty(entry.name) }}
           </span>
         </MenuHeading>
@@ -153,6 +153,7 @@ export default class MenuEntry extends Vue {
 <style lang="scss" scoped>
   @include variant-to-local("menuEntry");
   @include variant-to-local("badge");
+  @include variant-to-local("menuHeader");
 
   .menu-item-column {
     display: flex;
@@ -255,6 +256,10 @@ export default class MenuEntry extends Vue {
     .menu_entry > a {
       font-size: 20px !important;
     }
+  }
+
+  .menu-header {
+    color: var(--menuHeader-foregroundColor);
   }
 
   ::v-deep {
