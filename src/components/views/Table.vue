@@ -2151,7 +2151,8 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
       // const searchInColumns = R.intersection(columns, rawSearchInColumns);
 
       if (!deepEquals(this.currentFilter, this.filter)) {
-        this.$emit("load-entries-with-remote-search", this.filter.join(" "));
+        const search = this.filter.length === 0 ? undefined : this.filter.join(" ");
+        this.$emit("load-entries-with-remote-search", search);
       }
       this.currentFilter = this.filter;
     } else if (this.filterType === "local") {

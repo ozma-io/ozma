@@ -688,10 +688,10 @@ export default class UserView extends Vue {
     }
   }
 
-  private async loadEntriesWithRemoteSearch(search: string) {
+  private async loadEntriesWithRemoteSearch(search: string | undefined) {
     if (this.state.state !== "show") return;
 
-    await this.reload({ search });
+    await this.reload({ search, differentComponent: true });
   }
 
   private reload(options: {
