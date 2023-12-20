@@ -2697,7 +2697,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
             `);
     }
 
-    this.$emit("update:enable-filter", this.uv.rows !== null && !this.dirtyHackPreventEntireReloads);
+    this.$emit("update:enable-filter", this.uv.rows !== null);
 
     this.updateRows();
   }
