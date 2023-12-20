@@ -128,9 +128,14 @@ export default class MenuEntry extends Vue {
     return "content" in entry;
   }
 
+  private isEmptyMenu(entry: MenuValue): entry is IMenuCategory {
+    return this.isMenuCategory(entry) && entry.content.length === 0;
+  }
+
   private get twoLevelsMax() {
     if (this.level > 0) return false;
     if (this.isMenuCategory(this.entry) && this.entry.content.some(entry => this.isMenuCategory(entry))) return false;
+    if (this.isEmptyMenu(this.entry)) return false;
     return true;
   }
 
