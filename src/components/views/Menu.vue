@@ -19,7 +19,7 @@
 </i18n>
 
 <template>
-  <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
+  <div :class="['menu_container', { 'menu_container__centered': isCentered, 'is-mobile': $isMobile }]">
     <b-container class="menu-b-container">
       <b-row :class="[{ 'justify-content-center': isCentered }]">
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
@@ -215,6 +215,10 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     max-height: 100%;
     overflow-y: auto;
     background: var(--backgroundDarker1Color);
+
+    &.is-mobile {
+    padding: 3rem 1rem 0 1rem;
+    }
   }
 
   .menu_container__centered {
