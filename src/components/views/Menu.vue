@@ -19,11 +19,8 @@
 </i18n>
 
 <template>
-  <div
-    :class="['menu_container', { 'menu_container__centered': isCentered }]"
-    :style="menuEntryVariables"
-  >
-    <b-container>
+  <div :class="['menu_container', { 'menu_container__centered': isCentered }]">
+    <b-container class="menu-b-container">
       <b-row :class="[{ 'justify-content-center': isCentered }]">
         <b-col v-if="typeof entriesOrError === 'string'" cols="12">
           <span>
@@ -209,16 +206,12 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
       return this.$t("invalid_menu").toString();
     }
   }
-
-  get menuEntryVariables() {
-    /* return getVariantColorVariables("button", "menuEntry"); */
-    return null;
-  }
 }
 </script>
 
 <style lang="scss" scoped>
   .menu_container {
+    padding: 3rem 2rem 0 2rem;
     max-height: 100%;
     overflow-y: auto;
     background: var(--backgroundDarker1Color);
@@ -237,22 +230,13 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     }
   }
 
-  .main-menu-block {
-    width: 100%;
-    height: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    display: flex;
-    padding: 0;
-    overflow: auto;
+  .menu-b-container {
+    max-width: 100%; /* `container fluid` work bad */
+    padding: 0%;
   }
 
   .row {
-    display: -webkit-box;
-    display: -ms-flexbox;
     display: flex;
-    -ms-flex-wrap: wrap;
     flex-wrap: wrap;
   }
 
@@ -260,12 +244,6 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     @media screen and (max-width: 575px) {
       .menu_container {
         margin-top: 0;
-      }
-    }
-
-    @media screen and (max-device-width: 480px) {
-      .main-menu-block {
-        position: relative !important;
       }
     }
   }
