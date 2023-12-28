@@ -225,6 +225,10 @@ const settingsModule: Module<ISettingsState, {}> = {
             const value = String(row.values[valueColumnIndex].value);
             return [key, value];
           }));
+
+          // Commit before themes for more resposive loading.
+          commit("setSettings", new CurrentSettings(values, {}));
+
           const themes = await loadThemes();
           const currentThemeName = getPreferredTheme(themes, values["themes_schema"]);
 
