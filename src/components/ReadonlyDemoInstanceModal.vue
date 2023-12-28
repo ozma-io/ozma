@@ -60,6 +60,7 @@
           {{ $t("get_started") }}
         </b-button>
 
+        <!--
         <b-button
           class="ok-button"
           variant="outline-primary"
@@ -68,6 +69,7 @@
         >
           {{ $t("sign_up") }}
         </b-button>
+        -->
 
         <b-button
           class="cancel-button"
