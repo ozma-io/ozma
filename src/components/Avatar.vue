@@ -1,5 +1,8 @@
 <template>
-  <div class="avatar-box">
+  <div
+    class="avatar-box"
+    :style="{ width: circleSize, height: circleSize }"
+  >
     <div
       class="placeholder-avatar"
       :style="{
@@ -7,7 +10,11 @@
         borderRadius: round ? '50%' : '0.25rem',
       }"
     >
-      <span v-if="placeholderAvatarText" class="letter">
+      <span
+        v-if="placeholderAvatarText"
+        class="letter"
+        :style="{ fontSize: letterFontSize }"
+      >
         {{ placeholderAvatarText }}
       </span>
       <span v-else class="material-icons">
@@ -33,6 +40,7 @@ const toColor = (str: string) => {
 export default class Avatar extends Vue {
   @Prop({ required: true }) username!: string | null;
   @Prop({ type: Boolean, default: false }) round!: boolean;
+  @Prop({ type: Number, default: 1.875 }) size!: number; // in `rem`
 
   private get placeholderAvatarColor(): string {
     return this.username ? toColor(this.username) : "#ccc";
@@ -41,13 +49,18 @@ export default class Avatar extends Vue {
   private get placeholderAvatarText(): string | null {
     return this.username?.split(" ", 2).map(word => word[0]).join("").toUpperCase() ?? null;
   }
+
+  private get circleSize() {
+    return `${this.size}rem`;
+  }
+  private get letterFontSize() {
+    return `${this.size / 2}rem`;
+  }
 }
 </script>
 
 <style lang="scss" scoped>
   .avatar-box {
-    width: 1.875rem;
-    height: 1.875rem;
     overflow: hidden;
 
     .placeholder-avatar {

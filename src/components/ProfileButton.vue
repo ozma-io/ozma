@@ -71,7 +71,7 @@
       placement: 'bottom-end',
       positionFixed: true,
       modifiers: {
-        offset: { offset: '0, 10' },
+        offset: { offset: '0, 25' },
         preventOverflow: { enabled: true, boundariesElement: 'viewport' },
         hide: { enabled: true },
       }
@@ -80,7 +80,22 @@
     :force-show="show"
     @documentClick="show = false"
   >
-    <div class="popper shadow">
+    <div class="popper">
+      <div class="profile-block">
+        <Avatar
+          round
+          :size="2.625"
+          :username="username"
+        />
+        <div class="user-info">
+          <div v-if="showUsername" class="user-name">
+            {{ username }}
+          </div>
+          <div class="user-email">
+            {{ userEmail }}
+          </div>
+        </div>
+      </div>
       <ButtonList
         :buttons="buttons"
         @goto="$emit('goto', $event)"
@@ -109,7 +124,7 @@ import Popper from "vue-popperjs";
 
 import * as Api from "@/api";
 import { Button } from "@/components/buttons/buttons";
-import { bootstrapVariantAttribute, defaultVariantAttribute, IThemeRef } from "@/utils_colors";
+import { defaultVariantAttribute, IThemeRef } from "@/utils_colors";
 import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
 import { eventBus } from "@/main";
 import { CurrentSettings, DisplayMode } from "@/state/settings";
@@ -133,9 +148,18 @@ export default class AppHeader extends Vue {
 
   private show = false;
 
-  private get username(): string | null {
+  private get username() {
     const currentAuth = this.currentAuth as CurrentAuth | null;
     return currentAuth?.username ?? currentAuth?.email ?? null;
+  }
+
+  private get userEmail() {
+    const currentAuth = this.currentAuth as CurrentAuth | null;
+    return currentAuth?.email ?? null;
+  }
+
+  private get showUsername() {
+    return this.userEmail !== this.username;
   }
 
   private get allowBusinessMode() {
@@ -179,18 +203,20 @@ export default class AppHeader extends Vue {
 
     if (this.currentAuth?.refreshToken) {
       buttons.push({
-        icon: "person_add",
-        caption: this.$t("invite_user").toString(),
+        caption: this.$t("account").toString(),
+        type: "link",
+        link: { href: Api.accountUrl, type: "href", target: "blank" },
         variant: defaultVariantAttribute,
-        type: "callback",
-        callback: () => eventBus.emit("show-invite-user-modal"),
+      });
+
+      buttons.push({
+        type: "divider",
+        variant: defaultVariantAttribute,
       });
     }
-
     /*
     if (this.themeButtons.length > 0) {
       buttons.push({
-        icon: "palette",
         caption: this.$t("theme").toString(),
         type: "button-group",
         buttons: this.themeButtons,
@@ -200,7 +226,6 @@ export default class AppHeader extends Vue {
     */
 
     buttons.push({
-      icon: "language",
       caption: this.$t("change_language").toString(),
       variant: defaultVariantAttribute,
       type: "button-group",
@@ -216,30 +241,35 @@ export default class AppHeader extends Vue {
     });
 
     if (this.currentAuth?.refreshToken) {
+      buttons.push({
+        caption: this.$t("invite_user").toString(),
+        variant: defaultVariantAttribute,
+        type: "callback",
+        callback: () => eventBus.emit("show-invite-user-modal"),
+      });
+
       if (this.allowBusinessMode && this.userIsRoot) {
         buttons.push({
-          icon: "developer_mode",
-          caption: this.$t(this.developmentModeEnabled ? "disable_development_mode" : "enable_development_mode").toString() + " (Ctrl+Shift+D)",
+          caption: this.$t(this.developmentModeEnabled ? "disable_development_mode" : "enable_development_mode").toString(),
+          tooltip: "Ctrl+Shift+D",
           type: "callback",
           callback: () => this.toggleDeveloperMode(),
-          variant: this.developmentModeEnabled ? bootstrapVariantAttribute("warning") : bootstrapVariantAttribute("info"),
+          variant: defaultVariantAttribute,
           keepButtonGroupOpened: true,
         });
       }
 
       if (this.developmentModeEnabled) {
         buttons.push({
-          icon: "help_center",
           caption: this.$t("documentation").toString(),
-          variant: bootstrapVariantAttribute("info"),
+          variant: defaultVariantAttribute,
           type: "link",
           link: { type: "href", href: "https://wiki.ozma.io", target: "blank" },
         });
 
         buttons.push({
-          icon: "view_list",
           caption: this.$t("workspaces").toString(),
-          variant: bootstrapVariantAttribute("info"),
+          variant: defaultVariantAttribute,
           type: "link",
           link: { type: "href", href: "https://admin.ozma.io", target: "blank" },
         });
@@ -247,9 +277,8 @@ export default class AppHeader extends Vue {
         if (Api.developmentMode) {
           const currentAuth = this.currentAuth;
           buttons.push({
-            icon: "link",
             caption: this.$t("authed_link").toString(),
-            variant: bootstrapVariantAttribute("info"),
+            variant: defaultVariantAttribute,
             type: "callback",
             callback: () => {
               const link = getAuthedLink(currentAuth);
@@ -259,9 +288,8 @@ export default class AppHeader extends Vue {
         }
 
         buttons.push({
-          icon: "layers_clear",
           caption: this.$t("forget_dismissed_help_pages").toString(),
-          variant: bootstrapVariantAttribute("info"),
+          variant: defaultVariantAttribute,
           type: "callback",
           callback: () => {
             const allKeys = Object.keys(localStorage);
@@ -272,15 +300,12 @@ export default class AppHeader extends Vue {
           },
         });
       }
+
       buttons.push({
-        icon: "perm_identity",
-        caption: this.$t("account").toString(),
-        type: "link",
-        link: { href: Api.accountUrl, type: "href", target: "blank" },
-        variant: defaultVariantAttribute,
+        type: "divider",
+        variant: { type: "existing", className: "" },
       });
       buttons.push({
-        icon: "exit_to_app",
         caption: this.$t("logout").toString(),
         type: "callback",
         callback: () => void this.logout(),
@@ -288,7 +313,6 @@ export default class AppHeader extends Vue {
       });
     } else {
       buttons.push({
-        icon: "login",
         caption: this.$t("login").toString(),
         type: "callback",
         callback: () => void this.login(),
@@ -302,4 +326,34 @@ export default class AppHeader extends Vue {
 </script>
 
 <style lang="scss" scoped>
+  .popper {
+    padding: 1.25rem 0 0.75rem 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.5rem;
+    box-shadow: 0px 5px 12px 0px rgba(0, 0, 0, 0.08), 0px 15px 30px -7px rgba(33, 35, 38, 0.12);
+  }
+
+  .profile-block {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .user-name {
+    font-size: 0.875rem;
+    color: #1F1F1F;
+    font-weight: 600;
+  }
+  .user-email {
+    font-size: 0.75rem;
+    color: #3D3D3D;
+    font-weight: 500;
+  }
 </style>

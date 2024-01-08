@@ -3,8 +3,16 @@
     <template
       v-for="(button, index) in buttons"
     >
+      <div
+        v-if="button.type === 'divider'"
+        :key="index"
+        class="button-divider"
+      >
+        <div class="divider-top" />
+        <div class="divider-bottom" />
+      </div>
       <ButtonGroup
-        v-if="button.type === 'button-group'"
+        v-else-if="button.type === 'button-group'"
         :key="index"
         :button="button"
         list-item
@@ -54,5 +62,14 @@ export default class ButtonList extends Vue {
   .list-group {
     max-height: 60vh;
     overflow-y: auto;
+  }
+
+  .divider-top {
+    height: 0.75rem;
+    border-bottom: 1px solid #565656;
+    opacity: 0.1;
+  }
+  .divider-bottom {
+    height: 0.75rem;
   }
 </style>

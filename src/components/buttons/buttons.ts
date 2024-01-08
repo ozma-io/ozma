@@ -54,7 +54,12 @@ export interface IErrorButton extends IButton {
   type: "error";
 }
 
-export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IOtherButton | IErrorButton;
+// Only for button-lists
+export interface IDividerButton extends IButton {
+  type: "divider";
+}
+
+export type Button = ILocationButton | ILinkButton | ICallbackButton | IUploadFileButton | IButtonGroup | IOtherButton | IErrorButton | IDividerButton;
 
 export const attrToButton = (buttonAttr: unknown, opts?: IAttrToLinkOpts, parseAsOtherInsteadError = false): Button | undefined => {
   if (typeof buttonAttr !== "object" || buttonAttr === null) {

@@ -77,6 +77,7 @@ export default class ButtonsPanel extends Vue {
 <style lang="scss" scoped>
   .popper {
     border: none;
+    border-radius: 0.5rem;
   }
 
   .list-group {
