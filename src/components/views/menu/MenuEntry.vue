@@ -173,7 +173,7 @@ export default class MenuEntry extends Vue {
 
     &.is-mobile {
       margin: 0;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     @media (max-width: 575.98px) {

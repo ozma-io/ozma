@@ -217,7 +217,11 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     background: var(--backgroundDarker1Color);
 
     &.is-mobile {
-    padding: 3rem 1rem 0 1rem;
+    padding: 3rem 0.3rem 0 0.3rem;
+
+      ::v-deep .row {
+        margin: 0;
+      }
     }
   }
 
