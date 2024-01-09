@@ -95,7 +95,7 @@
                   'option-local-variant',
                   single ? 'single-value' : 'one-of-many-value',
                 ]"
-                :style="listValueStyle"
+                :style="{ ...listValueStyle, ...optionVariantVariables }"
               >
                 <slot
                   name="option"
