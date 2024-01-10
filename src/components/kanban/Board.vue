@@ -78,7 +78,7 @@ export default class Board extends Vue {
     display: flex;
     flex-direction: row;
     gap: 0.625rem;
-    background-color: var(--kanban-backgroundDarker1Color);
+    background-color: var(--userview-background-color);
     overflow-y: hidden;
     overflow-x: auto;
 

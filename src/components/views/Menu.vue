@@ -214,7 +214,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(BaseUserView
     padding: 3rem 4rem 0 4rem;
     max-height: 100%;
     overflow-y: auto;
-    background: var(--backgroundDarker1Color);
+    background-color: var(--userview-background-color);
 
     &.is-mobile {
     padding: 3rem 0.3rem 0 0.3rem;
