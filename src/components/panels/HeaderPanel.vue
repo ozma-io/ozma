@@ -49,7 +49,7 @@
 
       <div class="right-part">
         <ButtonsPanel
-          v-if="helpButtons.length !== 0"
+          v-if="helpButtons.length > 0"
           :buttons="helpButtons"
           @goto="$emit('goto', $event)"
         />
@@ -65,12 +65,12 @@
           :applyArguments="argumentEditorProps.applyArguments"
         />
         <ButtonsPanel
-          v-if="!$isMobile && headerButtons.length !== 0"
+          v-if="!$isMobile && headerButtons.length > 0"
           :buttons="headerButtons"
           @goto="$emit('goto', $event)"
         />
         <ButtonsPanel
-          v-if="fullscreenButtons.length !== 0"
+          v-if="fullscreenButtons.length > 0"
           :buttons="fullscreenButtons"
           @goto="$emit('goto', $event)"
         />
@@ -80,7 +80,7 @@
         </div>
       </div>
     </div>
-    <div v-if="$isMobile" class="second-row">
+    <div v-if="$isMobile && (headerButtons.length > 0 || Object.keys(argumentEditorProps?.userView.argumentsMap ?? {}).length > 0)" class="second-row">
       <ButtonsPanel
         class="second-row-button-panel"
         :buttons="headerButtons"
@@ -194,10 +194,17 @@ export default class HeaderPanel extends Vue {
     flex: 1;
     overflow-x: auto;
     overflow-y: hidden;
-  }
 
-  ::v-deep .button-element {
-    flex-shrink: 0;
+    ::v-deep {
+      .button-element {
+        flex-shrink: 0;
+        flex-grow: 0;
+
+        &:first-child {
+          margin-left: auto;
+        }
+      }
+    }
   }
 }
 

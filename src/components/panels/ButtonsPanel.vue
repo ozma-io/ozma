@@ -17,7 +17,7 @@
         :class="[
           'button-element text-decoration-none',
           {
-            'flex-grow-1': button.caption,
+            'flex-grow': button.caption,
           },
         ]"
         :button="button"
@@ -50,5 +50,9 @@ export default class ButtonsPanel extends Vue {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .flex-grow {
+    flex-grow: 1;
   }
 </style>
