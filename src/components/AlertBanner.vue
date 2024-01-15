@@ -48,6 +48,12 @@
         />
       </div>
     </div>
+
+    <template #dismiss>
+      <div class="dismiss-button material-button">
+        <i class="material-icons">close</i>
+      </div>
+    </template>
   </b-alert>
 </template>
 
@@ -58,6 +64,7 @@ import sanitizeHtml from "sanitize-html";
 import { bootstrapVariantAttribute } from "@/utils_colors";
 import { eventBus } from "@/main";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
+import { Button } from "./buttons/buttons";
 
 const sanitizeSettings = {
   allowedTags: ["b", "i", "em", "strong", "a"],
@@ -80,7 +87,7 @@ export default class AlertBanner extends Vue {
     return sanitize(this.message);
   }
 
-  private get contactButton() {
+  private get contactButton(): Button {
     const language = this.$i18n.locale;
     let url = "https://ozma.io/get-started/";
     if (["ru"].includes(language)) {
@@ -88,7 +95,7 @@ export default class AlertBanner extends Vue {
     }
     return {
       caption: this.$t("contact").toString(),
-      variant: bootstrapVariantAttribute("info"),
+      variant: { type: "existing", className: "ctaButton" },
       type: "link",
       link: { type: "href", href: url, target: "blank" },
     };
@@ -113,7 +120,7 @@ export default class AlertBanner extends Vue {
     }
     return {
       caption: this.$t("sign_up").toString(),
-      variant: bootstrapVariantAttribute("secondary"),
+      variant: bootstrapVariantAttribute("info"),
       type: "link",
       link: { type: "href", href: url, target: "blank" },
     };
@@ -123,36 +130,74 @@ export default class AlertBanner extends Vue {
 
 <style lang="scss" scoped>
   .custom-alert {
-    background-color: var(--banner-backgroundColor, #bee5eb);
-    color: var(--banner-foregroundColor, #0c5460);
-    border-color: var(--banner-borderColor, #bee5eb);
+    padding: 1rem 3.75rem;
+    padding-right: 6.75rem;
+    background-color: var(--banner-backgroundColor, #dde5f8);
+    color: var(--banner-foregroundColor, black);
+    border-color: var(--banner-borderColor, #dde5f8);
     border-radius: 0;
+
+    @include mobile {
+      padding: 1.25rem 1rem;
+      padding-right: 3rem;
+    }
+
+    ::v-deep {
+      .close {
+        padding: 1rem 3rem;
+        opacity: 1;
+
+        @include mobile {
+          padding: 0.75rem;
+        }
+      }
+    }
+  }
+
+  .dismiss-button {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eef2fb;
+    color: #777C87;
+    border-radius: 50%;
+    opacity: 1;
   }
 
   .content-wrapper {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9375rem;
+
+    @include mobile {
+      flex-direction: column;
+    }
   }
 
   .buttons-wrapper {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .contact-button,
   .invite-button,
   .sign-up-button {
-    margin: -1rem 0.5rem;
-    padding: 0.3rem 0.9rem;
-    align-self: center;
 
-    &:deep(.btn) {
-      padding: 0.3rem 0.9rem;
-      margin: 0 0.5rem;
-      font-size: 1rem;
-      font-weight: normal;
+    &:hover {
+      text-decoration: none;
+    }
+
+    ::v-deep {
+      .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+      }
     }
   }
 </style>
