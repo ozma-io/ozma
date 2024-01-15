@@ -386,7 +386,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   get showContactButtonInBanner() {
-    return true;
     return this.settings.getEntry("show_contact_button_in_banner", Boolean, false);
   }
 
@@ -454,7 +453,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   get bannerMessage() {
-    return "This is a demo example. Please Request a demo call and we'll create a personalized copy of this instance for you";
     const message = this.settings.getEntry("banner_message", String, "");
     const isImportant = this.settings.getEntry("banner_important", Boolean, false);
     const viewedMessage = localStorage.getItem("viewed-banner-message");
