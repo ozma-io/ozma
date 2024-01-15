@@ -81,7 +81,7 @@
       </div>
     </div>
     <div v-if="$isMobile" class="second-row">
-      <ButtonsPanel :buttons="headerButtons" @goto="$emit('goto', $event)" />
+      <ButtonsPanel class="second-row-button-panel" :buttons="headerButtons" @goto="$emit('goto', $event)" />
       <ArgumentEditor
         v-if="argumentEditorProps"
         :userView="argumentEditorProps.userView"
@@ -185,6 +185,16 @@ export default class HeaderPanel extends Vue {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+
+  .second-row-button-panel {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  ::v-deep .button-element {
+    flex-shrink: 0;
+  }
 }
 
 .left-part {
@@ -227,11 +237,21 @@ export default class HeaderPanel extends Vue {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
   @include mobile {
     overflow-x: hidden;
   }
 
   ::v-deep .button-element {
+    flex-shrink: 0;
+  }
+
+  .search-panel {
+    flex-shrink: 0;
+  }
+
+  /* ArgumentEditor's selector */
+  ::v-deep > span {
     flex-shrink: 0;
   }
 }
