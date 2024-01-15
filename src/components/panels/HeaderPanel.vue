@@ -81,7 +81,11 @@
       </div>
     </div>
     <div v-if="$isMobile" class="second-row">
-      <ButtonsPanel class="second-row-button-panel" :buttons="headerButtons" @goto="$emit('goto', $event)" />
+      <ButtonsPanel
+        class="second-row-button-panel"
+        :buttons="headerButtons"
+        @goto="$emit('goto', $event)"
+      />
       <ArgumentEditor
         v-if="argumentEditorProps"
         :userView="argumentEditorProps.userView"
