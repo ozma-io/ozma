@@ -196,7 +196,7 @@ export default class ArgumentEditor extends Vue {
         // TODO: Add 'expand' icon on the right to match design from Figma.
         type: "callback",
         variant: outlinedInterfaceButtonVariant,
-        icon: "filter_alt",
+        icon: "filter_list",
         caption: this.$t("filters").toString(),
         tooltip: "",
         callback: () => {

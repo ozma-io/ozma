@@ -160,11 +160,11 @@ export default class SearchPanel extends Vue {
   }
 
   .resize-fade-enter-active {
-    transition: all 0.1s;
+    transition: all 0.025s;
   }
 
   .resize-fade-leave-active {
-    transition: all 0.2s;
+    transition: all 0.025s;
   }
 
   .resize-fade-enter,

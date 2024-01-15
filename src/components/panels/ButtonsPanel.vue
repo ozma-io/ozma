@@ -1,12 +1,7 @@
 <template>
   <div
-    :class="[
-      'buttons-panel',
-      'd-flex align-items-center',
-    ]"
+    class="buttons-panel"
   >
-    <slot name="search-panel" />
-
     <!-- TODO: Make better keys for buttons -->
     <template v-for="(button, i) in buttons">
       <ButtonGroup
@@ -52,6 +47,8 @@ export default class ButtonsPanel extends Vue {
 
 <style lang="scss" scoped>
   .buttons-panel {
-    gap: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 </style>

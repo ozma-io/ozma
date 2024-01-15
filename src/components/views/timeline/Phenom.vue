@@ -15,9 +15,7 @@
 <template>
   <li class="phenom">
     <div v-if="phenom.username" class="avatar-container">
-      <Avatar
-        :username="phenom.username"
-      />
+      <Avatar :username="phenom.username" />
     </div>
     <b v-if="phenom.username" class="username">
       {{ phenom.username }}

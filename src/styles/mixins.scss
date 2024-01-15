@@ -17,7 +17,8 @@ $color-transition: background-color 0.3s, color 0.3s;
   }
 
   &:focus:not(.disabled) {
-    box-shadow: 0 0 0 0.2rem var(--#{$variant}-foregroundDarkerColor) !important;
+    // box-shadow: 0 0 0 0.2rem var(--#{$variant}-foregroundDarkerColor) !important;
+    box-shadow: none;
   }
 
   &:active:not(.disabled) {
@@ -68,5 +69,11 @@ $color-transition: background-color 0.3s, color 0.3s;
         --#{$local-name}-#{$key}: var(--#{$key}, var(--default-#{$key}));
       }
     }
+  }
+}
+
+@mixin mobile {
+  @media (max-width: 480px) {
+    @content;
   }
 }

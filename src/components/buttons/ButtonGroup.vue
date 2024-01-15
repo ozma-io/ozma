@@ -5,10 +5,10 @@
     trigger="clickToOpen"
     :visible-arrow="false"
     :options="{
-      placement: (listItem && !$isMobile) ? 'left-start' : 'bottom-end',
+      placement: listItem ? 'right-start' : 'bottom-end',
       positionFixed: true,
       modifiers: {
-        offset: { offset: '0, 10' },
+        offset: { offset: listItem ? '0, 5' : '0, 10' },
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
         preventOverflow: { enabled: !listItem, boundariesElement: 'viewport' },
         hide: { enabled: !listItem },

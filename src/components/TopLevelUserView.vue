@@ -575,6 +575,10 @@ export default class TopLevelUserView extends Vue {
     padding-right: 1.75rem;
     display: flex;
     align-items: center;
+    @include mobile {
+      padding-left: 0;
+      padding-right: 0.25rem;
+    }
   }
 
   .main-div {

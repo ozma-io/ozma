@@ -563,7 +563,7 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     const extraActions = this.uv.attributes["extra_actions"];
     const extraActionsButtons = attrToButtonsOld(extraActions).map(button => ({ ...button, display: undefined }));
     if (extraActionsButtons.length > 0) {
-      console.warn("@extra_actions attribute deprecated,  will be deleted future.");
+      console.warn("@extra_actions attribute is deprecated, will be deleted in the future.");
     }
     const buttons: Button[] = extraActionsButtons;
 

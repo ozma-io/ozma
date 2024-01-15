@@ -197,7 +197,7 @@ export const attrToButtonsOld = (buttonsAttr: unknown, opts?: IAttrToLinkOpts): 
   }, buttonsAttr);
 };
 
-export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
+export const buttonsToPanelButtons = (buttons: Button[]): { panelButtons: Button[]; extraButton: Button } => {
   const panelButtons: Button[] = [];
   const extraButton: Button = {
     icon: "more_vert",
@@ -221,6 +221,5 @@ export const buttonsToPanelButtons = (buttons: Button[]): Button[] => {
   });
 
   extraButton.disabled = extraButton.buttons.length === 0;
-  panelButtons.push(extraButton);
-  return panelButtons;
+  return { panelButtons, extraButton };
 };

@@ -7,64 +7,86 @@
       },
     ]"
   >
-    <div class="left-part d-flex align-items-center">
-      <div v-if="$slots['left-slot']" class="left-slot">
-        <slot name="left-slot" />
-      </div>
-      <div v-if="title && type === 'root'" class="middle-part">
-        <!-- `tabindex` is required for closing tooltip on blur -->
-        <h1
-          v-b-tooltip.click.blur.bottom.noninteractive.viewport
-          tabindex="0"
-          :class="[
-            'userview-title',
-            {
-              'is-loading': isLoading,
-            }
-          ]"
+    <div class="first-row">
+      <div class="left-part d-flex align-items-center">
+        <div v-if="$slots['left-slot']" class="left-slot">
+          <slot name="left-slot" />
+        </div>
+        <div v-if="title && type === 'root'" class="middle-part">
+          <!-- `tabindex` is required for closing tooltip on blur -->
+          <h1
+            v-b-tooltip.click.blur.bottom.noninteractive.viewport
+            tabindex="0"
+            :class="[
+              'userview-title',
+              {
+                'is-loading': isLoading,
+              }
+            ]"
+          >
+            {{ $ustOrEmpty(title) }}
+          </h1>
+        </div>
+        <div
+          v-else
+          class="userview-title-wrapper"
         >
-          {{ $ustOrEmpty(title) }}
-        </h1>
+          <h2
+            v-b-tooltip.click.blur.bottom.noninteractive.viewport
+            tabindex="0"
+            :title="$ustOrEmpty(title)"
+            :class="[
+              'userview-title',
+              {
+                'is-loading': isLoading,
+              },
+            ]"
+          >
+            {{ $ustOrEmpty(title) }}
+          </h2>
+        </div>
       </div>
-      <div
-        v-else
-        class="userview-title-wrapper"
-      >
-        <h2
-          v-b-tooltip.click.blur.bottom.noninteractive.viewport
-          tabindex="0"
-          :title="$ustOrEmpty(title)"
-          :class="[
-            'userview-title',
-            {
-              'is-loading': isLoading,
-            },
-          ]"
-        >
-          {{ $ustOrEmpty(title) }}
-        </h2>
+
+      <div class="right-part">
+        <ButtonsPanel
+          v-if="helpButtons.length !== 0"
+          :buttons="helpButtons"
+          @goto="$emit('goto', $event)"
+        />
+        <SearchPanel
+          v-if="isEnableFilter"
+          class="search-panel"
+          :filter-string="filterString"
+          @update:filter-string="$emit('update:filter-string', $event)"
+        />
+        <ArgumentEditor
+          v-if="!$isMobile && argumentEditorProps"
+          :userView="argumentEditorProps.userView"
+          :applyArguments="argumentEditorProps.applyArguments"
+        />
+        <ButtonsPanel
+          v-if="!$isMobile && headerButtons.length !== 0"
+          :buttons="headerButtons"
+          @goto="$emit('goto', $event)"
+        />
+        <ButtonsPanel
+          v-if="fullscreenButtons.length !== 0"
+          :buttons="fullscreenButtons"
+          @goto="$emit('goto', $event)"
+        />
+        <ButtonsPanel :buttons="extraButtons" @goto="$emit('goto', $event)" />
+        <div v-if="$slots['right-slot']" class="right-slot">
+          <slot name="right-slot" />
+        </div>
       </div>
     </div>
-
-    <div class="right-part">
+    <div v-if="$isMobile" class="second-row">
+      <ButtonsPanel :buttons="headerButtons" @goto="$emit('goto', $event)" />
       <ArgumentEditor
         v-if="argumentEditorProps"
         :userView="argumentEditorProps.userView"
         :applyArguments="argumentEditorProps.applyArguments"
       />
-      <ButtonsPanel :buttons="headerButtons" @goto="$emit('goto', $event)">
-        <template #search-panel>
-          <SearchPanel
-            v-if="isEnableFilter"
-            class="search-panel"
-            :filter-string="filterString"
-            @update:filter-string="$emit('update:filter-string', $event)"
-          />
-        </template>
-      </ButtonsPanel>
-      <div v-if="$slots['right-slot']" class="right-slot">
-        <slot name="right-slot" />
-      </div>
     </div>
   </div>
 </template>
@@ -84,6 +106,8 @@ import ArgumentEditor, {
   IArgumentEditorProps,
 } from "@/components/ArgumentEditor.vue";
 
+const isHelpButton = (button: Button) => button.icon === "help_outline";
+
 @Component({
   components: {
     SearchPanel,
@@ -100,16 +124,20 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) filterString!: string;
   @Prop({ type: Boolean, default: false }) isLoading!: boolean;
   @Prop({ type: Object }) argumentEditorProps!: IArgumentEditorProps | null;
-  // Is it TopLevelUserView's header or current tab of modal or component (sub UserView).
-  // options: 'component', 'modal' ,'root', null
-  @Prop({ type: String }) type!: string | undefined;
+  @Prop({ type: String }) type!: "root" | "modal" | "nested" | undefined;
 
+  get extraButtons() {
+    return [buttonsToPanelButtons(this.buttons).extraButton];
+  }
+  get fullscreenButtons() {
+    return this.fullscreenButton ? [this.fullscreenButton] : [];
+  }
+  // We want help button in a different place so we separate it from the rest.
+  get helpButtons() {
+    return buttonsToPanelButtons(this.buttons).panelButtons.filter(isHelpButton);
+  }
   get headerButtons() {
-    const buttons = buttonsToPanelButtons(this.buttons);
-    if (this.fullscreenButton) {
-      buttons.push(this.fullscreenButton);
-    }
-    return buttons;
+    return buttonsToPanelButtons(this.buttons).panelButtons.filter(button => !isHelpButton(button));
   }
 
   private get fullscreenButton(): Button | null {
@@ -132,9 +160,18 @@ export default class HeaderPanel extends Vue {
 
 <style lang="scss" scoped>
 .header-panel {
+  width: 100%;
   padding: 0.5rem;
   padding-top: 0.65rem;
   padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  @include mobile {
+    padding: 0.5rem 0 0.5rem 0;
+  }
+}
+.first-row {
   flex-grow: 1;
   display: flex;
   flex-direction: row;
@@ -143,10 +180,19 @@ export default class HeaderPanel extends Vue {
   overflow-x: hidden;
   color: var(--default-foregroundColor);
 }
+.second-row {
+  padding: 0 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
 
 .left-part {
   overflow: hidden;
   flex: 1 0 13rem;
+  @include mobile {
+    flex: 1 0 0;
+  }
 
   > .left-slot {
     /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
@@ -159,12 +205,14 @@ export default class HeaderPanel extends Vue {
 
 .middle-part {
   padding: 0.25rem;
-
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
   overflow-x: hidden;
+  @include mobile {
+    padding-left: 0;
+  }
 
   .userview-title {
     flex: 0 1 auto;
@@ -173,11 +221,15 @@ export default class HeaderPanel extends Vue {
 
 .right-part {
   padding-left: 0.25rem;
+  padding-right: 0.75rem;
   overflow-x: auto;
   overflow-y: hidden;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  @include mobile {
+    overflow-x: hidden;
+  }
 
   ::v-deep .button-element {
     flex-shrink: 0;
@@ -185,7 +237,6 @@ export default class HeaderPanel extends Vue {
 }
 
 ::v-deep .buttons-panel {
-  margin: 0 0.25rem;
   flex-shrink: 0;
 }
 
@@ -218,10 +269,6 @@ export default class HeaderPanel extends Vue {
     padding-left: 0.7rem;
     white-space: nowrap;
   }
-}
-
-.search-panel {
-  margin-right: 0.25rem;
 }
 
 .fullscreen_button {

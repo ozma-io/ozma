@@ -276,7 +276,7 @@
       </div>
       <HeaderPanel
         v-else-if="inputType.name === 'user_view'"
-        :type="'component'"
+        type="component"
         :title="usedCaption"
         :buttons="buttons"
         :is-enable-filter="enableFilter"

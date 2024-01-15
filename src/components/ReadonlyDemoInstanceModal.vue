@@ -165,7 +165,7 @@ export default class ReadonlyDemoInstanceModal extends Vue {
     align-items: center;
     overflow-y: auto;
   }
-  @media screen and (max-width: 480px) {
+  @include mobile {
     .demo-message-container {
       padding: 1.25rem 1rem;
     }
