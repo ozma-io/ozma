@@ -2,6 +2,7 @@
   {
     "en": {
       "pagination_select": "Rows per page",
+      "total_rows": "Total rows",
       "of": "of",
       "cut": "Cut",
       "copy": "Copy",
@@ -25,6 +26,7 @@
     },
     "ru": {
       "pagination_select": "Строк на странице",
+      "total_rows": "Всего строк",
       "of": "из",
       "cut": "Вырезать",
       "copy": "Копировать",
@@ -314,10 +316,10 @@
         </div>
 
         <div
-          v-if="uv.extra.lazyLoad.type === 'pagination'"
+          v-if="uv.extra.lazyLoad.type === 'pagination' || statusLine"
           class="footer"
         >
-          <div class="pagination-wrapper">
+          <div v-if="uv.extra.lazyLoad.type === 'pagination'" class="pagination-wrapper">
             <div class="pagination">
               <b-spinner
                 v-if="uv.extra.lazyLoad.pagination.loading"
@@ -354,6 +356,9 @@
                 :button="nextPageButton"
               />
             </div>
+          </div>
+          <div v-else class="total-rows">
+            {{ statusLine }}
           </div>
         </div>
       </template>
@@ -2866,7 +2871,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     } else {
       middleRowsLength = this.uv.rowsCount;
     }
-    return this.uv.rowLoadState.complete ? `${totalAdded + middleRowsLength}` : "";
+    return this.uv.rowLoadState.complete ? `${this.$t("total_rows")}: ${totalAdded + middleRowsLength}` : null;
   }
 
   get allRows() {
@@ -2966,6 +2971,13 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     flex-direction: column;
     align-items: flex-end;
     margin-top: auto;
+  }
+
+  .total-rows {
+    position: sticky;
+    right: 1.25rem;
+    z-index: 30;
+    font-size: 0.75rem;
   }
 
   .pagination-wrapper {

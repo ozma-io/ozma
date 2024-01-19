@@ -302,7 +302,6 @@ export default class TopLevelUserView extends Vue {
   @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
   @settings.Action("writeUserSettings") writeUserSettings!: (setting: { name: string; value: string }) => Promise<void>;
 
-  private statusLine = "";
   private enableFilter = false;
   private styleNode!: HTMLStyleElement;
   private userViewStyle: string | null = null;
