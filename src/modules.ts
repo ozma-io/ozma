@@ -10,6 +10,7 @@ import PortalVue from "portal-vue";
 import VueJSModal from "vue-js-modal";
 import { Fragment } from "vue-frag";
 import VueHotkey from "v-hotkey";
+import WrappedComponent from "vue-wrapped-component";
 
 import NotFound from "@/components/NotFound.vue";
 import AuthResponse from "@/components/AuthResponse.vue";
@@ -29,6 +30,7 @@ Vue.use(PortalVue);
 Vue.component("Fragment", Fragment as any);
 Vue.use(VueJSModal, { componentName: "VueModal" });
 Vue.use(VueHotkey);
+Vue.use(WrappedComponent);
 
 const routes = [
   { path: "/", name: "main", redirect: { name: "view", params: { schema: "user", name: "main" } } },

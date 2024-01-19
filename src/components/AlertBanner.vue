@@ -19,52 +19,56 @@
 </i18n>
 
 <template>
-  <b-alert
-    :show="messageHtml !== ''"
-    class="custom-alert mb-0"
-    :style="colorVariables"
-    dismissible
-    @dismissed="$emit('banner-close')"
-  >
-    <div class="content-wrapper">
-      <!-- eslint-disable vue/no-v-html -->
-      <span v-html="messageHtml" />
-      <!-- eslint-enable vue/no-v-html -->
-      <div class="buttons-wrapper">
-        <ButtonItem
-          v-if="showContactButton"
-          class="contact-button"
-          :button="contactButton"
-        />
-        <ButtonItem
-          v-if="showSignUpButton"
-          class="sign-up-button"
-          :button="signUpButton"
-        />
-        <ButtonItem
-          v-if="showInviteButton"
-          class="invite-button"
-          :button="inviteButton"
-        />
+  <div v-if="messageHtml !== ''" class="banner-wrapper">
+    <b-alert
+      :show="messageHtml !== ''"
+      class="custom-alert mb-0"
+      dismissible
+      @dismissed="onDismissed"
+    >
+      <div class="content-wrapper">
+        <!-- eslint-disable vue/no-v-html -->
+        <span v-html="messageHtml" />
+        <!-- eslint-enable vue/no-v-html -->
+        <div class="buttons-wrapper">
+          <ButtonItem
+            v-if="showContactButton"
+            class="contact-button"
+            :button="contactButton"
+          />
+          <ButtonItem
+            v-if="showSignUpButton"
+            class="sign-up-button"
+            :button="signUpButton"
+          />
+          <ButtonItem
+            v-if="showInviteButton"
+            class="invite-button"
+            :button="inviteButton"
+          />
+        </div>
       </div>
-    </div>
 
-    <template #dismiss>
-      <div class="dismiss-button material-button">
-        <i class="material-icons">close</i>
-      </div>
-    </template>
-  </b-alert>
+      <template #dismiss>
+        <div class="dismiss-button material-button">
+          <i class="material-icons">close</i>
+        </div>
+      </template>
+    </b-alert>
+  </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component } from "vue-property-decorator";
 import sanitizeHtml from "sanitize-html";
+import { namespace } from "vuex-class";
 
 import { bootstrapVariantAttribute } from "@/utils_colors";
 import { eventBus } from "@/main";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "./buttons/buttons";
+import { CurrentSettings } from "@/state/settings";
+import { CurrentAuth, INoAuth } from "@/state/auth";
 
 const sanitizeSettings = {
   allowedTags: ["b", "i", "em", "strong", "a"],
@@ -75,16 +79,43 @@ const sanitizeSettings = {
 
 const sanitize = (message: string) => sanitizeHtml(message, sanitizeSettings);
 
+const settings = namespace("settings");
+const auth = namespace("auth");
+
 @Component({ components: { ButtonItem } })
 export default class AlertBanner extends Vue {
-  @Prop({ type: String, required: true }) message!: string;
-  @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null;
-  @Prop({ type: Boolean, default: false }) showContactButton!: boolean;
-  @Prop({ type: Boolean, default: false }) showSignUpButton!: boolean;
-  @Prop({ type: Boolean, default: false }) showInviteButton!: boolean;
+  @settings.State("current") settings!: CurrentSettings;
+  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
+
+  private refreshKey = 0;
+
+  private get message() {
+    // eslint-disable-next-line
+    this.refreshKey;
+    const message = this.settings.getEntry("banner_message", String, "");
+    const isImportant = this.settings.getEntry("banner_important", Boolean, false);
+    const viewedMessage = localStorage.getItem("viewed-banner-message");
+    if (message.trim() === "" || (!isImportant && message === viewedMessage)) return "";
+    return message;
+  }
 
   private get messageHtml() {
     return sanitize(this.message);
+  }
+
+  get showContactButton() {
+    return this.settings.getEntry("show_contact_button_in_banner", Boolean, false);
+  }
+
+  get showSignUpButton() {
+    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false);
+  }
+
+  get hasAuth() {
+    return Boolean(this.currentAuth?.refreshToken);
+  }
+  get showInviteButton() {
+    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.hasAuth;
   }
 
   private get contactButton(): Button {
@@ -125,17 +156,27 @@ export default class AlertBanner extends Vue {
       link: { type: "href", href: url, target: "blank" },
     };
   }
+
+  onDismissed() {
+    localStorage.setItem("viewed-banner-message", this.message);
+    this.refreshKey++; // To refresh `message` computated property
+  }
 }
 </script>
 
 <style lang="scss" scoped>
+  .banner-wrapper {
+    padding: 1.875rem 2.25rem 0 2.25rem;
+    background-color: var(--userview-background-color);
+  }
+
   .custom-alert {
     padding: 1rem 3.75rem;
     padding-right: 6.75rem;
     background-color: var(--banner-backgroundColor, #dde5f8);
     color: var(--banner-foregroundColor, black);
     border-color: var(--banner-borderColor, #dde5f8);
-    border-radius: 0;
+    border-radius: 0.5rem;
 
     @include mobile {
       padding: 1.25rem 1rem;

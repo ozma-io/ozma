@@ -52,6 +52,7 @@
     "vue-unique-id": "^3.0.0",
     "vuedraggable": "^2.23.2",
     "vuex-class": "^0.3.2",
+    "vue-wrapped-component": "^1.0.0",
     "zod": "^3.19.1"
   },
   "resolutions": {

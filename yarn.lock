@@ -7351,6 +7351,11 @@ vue-unique-id@^3.0.0:
   resolved "https://registry.yarnpkg.com/vue-unique-id/-/vue-unique-id-3.2.1.tgz#e5db2e8620409a4b718578ca7f00eac78b15e818"
   integrity sha512-Ih4vw3nx5O0M0q16Omx23T6VQW5U+RD16SEEbGa+aJWLJxFco8slQN6z6GUuzwgREgofH3ns9n7a97qr6DI73g==
 
+vue-wrapped-component@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/vue-wrapped-component/-/vue-wrapped-component-1.0.0.tgz#047888a620bb299664ad82de4d13713f5adbb76c"
+  integrity sha512-lLZyUaG5W23fU6NsH3lJ28rRjhFgwgzlBT6K+XsFBPpl7frZBU4fXm6KXUXNSubHDPCfWKO2fp1axSFa784oUQ==
+
 vue@^2.7.10:
   version "2.7.13"
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.7.13.tgz#e9e499cc6da46dc7941c2510193b15aa6a84a79f"

@@ -732,7 +732,7 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
     color: var(--form-foregroundColor);
 
     @include mobile {
-    padding: 1rem !important;
+      padding: 1rem !important;
     }
 
     &.contains-only-one-iframe {

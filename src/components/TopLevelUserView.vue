@@ -98,6 +98,9 @@
           </div>
         </template>
       </HeaderPanel>
+
+      <AlertBanner />
+
       <div class="userview-div">
         <UserView
           ref="userViewRef"
@@ -111,7 +114,6 @@
           @goto="push({ ...$event, key: null })"
           @goto-previous="goBack(null)"
           @update:buttons="buttons = $event"
-          @update:status-line="statusLine = $event"
           @update:enable-filter="enableFilter = $event"
           @update:body-style="userViewStyle = $event"
           @update:title="title = $event"
@@ -122,15 +124,6 @@
         />
       </div>
     </div>
-    <nav
-      v-if="bottomBarNeeded"
-      class="fix-bot"
-    >
-      <div class="status-line">
-        {{ statusLine }}
-      </div>
-    </nav>
-
     <div
       :class="[
         'save-cluster',
@@ -243,6 +236,7 @@ import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
 import { UserString } from "@/state/translations";
 import { IArgumentEditorProps } from "./ArgumentEditor.vue";
 import ProfileButton from "./ProfileButton.vue";
+import AlertBanner from "./AlertBanner.vue";
 
 const auth = namespace("auth");
 const staging = namespace("staging");
@@ -257,6 +251,7 @@ const errors = namespace("errors");
     QRCodeScannerModal,
     HeaderPanel,
     ProfileButton,
+    AlertBanner,
   },
   /* Two hooks below catches only browser navigation buttons,
    * other ways of changing current page are handled in query module.
@@ -562,10 +557,6 @@ export default class TopLevelUserView extends Vue {
   get isMainView() {
     return this.$route.params.schema === "user" && this.$route.params.name === "main";
   }
-
-  get bottomBarNeeded() {
-    return this.statusLine !== "";
-  }
 }
 </script>
 
@@ -602,39 +593,6 @@ export default class TopLevelUserView extends Vue {
     flex-direction: column;
     position: relative;
     z-index: 0; /* вся страница, кроме низа */
-  }
-
-  .fix-bot {
-    padding: 0.1rem;
-    padding-left: 0.5rem;
-    line-height: normal;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    text-align: right;
-    margin-left: -1px !important;
-    position: relative;
-    background-color: var(--interface-backgroundColor) !important;
-    color: var(--interface-foregroundColor);
-    border-top: 1px solid var(--interface-borderColor);
-    z-index: 500; /* низ страницы */
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .status-line {
-    position: relative;
-    bottom: 0;
-    z-index: 600; /* кол-во записей внизу */
-    line-height: normal;
-    float: left;
-    margin-left: 5px;
-    color: var(--interface-foregroundColor);
   }
 
   .save-cluster {

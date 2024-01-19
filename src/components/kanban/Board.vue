@@ -74,13 +74,17 @@ export default class Board extends Vue {
   .board_container {
     width: 100%;
     height: 100%;
-    padding: 1.5rem 2.25rem;
+    padding: 1.875rem 2.25rem;
     display: flex;
     flex-direction: row;
     gap: 0.625rem;
     background-color: var(--userview-background-color);
     overflow-y: hidden;
     overflow-x: auto;
+
+    @include mobile {
+      padding: 1rem;
+    }
 
     &.dragging {
       cursor: grabbing !important;

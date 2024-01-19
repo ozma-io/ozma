@@ -19,16 +19,6 @@
     :style="styleSettings"
     class="default-variant default-local-variant"
   >
-    <AlertBanner
-      v-if="bannerMessage"
-      :message="bannerMessage"
-      :show-contact-button="showContactButtonInBanner"
-      :show-sign-up-button="showSignUpButtonInBanner"
-      :show-invite-button="showInviteButtonInBanner"
-      :color-variables="bannerColorVariables"
-      @banner-close="onBannerClose"
-    />
-
     <div class="app-container">
       <ModalPortalTarget
         name="tabbed-modal"
@@ -113,7 +103,6 @@ import { setHeadMeta, setHeadLink } from "@/elements";
   components: {
     ModalPortalTarget,
     InviteUserModal,
-    AlertBanner: () => import("@/components/AlertBanner.vue"),
     ReadonlyDemoInstanceModal: () => import("@/components/ReadonlyDemoInstanceModal.vue"),
     HelpModal: () => import("@/components/HelpModal.vue"),
   },
@@ -385,18 +374,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
   }
 
-  get showContactButtonInBanner() {
-    return this.settings.getEntry("show_contact_button_in_banner", Boolean, false);
-  }
-
-  get showSignUpButtonInBanner() {
-    return this.settings.getEntry("show_sign_up_button_in_banner", Boolean, false);
-  }
-
-  get showInviteButtonInBanner() {
-    return this.settings.getEntry("show_invite_button_in_banner", Boolean, false) && this.hasAuth;
-  }
-
   private get fontSize(): number {
     const defaultSize = 14;
     const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
@@ -450,33 +427,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       currSettings[`--${name}`] = value;
       return currSettings;
     }, {} as Record<string, unknown>);
-  }
-
-  get bannerMessage() {
-    const message = this.settings.getEntry("banner_message", String, "");
-    const isImportant = this.settings.getEntry("banner_important", Boolean, false);
-    const viewedMessage = localStorage.getItem("viewed-banner-message");
-    if (message.trim() === "" || (!isImportant && message === viewedMessage)) return "";
-    return message;
-  }
-
-  onBannerClose() {
-    localStorage.setItem("viewed-banner-message", this.bannerMessage);
-  }
-
-  get bannerColorVariables() {
-    // TODO FIXME
-    /*     const variant = this.settings.getEntry("banner_variant", String, null);
- *     if (variant) {
- *       try {
- *         const parsed = JSON.parse(variant);
- *         return getColorVariables("banner", parsed);
- *       } catch {
- *         return getColorVariables("banner", variant);
- *       }
- *     }
- *  */
-    return null;
   }
 }
 </script>

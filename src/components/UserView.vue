@@ -185,7 +185,6 @@
             @goto-previous="$emit('goto-previous')"
             @select="$emit('select', $event)"
             @update:buttons="componentButtons = $event"
-            @update:status-line="$emit('update:status-line', $event)"
             @update:enable-filter="$emit('update:enable-filter', $event)"
             @update:current-page="$emit('update:current-page', $event)"
             @update:body-style="$emit('update:body-style', $event)"
@@ -865,7 +864,6 @@ export default class UserView extends Vue {
 
     this.state = loadingState;
     this.componentButtons = [];
-    this.$emit("update:status-line", "");
     this.$emit("update:enable-filter", false);
     this.$emit("update:body-style", "");
   }

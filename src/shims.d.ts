@@ -58,3 +58,5 @@ declare module "v-hotkey" {
 
   export default plugin;
 }
+
+declare module "vue-wrapped-component";
