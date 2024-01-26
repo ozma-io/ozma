@@ -303,7 +303,7 @@ export default class InputSlot extends Vue {
     border-radius: 0.5rem;
 
     .indicator-container {
-      $indicator-size: 1rem; /* 12px is preferred font size and 18px is like in `.md-18` */
+      $indicator-size: 1rem;
       $indicator-padding: 0.125rem;
       $input-height: 2.5rem;
 
@@ -334,8 +334,8 @@ export default class InputSlot extends Vue {
 
       .required-indicator {
         position: absolute;
-        height: 1rem;
-        width: 1rem;
+        height: 0.5 * $indicator-size;
+        width: 0.5 * $indicator-size;
         border-radius: 50%;
         background-color: var(--cell-foregroundColor);
         opacity: 0.05;
@@ -344,7 +344,7 @@ export default class InputSlot extends Vue {
           opacity 0.1s;
 
         &.empty {
-          background-color: rgba(255, 120, 100, 0.9);
+          background-color: rgba(255, 120, 100);
           opacity: 1;
         }
       }
