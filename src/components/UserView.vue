@@ -705,7 +705,8 @@ export default class UserView extends Vue {
     search?: string;
   } = {}): Promise<void> {
     const { differentComponent, loadNextChunk, loadAllChunks, loadAllChunksLimitless, search } = options;
-    const args = { source: this.args.source, args: deepClone(this.appliedArguments ?? this.args.args) };
+    const clonedArgs = deepClone(this.args);
+    const args = { source: clonedArgs.source, args: this.appliedArguments ?? clonedArgs.args };
     if (this.level >= maxLevel) {
       this.setState({ state: "error", args, message: "Too many levels of nested user views" });
       return Promise.resolve();
