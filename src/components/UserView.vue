@@ -1012,6 +1012,7 @@ export default class UserView extends Vue {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    background-color: var(--userview-background-color);
   }
 
   .loading-container {
