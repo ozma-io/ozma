@@ -305,7 +305,11 @@ export default class TabbedModal extends Vue {
     flex-flow: column nowrap;
     flex-grow: 1;
     margin-top: 38px;
-    max-height: 95% !important;
+    max-height: calc(100% - 38px - 2rem);
+
+    @include mobile {
+      max-height: calc(100% - 38px);
+    }
   }
 
   .tab-content {
