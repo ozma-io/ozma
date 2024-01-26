@@ -589,6 +589,11 @@ export default class UserView extends Vue {
     this.$emit("update:argument-editor-props", argumentEditorProps);
   }
 
+
+  // Arguments saved here if they were changed in nested userview.
+  // `this.args.args` still has original arguments!
+  private appliedArguments: IUserViewArguments["args"] = null;
+
   private applyUpdatedArguments({ defaultArguments, currentArguments }: IApplyArgumentsParams) {
     if (this.state.state !== "show") {
       throw new Error("Unexpected state");
@@ -624,10 +629,8 @@ export default class UserView extends Vue {
       };
       this.$emit("goto", { query: linkQuery });
     } else {
-      const { source } = this.state.uv.args;
-      // TODO: Store args in URL query parameters maybe?
-      // Also it's not a good way to solve this, `this.args.args` still has initial values.
-      void this.reload({ differentComponent: true, newArgs: { source, args } });
+      this.appliedArguments = args;
+      void this.reload({ differentComponent: true });
     }
   }
 
@@ -700,11 +703,10 @@ export default class UserView extends Vue {
     loadAllChunksLimitless?: boolean; // Load ALL rows.
     limit?: number;
     autoSaved?: boolean;
-    newArgs?: IUserViewArguments;
     search?: string;
   } = {}): Promise<void> {
-    const { differentComponent, loadNextChunk, loadAllChunks, loadAllChunksLimitless, newArgs, search } = options;
-    const args = newArgs ?? deepClone(this.args);
+    const { differentComponent, loadNextChunk, loadAllChunks, loadAllChunksLimitless, search } = options;
+    const args = { source: this.args.source, args: deepClone(this.appliedArguments ?? this.args.args) };
     if (this.level >= maxLevel) {
       this.setState({ state: "error", args, message: "Too many levels of nested user views" });
       return Promise.resolve();

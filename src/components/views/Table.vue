@@ -3007,6 +3007,7 @@ export default class UserViewTable extends mixins<BaseUserView<ITableValueExtra,
     .pagination-arrow-button {
       width: 1.5rem;
       height: 1.25rem;
+      padding: 0;
     }
 
     .select-wrapper {
