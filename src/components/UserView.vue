@@ -589,7 +589,6 @@ export default class UserView extends Vue {
     this.$emit("update:argument-editor-props", argumentEditorProps);
   }
 
-
   // Arguments saved here if they were changed in nested userview.
   // `this.args.args` still has original arguments!
   private appliedArguments: IUserViewArguments["args"] = null;
