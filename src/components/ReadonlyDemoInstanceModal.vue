@@ -5,7 +5,7 @@
             "header_2": "to continue",
             "description_1": "It's read-only example. To start making changes, contact our team, and we will create a personal demonstration instance just for you.",
             "get_started": "Demo call",
-            "sign_up": "Sign up (only if you know SQL and JS)"
+            "sign_up": "Start your app with this demo"
         },
         "ru": {
             "header_1": "Свяжитесь с ozma.io",
@@ -13,7 +13,7 @@
             "description_1": "Это демо-пример. Чтобы начать вносить изменения,",
             "description_2": "свяжитесь с менеджером ozma.io.",
             "get_started": "Связаться с менеджером ozma.io",
-            "sign_up": "Зарегистрироваться (только если вы знаете SQL и JS)"
+            "sign_up": "Начать ваше приложение с этим демо"
         },
         "es": {
             "header_1": "Conéctate con ozma.io",
@@ -21,7 +21,7 @@
             "description_1": "Es un ejemplo de solo lectura. Para comenzar, haga cambios,",
             "description_2": "haga una cita con un gerente y crearemos una instancia personal para usted.",
             "get_started": "Hacer una cita con el gerente",
-            "sign_up": "Registrarse (solo si sabes SQL y JS)"
+            "sign_up": "Comience su aplicación con este demo"
         }
     }
 </i18n>
@@ -56,7 +56,7 @@
       </div>
       <div class="buttons-container">
         <b-button
-          class="ok-button"
+          class="button primary-button"
           block
           variant="primary"
           :href="getStartedLink"
@@ -65,16 +65,14 @@
           {{ $t("get_started") }}
         </b-button>
 
-        <!--
         <b-button
-          class="ok-button"
+          class="button secondary-button"
           variant="outline-primary"
           :href="signUpLink"
           target="_blank"
         >
           {{ $t("sign_up") }}
         </b-button>
-        -->
       </div>
     </div>
   </ModalWindow>
@@ -217,14 +215,27 @@ export default class ReadonlyDemoInstanceModal extends Vue {
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
   }
 
-  .ok-button {
+  .button {
     padding: 1rem;
-    background-color: #2361FF;
     border-radius: 0.5rem;
+  }
+
+  .primary-button {
+    background-color: #2361FF;
     &:hover {
       background-color: #163da3;
+    }
+  }
+
+  .secondary-button {
+    background-color: #e5edff;
+    border-color: #e5edff;
+    color: #2361FF;
+    &:hover {
+      background-color: #b8becc;
     }
   }
 </style>
