@@ -1,7 +1,7 @@
 <i18n>
     {
         "en": {
-            "contact": "Request a demo call",
+            "contact": "Start your app with this demo",
             "sign_up": "Sign Up",
             "invite_user": "Invite"
         },
@@ -145,10 +145,7 @@ export default class AlertBanner extends Vue {
   // TODO: add other options for sign up button, not only /crm
   private get signUpButton() {
     const language = this.$i18n.locale;
-    let url = "https://onboard.ozma.io/crm";
-    if (["ru"].includes(language)) {
-      url = `https://onboard.ozma.io/crm/${language}`;
-    }
+    let url = `https://onboard.ozma.io/${instanceName}/${language}`
     return {
       caption: this.$t("sign_up").toString(),
       variant: bootstrapVariantAttribute("info"),
