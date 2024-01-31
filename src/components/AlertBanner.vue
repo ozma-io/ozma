@@ -1,13 +1,13 @@
 <i18n>
     {
         "en": {
-            "contact": "Start your app with this demo",
-            "sign_up": "Sign Up",
+            "contact": "Schedule a demo call",
+            "sign_up": "Start your app with this demo",
             "invite_user": "Invite"
         },
         "ru": {
             "contact": "Заказать внедрение",
-            "sign_up": "Зарегистрироваться",
+            "sign_up": "Скопировать себе это демо",
             "invite_user": "Пригласить"
         },
         "es": {
@@ -138,19 +138,18 @@ export default class AlertBanner extends Vue {
     return {
       icon: "person_add",
       caption: this.$t("invite_user").toString(),
-      variant: bootstrapVariantAttribute("success"),
+      variant: { type: "existing", className: "ctaButton" },
       type: "callback",
       callback: () => eventBus.emit("show-invite-user-modal"),
     };
   }
 
-  // TODO: add other options for sign up button, not only /crm
   private get signUpButton() {
     const language = this.$i18n.locale;
     const url = `https://onboard.ozma.io/${instanceName}/${language}`;
     return {
       caption: this.$t("sign_up").toString(),
-      variant: bootstrapVariantAttribute("info"),
+      variant: { type: "existing", className: "ctaButton" },
       type: "link",
       link: { type: "href", href: url, target: "blank" },
     };
