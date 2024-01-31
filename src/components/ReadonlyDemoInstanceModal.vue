@@ -85,6 +85,8 @@ import { namespace } from "vuex-class";
 import { CurrentSettings } from "@/state/settings";
 import ModalWindow from "@/components/modal/ModalWindow.vue";
 
+import { instanceName } from "@/api";
+
 const settings = namespace("settings");
 
 @Component({ components: { ModalWindow } })
@@ -117,7 +119,7 @@ export default class ReadonlyDemoInstanceModal extends Vue {
   }
 
   private get signUpLink() {
-    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, `https://onboard.ozma.io/register?locale=${this.locale}&lp=demo-x`);
+    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, `https://onboard.ozma.io/${instanceName}/${this.locale}`);
   }
 }
 </script>
