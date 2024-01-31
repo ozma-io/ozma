@@ -70,6 +70,8 @@ import { Button } from "./buttons/buttons";
 import { CurrentSettings } from "@/state/settings";
 import { CurrentAuth, INoAuth } from "@/state/auth";
 
+import { instanceName } from "@/api";
+
 const sanitizeSettings = {
   allowedTags: ["b", "i", "em", "strong", "a"],
   allowedAttributes: {
