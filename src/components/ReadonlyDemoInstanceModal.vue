@@ -117,7 +117,7 @@ export default class ReadonlyDemoInstanceModal extends Vue {
   }
 
   private get signUpLink() {
-    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, `https://onboard.ozma.io/register?locale=${this.locale}&lp=demo-x`);
+    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, `https://onboard.ozma.io/admin/en?locale=${this.locale}`);
   }
 }
 </script>
