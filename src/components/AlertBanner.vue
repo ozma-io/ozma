@@ -147,7 +147,7 @@ export default class AlertBanner extends Vue {
   // TODO: add other options for sign up button, not only /crm
   private get signUpButton() {
     const language = this.$i18n.locale;
-    let url = `https://onboard.ozma.io/${instanceName}/${language}`
+    const url = `https://onboard.ozma.io/${instanceName}/${language}`
     return {
       caption: this.$t("sign_up").toString(),
       variant: bootstrapVariantAttribute("info"),
