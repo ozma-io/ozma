@@ -63,7 +63,6 @@ import { Vue, Component } from "vue-property-decorator";
 import sanitizeHtml from "sanitize-html";
 import { namespace } from "vuex-class";
 
-import { bootstrapVariantAttribute } from "@/utils_colors";
 import { eventBus } from "@/main";
 import ButtonItem from "@/components/buttons/ButtonItem.vue";
 import { Button } from "./buttons/buttons";
