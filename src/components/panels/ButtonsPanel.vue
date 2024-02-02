@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="buttons-panel"
-  >
+  <div class="buttons-panel">
     <!-- TODO: Make better keys for buttons -->
     <template v-for="(button, i) in buttons">
       <ButtonGroup
@@ -28,11 +26,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator'
 
-import type { Button } from "@/components/buttons/buttons";
-import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import ButtonGroup from "@/components/buttons/ButtonGroup.vue";
+import type { Button } from '@/components/buttons/buttons'
+import ButtonItem from '@/components/buttons/ButtonItem.vue'
+import ButtonGroup from '@/components/buttons/ButtonGroup.vue'
 
 @Component({
   components: {
@@ -41,18 +39,18 @@ import ButtonGroup from "@/components/buttons/ButtonGroup.vue";
   },
 })
 export default class ButtonsPanel extends Vue {
-  @Prop({ type: Array, required: true }) buttons!: Button[];
+  @Prop({ type: Array, required: true }) buttons!: Button[]
 }
 </script>
 
 <style lang="scss" scoped>
-  .buttons-panel {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+.buttons-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-  .flex-grow {
-    flex-grow: 1;
-  }
+.flex-grow {
+  flex-grow: 1;
+}
 </style>

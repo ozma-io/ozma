@@ -1,8 +1,5 @@
 <template>
-  <b-col
-    :md="entry.size || 12"
-    class="menu-item-column"
-  >
+  <b-col :md="entry.size || 12" class="menu-item-column">
     <template v-if="entry.content">
       <div
         :class="[
@@ -12,16 +9,25 @@
           {
             'is-mobile': $isMobile,
             'no-content-zero-level': entry.content.length === 0 && level === 1,
-            'two_levels_max': twoLevelsMax,
+            two_levels_max: twoLevelsMax,
           },
         ]"
       >
         <MenuHeading :level="level + 1">
-          <span class="menu-header menuHeader-variant menuHeader-local-variant" :title="$ustOrEmpty(entry.name)">
+          <span
+            class="menu-header menuHeader-variant menuHeader-local-variant"
+            :title="$ustOrEmpty(entry.name)"
+          >
             {{ $ustOrEmpty(entry.name) }}
           </span>
         </MenuHeading>
-        <b-row :class="['menu_entries', 'no-gutters', { 'first_level_entries': level === 0 }]">
+        <b-row
+          :class="[
+            'menu_entries',
+            'no-gutters',
+            { first_level_entries: level === 0 },
+          ]"
+        >
           <MenuEntry
             v-for="(subEntry, index) in entry.content"
             :key="index"
@@ -45,16 +51,21 @@
             {
               'no-icon': !entry.icon,
               'emoji-icon': getIconType(entry.icon) === 'emoji',
-            }]"
+            },
+          ]"
         >
-          {{ entry.icon || "chevron_right" }}
+          {{ entry.icon || 'chevron_right' }}
         </i>
         <span class="name" :title="$ustOrEmpty(entry.name)">
           {{ $ustOrEmpty(entry.name) }}
         </span>
         <b-badge
           v-if="entry.badge !== undefined && entry.badge.value !== undefined"
-          :class="[badgeVariantClassName, 'badge-local-variant', $isMobile ? 'ml-auto' : 'ml-1']"
+          :class="[
+            badgeVariantClassName,
+            'badge-local-variant',
+            $isMobile ? 'ml-auto' : 'ml-1',
+          ]"
           :style="badgeVariantVariables"
           pill
           variant="light"
@@ -67,210 +78,216 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import MenuHeading from "@/components/menu/MenuHeading.vue";
-import { Link } from "@/links";
-import { getIconType } from "@/utils";
-import type { ColorVariantAttribute } from "@/utils_colors";
-import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
-import { UserString } from "@/state/translations";
+import MenuHeading from '@/components/menu/MenuHeading.vue'
+import { Link } from '@/links'
+import { getIconType } from '@/utils'
+import type { ColorVariantAttribute } from '@/utils_colors'
+import {
+  getColorVariantAttributeClassName,
+  getColorVariantAttributeVariables,
+} from '@/utils_colors'
+import { UserString } from '@/state/translations'
 
 export type Badge = {
-  value: unknown;
-  variant: ColorVariantAttribute;
-};
+  value: unknown
+  variant: ColorVariantAttribute
+}
 
 interface IMenuBase {
-  name: UserString;
-  size?: number;
+  name: UserString
+  size?: number
 }
 
 export interface IMenuLink extends IMenuBase {
-  icon?: string;
-  link: Link;
-  badge?: Badge;
+  icon?: string
+  link: Link
+  badge?: Badge
 }
 
 export interface IMenuCategory extends IMenuBase {
-  content: MenuValue[];
+  content: MenuValue[]
 }
 
-export type MenuValue = IMenuLink | IMenuCategory;
+export type MenuValue = IMenuLink | IMenuCategory
 
-const initialSize = 50;
-const scaleFactor = 0.85;
+const initialSize = 50
+const scaleFactor = 0.85
 
-@Component({ name: "MenuEntry", components: { MenuHeading } })
+@Component({ name: 'MenuEntry', components: { MenuHeading } })
 export default class MenuEntry extends Vue {
-  @Prop({ type: Number, required: false, default: 0 }) level!: number;
-  @Prop({ type: Object, required: true }) entry!: MenuValue;
+  @Prop({ type: Number, required: false, default: 0 }) level!: number
+  @Prop({ type: Object, required: true }) entry!: MenuValue
 
   get titleStyle(): { fontSize: string } {
     if (this.level > 0) {
-      const divider = (this.level / scaleFactor);
-      const fontSize = initialSize / divider;
-      return { fontSize: `${fontSize}px` };
+      const divider = this.level / scaleFactor
+      const fontSize = initialSize / divider
+      return { fontSize: `${fontSize}px` }
     }
-    const fontSize = initialSize;
-    return { fontSize: `${fontSize}px` };
+    const fontSize = initialSize
+    return { fontSize: `${fontSize}px` }
   }
 
   private getIconType(str: string | undefined | null) {
-    return getIconType(str);
+    return getIconType(str)
   }
 
   private isMenuLink(entry: MenuValue): entry is IMenuLink {
-    return "link" in entry;
+    return 'link' in entry
   }
 
   private isMenuCategory(entry: MenuValue): entry is IMenuCategory {
-    return "content" in entry;
+    return 'content' in entry
   }
 
   private isEmptyMenu(entry: MenuValue): entry is IMenuCategory {
-    return this.isMenuCategory(entry) && entry.content.length === 0;
+    return this.isMenuCategory(entry) && entry.content.length === 0
   }
 
   private get twoLevelsMax() {
-    if (this.level > 0) return false;
-    if (this.isMenuCategory(this.entry) && this.entry.content.some(entry => this.isMenuCategory(entry))) return false;
-    if (this.isEmptyMenu(this.entry)) return false;
-    return true;
+    if (this.level > 0) return false
+    if (
+      this.isMenuCategory(this.entry) &&
+      this.entry.content.some((entry) => this.isMenuCategory(entry))
+    )
+      return false
+    if (this.isEmptyMenu(this.entry)) return false
+    return true
   }
 
   private get badgeVariantClassName(): string | null {
-    if (!this.isMenuLink(this.entry)) return null;
-    if (!this.entry.badge) return null;
+    if (!this.isMenuLink(this.entry)) return null
+    if (!this.entry.badge) return null
 
-    return getColorVariantAttributeClassName(this.entry.badge.variant);
+    return getColorVariantAttributeClassName(this.entry.badge.variant)
   }
 
   private get badgeVariantVariables(): Record<string, string> | null {
-    if (!this.isMenuLink(this.entry)) return null;
-    if (!this.entry.badge) return null;
+    if (!this.isMenuLink(this.entry)) return null
+    if (!this.entry.badge) return null
 
-    return getColorVariantAttributeVariables(this.entry.badge.variant);
+    return getColorVariantAttributeVariables(this.entry.badge.variant)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  @include variant-to-local("menuEntry");
-  @include variant-to-local("badge");
-  @include variant-to-local("menuHeader");
+@include variant-to-local('menuEntry');
+@include variant-to-local('badge');
+@include variant-to-local('menuHeader');
 
-  .menu-item-column {
-    display: flex;
-    flex-direction: column;
-    padding: 0 calc(0.625rem / 2);
+.menu-item-column {
+  display: flex;
+  flex-direction: column;
+  padding: 0 calc(0.625rem / 2);
+}
+
+.menu_category_block {
+  margin-top: 0.625rem;
+  height: 100%;
+
+  &.is-mobile {
+    margin: 0;
+    margin-bottom: 0.75rem;
   }
 
-  .menu_category_block {
-    height: 100%;
+  @media (max-width: 575.98px) {
+    margin: 0;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+}
 
-    margin-top: 0.625rem;
+.no-content-zero-level {
+  display: none;
+}
 
-    &.is-mobile {
-      margin: 0;
-      margin-bottom: 0.75rem;
+.menu_category_block h1,
+.menu_category_block h2,
+.menu_category_block h3,
+.menu_category_block h4,
+.menu_category_block h5,
+.menu_category_block h6 {
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.menu-entry {
+  @include material-button('menuEntry');
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  border-color: transparent;
+  border-radius: 0.25rem;
+  background: transparent;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+
+  width: 100%;
+  max-width: 100%;
+  color: var(--menuEntry-foregroundColor);
+  text-decoration: none;
+
+  .icon {
+    user-select: none;
+
+    &.no-icon {
+      color: var(--menuEntry-foregroundDarkerColor);
     }
 
-    @media (max-width: 575.98px) {
-      margin: 0;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
+    &.emoji-icon {
+      font-family: initial;
     }
   }
 
-  .no-content-zero-level {
-    display: none;
-  }
-
-  .menu_category_block h1,
-  .menu_category_block h2,
-  .menu_category_block h3,
-  .menu_category_block h4,
-  .menu_category_block h5,
-  .menu_category_block h6 {
-    font-weight: 600;
+  .name {
+    margin-right: 0.35rem;
+    margin-left: 0.35rem;
     overflow: hidden;
+    font-size: 1rem;
     text-overflow: ellipsis;
-    margin-bottom: 1.25rem;
   }
+}
 
-  .menu-entry {
-    @include material-button("menuEntry");
+.first_level_entries {
+  padding-left: 0 !important;
+}
 
-    width: 100%;
-    max-width: 100%;
-    border-radius: 0.25rem;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
-    display: flex;
-    align-items: center;
-    color: var(--menuEntry-foregroundColor);
-    margin-bottom: 0.25rem;
-    text-decoration: none;
-    background: transparent;
-    border-color: transparent;
+.first_level_entries .menu_category_block,
+.two_levels_max {
+  border: 1px solid var(--default-backgroundDarker1Color);
+  border-radius: 0.5rem;
+  background: var(--default-backgroundColor);
+  padding: 1.875rem;
+}
 
-    .icon {
-      user-select: none;
+.menu_category_title {
+  color: #000;
+  font-weight: bold;
+}
 
-      &.no-icon {
-        color: var(--menuEntry-foregroundDarkerColor);
-      }
-
-      &.emoji-icon {
-        font-family: initial;
-      }
-    }
-
-    .name {
-      margin-left: 0.35rem;
-      margin-right: 0.35rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 1rem;
-    }
-  }
-
-  .first_level_entries {
-    padding-left: 0 !important;
-  }
-
-  .first_level_entries .menu_category_block,
-  .two_levels_max {
-    border-radius: 0.5rem;
-    padding: 1.875rem;
-    background: var(--default-backgroundColor);
-    border: 1px solid var(--default-backgroundDarker1Color);
-  }
-
+@media (max-width: 600px) {
   .menu_category_title {
-    color: #000;
-    font-weight: bold;
+    font-size: 30px !important;
   }
 
-  @media (max-width: 600px) {
-    .menu_category_title {
-      font-size: 30px !important;
-    }
-
-    .menu_entry > a {
-      font-size: 20px !important;
-    }
+  .menu_entry > a {
+    font-size: 20px !important;
   }
+}
 
-  .menu-header {
-    color: var(--menuHeader-foregroundColor);
-  }
+.menu-header {
+  color: var(--menuHeader-foregroundColor);
+}
 
-  ::v-deep {
-    .badge {
-      background: var(--badge-backgroundColor) !important;
-      color: var(--badge-foregroundColor) !important;
-    }
+::v-deep {
+  .badge {
+    background: var(--badge-backgroundColor) !important;
+    color: var(--badge-foregroundColor) !important;
   }
+}
 </style>

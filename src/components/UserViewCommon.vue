@@ -74,14 +74,15 @@
         class="selection-buttons-wrapper"
       >
         <div class="selection-buttons-label">
-          {{ $t("selected_n_entries", { n: selectedLength, loaded: loadedRowsCount }) }}
+          {{
+            $t('selected_n_entries', {
+              n: selectedLength,
+              loaded: loadedRowsCount,
+            })
+          }}
         </div>
-        <div
-          class="selection-buttons-panel"
-        >
-          <ButtonsPanel
-            :buttons="selectionButtons"
-          />
+        <div class="selection-buttons-panel">
+          <ButtonsPanel :buttons="selectionButtons" />
         </div>
       </div>
     </transition>
@@ -89,49 +90,81 @@
 </template>
 
 <script lang="ts">
-import { Component, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
-import { FunDBError, IEntity, IEntityRef, IEntriesRequestOpts, IInsertEntityOp, ITransaction } from "ozma-api";
-import { Action, namespace } from "vuex-class";
+import { Component, Watch } from 'vue-property-decorator'
+import { mixins } from 'vue-class-component'
+import {
+  FunDBError,
+  IEntity,
+  IEntityRef,
+  IEntriesRequestOpts,
+  IInsertEntityOp,
+  ITransaction,
+} from 'ozma-api'
+import { Action, namespace } from 'vuex-class'
 
-import { AutoSaveLock } from "@/state/staging_changes";
-import { csvCell, csvSeparator, encodeUTF16LE, getBOM, mapMaybe, saveToFile, tryDicts } from "@/utils";
-import { defaultVariantAttribute, bootstrapVariantAttribute, interfaceButtonVariant } from "@/utils_colors";
-import BaseUserView, { IBaseRowExtra, IBaseValueExtra, IBaseViewExtra, userViewTitle } from "@/components/BaseUserView";
-import { attrToQuery, IQuery } from "@/state/query";
-import SelectUserView from "@/components/SelectUserView.vue";
-import type { IQRResultContent } from "@/components/qrcode/QRCodeScanner.vue";
-import { RowRef, ValueRef } from "@/user_views/combined";
-import type { ICommonUserViewData, ICombinedUserViewAny } from "@/user_views/combined";
-import { getReferenceInfo } from "@/state/entries";
-import { attrToButton, Button, attrToButtons, attrToButtonsOld } from "@/components/buttons/buttons";
-import { EntityRef, IAttrToLinkOpts } from "@/links";
-import { deserializeParsedRows, serializeValue, valueFromRaw } from "@/values";
+import { AutoSaveLock } from '@/state/staging_changes'
+import {
+  csvCell,
+  csvSeparator,
+  encodeUTF16LE,
+  getBOM,
+  mapMaybe,
+  saveToFile,
+  tryDicts,
+} from '@/utils'
+import {
+  defaultVariantAttribute,
+  bootstrapVariantAttribute,
+  interfaceButtonVariant,
+} from '@/utils_colors'
+import BaseUserView, {
+  IBaseRowExtra,
+  IBaseValueExtra,
+  IBaseViewExtra,
+  userViewTitle,
+} from '@/components/BaseUserView'
+import { attrToQuery, IQuery } from '@/state/query'
+import SelectUserView from '@/components/SelectUserView.vue'
+import type { IQRResultContent } from '@/components/qrcode/QRCodeScanner.vue'
+import { RowRef, ValueRef } from '@/user_views/combined'
+import type {
+  ICommonUserViewData,
+  ICombinedUserViewAny,
+} from '@/user_views/combined'
+import { getReferenceInfo } from '@/state/entries'
+import {
+  attrToButton,
+  Button,
+  attrToButtons,
+  attrToButtonsOld,
+} from '@/components/buttons/buttons'
+import { EntityRef, IAttrToLinkOpts } from '@/links'
+import { deserializeParsedRows, serializeValue, valueFromRaw } from '@/values'
 
-import { fetchUserViewData } from "@/user_views/fetch";
-import { eventBus, IShowHelpModalArgs } from "@/main";
-import { formatValue } from "@/user_views/format";
-import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
-import type { ICallApi } from "@/state/auth";
+import { fetchUserViewData } from '@/user_views/fetch'
+import { eventBus, IShowHelpModalArgs } from '@/main'
+import { formatValue } from '@/user_views/format'
+import QRCodeScannerModal from '@/components/qrcode/QRCodeScannerModal.vue'
+import type { ICallApi } from '@/state/auth'
 
 interface IModalReferenceField {
-  field: ValueRef;
-  uv: IQuery;
-  entity: IEntityRef;
+  field: ValueRef
+  uv: IQuery
+  entity: IEntityRef
 }
 
 const csvExportOpts: IEntriesRequestOpts = {
   chunk: { limit: 10000 },
-};
+}
 
-const csvImportChunk = 100;
+const csvImportChunk = 100
 
-const staging = namespace("staging");
-const errors = namespace("errors");
-const entities = namespace("entities");
-const settings = namespace("settings");
+const staging = namespace('staging')
+const errors = namespace('errors')
+const entities = namespace('entities')
+const settings = namespace('settings')
 
-const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
+const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`
 
 @Component({
   components: {
@@ -139,114 +172,127 @@ const uvHelpPageKey = (ref: IEntityRef) => `uv_${ref.schema}.${ref.name}`;
     QRCodeScannerModal,
   },
 })
-export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>>(BaseUserView) {
-  @Action("callApi") callApi!: ICallApi;
-  @Action("reload") reload!: () => Promise<void>;
-  @staging.Action("addAutoSaveLock") addAutoSaveLock!: () => Promise<AutoSaveLock>;
-  @staging.Action("removeAutoSaveLock") removeAutoSaveLock!: (id: AutoSaveLock) => Promise<void>;
-  @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
-  @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
+export default class UserViewCommon extends mixins<
+  BaseUserView<IBaseValueExtra, IBaseRowExtra, IBaseViewExtra>
+>(BaseUserView) {
+  @Action('callApi') callApi!: ICallApi
+  @Action('reload') reload!: () => Promise<void>
+  @staging.Action('addAutoSaveLock')
+  addAutoSaveLock!: () => Promise<AutoSaveLock>
+  @staging.Action('removeAutoSaveLock') removeAutoSaveLock!: (
+    id: AutoSaveLock,
+  ) => Promise<void>
+  @entities.Action('getEntity') getEntity!: (
+    ref: IEntityRef,
+  ) => Promise<IEntity>
+  @settings.Getter('businessModeEnabled') businessModeEnabled!: boolean
 
-  modalView: IQuery | null = null;
-  private showDeleteEntiesButton = false;
-  private autoSaveLock: AutoSaveLock | null = null;
+  modalView: IQuery | null = null
+  private showDeleteEntiesButton = false
+  private autoSaveLock: AutoSaveLock | null = null
 
   get helpPageReference() {
-    const helpRef = EntityRef.safeParse(this.uv.attributes["help_page"]);
+    const helpRef = EntityRef.safeParse(this.uv.attributes['help_page'])
     if (helpRef.success) {
-      return helpRef.data;
+      return helpRef.data
     } else {
-      const rawMarkupName = this.uv.attributes["help_embedded_page_name"];
+      const rawMarkupName = this.uv.attributes['help_embedded_page_name']
       if (rawMarkupName) {
-        console.error("Attribute help_embedded_page_name is deprecated; use help_page");
+        console.error(
+          'Attribute help_embedded_page_name is deprecated; use help_page',
+        )
         return {
-          schema: "user",
+          schema: 'user',
           name: String(rawMarkupName),
-        };
+        }
       }
     }
 
-    return null;
+    return null
   }
 
-  @Watch("helpPageReference", { deep: true, immediate: true })
+  @Watch('helpPageReference', { deep: true, immediate: true })
   private updateHelpPage() {
     if (this.helpPageReference !== null) {
-      this.showHelpModal(true);
+      this.showHelpModal(true)
     }
   }
 
   private showHelpModal(skipIfShown?: boolean) {
     const eventArgs: IShowHelpModalArgs = {
-      key: this.uv.args.source.type === "named" ? uvHelpPageKey(this.uv.args.source.ref) : null,
+      key:
+        this.uv.args.source.type === 'named'
+          ? uvHelpPageKey(this.uv.args.source.ref)
+          : null,
       skipIfShown,
       ref: this.helpPageReference!,
-    };
-    eventBus.emit("show-help-modal", eventArgs);
+    }
+    eventBus.emit('show-help-modal', eventArgs)
   }
 
   private async addMyAutoSaveLock() {
-    if (this.autoSaveLock !== null) return;
+    if (this.autoSaveLock !== null) return
 
-    const lock = await this.addAutoSaveLock();
-    this.autoSaveLock = lock;
+    const lock = await this.addAutoSaveLock()
+    this.autoSaveLock = lock
   }
 
   private removeMyAutoSaveLock() {
-    if (this.autoSaveLock === null) return;
+    if (this.autoSaveLock === null) return
 
-    void this.removeAutoSaveLock(this.autoSaveLock);
-    this.autoSaveLock = null;
+    void this.removeAutoSaveLock(this.autoSaveLock)
+    this.autoSaveLock = null
   }
 
   protected beforeDestroy() {
-    this.removeMyAutoSaveLock();
+    this.removeMyAutoSaveLock()
   }
 
-  @Watch("uv", { immediate: true })
+  @Watch('uv', { immediate: true })
   private async onUserViewUpdate(uv: ICombinedUserViewAny) {
-    this.showDeleteEntiesButton = false;
-    let disableAutoSave: boolean;
+    this.showDeleteEntiesButton = false
+    let disableAutoSave: boolean
 
-    const disableAutoSaveRaw = uv.attributes["disable_auto_save"];
-    if (typeof disableAutoSaveRaw === "boolean") {
-      disableAutoSave = disableAutoSaveRaw;
+    const disableAutoSaveRaw = uv.attributes['disable_auto_save']
+    if (typeof disableAutoSaveRaw === 'boolean') {
+      disableAutoSave = disableAutoSaveRaw
     } else {
-      disableAutoSave = false;
-      if ("post_create_link" in uv.attributes) {
-        disableAutoSave = true;
+      disableAutoSave = false
+      if ('post_create_link' in uv.attributes) {
+        disableAutoSave = true
       } else if (uv.rows === null && uv.info.mainEntity) {
-        const entity = await this.getEntity(uv.info.mainEntity.entity);
+        const entity = await this.getEntity(uv.info.mainEntity.entity)
         if (entity.hasInsertTriggers) {
-          disableAutoSave = true;
+          disableAutoSave = true
         }
       }
     }
 
     if (disableAutoSave) {
-      await this.addMyAutoSaveLock();
+      await this.addMyAutoSaveLock()
     } else {
-      this.removeMyAutoSaveLock();
+      this.removeMyAutoSaveLock()
     }
-    await this.updateShowDeleteEntriesButton();
+    await this.updateShowDeleteEntriesButton()
   }
 
   get softDisabled() {
-    return Boolean(this.uv.attributes["soft_disabled"]);
+    return Boolean(this.uv.attributes['soft_disabled'])
   }
 
-  @Watch("businessModeEnabled")
+  @Watch('businessModeEnabled')
   private async updateShowDeleteEntriesButton() {
-    this.showDeleteEntiesButton = false;
+    this.showDeleteEntiesButton = false
 
-    if (!this.uv.info.mainEntity) return;
-    if (this.softDisabled) return;
+    if (!this.uv.info.mainEntity) return
+    if (this.softDisabled) return
 
     if (this.businessModeEnabled) {
-      this.showDeleteEntiesButton = !this.uv.attributes["business_mode_disable_delete"];
+      this.showDeleteEntiesButton =
+        !this.uv.attributes['business_mode_disable_delete']
     } else {
-      const entity = await this.getEntity(this.uv.info.mainEntity.entity);
-      this.showDeleteEntiesButton = entity?.access.delete ?? false;
+      const entity = await this.getEntity(this.uv.info.mainEntity.entity)
+      this.showDeleteEntiesButton = entity?.access.delete ?? false
     }
   }
 
@@ -267,225 +313,279 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
     // *. (untested) Excel for Mac
     // I'd like the reader to think long and hard about benefits of open standards and avoidance of vendor lock-ins right here, right now.
     try {
-      let data: ICommonUserViewData;
+      let data: ICommonUserViewData
       if (this.uv.rowLoadState.complete) {
-        data = this.uv;
+        data = this.uv
       } else {
-        const fetched = await fetchUserViewData(this.$store, this.uv.args, csvExportOpts);
+        const fetched = await fetchUserViewData(
+          this.$store,
+          this.uv.args,
+          csvExportOpts,
+        )
         // Always a full user view with rows.
         if (!fetched.complete) {
-          throw new Error("Too many entries to export");
+          throw new Error('Too many entries to export')
         }
-        deserializeParsedRows(fetched.info, fetched.rows!);
-        data = fetched;
+        deserializeParsedRows(fetched.info, fetched.rows!)
+        data = fetched
       }
 
-      let output = "";
+      let output = ''
 
       const columnIndices = mapMaybe((col, index) => {
-        if (this.uv.columnAttributes[index]?.["csv_skip"]) {
-          return undefined;
+        if (this.uv.columnAttributes[index]?.['csv_skip']) {
+          return undefined
         }
-        return index;
-      }, data.info.columns);
+        return index
+      }, data.info.columns)
 
-      columnIndices.forEach(index => {
-        const col = data.info.columns[index];
-        const csvColumnNameRaw = data.columnAttributes[index]["csv_column_name"] ?? data.attributes["csv_column_name"];
-        const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
-        output += csvCell(csvColumnName ?? col.name);
+      columnIndices.forEach((index) => {
+        const col = data.info.columns[index]
+        const csvColumnNameRaw =
+          data.columnAttributes[index]['csv_column_name'] ??
+          data.attributes['csv_column_name']
+        const csvColumnName =
+          typeof csvColumnNameRaw === 'string' ? csvColumnNameRaw : null
+        output += csvCell(csvColumnName ?? col.name)
         if (index < data.info.columns.length - 1) {
-          output += csvSeparator;
+          output += csvSeparator
         }
-      });
-      output += "\n";
+      })
+      output += '\n'
 
-      data.rows!.forEach(row => {
-        columnIndices.forEach(colI => {
-          const cell = row.values[colI];
-          const info = this.uv.info.columns[colI];
+      data.rows!.forEach((row) => {
+        columnIndices.forEach((colI) => {
+          const cell = row.values[colI]
+          const info = this.uv.info.columns[colI]
           // This makes export non-reversible, because we don't export reference IDs. Some clients ask for main fields in these columns though.
-          const textValue = formatValue(info.valueType, cell);
-          output += csvCell(textValue);
+          const textValue = formatValue(info.valueType, cell)
+          output += csvCell(textValue)
           if (colI < row.values.length - 1) {
-            output += csvSeparator;
+            output += csvSeparator
           }
-        });
-        output += "\n";
-      });
+        })
+        output += '\n'
+      })
 
-      const title = userViewTitle(this.uv) ?? "unnamed";
-      const bom = getBOM("le");
-      const encoded = [bom, encodeUTF16LE(output)];
-      saveToFile(`${title}.csv`, encoded, { type: "text/csv;charset=utf-16le" });
+      const title = userViewTitle(this.uv) ?? 'unnamed'
+      const bom = getBOM('le')
+      const encoded = [bom, encodeUTF16LE(output)]
+      saveToFile(`${title}.csv`, encoded, {
+        type: 'text/csv;charset=utf-16le',
+      })
     } catch (e) {
-      this.setError({ key: "export_csv", error: String(e) });
-      throw e;
+      this.setError({ key: 'export_csv', error: String(e) })
+      throw e
     }
   }
 
   private async importFromCsv(file: File) {
-    const Papa = await import("papaparse");
-    const streaming = Boolean(this.uv.attributes["csv_import_streaming"]);
-    const skipEmptyRows = Boolean(this.uv.attributes["csv_import_skip_empty_rows"] ?? true);
+    const Papa = await import('papaparse')
+    const streaming = Boolean(this.uv.attributes['csv_import_streaming'])
+    const skipEmptyRows = Boolean(
+      this.uv.attributes['csv_import_skip_empty_rows'] ?? true,
+    )
 
-    const entityRef = this.uv.info.mainEntity!.entity;
-    const emptyRow = Object.fromEntries(mapMaybe((value, colI) => {
-      if (value.value === undefined || value.value === null) {
-        return undefined;
-      }
-      const col = this.uv.info.columns[colI];
-      return [col.mainField!.name, value.value];
-    }, this.uv.emptyRow!.values)) as Record<string, unknown>;
-    const columnNames = Object.fromEntries(mapMaybe((info, colI) => {
-      if (!info.mainField || this.uv.columnAttributes[colI]?.["csv_skip"]) {
-        return undefined;
-      }
+    const entityRef = this.uv.info.mainEntity!.entity
+    const emptyRow = Object.fromEntries(
+      mapMaybe((value, colI) => {
+        if (value.value === undefined || value.value === null) {
+          return undefined
+        }
+        const col = this.uv.info.columns[colI]
+        return [col.mainField!.name, value.value]
+      }, this.uv.emptyRow!.values),
+    ) as Record<string, unknown>
+    const columnNames = Object.fromEntries(
+      mapMaybe((info, colI) => {
+        if (!info.mainField || this.uv.columnAttributes[colI]?.['csv_skip']) {
+          return undefined
+        }
 
-      const csvColumnNameRaw = this.uv.columnAttributes[colI]?.["csv_column_name"];
-      const csvColumnName = typeof csvColumnNameRaw === "string" ? csvColumnNameRaw : null;
-      const csvImportColumnRaw = this.uv.columnAttributes[colI]?.["csv_import_column"]; // Deprecated attribute.
-      const csvImportColumn = typeof csvImportColumnRaw === "string" ? csvImportColumnRaw : null;
+        const csvColumnNameRaw =
+          this.uv.columnAttributes[colI]?.['csv_column_name']
+        const csvColumnName =
+          typeof csvColumnNameRaw === 'string' ? csvColumnNameRaw : null
+        const csvImportColumnRaw =
+          this.uv.columnAttributes[colI]?.['csv_import_column'] // Deprecated attribute.
+        const csvImportColumn =
+          typeof csvImportColumnRaw === 'string' ? csvImportColumnRaw : null
 
-      const columnName = csvImportColumn ?? csvColumnName ?? info.name;
-      const mainField = {
-        name: info.mainField.name,
-        field: {
-          fieldType: info.mainField.field.fieldType,
-          isNullable: info.mainField.field.isNullable || info.mainField.field.defaultValue !== undefined,
-        },
-      };
-      return [columnName, mainField];
-    }, this.uv.info.columns));
+        const columnName = csvImportColumn ?? csvColumnName ?? info.name
+        const mainField = {
+          name: info.mainField.name,
+          field: {
+            fieldType: info.mainField.field.fieldType,
+            isNullable:
+              info.mainField.field.isNullable ||
+              info.mainField.field.defaultValue !== undefined,
+          },
+        }
+        return [columnName, mainField]
+      }, this.uv.info.columns),
+    )
 
-    const maxTries = streaming ? 3 : 1;
-    let submittedCount = 0;
-    let operations: IInsertEntityOp[] = [];
-    let previousSubmit: Promise<void> = Promise.resolve();
+    const maxTries = streaming ? 3 : 1
+    let submittedCount = 0
+    let operations: IInsertEntityOp[] = []
+    let previousSubmit: Promise<void> = Promise.resolve()
 
     const submitOperations = () => {
-      const currentOperations = operations;
-      operations = [];
-      const prev = previousSubmit;
+      const currentOperations = operations
+      operations = []
+      const prev = previousSubmit
       previousSubmit = (async () => {
-        await prev;
+        await prev
         if (currentOperations.length === 0) {
-          return;
+          return
         }
 
         try {
           const transaction: ITransaction = {
             operations: currentOperations,
-          };
-          let currentTry = 1;
+          }
+          let currentTry = 1
           while (true) {
             try {
               // eslint-disable-next-line no-await-in-loop
               await this.callApi({
-                func: api => api.runTransaction(transaction),
-              });
-              break;
+                func: (api) => api.runTransaction(transaction),
+              })
+              break
             } catch (e) {
-              if (e instanceof FunDBError && (e.name === "concurrent_update" || e.name === "network_failure") && currentTry < maxTries) {
-                currentTry++;
+              if (
+                e instanceof FunDBError &&
+                (e.name === 'concurrent_update' ||
+                  e.name === 'network_failure') &&
+                currentTry < maxTries
+              ) {
+                currentTry++
               } else {
-                throw e;
+                throw e
               }
             }
           }
-          submittedCount += currentOperations.length;
+          submittedCount += currentOperations.length
         } catch (e) {
-          const suffix = submittedCount > 0 ? ` (imported ${submittedCount} rows)` : "";
-          this.setError({ key: "import_csv", error: String(e) + suffix });
-          throw e;
+          const suffix =
+            submittedCount > 0 ? ` (imported ${submittedCount} rows)` : ''
+          this.setError({ key: 'import_csv', error: String(e) + suffix })
+          throw e
         }
-      })();
-      return previousSubmit;
-    };
+      })()
+      return previousSubmit
+    }
 
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       step: (rawRow: { data: Record<string, string> }) => {
         try {
-          if (skipEmptyRows && Object.values(rawRow.data).every(x => x === "")) {
-            return;
+          if (
+            skipEmptyRows &&
+            Object.values(rawRow.data).every((x) => x === '')
+          ) {
+            return
           }
-          const row = { ...emptyRow };
+          const row = { ...emptyRow }
           for (const [columnName, rawValue] of Object.entries(rawRow.data)) {
-            const mainField = columnNames[columnName];
+            const mainField = columnNames[columnName]
             if (mainField) {
-              const value = valueFromRaw(mainField.field, rawValue);
+              const value = valueFromRaw(mainField.field, rawValue)
               if (value === undefined) {
-                throw new Error(`Failed to validate value "${rawValue}" for field ${mainField.name} at row ${operations.length + 1}`);
+                throw new Error(
+                  `Failed to validate value "${rawValue}" for field ${
+                    mainField.name
+                  } at row ${operations.length + 1}`,
+                )
               }
               if (value !== null) {
-                row[mainField.name] = serializeValue(mainField.field.fieldType, value);
+                row[mainField.name] = serializeValue(
+                  mainField.field.fieldType,
+                  value,
+                )
               }
             }
           }
           operations.push({
-            type: "insert",
+            type: 'insert',
             entity: entityRef,
             fields: row,
-          });
+          })
         } catch (e) {
-          this.setError({ key: "import_csv", error: String(e) });
-          throw e;
+          this.setError({ key: 'import_csv', error: String(e) })
+          throw e
         }
         if (streaming && operations.length >= csvImportChunk) {
-          void submitOperations();
+          void submitOperations()
         }
       },
       complete: () => void submitOperations().then(this.reload),
-    });
+    })
   }
 
   get loadedRowsCount(): string {
-    return `${this.uv.rowLoadState.fetchedRowCount}${this.uv.rowLoadState.complete ? "" : "+"}`;
+    return `${this.uv.rowLoadState.fetchedRowCount}${
+      this.uv.rowLoadState.complete ? '' : '+'
+    }`
   }
 
   private get selectedRowIds(): any[] | null {
-    const columnIndex = this.uv.columnAttributes.findIndex(attributes => attributes["entry_id"]);
+    const columnIndex = this.uv.columnAttributes.findIndex(
+      (attributes) => attributes['entry_id'],
+    )
 
     if (columnIndex === -1 && this.uv.info.mainEntity) {
-      const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
-      const ids = mapMaybe(row => (row as any)?.mainId ?? undefined, rows); // mainId is guaranteed to exist here.
-      return ids;
+      const rows = this.uv.extra.selectedRows
+        .keys()
+        .map((rowRef: RowRef) => this.uv.getRowByRef(rowRef))
+      const ids = mapMaybe((row) => (row as any)?.mainId ?? undefined, rows) // mainId is guaranteed to exist here.
+      return ids
     }
 
     if (columnIndex !== -1) {
-      const rows = this.uv.extra.selectedRows.keys().map((rowRef: RowRef) => this.uv.getRowByRef(rowRef));
-      const ids = rows.map(row => row?.values[columnIndex].value);
-      return ids;
+      const rows = this.uv.extra.selectedRows
+        .keys()
+        .map((rowRef: RowRef) => this.uv.getRowByRef(rowRef))
+      const ids = rows.map((row) => row?.values[columnIndex].value)
+      return ids
     }
 
-    return null;
+    return null
   }
 
   get attrButtons(): Button[] {
     const opts: IAttrToLinkOpts = {
       homeSchema: this.uv.homeSchema ?? undefined,
       defaultActionArgs: { ids: this.selectedRowIds ?? undefined },
-    };
+    }
 
-    const panelButtons = this.uv.attributes["panel_buttons"]; // Will be deleted
-    const buttons = this.uv.attributes["buttons"];
+    const panelButtons = this.uv.attributes['panel_buttons'] // Will be deleted
+    const buttons = this.uv.attributes['buttons']
     if (panelButtons) {
-      console.warn("@panel_buttons attribute deprecated,  will be deleted future.");
-      return attrToButtonsOld(panelButtons, opts); // Will be deleted
+      console.warn(
+        '@panel_buttons attribute deprecated,  will be deleted future.',
+      )
+      return attrToButtonsOld(panelButtons, opts) // Will be deleted
     } else {
-      return attrToButtons(buttons, opts);
+      return attrToButtons(buttons, opts)
     }
   }
 
   get buttons() {
-    return [...this.staticButtons, ...this.attrButtons.filter(button => button.display !== "selection_panel" && button.display !== "selectionPanel")];
+    return [
+      ...this.staticButtons,
+      ...this.attrButtons.filter(
+        (button) =>
+          button.display !== 'selection_panel' &&
+          button.display !== 'selectionPanel',
+      ),
+    ]
   }
 
-  @Watch("buttons", { deep: true, immediate: true })
+  @Watch('buttons', { deep: true, immediate: true })
   private pushButtons() {
-    this.$emit("update:buttons", this.buttons);
+    this.$emit('update:buttons', this.buttons)
   }
 
   /**
@@ -493,140 +593,160 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
    * @return {boolean} Allow showing default actions (edit, import from csv, etc.)
    */
   get showDefaultActions() {
-    return !(this.uv.attributes["hide_default_actions"] === true);
+    return !(this.uv.attributes['hide_default_actions'] === true)
   }
 
   private get communicationButtons() {
-    const buttons: Button[] = [];
+    const buttons: Button[] = []
 
     if (this.settings.communicationLinks.email !== null) {
       buttons.push({
-        caption: "E-mail",
-        icon: "email",
-        type: "link",
-        link: { type: "href", href: "mailto:" + this.settings.communicationLinks.email, target: "blank" },
+        caption: 'E-mail',
+        icon: 'email',
+        type: 'link',
+        link: {
+          type: 'href',
+          href: 'mailto:' + this.settings.communicationLinks.email,
+          target: 'blank',
+        },
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
     if (this.settings.communicationLinks.whatsapp !== null) {
       buttons.push({
-        caption: "WhatsApp",
-        icon: "phone",
-        type: "link",
-        link: { type: "href", href: this.settings.communicationLinks.whatsapp, target: "blank" },
+        caption: 'WhatsApp',
+        icon: 'phone',
+        type: 'link',
+        link: {
+          type: 'href',
+          href: this.settings.communicationLinks.whatsapp,
+          target: 'blank',
+        },
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
     if (this.settings.communicationLinks.telegram !== null) {
       buttons.push({
-        caption: "Telegram",
-        icon: "send",
-        type: "link",
-        link: { type: "href", href: this.settings.communicationLinks.telegram, target: "blank" },
+        caption: 'Telegram',
+        icon: 'send',
+        type: 'link',
+        link: {
+          type: 'href',
+          href: this.settings.communicationLinks.telegram,
+          target: 'blank',
+        },
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
-    return buttons;
+    return buttons
   }
 
   private get helpButtons(): Button[] {
-    const buttons: Button[] = [];
+    const buttons: Button[] = []
 
     if (this.helpPageReference) {
       buttons.push({
-        icon: "ondemand_video",
-        caption: this.$t("help_button_caption").toString(),
-        variant: { type: "existing", className: "help-button" }, // "help-button" is magic variant only for this case.
-        type: "callback",
+        icon: 'ondemand_video',
+        caption: this.$t('help_button_caption').toString(),
+        variant: { type: 'existing', className: 'help-button' }, // "help-button" is magic variant only for this case.
+        type: 'callback',
         callback: () => this.showHelpModal(),
-      });
+      })
     }
 
     if (this.communicationButtons.length > 0) {
       const communicationButton: Button = {
-        icon: "contact_support",
-        caption: this.$t("contacts").toString(),
+        icon: 'contact_support',
+        caption: this.$t('contacts').toString(),
         variant: defaultVariantAttribute,
-        type: "button-group",
+        type: 'button-group',
         buttons: this.communicationButtons,
-      };
-      buttons.push(communicationButton);
+      }
+      buttons.push(communicationButton)
     }
 
-    return buttons;
+    return buttons
   }
 
   get staticButtons(): Button[] {
-    const extraActions = this.uv.attributes["extra_actions"];
-    const extraActionsButtons = attrToButtonsOld(extraActions).map(button => ({ ...button, display: undefined }));
+    const extraActions = this.uv.attributes['extra_actions']
+    const extraActionsButtons = attrToButtonsOld(extraActions).map(
+      (button) => ({ ...button, display: undefined }),
+    )
     if (extraActionsButtons.length > 0) {
-      console.warn("@extra_actions attribute is deprecated, will be deleted in the future.");
+      console.warn(
+        '@extra_actions attribute is deprecated, will be deleted in the future.',
+      )
     }
-    const buttons: Button[] = extraActionsButtons;
+    const buttons: Button[] = extraActionsButtons
 
     if (this.helpButtons.length > 0) {
       buttons.push({
-        icon: "help_outline",
-        caption: this.$isMobile ? this.$t("help").toString() : undefined,
-        display: "desktop",
+        icon: 'help_outline',
+        caption: this.$isMobile ? this.$t('help').toString() : undefined,
+        display: 'desktop',
         variant: interfaceButtonVariant,
-        type: "button-group",
+        type: 'button-group',
         buttons: this.helpButtons,
-      });
+      })
     }
 
     if (this.creationButtons) {
       buttons.push({
-        icon: "add",
-        caption: this.$t("create").toString(),
+        icon: 'add',
+        caption: this.$t('create').toString(),
         buttons: this.creationButtons,
-        type: "button-group",
-        variant: bootstrapVariantAttribute("success"),
-      });
+        type: 'button-group',
+        variant: bootstrapVariantAttribute('success'),
+      })
     } else if (this.creationLink) {
       buttons.push({
-        icon: "add",
-        caption: this.$t("create").toString(),
+        icon: 'add',
+        caption: this.$t('create').toString(),
         link: this.creationLink,
-        type: "link",
-        variant: bootstrapVariantAttribute("success"),
-      });
+        type: 'link',
+        variant: bootstrapVariantAttribute('success'),
+      })
     }
 
-    const modalReferenceField = this.modalReferenceField;
+    const modalReferenceField = this.modalReferenceField
     if (modalReferenceField) {
       buttons.push({
-        caption: this.$t("create_in_modal").toString(),
+        caption: this.$t('create_in_modal').toString(),
         callback: () => {
-          this.modalView = modalReferenceField.uv;
+          this.modalView = modalReferenceField.uv
         },
-        type: "callback",
+        type: 'callback',
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
     if (typeof this.uv.info.mainEntity?.forInsert && this.showDefaultActions) {
       buttons.push({
-        icon: "file_upload",
-        caption: this.$t("import_from_csv").toString(),
-        uploadFile: file => void this.importFromCsv(file),
-        type: "upload-file",
+        icon: 'file_upload',
+        caption: this.$t('import_from_csv').toString(),
+        uploadFile: (file) => void this.importFromCsv(file),
+        type: 'upload-file',
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
     // FIXME: workaround until we have proper role-based permissions for this.
-    if (this.uv.rows !== null && (this.uv.attributes["export_to_csv"] || "__export_to_csv" in this.$route.query)) {
+    if (
+      this.uv.rows !== null &&
+      (this.uv.attributes['export_to_csv'] ||
+        '__export_to_csv' in this.$route.query)
+    ) {
       buttons.push({
-        icon: "file_download",
-        caption: this.$t("export_to_csv").toString(),
+        icon: 'file_download',
+        caption: this.$t('export_to_csv').toString(),
         callback: () => void this.exportToCsv(),
-        type: "callback",
+        type: 'callback',
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
     if (this.selectedQRCodeReference !== null && this.qrCodeButton) {
@@ -637,10 +757,10 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         tooltip: this.qrCodeButton.tooltip,
         variant: this.qrCodeButton.variant,
         callback: () => {
-          (this.$refs.qrcodeScanner as QRCodeScannerModal).scan();
+          ;(this.$refs.qrcodeScanner as QRCodeScannerModal).scan()
         },
-        type: "callback",
-      });
+        type: 'callback',
+      })
     }
 
     if (this.selectedBarCodeReference !== null && this.barCodeButton) {
@@ -651,158 +771,184 @@ export default class UserViewCommon extends mixins<BaseUserView<IBaseValueExtra,
         tooltip: this.barCodeButton.tooltip,
         variant: this.barCodeButton.variant,
         callback: () => {
-          (this.$refs.barcodeScanner as QRCodeScannerModal).scan();
+          ;(this.$refs.barcodeScanner as QRCodeScannerModal).scan()
         },
-        type: "callback",
-      });
+        type: 'callback',
+      })
     }
 
-    return buttons;
+    return buttons
   }
 
   get selectionButtons() {
-    const buttons = this.attrButtons.filter(button => button.display === "selection_panel" || button.display === "selectionPanel");
+    const buttons = this.attrButtons.filter(
+      (button) =>
+        button.display === 'selection_panel' ||
+        button.display === 'selectionPanel',
+    )
 
     if (this.showDeleteEntiesButton) {
-      buttons.push(
-        {
-          icon: "delete_sweep",
-          caption: this.$t("remove_selected_rows").toString(),
-          callback: () => this.removeSelectedRows(),
-          variant: bootstrapVariantAttribute("danger"),
-          type: "callback",
-        },
-      );
+      buttons.push({
+        icon: 'delete_sweep',
+        caption: this.$t('remove_selected_rows').toString(),
+        callback: () => this.removeSelectedRows(),
+        variant: bootstrapVariantAttribute('danger'),
+        type: 'callback',
+      })
     }
-    return buttons;
+    return buttons
   }
 
   private removeSelectedRows() {
-    this.uv.extra.selectedRows.keys().forEach(rowRef => this.deleteRow(rowRef));
+    this.uv.extra.selectedRows
+      .keys()
+      .forEach((rowRef) => this.deleteRow(rowRef))
   }
 
   // Used to create referenced entries and automatically insert them into current table.
   get modalReferenceField(): IModalReferenceField | null {
-    const modalReferenceField = mapMaybe((column, columnIndex): IModalReferenceField | undefined => {
-      const columnAttrs = this.uv.columnAttributes[columnIndex];
-      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, this.uv.attributes);
-      const referenceViewAttr = Boolean(getColumnAttr("main_reference_field"));
-      const referenceUV = attrToQuery(getColumnAttr("select_view"));
-      const fieldType = this.uv.info.columns[columnIndex].mainField?.field.fieldType;
-      if (referenceUV && referenceViewAttr && fieldType !== undefined && fieldType.type === "reference") {
-        return {
-          field: { type: "new", column: columnIndex },
-          uv: referenceUV,
-          entity: fieldType.entity,
-        };
-      }
-      return undefined;
-    }, this.uv.columnAttributes);
-    return modalReferenceField.pop() ?? null;
+    const modalReferenceField = mapMaybe(
+      (column, columnIndex): IModalReferenceField | undefined => {
+        const columnAttrs = this.uv.columnAttributes[columnIndex]
+        const getColumnAttr = (name: string) =>
+          tryDicts(name, columnAttrs, this.uv.attributes)
+        const referenceViewAttr = Boolean(getColumnAttr('main_reference_field'))
+        const referenceUV = attrToQuery(getColumnAttr('select_view'))
+        const fieldType =
+          this.uv.info.columns[columnIndex].mainField?.field.fieldType
+        if (
+          referenceUV &&
+          referenceViewAttr &&
+          fieldType !== undefined &&
+          fieldType.type === 'reference'
+        ) {
+          return {
+            field: { type: 'new', column: columnIndex },
+            uv: referenceUV,
+            entity: fieldType.entity,
+          }
+        }
+        return undefined
+      },
+      this.uv.columnAttributes,
+    )
+    return modalReferenceField.pop() ?? null
   }
 
   selectFromUserView(id: number) {
     if (this.modalReferenceField === null) {
-      throw new Error("Impossible");
+      throw new Error('Impossible')
     }
 
-    void this.updateValue(this.modalReferenceField.field, id);
-    this.modalView = null;
+    void this.updateValue(this.modalReferenceField.field, id)
+    this.modalView = null
   }
 
   selectFromScanner(columnIndex: number, result: IQRResultContent[]) {
-    result.forEach(r => {
-      void this.updateValue({ type: "new", column: columnIndex }, r.id);
-    });
+    result.forEach((r) => {
+      void this.updateValue({ type: 'new', column: columnIndex }, r.id)
+    })
   }
 
   get barCodeButton() {
-    if (this.barCodeColumnIndex === null) return null;
+    if (this.barCodeColumnIndex === null) return null
 
-    return attrToButton(this.uv.columnAttributes[this.barCodeColumnIndex]["barcode_text_input"], undefined, true);
+    return attrToButton(
+      this.uv.columnAttributes[this.barCodeColumnIndex]['barcode_text_input'],
+      undefined,
+      true,
+    )
   }
 
   get qrCodeButton() {
-    if (this.qrCodeColumnIndex === null) return null;
+    if (this.qrCodeColumnIndex === null) return null
 
-    return attrToButton(this.uv.columnAttributes[this.qrCodeColumnIndex]["barcode_camera_input"], undefined, true);
+    return attrToButton(
+      this.uv.columnAttributes[this.qrCodeColumnIndex]['barcode_camera_input'],
+      undefined,
+      true,
+    )
   }
 
   get barCodeColumnIndex() {
-    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["barcode_text_input"]);
+    const ret = this.uv.columnAttributes.findIndex(
+      (attrs) => attrs['barcode_text_input'],
+    )
     if (ret === -1) {
-      return null;
+      return null
     } else {
-      return ret;
+      return ret
     }
   }
 
   get qrCodeColumnIndex() {
-    const ret = this.uv.columnAttributes.findIndex(attrs => attrs["barcode_camera_input"]);
+    const ret = this.uv.columnAttributes.findIndex(
+      (attrs) => attrs['barcode_camera_input'],
+    )
     if (ret === -1) {
-      return null;
+      return null
     } else {
-      return ret;
+      return ret
     }
   }
 
   get selectedBarCodeReference() {
     if (this.barCodeColumnIndex === null) {
-      return null;
+      return null
     }
-    return getReferenceInfo(this.uv, this.barCodeColumnIndex, null);
+    return getReferenceInfo(this.uv, this.barCodeColumnIndex, null)
   }
 
   get selectedQRCodeReference() {
     if (this.qrCodeColumnIndex === null) {
-      return null;
+      return null
     }
-    return getReferenceInfo(this.uv, this.qrCodeColumnIndex, null);
+    return getReferenceInfo(this.uv, this.qrCodeColumnIndex, null)
   }
 
   private makeToast(message: string) {
     this.$bvToast.toast(message, {
-      title: this.$t("error").toString(),
-      variant: "danger",
+      title: this.$t('error').toString(),
+      variant: 'danger',
       solid: true,
-    });
+    })
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .selection-buttons-wrapper {
-    position: fixed;
-    bottom: 3rem;
-    left: 50%;
-    transform: translate(-50%, 0);
+.selection-buttons-wrapper {
+  position: fixed;
+  bottom: 3rem;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 1000;
+  border-radius: 0.5rem;
+  background-color: #000a;
+  padding: 0.5rem;
+
+  .selection-buttons-label {
     padding: 0.5rem;
-    background-color: #000a;
-    border-radius: 0.5rem;
-    z-index: 1000;
+    padding-top: 0;
+    color: white;
+    text-align: center;
+  }
 
-    .selection-buttons-label {
-      padding: 0.5rem;
-      padding-top: 0;
-      text-align: center;
-      color: white;
-    }
-
-    ::v-deep {
-      .buttons-panel {
-        gap: 0.5rem;
-      }
+  ::v-deep {
+    .buttons-panel {
+      gap: 0.5rem;
     }
   }
+}
 
-  .fade-transform-enter-active,
-  .fade-transform-leave-active {
-    transition: opacity 0.4s, transform 0.4s, $color-transition;
-  }
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: opacity 0.4s, transform 0.4s, $color-transition;
+}
 
-  .fade-transform-enter,
-  .fade-transform-leave-to {
-    opacity: 0;
-    transform: translate(-50%, 1rem);
-  }
+.fade-transform-enter,
+.fade-transform-leave-to {
+  transform: translate(-50%, 1rem);
+  opacity: 0;
+}
 </style>

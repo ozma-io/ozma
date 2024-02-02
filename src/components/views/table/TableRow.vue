@@ -1,27 +1,23 @@
 <template>
-  <tr
-    :style="style"
-    :class="['table-tr', { selected: row.extra.selected }]"
-  >
+  <tr :style="style" :class="['table-tr', { selected: row.extra.selected }]">
     <td
       v-if="showSelectionColumn"
-      class="fixed-column checkbox-cells"
+      class="fixed-column select-row-cell"
       @click="$emit('select', $event)"
     >
-      <!-- Key is needed to force checkbox re-render when `selected` changes. Not sure why. -->
-      <span class="table-td_span">
+      <div class="cell-wrapper">
         <Checkbox :checked="row.extra.selected" />
-      </span>
+      </div>
     </td>
     <td
       v-if="showLinkColumn"
       :class="[
         'fixed-column',
-        'openform-cells',
+        'add-entry-cell',
         {
           'without-selection-cell': !showSelectionColumn,
           'has-link': row.extra.link,
-        }
+        },
       ]"
     >
       <FunLink
@@ -30,7 +26,7 @@
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
-        <i class="material-icons edit-in-modal-icon">open_in_new</i>
+        <i class="material-icons edit-in-modal-icon">edit_note</i>
       </FunLink>
     </td>
     <TableCell
@@ -50,10 +46,18 @@
       :height="height"
       :show-add-child="Boolean(uv.emptyRow)"
       @cell-click="$emit('cell-click', tableColI, arguments[0], arguments[1])"
-      @cell-mousedown="$emit('cell-mousedown', tableColI, arguments[0], arguments[1])"
-      @cell-mouseover="$emit('cell-mouseover', tableColI, arguments[0], arguments[1])"
-      @cell-mouseup="$emit('cell-mouseup', tableColI, arguments[0], arguments[1])"
-      @cell-contextmenu="$emit('cell-contextmenu', tableColI, arguments[0], arguments[1])"
+      @cell-mousedown="
+        $emit('cell-mousedown', tableColI, arguments[0], arguments[1])
+      "
+      @cell-mouseover="
+        $emit('cell-mouseover', tableColI, arguments[0], arguments[1])
+      "
+      @cell-mouseup="
+        $emit('cell-mouseup', tableColI, arguments[0], arguments[1])
+      "
+      @cell-contextmenu="
+        $emit('cell-contextmenu', tableColI, arguments[0], arguments[1])
+      "
       @toggle-children="$emit('toggle-children', $event)"
       @add-child="$emit('add-child')"
       @goto="$emit('goto', $event)"
@@ -62,192 +66,155 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator'
 
-import TableCell from "@/components/views/table/TableCell.vue";
-import Checkbox from "@/components/checkbox/Checkbox.vue";
-import type { IColumn, ITableCombinedUserView, ITableExtendedRowCommon } from "@/components/views/Table.vue";
+import TableCell from '@/components/views/table/TableCell.vue'
+import Checkbox from '@/components/checkbox/Checkbox.vue'
+import type {
+  IColumn,
+  ITableCombinedUserView,
+  ITableExtendedRowCommon,
+} from '@/components/views/Table.vue'
 
 @Component({
   components: {
-    TableCell, Checkbox,
+    TableCell,
+    Checkbox,
   },
 })
 export default class TableRow extends Vue {
   // The reason this is not a functional component is because of performance.
   // See https://forum.vuejs.org/t/performance-for-large-numbers-of-components/13545/10
-  @Prop({ type: Object, required: true }) row!: ITableExtendedRowCommon;
-  @Prop({ type: Array, required: true }) columnIndexes!: number[];
-  @Prop({ type: Array, required: true }) columns!: IColumn[];
-  @Prop({ type: Object, required: true }) fixedColumnPositions!: Record<number, number>;
-  @Prop({ type: Number, required: true }) fixedColumnsLength!: number;
-  @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView;
-  @Prop({ type: Boolean, default: false }) notExisting!: boolean;
-  @Prop({ type: Boolean, default: false }) showTree!: boolean;
-  @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean;
-  @Prop({ type: Boolean, default: false }) showSelectionColumn!: boolean;
+  @Prop({ type: Object, required: true }) row!: ITableExtendedRowCommon
+  @Prop({ type: Array, required: true }) columnIndexes!: number[]
+  @Prop({ type: Array, required: true }) columns!: IColumn[]
+  @Prop({ type: Object, required: true }) fixedColumnPositions!: Record<
+    number,
+    number
+  >
+  @Prop({ type: Number, required: true }) fixedColumnsLength!: number
+  @Prop({ type: Object, required: true }) uv!: ITableCombinedUserView
+  @Prop({ type: Boolean, default: false }) notExisting!: boolean
+  @Prop({ type: Boolean, default: false }) showTree!: boolean
+  @Prop({ type: Boolean, default: false }) showLinkColumn!: boolean
+  @Prop({ type: Boolean, default: false }) showSelectionColumn!: boolean
 
   private getRowAttr(name: string) {
-    return this.row.attributes?.[name] || this.uv.attributes[name];
+    return this.row.attributes?.[name] || this.uv.attributes[name]
   }
 
   get style() {
-    const style: Record<string, unknown> = {};
+    const style: Record<string, unknown> = {}
 
     if (this.height !== null) {
-      style["white-space"] = "nowrap";
-      style["--max-height"] = `${this.height}px`;
+      style['white-space'] = 'nowrap'
+      style['--max-height'] = `${this.height}px`
     }
 
-    return style;
+    return style
   }
 
   get height() {
-    const raw = this.getRowAttr("row_height");
-    if (typeof raw === "number") {
-      return raw;
+    const raw = this.getRowAttr('row_height')
+    if (typeof raw === 'number') {
+      return raw
     } else {
-      return null;
+      return null
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  /* Current Z layout:
-   * FormControl           (200)
-   * Selected fixed cell   (20)
-   * Selected cell         (15)
-   */
+.disabled-cell {
+  background-color: var(--ControlDisableColor);
+}
 
-  .fixed-place-tr {
-    display: none;
+.add-entry-cell {
+  width: 100%;
+  height: 100%;
+}
+.icon-link {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 1.25rem;
+  width: 100%;
+  height: 100%;
+  color: var(--icon-color);
+  &:hover {
+    background-color: var(--button-hover-background);
+    text-decoration: none;
   }
+}
 
-  .disabled-cell {
-    background-color: var(--ControlDisableColor);
-  }
+.table-tr {
+  background-color: var(--table-backgroundColor);
+  height: 100%;
+}
 
-  .icon-link {
-    display: block;
-    width: 20px;
-    height: 20px;
-    margin: 0 auto;
-    overflow-y: visible;
-  }
+td {
+  vertical-align: top;
+  background-color: var(--cell-backgroundColor, var(--table-backgroundColor));
+  overflow: hidden;
+  color: var(--cell-foregroundColor, var(--table-foregroundColor));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .checkbox-cells {
-    position: relative;
-    cursor: pointer;
-    color: var(--table-backgroundDarker1Color);
-
-    &:hover {
-      color: var(--cell-foregroundColor, var(--table-foregroundColor));
-    }
-  }
-
-  .checkbox-cells > .table-td_span {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .table-tr {
-    background-color: var(--table-backgroundColor);
+.select-row-cell {
+  height: 100%;
+  .cell-wrapper {
     height: 100%;
   }
+}
 
-  td {
-    border-right: 1px solid var(--table-backgroundDarker1Color);
-    color: var(--cell-foregroundColor, var(--table-foregroundColor));
-    background-color: var(--cell-backgroundColor, var(--table-backgroundColor));
-    vertical-align: top;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.selected td {
+  background-color: var(--table-backgroundDarker1Color);
+  color: var(--table-foregroundColor);
+}
+
+.table-tr > td:last-child {
+  border-right: none;
+}
+
+td ::v-deep p {
+  max-height: var(--max-height, 10rem);
+  overflow-y: auto;
+}
+
+td ::v-deep p {
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: normal;
+  text-overflow: ellipsis;
+  white-space: initial;
+}
+
+td ::v-deep p:hover {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* !importants was used because styles for fixed columns have priority otherwise. */
+td.required-cell {
+  background-color: var(--WarningColor) !important;
+}
+
+td.selected {
+  z-index: 15;
+}
+
+@media screen and (min-device-width: 813px) and (orientation: landscape) {
+  td.select_fixed {
+    position: sticky;
+    z-index: 20;
   }
 
-  .selected td {
+  .table-tr.selected .fixed-column {
     background-color: var(--table-backgroundDarker1Color);
-    color: var(--table-foregroundColor);
   }
-
-  .table-tr > td:last-child {
-    border-right: none;
-  }
-
-  td ::v-deep p,
-  td ::v-deep a {
-    max-height: var(--max-height, 10rem);
-    overflow-y: auto;
-  }
-
-  td ::v-deep p {
-    overflow: hidden;
-    width: 100%;
-    text-overflow: ellipsis;
-    line-height: normal;
-    margin: 0;
-    white-space: initial;
-  }
-
-  td ::v-deep p:hover {
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  /* !importants was used because styles for fixed columns have priority otherwise. */
-  td.required-cell {
-    background-color: var(--WarningColor) !important;
-  }
-
-  td.selected {
-    z-index: 15; /* обычные ячейки ниже фиксированных */
-  }
-
-  .openform-cells {
-    text-align: center;
-    width: 100%;
-    border-right: 1px solid var(--table-backgroundDarker1Color);
-
-    &.has-link:hover {
-      color: var(--cell-foregroundColor, var(--table-foregroundColor));
-      background-color: var(--cell-backgroundDarker1Color, var(--table-backgroundDarker1Color));
-      transition: background 0s;
-
-      .edit-in-modal-icon {
-        color: var(--cell-foregroundColor, var(--table-foregroundColor));
-      }
-    }
-  }
-
-  @media screen and (min-device-width: 813px) and (orientation: landscape) {
-    .checkbox-cells {
-      left: 0;
-    }
-
-    .openform-cells {
-      left: 35px;
-
-      .without-selection-cell {
-        left: 0;
-      }
-    }
-
-    td.select_fixed {
-      position: sticky;
-      z-index: 20; /* поверх обычных ячеек */
-    }
-
-    .table-tr .fixed-column {
-      position: sticky;
-      z-index: 20;
-      background-color: var(--cell-backgroundColor, inherit);
-      box-shadow: 1px 0 0 var(--table-backgroundDarker1Color);
-    }
-
-    .table-tr.selected .fixed-column {
-      background-color: var(--table-backgroundDarker1Color);
-    }
-  }
+}
 </style>

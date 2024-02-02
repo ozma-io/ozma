@@ -39,7 +39,7 @@
       :autofocus="autofocus"
       show-filter
       :loading-state="loadingState"
-      :process-filter="f => processFilter(f)"
+      :process-filter="(f) => processFilter(f)"
       :compact-mode="compactMode"
       :option-color-variant-attribute="optionColorVariantAttribute"
       @update:value="updateValue"
@@ -76,9 +76,7 @@
           <!-- eslint-enable vue/no-v-html -->
         </fragment>
       </template>
-      <template
-        #actions
-      >
+      <template #actions>
         <button
           v-for="(action, index) in selectViews"
           :key="index"
@@ -93,17 +91,9 @@
         </button>
       </template>
       <template #qrcode-button>
-        <b-input-group-append
-          v-if="qrcodeInput"
-        >
-          <b-button
-            variant="outline-info"
-            class="with-material-icon"
-          >
-            <i
-              class="material-icons qr_code"
-              @click="openQRCodeScanner()"
-            >
+        <b-input-group-append v-if="qrcodeInput">
+          <b-button variant="outline-info" class="with-material-icon">
+            <i class="material-icons qr_code" @click="openQRCodeScanner()">
               qr_code_2
             </i>
           </b-button>
@@ -116,7 +106,10 @@
     >
       <div
         class="spinner-border spinner-border-sm"
-        style="border-color: var(--cell-foregroundDarkerColor); border-right-color: transparent;"
+        style="
+          border-color: var(--cell-foregroundDarkerColor);
+          border-right-color: transparent;
+        "
       />
     </div>
     <QRCodeScannerModal
@@ -129,49 +122,63 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
+import { Component, Prop, Watch } from 'vue-property-decorator'
+import { mixins } from 'vue-class-component'
 
-import type { IEntityRef, RowId, SchemaName, ValueType } from "ozma-api";
-import { Debounce } from "vue-debounce-decorator";
-import { ISelectOption, default as MultiSelect, LoadingResult, LoadingState } from "@/components/multiselect/MultiSelect.vue";
-import { IQRCode, parseQRCode } from "@/components/qrcode/QRCode.vue";
-import BaseEntriesView from "@/components/BaseEntriesView";
-import SelectUserView from "@/components/SelectUserView.vue";
-import { IQuery } from "@/state/query";
-import { attrToLinkRef, IAttrToLinkOpts, Link } from "@/links";
-import { currentValue, ICombinedValue, valueToPunnedText } from "@/user_views/combined";
-import { mapMaybe, NeverError } from "@/utils";
-import { equalEntityRef, valueIsNull } from "@/values";
-import { CancelledError } from "@/modules";
-import type { EntriesRef } from "@/state/entries";
-import type { ScopeName } from "@/state/staging_changes";
-import QRCodeScannerModal from "./qrcode/QRCodeScannerModal.vue";
-import type { ColorVariantAttribute } from "@/utils_colors";
+import type { IEntityRef, RowId, SchemaName, ValueType } from 'ozma-api'
+import { Debounce } from 'vue-debounce-decorator'
+import {
+  ISelectOption,
+  default as MultiSelect,
+  LoadingResult,
+  LoadingState,
+} from '@/components/multiselect/MultiSelect.vue'
+import { IQRCode, parseQRCode } from '@/components/qrcode/QRCode.vue'
+import BaseEntriesView from '@/components/BaseEntriesView'
+import SelectUserView from '@/components/SelectUserView.vue'
+import { IQuery } from '@/state/query'
+import { attrToLinkRef, IAttrToLinkOpts, Link } from '@/links'
+import {
+  currentValue,
+  ICombinedValue,
+  valueToPunnedText,
+} from '@/user_views/combined'
+import { mapMaybe, NeverError } from '@/utils'
+import { equalEntityRef, valueIsNull } from '@/values'
+import { CancelledError } from '@/modules'
+import type { EntriesRef } from '@/state/entries'
+import type { ScopeName } from '@/state/staging_changes'
+import QRCodeScannerModal from './qrcode/QRCodeScannerModal.vue'
+import type { ColorVariantAttribute } from '@/utils_colors'
 
 export interface ICombinedReferenceValue {
-  id: RowId;
-  link: Link | null;
+  id: RowId
+  link: Link | null
 }
 
 export interface IReferenceSelectAction {
-  name: string;
-  query: IQuery;
+  name: string
+  query: IQuery
 }
 
-export type ReferenceSelectOption = ISelectOption<ICombinedReferenceValue>;
+export type ReferenceSelectOption = ISelectOption<ICombinedReferenceValue>
 
-const compareOptions = (a : ReferenceSelectOption, b : ReferenceSelectOption): number => {
-  return a.label.localeCompare(b.label);
-};
+const compareOptions = (
+  a: ReferenceSelectOption,
+  b: ReferenceSelectOption,
+): number => {
+  return a.label.localeCompare(b.label)
+}
 
-const valueIsSingle = (value: ICombinedValue | ICombinedValue[] | null): value is ICombinedValue => {
-  return value !== null && "value" in value;
-};
+const valueIsSingle = (
+  value: ICombinedValue | ICombinedValue[] | null,
+): value is ICombinedValue => {
+  return value !== null && 'value' in value
+}
 
 export interface IReferenceValue {
-  value: number | null;
-  pun?: string | null;
+  value: number | null
+  pun?: string | null
 }
 
 @Component({
@@ -182,43 +189,47 @@ export interface IReferenceValue {
   },
 })
 export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
-  @Prop({ required: true }) value!: IReferenceValue | IReferenceValue[] | null;
-  @Prop({ type: Boolean, default: false }) single!: boolean;
-  @Prop({ type: Boolean, default: false }) required!: boolean;
-  @Prop({ type: Boolean, default: false }) disabled!: boolean;
-  @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Number }) optionsListHeight!: number | undefined;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Object, required: true }) entries!: EntriesRef;
-  @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
-  @Prop({ type: Array, default: () => [] }) selectViews!: IReferenceSelectAction[];
-  @Prop({ type: String }) homeSchema!: SchemaName | undefined;
-  @Prop({ type: Object }) linkAttr!: unknown | undefined;
-  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
-  @Prop({ type: String, default: "no_scope" }) scope!: ScopeName;
-  @Prop({ type: String }) label!: string | undefined;
-  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
-  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
+  @Prop({ required: true }) value!: IReferenceValue | IReferenceValue[] | null
+  @Prop({ type: Boolean, default: false }) single!: boolean
+  @Prop({ type: Boolean, default: false }) required!: boolean
+  @Prop({ type: Boolean, default: false }) disabled!: boolean
+  @Prop({ type: Number }) height!: number | undefined
+  @Prop({ type: Number }) optionsListHeight!: number | undefined
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
+  @Prop({ type: Object, required: true }) entries!: EntriesRef
+  @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef
+  @Prop({ type: Array, default: () => [] })
+  selectViews!: IReferenceSelectAction[]
+  @Prop({ type: String }) homeSchema!: SchemaName | undefined
+  @Prop({ type: Object }) linkAttr!: unknown | undefined
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean
+  @Prop({ type: String, default: 'no_scope' }) scope!: ScopeName
+  @Prop({ type: String }) label!: string | undefined
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 
-  private selectedView: IQuery | null = null;
+  private selectedView: IQuery | null = null
 
   private openQRCodeScanner() {
-    (this.$refs.scanner as QRCodeScannerModal).scan();
+    ;(this.$refs.scanner as QRCodeScannerModal).scan()
   }
 
-  @Watch("value", { immediate: true })
+  @Watch('value', { immediate: true })
   // TODO: Possible unnecessary requests there, check this.
   private loadPun() {
     if (this.single) {
-      const value = this.value as ICombinedValue;
-      const rawValue = currentValue(value);
-      if (value.pun || typeof rawValue !== "number") return;
-      void this.fetchEntriesByIds(this.entries, [rawValue]);
+      const value = this.value as ICombinedValue
+      const rawValue = currentValue(value)
+      if (value.pun || typeof rawValue !== 'number') return
+      void this.fetchEntriesByIds(this.entries, [rawValue])
     } else {
-      const values = this.value as ICombinedValue[];
-      const neededValues = mapMaybe(v => v.pun ? undefined : currentValue(v) as number, values);
-      if (neededValues.length === 0) return;
-      void this.fetchEntriesByIds(this.entries, neededValues);
+      const values = this.value as ICombinedValue[]
+      const neededValues = mapMaybe(
+        (v) => (v.pun ? undefined : (currentValue(v) as number)),
+        values,
+      )
+      if (neededValues.length === 0) return
+      void this.fetchEntriesByIds(this.entries, neededValues)
     }
   }
 
@@ -228,28 +239,31 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
    * } */
 
   private findValue(value: ICombinedValue): number | undefined {
-    const currentId = currentValue(value) as number | null | undefined;
-    const idx = this.options!.findIndex(opt => opt.value.id === currentId);
-    return idx === -1 ? undefined : idx;
+    const currentId = currentValue(value) as number | null | undefined
+    const idx = this.options!.findIndex((opt) => opt.value.id === currentId)
+    return idx === -1 ? undefined : idx
   }
 
   get valueIndex(): number | number[] | null {
     if (!this.options) {
-      return null;
+      return null
     }
     if (this.value === null) {
-      return null;
+      return null
     }
 
     if (this.single) {
-      return this.findValue(this.value as ICombinedValue) ?? null;
+      return this.findValue(this.value as ICombinedValue) ?? null
     } else {
-      return mapMaybe(value => this.findValue(value), this.value as ICombinedValue[]);
+      return mapMaybe(
+        (value) => this.findValue(value),
+        this.value as ICombinedValue[],
+      )
     }
   }
 
   get linkOpts(): IAttrToLinkOpts | undefined {
-    return this.homeSchema ? { homeSchema: this.homeSchema } : undefined;
+    return this.homeSchema ? { homeSchema: this.homeSchema } : undefined
   }
 
   private makeOption(id: RowId, pun: string): ReferenceSelectOption {
@@ -259,227 +273,256 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
         id,
         link: attrToLinkRef(this.linkAttr, id, this.linkOpts),
       },
-    };
+    }
   }
 
   get valueOptions(): ReferenceSelectOption[] | null {
-    const valueType: ValueType = { type: "int" };
-    if (valueIsNull(this.value) || (valueIsSingle(this.value) && valueIsNull(this.value.value))) {
-      return [];
+    const valueType: ValueType = { type: 'int' }
+    if (
+      valueIsNull(this.value) ||
+      (valueIsSingle(this.value) && valueIsNull(this.value.value))
+    ) {
+      return []
     } else {
-      const values = this.single ? [this.value as ICombinedValue] : (this.value as ICombinedValue[]);
-      const ret: ReferenceSelectOption[] = [];
+      const values = this.single
+        ? [this.value as ICombinedValue]
+        : (this.value as ICombinedValue[])
+      const ret: ReferenceSelectOption[] = []
       for (const value of values) {
-        const curValue = currentValue(value) as number | null | undefined;
-        if (curValue === null ||
-            curValue === undefined ||
-            // We skip entries that have already been properly loaded; they will appear in `entriesOptions`.
-            (this.currentEntries !== null && curValue in this.currentEntries.entries)) {
-          continue;
+        const curValue = currentValue(value) as number | null | undefined
+        if (
+          curValue === null ||
+          curValue === undefined ||
+          // We skip entries that have already been properly loaded; they will appear in `entriesOptions`.
+          (this.currentEntries !== null &&
+            curValue in this.currentEntries.entries)
+        ) {
+          continue
         }
 
-        if (value.pun === undefined &&
-            // Value didn't fail to load (in that case, we want to show a numeric id instead)
-            this.currentEntries?.pendingSingleEntries?.[curValue] !== null) {
+        if (
+          value.pun === undefined &&
+          // Value didn't fail to load (in that case, we want to show a numeric id instead)
+          this.currentEntries?.pendingSingleEntries?.[curValue] !== null
+        ) {
           // No pun for one of values -- wait till we finish loading.
-          return null;
+          return null
         } else {
-          ret.push(this.makeOption(curValue, valueToPunnedText(valueType, value)));
+          ret.push(
+            this.makeOption(curValue, valueToPunnedText(valueType, value)),
+          )
         }
       }
-      return ret;
+      return ret
     }
   }
 
   get entriesOptions(): ReferenceSelectOption[] | null {
     if (this.currentEntries === null) {
-      return null;
+      return null
     } else {
-      return Object.entries(this.currentEntries.entries).map(([rawId, name]) => this.makeOption(Number(rawId), name));
+      return Object.entries(this.currentEntries.entries).map(([rawId, name]) =>
+        this.makeOption(Number(rawId), name),
+      )
     }
   }
 
   get options(): ReferenceSelectOption[] | null {
-    return [...this.valueOptions ?? [], ...this.entriesOptions ?? []].sort(compareOptions);
+    return [...(this.valueOptions ?? []), ...(this.entriesOptions ?? [])].sort(
+      compareOptions,
+    )
   }
 
   private setValue(id: number) {
     if (this.single) {
-      this.$emit("update:value", id);
+      this.$emit('update:value', id)
     } else {
-      this.$emit("add-value", id);
+      this.$emit('add-value', id)
     }
   }
 
   private async setRawId(id: number): Promise<boolean> {
-    const puns = await this.fetchEntriesByIds(this.entries, [id]);
+    const puns = await this.fetchEntriesByIds(this.entries, [id])
     if (!(id in puns)) {
-      return false;
+      return false
     }
 
-    this.setValue(id);
-    return true;
+    this.setValue(id)
+    return true
   }
 
   private async selectFromScanner(content: IQRCode): Promise<boolean> {
-    return this.setRawId(content.id);
+    return this.setRawId(content.id)
   }
 
   private async processQRCode(filterValue: string): Promise<boolean> {
-    const qrcode = parseQRCode(filterValue);
+    const qrcode = parseQRCode(filterValue)
     if (qrcode === null) {
-      return false;
+      return false
     }
 
     if (!equalEntityRef(qrcode.entity, this.referenceEntity)) {
-      this.makeToast(this.$t("error_qrcode_is_inappropriate").toString());
-      return false;
+      this.makeToast(this.$t('error_qrcode_is_inappropriate').toString())
+      return false
     }
 
-    return this.setRawId(qrcode.id);
+    return this.setRawId(qrcode.id)
   }
 
   private async processRawId(filterValue: string): Promise<boolean> {
-    const id = Number(filterValue);
-    if (filterValue === "" || Number.isNaN(id)) {
-      return false;
+    const id = Number(filterValue)
+    if (filterValue === '' || Number.isNaN(id)) {
+      return false
     }
 
-    return this.setRawId(id);
+    return this.setRawId(id)
   }
 
   private async processFilter(filterValue: string): Promise<boolean> {
     if (await this.processQRCode(filterValue)) {
-      return true;
+      return true
     }
 
-    return this.processRawId(filterValue);
+    return this.processRawId(filterValue)
   }
 
   private makeToast(message: string) {
     this.$bvToast.toast(message, {
-      title: this.$t("error").toString(),
-      variant: "danger",
+      title: this.$t('error').toString(),
+      variant: 'danger',
       solid: true,
       noAutoHide: true,
-    });
+    })
   }
 
   private iconValue(target: string) {
-    return "open_in_new";
+    return 'open_in_new'
   }
 
   private selectFromView(id: number) {
-    this.selectedView = null;
-    this.setValue(id);
+    this.selectedView = null
+    this.setValue(id)
   }
 
   private closeSelectView() {
-    this.selectedView = null;
-    this.$emit("popup-closed");
+    this.selectedView = null
+    this.$emit('popup-closed')
   }
 
   private onPopupClosed() {
     if (this.selectedView === null) {
-      this.$emit("popup-closed");
+      this.$emit('popup-closed')
     }
   }
 
   private beginSelect(action: IReferenceSelectAction) {
-    this.selectedView = action.query;
+    this.selectedView = action.query
   }
 
   get loadingState(): LoadingState {
     switch (this.entriesLoadingState.status) {
-      case "not_asked":
-        return { status: "ok", moreAvailable: true };
-      case "pending":
-        return { status: "pending" };
-      case "ok":
-        return { status: "ok", moreAvailable: this.entriesLoadingState.limit !== null };
-      case "error":
-        return { status: "error", message: String(this.entriesLoadingState.error) };
+      case 'not_asked':
+        return { status: 'ok', moreAvailable: true }
+      case 'pending':
+        return { status: 'pending' }
+      case 'ok':
+        return {
+          status: 'ok',
+          moreAvailable: this.entriesLoadingState.limit !== null,
+        }
+      case 'error':
+        return {
+          status: 'error',
+          message: String(this.entriesLoadingState.error),
+        }
       default:
-        throw new NeverError(this.entriesLoadingState);
+        throw new NeverError(this.entriesLoadingState)
     }
   }
 
   private updateValue(index: number | null) {
-    this.$emit("update:value", index === null ? null : this.options![index].value.id);
+    this.$emit(
+      'update:value',
+      index === null ? null : this.options![index].value.id,
+    )
   }
 
   private addValue(index: number) {
-    this.$emit("add-value", this.options![index].value.id);
+    this.$emit('add-value', this.options![index].value.id)
   }
 
   private removeValue(index: number) {
     // We pass `remove-value` as is to support repeating ids.
-    this.$emit("remove-index", index);
+    this.$emit('remove-index', index)
   }
 
   private async loadMore(next: (_: LoadingResult) => void) {
     try {
-      const moreAvailable = await this.fetchEntries(this.entries, this.requestedSearch, this.requestedLimit + 20);
-      next({ status: "ok", moreAvailable });
+      const moreAvailable = await this.fetchEntries(
+        this.entries,
+        this.requestedSearch,
+        this.requestedLimit + 20,
+      )
+      next({ status: 'ok', moreAvailable })
     } catch (e) {
       if (!(e instanceof CancelledError)) {
-        next({ status: "error", message: String(e) });
+        next({ status: 'error', message: String(e) })
       }
     }
   }
 
   @Debounce(200)
   private updateFilter(filter: string) {
-    void this.fetchEntries(this.entries, filter, 20);
+    void this.fetchEntries(this.entries, filter, 20)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .single-value__link {
-    display: flex;
+.single-value__link {
+  display: flex;
+}
+
+.open-modal-button {
+  @include material-button('option');
+
+  margin: 0;
+  margin-right: 0.25rem;
+  margin-left: -0.25rem;
+  border: none;
+  padding: 0;
+
+  &:not(:hover) {
+    opacity: 0.5;
   }
+}
 
-  .open-modal-button {
-    @include material-button("option");
+.action-button {
+  display: flex;
+  align-items: center;
+  border-radius: 0;
+  background: var(--default-backgroundColor);
+  padding: 0.5rem 0.25rem;
+  width: 100%;
+}
 
-    margin: 0;
-    margin-left: -0.25rem;
-    margin-right: 0.25rem;
-    border: none;
-    padding: 0;
+.loading-box {
+  height: 2rem;
+}
 
-    &:not(:hover) {
-      opacity: 0.5;
-    }
-  }
+.value-text {
+  overflow: hidden;
+  line-height: 1.1rem;
+  text-align: left;
+  text-overflow: ellipsis;
+}
 
-  .action-button {
-    padding: 0.5rem 0.25rem;
-    border-radius: 0;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    background: var(--default-backgroundColor);
-  }
-
-  .loading-box {
-    height: 2rem;
-  }
-
+.compact-mode {
   .value-text {
-    text-align: left;
     overflow: hidden;
-    text-overflow: ellipsis;
     line-height: 1.1rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-
-  .compact-mode {
-    .value-text {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.1rem;
-    }
-  }
+}
 </style>

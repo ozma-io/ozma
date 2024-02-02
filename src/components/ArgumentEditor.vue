@@ -55,11 +55,7 @@
         >
           <b-container fluid>
             <b-row class="no-gutters">
-              <b-col
-                v-for="argument in args"
-                :key="argument.name"
-                cols="12"
-              >
+              <b-col v-for="argument in args" :key="argument.name" cols="12">
                 <FormControl
                   :value="currentArguments?.[argument.name] ?? null"
                   :is-nullable="argument.isOptional"
@@ -84,164 +80,188 @@
               class="apply-button"
               @click="apply"
             >
-              {{ $t("apply") }}
+              {{ $t('apply') }}
             </b-button>
           </div>
         </div>
       </div>
       <!-- eslint-disable vue/no-deprecated-slot-attribute -->
-      <ButtonItem
-        slot="reference"
-        class="filters-button"
-        :button="button"
-      />
+      <ButtonItem slot="reference" class="filters-button" :button="button" />
     </popper>
   </fragment>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import Popper from "vue-popperjs";
-import { Debounce } from "vue-debounce-decorator";
-import { namespace } from "vuex-class";
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+import Popper from 'vue-popperjs'
+import { Debounce } from 'vue-debounce-decorator'
+import { namespace } from 'vuex-class'
 
-import { ArgumentName, AttributesMap, FieldType, ValueType } from "ozma-api";
-import { deserializeValueFunction, fieldToValueType } from "@/values";
-import FormControl from "@/components/FormControl.vue";
-import type { ConvertedBoundAttributesMap, ICombinedUserViewAny } from "@/user_views/combined";
-import { UserString, rawToUserString } from "@/state/translations";
-import { outlinedInterfaceButtonVariant } from "@/utils_colors";
-import { Button } from "./buttons/buttons";
-import ButtonItem from "./buttons/ButtonItem.vue";
-import { mapMaybe } from "@/utils";
+import { ArgumentName, AttributesMap, FieldType, ValueType } from 'ozma-api'
+import { deserializeValueFunction, fieldToValueType } from '@/values'
+import FormControl from '@/components/FormControl.vue'
+import type {
+  ConvertedBoundAttributesMap,
+  ICombinedUserViewAny,
+} from '@/user_views/combined'
+import { UserString, rawToUserString } from '@/state/translations'
+import { outlinedInterfaceButtonVariant } from '@/utils_colors'
+import { Button } from './buttons/buttons'
+import ButtonItem from './buttons/ButtonItem.vue'
+import { mapMaybe } from '@/utils'
 
 interface IArgumentInfo {
-  name: ArgumentName;
-  defaultValue: any;
-  caption: UserString;
-  fieldType: FieldType;
-  valueType: ValueType;
-  isOptional: boolean;
-  attributes: AttributesMap;
-  attributeMappings: ConvertedBoundAttributesMap;
+  name: ArgumentName
+  defaultValue: any
+  caption: UserString
+  fieldType: FieldType
+  valueType: ValueType
+  isOptional: boolean
+  attributes: AttributesMap
+  attributeMappings: ConvertedBoundAttributesMap
 }
 
 export interface IApplyArgumentsParams {
-  defaultArguments: Record<string, any>;
-  currentArguments: Record<string, any>;
+  defaultArguments: Record<string, any>
+  currentArguments: Record<string, any>
 }
 export interface IArgumentEditorProps {
-  userView: ICombinedUserViewAny;
-  applyArguments: (params: IApplyArgumentsParams) => void;
+  userView: ICombinedUserViewAny
+  applyArguments: (params: IApplyArgumentsParams) => void
 }
 
-const settings = namespace("settings");
+const settings = namespace('settings')
 
 @Component({ components: { FormControl, ButtonItem, Popper } })
 export default class ArgumentEditor extends Vue {
-  @Prop({ type: Object, required: true }) userView!: ICombinedUserViewAny;
-  @Prop({ type: Function, required: true }) applyArguments!: (params: IApplyArgumentsParams) => void;
+  @Prop({ type: Object, required: true }) userView!: ICombinedUserViewAny
+  @Prop({ type: Function, required: true }) applyArguments!: (
+    params: IApplyArgumentsParams,
+  ) => void
 
-  @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
+  @settings.Getter('developmentModeEnabled') developmentModeEnabled!: boolean
 
-  private visible = false;
-  private updatedArguments: Record<ArgumentName, unknown> = {};
+  private visible = false
+  private updatedArguments: Record<ArgumentName, unknown> = {}
 
-  @Watch("userView")
+  @Watch('userView')
   propsChanged() {
-    this.updatedArguments = {};
+    this.updatedArguments = {}
   }
 
   get defaultArguments() {
-    if (this.userView.args.args === null) return null;
+    if (this.userView.args.args === null) return null
 
-    return Object.fromEntries(mapMaybe(argInfo => {
-      if (argInfo.defaultValue !== undefined) {
-        const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
-        const value = argInfo.defaultValue && convertFunc ? convertFunc(argInfo.defaultValue) : argInfo.defaultValue;
-        console.assert(value !== undefined);
-        return [argInfo.name, value];
-      } else if (argInfo.optional) {
-        return [argInfo.name, null];
-      } else {
-        return [argInfo.name, undefined];
-      }
-    }, this.userView.info.arguments));
+    return Object.fromEntries(
+      mapMaybe((argInfo) => {
+        if (argInfo.defaultValue !== undefined) {
+          const convertFunc = deserializeValueFunction(
+            fieldToValueType(argInfo.argType),
+          )
+          const value =
+            argInfo.defaultValue && convertFunc
+              ? convertFunc(argInfo.defaultValue)
+              : argInfo.defaultValue
+          console.assert(value !== undefined)
+          return [argInfo.name, value]
+        } else if (argInfo.optional) {
+          return [argInfo.name, null]
+        } else {
+          return [argInfo.name, undefined]
+        }
+      }, this.userView.info.arguments),
+    )
   }
 
   get initialArguments() {
-    if (this.userView.args.args === null) return null;
+    if (this.userView.args.args === null) return null
 
-    return Object.fromEntries(mapMaybe(([name, rawValue]) => {
-      const argInfo = this.userView.argumentsMap[name];
-      if (argInfo === undefined) {
-        return undefined;
-      }
-      const convertFunc = deserializeValueFunction(fieldToValueType(argInfo.argType));
-      const value = rawValue && convertFunc ? convertFunc(rawValue) : rawValue;
-      return [name, value];
-    }, Object.entries(this.userView.args.args)));
+    return Object.fromEntries(
+      mapMaybe(([name, rawValue]) => {
+        const argInfo = this.userView.argumentsMap[name]
+        if (argInfo === undefined) {
+          return undefined
+        }
+        const convertFunc = deserializeValueFunction(
+          fieldToValueType(argInfo.argType),
+        )
+        const value = rawValue && convertFunc ? convertFunc(rawValue) : rawValue
+        return [name, value]
+      }, Object.entries(this.userView.args.args)),
+    )
   }
 
   get currentArguments() {
-    if (this.initialArguments === null) return null;
+    if (this.initialArguments === null) return null
 
-    return { ...this.defaultArguments, ...this.initialArguments, ...this.updatedArguments };
+    return {
+      ...this.defaultArguments,
+      ...this.initialArguments,
+      ...this.updatedArguments,
+    }
   }
 
   private get button(): Button | null {
-    if (this.userView.attributes["show_argument_editor"] || this.userView.attributes["show_argument_button"]
-      || (this.developmentModeEnabled && Object.keys(this.userView.argumentsMap).length > 0)) {
+    if (
+      this.userView.attributes['show_argument_editor'] ||
+      this.userView.attributes['show_argument_button'] ||
+      (this.developmentModeEnabled &&
+        Object.keys(this.userView.argumentsMap).length > 0)
+    ) {
       return {
         // TODO: Add 'expand' icon on the right to match design from Figma.
-        type: "callback",
+        type: 'callback',
         variant: outlinedInterfaceButtonVariant,
-        icon: "filter_list",
-        caption: this.$t("filters").toString(),
-        tooltip: "",
+        icon: 'filter_list',
+        caption: this.$t('filters').toString(),
+        tooltip: '',
         callback: () => {
-          this.visible = !this.visible;
+          this.visible = !this.visible
         },
-      };
+      }
     }
 
-    return null;
+    return null
   }
 
   apply() {
-    if (this.defaultArguments === null || this.currentArguments === null) return;
+    if (this.defaultArguments === null || this.currentArguments === null) return
 
     this.applyArguments({
       defaultArguments: this.defaultArguments,
       currentArguments: this.currentArguments,
-    });
+    })
   }
 
   @Debounce(500)
   private debouncedApply() {
-    this.apply();
+    this.apply()
   }
 
   private get autoApply() {
-    return this.userView.attributes["confirm_argument_changes"] === undefined
-      || !this.userView.attributes["confirm_argument_changes"];
+    return (
+      this.userView.attributes['confirm_argument_changes'] === undefined ||
+      !this.userView.attributes['confirm_argument_changes']
+    )
   }
 
   private updateArgument(argument: IArgumentInfo, rawValue: unknown) {
-    Vue.set(this.updatedArguments, argument.name, rawValue);
+    Vue.set(this.updatedArguments, argument.name, rawValue)
 
     if (this.autoApply) {
-      this.debouncedApply();
+      this.debouncedApply()
     }
   }
 
   private get args(): IArgumentInfo[] {
-    return this.userView.info.arguments.map(parameter => {
-      const attributes = this.userView.argumentAttributes[parameter.name] ?? {};
-      const attributeMappings = this.userView.argumentAttributeMappings[parameter.name] ?? {};
-      const caption = rawToUserString(attributes["caption"]) ?? parameter.name;
-      const type = parameter.argType;
-      const isOptional = parameter.optional || parameter.defaultValue !== undefined;
+    return this.userView.info.arguments.map((parameter) => {
+      const attributes = this.userView.argumentAttributes[parameter.name] ?? {}
+      const attributeMappings =
+        this.userView.argumentAttributeMappings[parameter.name] ?? {}
+      const caption = rawToUserString(attributes['caption']) ?? parameter.name
+      const type = parameter.argType
+      const isOptional =
+        parameter.optional || parameter.defaultValue !== undefined
 
       return {
         name: parameter.name,
@@ -252,8 +272,8 @@ export default class ArgumentEditor extends Vue {
         isOptional,
         attributes,
         attributeMappings,
-      };
-    });
+      }
+    })
   }
 }
 </script>
@@ -264,11 +284,11 @@ export default class ArgumentEditor extends Vue {
 }
 
 .arguments-editor {
-  max-height: 30rem;
-  width: min(30rem, 90vw);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: min(30rem, 90vw);
+  max-height: 30rem;
   text-align: left;
 
   .container-fluid {
@@ -276,7 +296,6 @@ export default class ArgumentEditor extends Vue {
     overflow: auto;
 
     ::v-deep .row > .col-12 {
-
       &:not(:last-child) {
         margin-bottom: 0.75rem;
       }

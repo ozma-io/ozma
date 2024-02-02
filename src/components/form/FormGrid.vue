@@ -1,8 +1,5 @@
 <template>
-  <b-container
-    fluid
-    class="form_container"
-  >
+  <b-container fluid class="form_container">
     <b-row class="sm-gutters">
       <FormGridBlock
         v-for="(block, blockI) in gridContent"
@@ -20,36 +17,36 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop } from 'vue-property-decorator'
 
-import FormGridBlock from "@/components/form/FormGridBlock.vue";
+import FormGridBlock from '@/components/form/FormGridBlock.vue'
 
 export interface IGridBase {
-  size: number;
+  size: number
 }
 
 export interface IGridInput<T> extends IGridBase {
-  type: "element";
-  element: T;
+  type: 'element'
+  element: T
 }
 
 export interface IGridSection<T> extends IGridBase {
-  type: "section";
-  content: GridElement<T>[];
-  singleUserViewSection?: boolean;
-  hasNoContent?: boolean;
+  type: 'section'
+  content: GridElement<T>[]
+  singleUserViewSection?: boolean
+  hasNoContent?: boolean
 }
 
-export type GridElement<T> = IGridInput<T> | IGridSection<T>;
+export type GridElement<T> = IGridInput<T> | IGridSection<T>
 
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {
-  @Prop({ type: Array }) gridContent!: GridElement<any>[];
+  @Prop({ type: Array }) gridContent!: GridElement<any>[]
 }
 </script>
 
 <style lang="scss" scoped>
-  .form_container {
-    padding: 0;
-  }
+.form_container {
+  padding: 0;
+}
 </style>

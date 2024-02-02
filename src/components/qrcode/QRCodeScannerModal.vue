@@ -12,11 +12,7 @@
   }
 </i18n>
 <template>
-  <b-modal
-    ref="modal"
-    hide-footer
-    :title="$t('qrcode_scanner')"
-  >
+  <b-modal ref="modal" hide-footer :title="$t('qrcode_scanner')">
     <QRCodeScanner
       :multi-scan="multiScan"
       :text-input="textInput"
@@ -31,39 +27,39 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import type { IEntityRef } from "ozma-api";
+import { Component, Prop, Vue } from 'vue-property-decorator'
+import type { IEntityRef } from 'ozma-api'
 
-import type { Link } from "@/links";
-import { IQRCode } from "@/components/qrcode/QRCode.vue";
-import { EntriesRef } from "@/state/entries";
-import { IQuery } from "@/state/query";
+import type { Link } from '@/links'
+import { IQRCode } from '@/components/qrcode/QRCode.vue'
+import { EntriesRef } from '@/state/entries'
+import { IQuery } from '@/state/query'
 
 @Component({
   components: {
-    QRCodeScanner: () => import("@/components/qrcode/QRCodeScanner.vue"),
+    QRCodeScanner: () => import('@/components/qrcode/QRCodeScanner.vue'),
   },
 })
 export default class QRCodeScannerModal extends Vue {
-  @Prop({ type: Boolean, default: false }) multiScan!: boolean;
-  @Prop({ type: Boolean, default: false }) textInput!: boolean;
-  @Prop({ type: Boolean, default: false }) raw!: boolean;
-  @Prop({ type: Object }) link!: Link | undefined;
-  @Prop({ type: Object }) entries!: EntriesRef | undefined;
-  @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined;
+  @Prop({ type: Boolean, default: false }) multiScan!: boolean
+  @Prop({ type: Boolean, default: false }) textInput!: boolean
+  @Prop({ type: Boolean, default: false }) raw!: boolean
+  @Prop({ type: Object }) link!: Link | undefined
+  @Prop({ type: Object }) entries!: EntriesRef | undefined
+  @Prop({ type: Object }) referenceEntity!: IEntityRef | undefined
 
   scan() {
-    (this.$refs.modal as any).show();
+    ;(this.$refs.modal as any).show()
   }
 
   private onSelect(result: IQRCode) {
-    (this.$refs.modal as any).hide();
-    this.$emit("select", result);
+    ;(this.$refs.modal as any).hide()
+    this.$emit('select', result)
   }
 
   private onBeforeHandler(result: IQuery) {
-    (this.$refs.modal as any).hide();
-    this.$emit("before-handler", result);
+    ;(this.$refs.modal as any).hide()
+    this.$emit('before-handler', result)
   }
 }
 </script>

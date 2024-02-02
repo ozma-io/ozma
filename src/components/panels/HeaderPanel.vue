@@ -21,16 +21,13 @@
               'userview-title',
               {
                 'is-loading': isLoading,
-              }
+              },
             ]"
           >
             {{ $ustOrEmpty(title) }}
           </h1>
         </div>
-        <div
-          v-else
-          class="userview-title-wrapper"
-        >
+        <div v-else class="userview-title-wrapper">
           <h2
             v-b-tooltip.click.blur.bottom.noninteractive.viewport
             tabindex="0"
@@ -80,7 +77,15 @@
         </div>
       </div>
     </div>
-    <div v-if="$isMobile && (headerButtons.length > 0 || Object.keys(argumentEditorProps?.userView.argumentsMap ?? {}).length > 0)" class="second-row">
+    <div
+      v-if="
+        $isMobile &&
+        (headerButtons.length > 0 ||
+          Object.keys(argumentEditorProps?.userView.argumentsMap ?? {}).length >
+            0)
+      "
+      class="second-row"
+    >
       <ButtonsPanel
         class="second-row-button-panel"
         :buttons="headerButtons"
@@ -96,21 +101,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import Popper from "vue-popperjs";
+import { Component, Vue, Prop } from 'vue-property-decorator'
+import Popper from 'vue-popperjs'
 
-import type { IUserViewType } from "@/components/FormControl.vue";
-import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import type { Button } from "@/components/buttons/buttons";
-import { buttonsToPanelButtons } from "@/components/buttons/buttons";
-import SearchPanel from "@/components/SearchPanel.vue";
-import { interfaceButtonVariant } from "@/utils_colors";
-import { UserString } from "@/state/translations";
+import type { IUserViewType } from '@/components/FormControl.vue'
+import ButtonItem from '@/components/buttons/ButtonItem.vue'
+import type { Button } from '@/components/buttons/buttons'
+import { buttonsToPanelButtons } from '@/components/buttons/buttons'
+import SearchPanel from '@/components/SearchPanel.vue'
+import { interfaceButtonVariant } from '@/utils_colors'
+import { UserString } from '@/state/translations'
 import ArgumentEditor, {
   IArgumentEditorProps,
-} from "@/components/ArgumentEditor.vue";
+} from '@/components/ArgumentEditor.vue'
 
-const isHelpButton = (button: Button) => button.icon === "help_outline";
+const isHelpButton = (button: Button) => button.icon === 'help_outline'
 
 @Component({
   components: {
@@ -121,63 +126,65 @@ const isHelpButton = (button: Button) => button.icon === "help_outline";
   },
 })
 export default class HeaderPanel extends Vue {
-  @Prop() title!: UserString | undefined;
-  @Prop({ type: Array, required: true }) buttons!: Button[];
-  @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean;
-  @Prop({ type: Object }) view!: IUserViewType | undefined;
-  @Prop({ type: String, required: true }) filterString!: string;
-  @Prop({ type: Boolean, default: false }) isLoading!: boolean;
-  @Prop({ type: Object }) argumentEditorProps!: IArgumentEditorProps | null;
-  @Prop({ type: String }) type!: "root" | "modal" | "nested" | undefined;
+  @Prop() title!: UserString | undefined
+  @Prop({ type: Array, required: true }) buttons!: Button[]
+  @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean
+  @Prop({ type: Object }) view!: IUserViewType | undefined
+  @Prop({ type: String, required: true }) filterString!: string
+  @Prop({ type: Boolean, default: false }) isLoading!: boolean
+  @Prop({ type: Object }) argumentEditorProps!: IArgumentEditorProps | null
+  @Prop({ type: String }) type!: 'root' | 'modal' | 'nested' | undefined
 
   get extraButtons() {
-    return [buttonsToPanelButtons(this.buttons).extraButton];
+    return [buttonsToPanelButtons(this.buttons).extraButton]
   }
   get fullscreenButtons() {
-    return this.fullscreenButton ? [this.fullscreenButton] : [];
+    return this.fullscreenButton ? [this.fullscreenButton] : []
   }
   // We want help button in a different place so we separate it from the rest.
   get helpButtons() {
-    return buttonsToPanelButtons(this.buttons).panelButtons.filter(isHelpButton);
+    return buttonsToPanelButtons(this.buttons).panelButtons.filter(isHelpButton)
   }
   get headerButtons() {
-    return buttonsToPanelButtons(this.buttons).panelButtons.filter(button => !isHelpButton(button));
+    return buttonsToPanelButtons(this.buttons).panelButtons.filter(
+      (button) => !isHelpButton(button),
+    )
   }
 
   private get fullscreenButton(): Button | null {
     if (!this.view) {
-      return null;
+      return null
     }
     return {
-      type: "link",
+      type: 'link',
       variant: interfaceButtonVariant,
-      icon: "fullscreen",
+      icon: 'fullscreen',
       link: {
-        type: "query",
-        target: this.type === "modal" ? "top" : "root",
+        type: 'query',
+        target: this.type === 'modal' ? 'top' : 'root',
         query: this.view,
       },
-    };
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .header-panel {
-  width: 100%;
-  padding: 0.5rem;
-  padding-top: 0.65rem;
-  padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 0.5rem;
+  padding-top: 0.65rem;
+  padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
+  width: 100%;
   @include mobile {
     padding: 0.5rem 0 0.5rem 0;
   }
 }
 .first-row {
-  flex-grow: 1;
   display: flex;
+  flex-grow: 1;
   flex-direction: row;
   justify-content: space-between;
   align-items: stretch;
@@ -185,10 +192,10 @@ export default class HeaderPanel extends Vue {
   color: var(--default-foregroundColor);
 }
 .second-row {
-  padding: 0 0.75rem;
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+  padding: 0 0.75rem;
 
   .second-row-button-panel {
     flex: 1;
@@ -197,8 +204,8 @@ export default class HeaderPanel extends Vue {
 
     ::v-deep {
       .button-element {
-        flex-shrink: 0;
         flex-grow: 0;
+        flex-shrink: 0;
 
         &:first-child {
           margin-left: auto;
@@ -209,27 +216,27 @@ export default class HeaderPanel extends Vue {
 }
 
 .left-part {
-  overflow: hidden;
   flex: 1 0 13rem;
+  overflow: hidden;
   @include mobile {
     flex: 1 0 0;
   }
 
   > .left-slot {
+    flex-shrink: 0;
     /* Looks like it should be a padding, but due to `overflow-hidden` mechanic it must be margin,
          see https://foobartel.com/tilrs/overflow-x-and-borders */
     margin: 0.25rem;
     margin-left: 0.5rem;
-    flex-shrink: 0;
   }
 }
 
 .middle-part {
-  padding: 0.25rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.25rem;
   overflow-x: hidden;
   @include mobile {
     padding-left: 0;
@@ -241,13 +248,13 @@ export default class HeaderPanel extends Vue {
 }
 
 .right-part {
-  padding-left: 0.25rem;
-  padding-right: 0.75rem;
-  overflow-x: auto;
-  overflow-y: hidden;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding-right: 0.75rem;
+  padding-left: 0.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
 
   @include mobile {
     overflow-x: hidden;
@@ -272,28 +279,28 @@ export default class HeaderPanel extends Vue {
 }
 
 .userview-title-wrapper {
-  padding-right: 0.25rem;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
+  padding-right: 0.25rem;
   overflow-x: hidden;
 }
 
 .userview-title {
   margin: 0.5rem;
-  margin-left: 0;
   margin-right: auto;
+  margin-left: 0;
+  overflow: hidden;
+  color: var(--MainTextColor);
   font-weight: 600;
   font-size: 1.25em;
-  color: var(--MainTextColor);
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: pre;
 
   &.is-loading {
-    color: var(--MainTextColorLight);
     opacity: 0.6;
+    color: var(--MainTextColorLight);
   }
 
   .header-panel:not(.is-root) & {
@@ -303,9 +310,9 @@ export default class HeaderPanel extends Vue {
 }
 
 .fullscreen_button {
-  background: none;
-  border: none;
   cursor: pointer;
+  border: none;
+  background: none;
   color: var(--MainTextColor);
 }
 </style>

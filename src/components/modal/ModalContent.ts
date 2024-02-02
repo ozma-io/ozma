@@ -1,13 +1,13 @@
-import Vue, { VNode } from "vue";
+import Vue, { VNode } from 'vue'
 
 export default Vue.extend({
-  name: "ModalContent",
+  name: 'ModalContent',
   functional: true,
   props: {
     // eslint-disable-next-line vue/require-prop-types
-    content: { },
+    content: {},
   },
   render: (createElement, ctx) => {
-    return ctx.props.content as VNode | VNode[];
+    return ctx.props.content as VNode | VNode[]
   },
-});
+})

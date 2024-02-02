@@ -1,9 +1,7 @@
 {
   "extends": "stylelint-config-standard",
   "defaultSeverity": "warning",
-  "plugins": [
-    "stylelint-scss"
-  ],
+  "plugins": ["stylelint-scss"],
   "rules": {
     "indentation": [
       2,
@@ -14,9 +12,7 @@
     "selector-pseudo-element-no-unknown": [
       true,
       {
-        "ignorePseudoElements": [
-          "v-deep"
-        ]
+        "ignorePseudoElements": ["v-deep"]
       }
     ],
     "at-rule-no-unknown": null,

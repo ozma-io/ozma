@@ -1,43 +1,45 @@
-import {
-  IUserViewHandler,
-} from "@/user_views/combined";
+import { IUserViewHandler } from '@/user_views/combined'
 
 export const emptyUserViewHandlerFunctions = {
-  updateValue() { },
-  updateAddedValue() { },
-  updateEmptyValue() { },
-  deleteRow() { },
-  undeleteRow() { },
-  deleteAddedRow() { },
-  undeleteAddedRow() { },
-  postInitUserView() { },
-  postInitRow() { },
-  postInitAddedRow() { },
-  postInitEmptyRow() { },
-  commitAddedRow() { },
-};
+  updateValue() {},
+  updateAddedValue() {},
+  updateEmptyValue() {},
+  deleteRow() {},
+  undeleteRow() {},
+  deleteAddedRow() {},
+  undeleteAddedRow() {},
+  postInitUserView() {},
+  postInitRow() {},
+  postInitAddedRow() {},
+  postInitEmptyRow() {},
+  commitAddedRow() {},
+}
 
-export const emptyUserViewHandler: IUserViewHandler<undefined, undefined, undefined> = {
+export const emptyUserViewHandler: IUserViewHandler<
+  undefined,
+  undefined,
+  undefined
+> = {
   createLocalUserView() {
-    return undefined;
+    return undefined
   },
   createLocalRow() {
-    return undefined;
+    return undefined
   },
   createLocalValue() {
-    return undefined;
+    return undefined
   },
   createAddedLocalValue() {
-    return undefined;
+    return undefined
   },
   createEmptyLocalRow() {
-    return undefined;
+    return undefined
   },
   createAddedLocalRow() {
-    return undefined;
+    return undefined
   },
   createEmptyLocalValue() {
-    return undefined;
+    return undefined
   },
   ...emptyUserViewHandlerFunctions,
-};
+}

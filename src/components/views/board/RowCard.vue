@@ -17,10 +17,7 @@
         v-for="(col, colIndex) in row"
         :key="colIndex"
         :cols="col.size"
-        :class="[
-          'card-col',
-          col.cellVariantClass
-        ]"
+        :class="['card-col', col.cellVariantClass]"
         :styles="col.cellVariantStyles"
       >
         <div
@@ -28,14 +25,14 @@
           class="card-avatar"
           :style="{ backgroundImage: `url('${col.url}')` }"
         />
-        <span
-          v-else
-          class="card-text"
-        >
+        <span v-else class="card-text">
           <!-- TODO: Remove `getIconType` method call from template -->
           <span
             v-if="col.icon && col.textHtml"
-            :class="['card-icon', { 'material-icons md-18': getIconType(col.icon) === 'material' }]"
+            :class="[
+              'card-icon',
+              { 'material-icons md-18': getIconType(col.icon) === 'material' },
+            ]"
           >
             {{ col.icon }}
           </span>
@@ -53,96 +50,99 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator'
 
-import { Link } from "@/links";
-import { RowRef } from "@/user_views/combined";
-import { getIconType } from "@/utils";
-import { ColorVariantFullClassName, ColorVariantCssVariables } from "@/utils_colors";
+import { Link } from '@/links'
+import { RowRef } from '@/user_views/combined'
+import { getIconType } from '@/utils'
+import {
+  ColorVariantFullClassName,
+  ColorVariantCssVariables,
+} from '@/utils_colors'
 
 export interface ICardColumnBase {
-  size: number;
+  size: number
 }
 
 export interface ITextCardColumn extends ICardColumnBase {
-  type: "text";
-  icon: string | null;
-  textHtml: string;
-  hasLinks: boolean;
-  cellVariantClass: ColorVariantFullClassName | null;
-  cellVariantStyles: ColorVariantCssVariables | null;
+  type: 'text'
+  icon: string | null
+  textHtml: string
+  hasLinks: boolean
+  cellVariantClass: ColorVariantFullClassName | null
+  cellVariantStyles: ColorVariantCssVariables | null
 }
 
 export interface IImageCardColumn extends ICardColumnBase {
-  type: "image";
-  url: string;
+  type: 'image'
+  url: string
 }
 
-export type CardColumn = ITextCardColumn | IImageCardColumn;
+export type CardColumn = ITextCardColumn | IImageCardColumn
 
-export type CardRow = CardColumn[];
+export type CardRow = CardColumn[]
 
 export interface IRowCard {
-  group: unknown;
-  order: number | null;
-  ref: RowRef;
-  link: Link | null;
-  rows: CardRow[];
+  group: unknown
+  order: number | null
+  ref: RowRef
+  link: Link | null
+  rows: CardRow[]
 }
 
 @Component
 export default class RowCard extends Vue {
-  @Prop({ type: Object, required: true }) card!: IRowCard;
-  @Prop({ type: Boolean, default: false }) dragged!: boolean;
+  @Prop({ type: Object, required: true }) card!: IRowCard
+  @Prop({ type: Boolean, default: false }) dragged!: boolean
 
   private getIconType(icon: string) {
-    return getIconType(icon);
+    return getIconType(icon)
   }
 
   // We need to prevent clicks if row has links, otherwise click on link opens a card also.
   private handleClick(event: MouseEvent, stopPropagation: boolean) {
     if (stopPropagation) {
-      event.stopPropagation();
+      event.stopPropagation()
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .card-link {
-    padding: 0.75rem;
-    display: block;
-    cursor: pointer;
-    user-select: none;
-  }
+.card-link {
+  display: block;
+  cursor: pointer;
+  padding: 0.75rem;
+  user-select: none;
+}
 
-  .card-row:not(:last-child) {
-    margin-bottom: 0.5rem;
-  }
+.card-row:not(:last-child) {
+  margin-bottom: 0.5rem;
+}
 
-  .card-col {
-    padding: 0 0.25rem 0 0.25rem;
-    background-color: var(--backgroundDarker1Color);
-    border-radius: 0.5rem;
-  }
+.card-col {
+  border-radius: 0.5rem;
+  background-color: var(--backgroundDarker1Color);
+  padding: 0 0.25rem 0 0.25rem;
+}
 
-  .card-text {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--foregroundColor, --kanbanCard-foregroundColor);
-  }
+.card-text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  overflow: hidden;
+  color: var(--foregroundColor, --kanbanCard-foregroundColor);
+  text-overflow: ellipsis;
+}
 
-  .card-icon {
-    margin-right: 0.25rem;
-    font-size: 1.3rem;
-  }
+.card-icon {
+  margin-right: 0.25rem;
+  font-size: 1.3rem;
+}
 
-  .card-text-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.card-text-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

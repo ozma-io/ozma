@@ -12,7 +12,7 @@
         // Nested poppers cannot appear outside the parent element if overflow is enabled.
         preventOverflow: { enabled: !listItem, boundariesElement: 'viewport' },
         hide: { enabled: !listItem },
-      }
+      },
     }"
     :disabled="!show"
     :force-show="show"
@@ -36,12 +36,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import Popper from "vue-popperjs";
+import { Component, Vue, Prop } from 'vue-property-decorator'
+import Popper from 'vue-popperjs'
 
-import type { IButton, IButtonGroup } from "@/components/buttons/buttons";
-import ButtonView from "@/components/buttons/ButtonView.vue";
-import ButtonList from "@/components/buttons/ButtonList.vue";
+import type { IButton, IButtonGroup } from '@/components/buttons/buttons'
+import ButtonView from '@/components/buttons/ButtonView.vue'
+import ButtonList from '@/components/buttons/ButtonList.vue'
 
 @Component({
   components: {
@@ -51,38 +51,37 @@ import ButtonList from "@/components/buttons/ButtonList.vue";
   },
 })
 export default class ButtonsPanel extends Vue {
-  @Prop({ type: Object, required: true }) button!: IButtonGroup;
-  @Prop({ type: Boolean, default: false }) listItem!: boolean;
+  @Prop({ type: Object, required: true }) button!: IButtonGroup
+  @Prop({ type: Boolean, default: false }) listItem!: boolean
 
-  private show = false;
+  private show = false
 
   onReferenceClick() {
-    this.show = !this.show;
+    this.show = !this.show
   }
 
   onDocumentClick() {
-    this.show = false;
+    this.show = false
   }
 
   onInnerButtonClick(button: IButton) {
-    this.$emit("button-click", button);
+    this.$emit('button-click', button)
 
     if (!button.keepButtonGroupOpened) {
-      this.show = false;
+      this.show = false
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .popper {
-    border: none;
-    border-radius: 0.5rem;
-  }
+.popper {
+  border: none;
+  border-radius: 0.5rem;
+}
 
-  .list-group {
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-
+.list-group {
+  max-height: 60vh;
+  overflow-y: auto;
+}
 </style>

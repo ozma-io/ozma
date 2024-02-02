@@ -1,16 +1,25 @@
-"use strict";
+'use strict'
 
 module.exports = {
   presets: [
-    ['@vue/app', {
-      "exclude": ["babel-plugin-transform-async-to-generator", "babel-plugin-transform-regenerator"]
-    }]
+    [
+      '@vue/app',
+      {
+        exclude: [
+          'babel-plugin-transform-async-to-generator',
+          'babel-plugin-transform-regenerator',
+        ],
+      },
+    ],
   ],
-  "plugins": [
-    ["module:fast-async", {
-      "spec": true,
-      "useRuntimeModule": false
-    }],
-    "ramda"
-  ]
+  plugins: [
+    [
+      'module:fast-async',
+      {
+        spec: true,
+        useRuntimeModule: false,
+      },
+    ],
+    'ramda',
+  ],
 }

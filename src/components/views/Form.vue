@@ -32,7 +32,10 @@
 
 <template>
   <div
-    :class="['view-form', { 'contains-only-one-iframe': containsOnlyOneIframe }]"
+    :class="[
+      'view-form',
+      { 'contains-only-one-iframe': containsOnlyOneIframe },
+    ]"
   >
     <Errorbox
       v-if="rowPositions.length === 0 && firstRow === null"
@@ -52,13 +55,8 @@
         {{ $t('delete_confirmation') }}
       </b-modal>
 
-      <div
-        v-if="showPagination"
-        class="pagination-wrapper"
-      >
-        <div
-          class="pagination"
-        >
+      <div v-if="showPagination" class="pagination-wrapper">
+        <div class="pagination">
           <b-spinner
             v-if="uv.extra.lazyLoad.pagination.loading"
             class="mr-1"
@@ -69,7 +67,10 @@
           <ButtonItem :button="prevPageButton" />
           <div class="current-page-wrapper">
             <div class="current-page">
-              {{ currentVisualPage }}<span v-if="pagesCount !== null" class="pages-count">{{ "/" + pagesCount }}</span>
+              {{ currentVisualPage
+              }}<span v-if="pagesCount !== null" class="pages-count">{{
+                '/' + pagesCount
+              }}</span>
             </div>
           </div>
           <ButtonItem :button="nextPageButton" />
@@ -89,7 +90,9 @@
         :level="level"
         :is-top-level="isTopLevel"
         :show-delete="useDeleteAction.type === 'show'"
-        @update="updateValue({ ...firstRow.ref, column: arguments[0] }, arguments[1])"
+        @update="
+          updateValue({ ...firstRow.ref, column: arguments[0] }, arguments[1])
+        "
         @delete="confirmDelete(firstRow.ref)"
         @goto="$emit('goto', $event)"
       />
@@ -104,7 +107,12 @@
         :level="level"
         :is-top-level="isTopLevel"
         :show-delete="useDeleteAction.type === 'show'"
-        @update="updateValue({ type: 'added', id: rowId, column: arguments[0] }, arguments[1])"
+        @update="
+          updateValue(
+            { type: 'added', id: rowId, column: arguments[0] },
+            arguments[1],
+          )
+        "
         @delete="confirmDelete({ type: 'added', id: rowId })"
         @goto="$emit('goto', $event)"
       />
@@ -120,7 +128,12 @@
         :is-top-level="isTopLevel"
         :selection-mode="selectionMode"
         :show-delete="useDeleteAction.type === 'show'"
-        @update="updateValue({ type: 'existing', position: rowI, column: arguments[0] }, arguments[1])"
+        @update="
+          updateValue(
+            { type: 'existing', position: rowI, column: arguments[0] },
+            arguments[1],
+          )
+        "
         @delete="confirmDelete({ type: 'existing', position: rowI })"
         @goto="$emit('goto', $event)"
         @select="$emit('select', $event)"
@@ -147,88 +160,118 @@
 </template>
 
 <script lang="ts">
-import { Component, Watch } from "vue-property-decorator";
-import { mixins } from "vue-class-component";
-import { IResultColumnInfo, ValueType } from "ozma-api";
-import { namespace } from "vuex-class";
-import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
+import { Component, Watch } from 'vue-property-decorator'
+import { mixins } from 'vue-class-component'
+import { IResultColumnInfo, ValueType } from 'ozma-api'
+import { namespace } from 'vuex-class'
+import InfiniteLoading, { StateChanger } from 'vue-infinite-loading'
 
-import { tryDicts, mapMaybe } from "@/utils";
-import { interfaceButtonVariant, bootstrapVariantAttribute } from "@/utils_colors";
-import { UserView } from "@/components";
-import Errorbox from "@/components/Errorbox.vue";
-import BaseUserView, { baseUserViewHandler, IBaseRowExtra, IBaseValueExtra, IBaseViewExtra } from "@/components/BaseUserView";
-import FormEntry from "@/components/views/form/FormEntry.vue";
-import { attrToLink, Link } from "@/links";
-import { ICurrentQueryHistory } from "@/state/query";
-import { ICombinedUserView, IExtendedRowCommon, IExtendedRowInfo, IUserViewHandler, RowRef } from "@/user_views/combined";
-import { GridElement, IGridInput, IGridSection } from "@/components/form/FormGrid.vue";
-import type { Button } from "@/components/buttons/buttons";
-import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import { ITableLazyLoad, TableLazyLoad } from "./Table.vue";
-import { UserString, rawToUserString } from "@/state/translations";
+import { tryDicts, mapMaybe } from '@/utils'
+import {
+  interfaceButtonVariant,
+  bootstrapVariantAttribute,
+} from '@/utils_colors'
+import { UserView } from '@/components'
+import Errorbox from '@/components/Errorbox.vue'
+import BaseUserView, {
+  baseUserViewHandler,
+  IBaseRowExtra,
+  IBaseValueExtra,
+  IBaseViewExtra,
+} from '@/components/BaseUserView'
+import FormEntry from '@/components/views/form/FormEntry.vue'
+import { attrToLink, Link } from '@/links'
+import { ICurrentQueryHistory } from '@/state/query'
+import {
+  ICombinedUserView,
+  IExtendedRowCommon,
+  IExtendedRowInfo,
+  IUserViewHandler,
+  RowRef,
+} from '@/user_views/combined'
+import {
+  GridElement,
+  IGridInput,
+  IGridSection,
+} from '@/components/form/FormGrid.vue'
+import type { Button } from '@/components/buttons/buttons'
+import ButtonItem from '@/components/buttons/ButtonItem.vue'
+import { ITableLazyLoad, TableLazyLoad } from './Table.vue'
+import { UserString, rawToUserString } from '@/state/translations'
 
 export interface IButtonAction {
-  name: UserString;
-  variant: string;
-  link: Link;
+  name: UserString
+  variant: string
+  link: Link
 }
 
 export interface IElementField {
-  type: "field";
-  index: number;
-  columnInfo: IResultColumnInfo;
-  caption: UserString;
-  forceCaption: boolean;
-  autofocus: boolean;
+  type: 'field'
+  index: number
+  columnInfo: IResultColumnInfo
+  caption: UserString
+  forceCaption: boolean
+  autofocus: boolean
 }
 
 export interface IElementButtons {
-  type: "buttons";
-  actions: IButtonAction[];
+  type: 'buttons'
+  actions: IButtonAction[]
 }
 
-export type FormElement = IElementField | IElementButtons;
+export type FormElement = IElementField | IElementButtons
 
-export type FormGridElement = GridElement<FormElement>;
+export type FormGridElement = GridElement<FormElement>
 
 export interface IFormValueExtra extends IBaseValueExtra {
-  valueFormatted?: string; // Used at least for read-only number inputs.
+  valueFormatted?: string // Used at least for read-only number inputs.
 }
 
-export type IFormRowExtra = IBaseRowExtra;
+export type IFormRowExtra = IBaseRowExtra
 
-export const FormLazyLoad = TableLazyLoad;
-type IFormLazyLoad = ITableLazyLoad;
+export const FormLazyLoad = TableLazyLoad
+type IFormLazyLoad = ITableLazyLoad
 
-const showStep = 3;
+const showStep = 3
 
 export interface IFormViewExtra extends IBaseViewExtra {
-  lazyLoad: IFormLazyLoad;
+  lazyLoad: IFormLazyLoad
 }
 
-export type IFormCombinedUserView = ICombinedUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>;
-export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>;
-export type IFormExtendedRowCommon = IExtendedRowCommon<IFormValueExtra, IFormRowExtra>;
-export const numberTypes: (ValueType["type"])[] = ["int", "decimal"];
+export type IFormCombinedUserView = ICombinedUserView<
+  IFormValueExtra,
+  IFormRowExtra,
+  IFormViewExtra
+>
+export type IFormExtendedRowInfo = IExtendedRowInfo<IFormRowExtra>
+export type IFormExtendedRowCommon = IExtendedRowCommon<
+  IFormValueExtra,
+  IFormRowExtra
+>
+export const numberTypes: ValueType['type'][] = ['int', 'decimal']
 
-export const formUserViewHandler: IUserViewHandler<IFormValueExtra, IFormRowExtra, IFormViewExtra> = {
+export const formUserViewHandler: IUserViewHandler<
+  IFormValueExtra,
+  IFormRowExtra,
+  IFormViewExtra
+> = {
   ...baseUserViewHandler,
 
   createLocalUserView(uv: IFormCombinedUserView, oldView?: IFormViewExtra) {
-    const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView);
+    const baseExtra = baseUserViewHandler.createLocalUserView(uv, oldView)
 
-    const lazyLoad = oldView?.lazyLoad ?? FormLazyLoad.parse(uv.attributes["lazy_load"]);
+    const lazyLoad =
+      oldView?.lazyLoad ?? FormLazyLoad.parse(uv.attributes['lazy_load'])
 
     return {
       ...baseExtra,
       lazyLoad,
-    };
+    }
   },
-};
+}
 
-const query = namespace("query");
-const settings = namespace("settings");
+const query = namespace('query')
+const settings = namespace('settings')
 
 @UserView({
   handler: formUserViewHandler,
@@ -242,362 +285,436 @@ const settings = namespace("settings");
     InfiniteLoading,
   },
 })
-export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>>(BaseUserView) {
-  @query.State("current") query!: ICurrentQueryHistory | null;
-  @settings.Getter("businessModeEnabled") businessModeEnabled!: boolean;
-  private deletedOne = false;
-  private toBeDeletedRef: RowRef | null = null;
+export default class UserViewForm extends mixins<
+  BaseUserView<IFormValueExtra, IFormRowExtra, IFormViewExtra>
+>(BaseUserView) {
+  @query.State('current') query!: ICurrentQueryHistory | null
+  @settings.Getter('businessModeEnabled') businessModeEnabled!: boolean
+  private deletedOne = false
+  private toBeDeletedRef: RowRef | null = null
 
   private get showPagination() {
-    return this.uv.extra.lazyLoad.type === "pagination"
-      && this.uv.rowLoadState.fetchedRowCount >= this.uv.extra.lazyLoad.pagination.perPage;
+    return (
+      this.uv.extra.lazyLoad.type === 'pagination' &&
+      this.uv.rowLoadState.fetchedRowCount >=
+        this.uv.extra.lazyLoad.pagination.perPage
+    )
   }
 
   private get useInfiniteScrolling() {
-    return this.uv.extra.lazyLoad.type === "infinite_scroll"
-      && (!this.uv.rowLoadState.complete
-      || this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength < this.uv.rowLoadState.fetchedRowCount);
+    return (
+      this.uv.extra.lazyLoad.type === 'infinite_scroll' &&
+      (!this.uv.rowLoadState.complete ||
+        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength <
+          this.uv.rowLoadState.fetchedRowCount)
+    )
   }
 
   private get nextPageButton(): Button | null {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return null
 
     return {
-      type: "callback",
-      icon: "navigate_next",
+      type: 'callback',
+      icon: 'navigate_next',
       variant: interfaceButtonVariant,
-      disabled: (this.uv.rowLoadState.complete && this.onLastPage)
-        || (this.uv.extra.lazyLoad.type === "pagination" && this.uv.extra.lazyLoad.pagination.loading),
+      disabled:
+        (this.uv.rowLoadState.complete && this.onLastPage) ||
+        (this.uv.extra.lazyLoad.type === 'pagination' &&
+          this.uv.extra.lazyLoad.pagination.loading),
       callback: () => this.goToNextPage(),
-    };
+    }
   }
 
   private get prevPageButton(): Button | null {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return null
 
     return {
-      type: "callback",
-      icon: "navigate_before",
+      type: 'callback',
+      icon: 'navigate_before',
       variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPrevPage(),
-    };
+    }
   }
 
   private get firstPageButton(): Button | null {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return null;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return null
     return {
-      type: "callback",
-      icon: "first_page",
+      type: 'callback',
+      icon: 'first_page',
       variant: interfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPage(0),
-    };
+    }
   }
 
   private goToPrevPage() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
 
     if (this.uv.extra.lazyLoad.pagination.currentPage > 0) {
-      this.uv.extra.lazyLoad.pagination.currentPage--;
+      this.uv.extra.lazyLoad.pagination.currentPage--
     }
   }
 
   private goToNextPage() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
 
     if (this.nextPageRequiresLoading) {
-      this.uv.extra.lazyLoad.pagination.loading = true;
-      this.$emit("load-next-chunk", () => {
-        if (this.uv.extra.lazyLoad.type !== "pagination") return;
+      this.uv.extra.lazyLoad.pagination.loading = true
+      this.$emit('load-next-chunk', () => {
+        if (this.uv.extra.lazyLoad.type !== 'pagination') return
 
-        this.uv.extra.lazyLoad.pagination.loading = false;
-        this.uv.extra.lazyLoad.pagination.currentPage++;
-      });
+        this.uv.extra.lazyLoad.pagination.loading = false
+        this.uv.extra.lazyLoad.pagination.currentPage++
+      })
     } else {
-      this.uv.extra.lazyLoad.pagination.currentPage++;
+      this.uv.extra.lazyLoad.pagination.currentPage++
     }
   }
 
   private goToPage(page: number) {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return;
-    const { pagination } = this.uv.extra.lazyLoad;
-    const { rowLoadState } = this.uv;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const { pagination } = this.uv.extra.lazyLoad
+    const { rowLoadState } = this.uv
 
-    const requiredRowNumber = (page + 1) * pagination.perPage;
+    const requiredRowNumber = (page + 1) * pagination.perPage
 
     if (requiredRowNumber <= rowLoadState.fetchedRowCount) {
-      pagination.currentPage = page;
+      pagination.currentPage = page
     } else if (this.uv.rowLoadState.complete) {
-      pagination.currentPage = Math.floor(rowLoadState.fetchedRowCount / pagination.perPage) - 1;
+      pagination.currentPage =
+        Math.floor(rowLoadState.fetchedRowCount / pagination.perPage) - 1
     } else {
-      pagination.loading = true;
-      this.$emit("load-entries", requiredRowNumber, () => {
+      pagination.loading = true
+      this.$emit('load-entries', requiredRowNumber, () => {
         this.$nextTick(() => {
           if (requiredRowNumber <= this.uv.rowLoadState.fetchedRowCount) {
-            pagination.currentPage = page;
+            pagination.currentPage = page
           } else {
             // Not sure why do we need `- 1` here but doesn't need it in tables.
-            pagination.currentPage = Math.floor(this.uv.rowLoadState.fetchedRowCount / pagination.perPage) - 1;
+            pagination.currentPage =
+              Math.floor(
+                this.uv.rowLoadState.fetchedRowCount / pagination.perPage,
+              ) - 1
           }
-          pagination.loading = false;
-        });
-      });
+          pagination.loading = false
+        })
+      })
     }
   }
 
   private get currentVisualPage() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return "0";
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return '0'
 
-    return String((this.uv.extra.lazyLoad.pagination?.currentPage ?? 0) + 1);
+    return String((this.uv.extra.lazyLoad.pagination?.currentPage ?? 0) + 1)
   }
 
-  @Watch("currentVisualPage")
+  @Watch('currentVisualPage')
   private updateCurrentPageToParent() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return;
-    if (!this.isTopLevel) return;
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    if (!this.isTopLevel) return
 
-    this.$emit("update:current-page", this.uv.extra.lazyLoad.pagination.currentPage);
+    this.$emit(
+      'update:current-page',
+      this.uv.extra.lazyLoad.pagination.currentPage,
+    )
   }
 
   private get onLastPage() {
-    if (!this.uv.rows || this.uv.extra.lazyLoad.type !== "pagination") return false;
+    if (!this.uv.rows || this.uv.extra.lazyLoad.type !== 'pagination')
+      return false
 
-    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (this.uv.extra.lazyLoad.pagination.currentPage + 1);
-    return this.uv.rowLoadState.fetchedRowCount <= shownRowCount;
+    const shownRowCount =
+      this.uv.extra.lazyLoad.pagination.perPage *
+      (this.uv.extra.lazyLoad.pagination.currentPage + 1)
+    return this.uv.rowLoadState.fetchedRowCount <= shownRowCount
   }
 
   private pageRequiresLoading(page: number) {
-    if (!this.uv.rows || this.uv.rowLoadState.complete || this.uv.extra.lazyLoad.type !== "pagination") return false;
+    if (
+      !this.uv.rows ||
+      this.uv.rowLoadState.complete ||
+      this.uv.extra.lazyLoad.type !== 'pagination'
+    )
+      return false
 
-    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (page + 2);
-    return this.uv.rowLoadState.fetchedRowCount < shownRowCount;
+    const shownRowCount = this.uv.extra.lazyLoad.pagination.perPage * (page + 2)
+    return this.uv.rowLoadState.fetchedRowCount < shownRowCount
   }
 
   private get nextPageRequiresLoading() {
-    if (this.uv.extra.lazyLoad.type !== "pagination") return false;
-    return this.pageRequiresLoading(this.uv.extra.lazyLoad.pagination.currentPage + 1);
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return false
+    return this.pageRequiresLoading(
+      this.uv.extra.lazyLoad.pagination.currentPage + 1,
+    )
   }
 
   private get pagesCount(): number | null {
-    if (this.uv.extra.lazyLoad.type !== "pagination" || !this.uv.rowLoadState.complete) return null;
+    if (
+      this.uv.extra.lazyLoad.type !== 'pagination' ||
+      !this.uv.rowLoadState.complete
+    )
+      return null
 
-    return Math.ceil(this.uv.rowLoadState.fetchedRowCount / this.uv.extra.lazyLoad.pagination.perPage);
+    return Math.ceil(
+      this.uv.rowLoadState.fetchedRowCount /
+        this.uv.extra.lazyLoad.pagination.perPage,
+    )
   }
 
   private infiniteHandler(ev: StateChanger) {
-    if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
+    if (this.uv.extra.lazyLoad.type !== 'infinite_scroll') return
 
-    this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep;
+    this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength += showStep
 
-    if (!this.uv.rowLoadState.complete
-     && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength > this.uv.rowLoadState.fetchedRowCount
+    if (
+      !this.uv.rowLoadState.complete &&
+      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >
+        this.uv.rowLoadState.fetchedRowCount
     ) {
-      this.$emit("load-next-chunk", (result: boolean) => {
+      this.$emit('load-next-chunk', (result: boolean) => {
         if (this.uv.rowLoadState.complete) {
           if (this.uv.rowLoadState.fetchedRowCount !== 0) {
-            ev.loaded();
+            ev.loaded()
           }
-          ev.complete();
+          ev.complete()
         } else {
-          ev.loaded();
+          ev.loaded()
         }
 
-        if (this.uv.extra.lazyLoad.type !== "infinite_scroll") return;
-        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
-      });
-    } else if (this.uv.rowLoadState.complete
-      && this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >= this.uv.rowLoadState.fetchedRowCount) {
+        if (this.uv.extra.lazyLoad.type !== 'infinite_scroll') return
+        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength =
+          this.uv.rowLoadState.fetchedRowCount
+      })
+    } else if (
+      this.uv.rowLoadState.complete &&
+      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength >=
+        this.uv.rowLoadState.fetchedRowCount
+    ) {
       if (this.uv.rowLoadState.fetchedRowCount !== 0) {
-        ev.loaded();
+        ev.loaded()
       }
-      ev.complete();
+      ev.complete()
 
-      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength = this.uv.rowLoadState.fetchedRowCount;
+      this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength =
+        this.uv.rowLoadState.fetchedRowCount
     } else {
-      ev.loaded();
+      ev.loaded()
     }
   }
 
   get firstRow(): { row: IFormExtendedRowCommon; ref: RowRef } | null {
-    if (this.uv.newRowsOrder.length === 0 && !this.uv.rows && this.uv.emptyRow) {
+    if (
+      this.uv.newRowsOrder.length === 0 &&
+      !this.uv.rows &&
+      this.uv.emptyRow
+    ) {
       return {
         row: this.uv.emptyRow,
-        ref: { type: "new" },
-      };
+        ref: { type: 'new' },
+      }
     } else if (this.uv.newRowsOrder.length > 0) {
       return {
         row: this.uv.newRows[this.uv.newRowsOrder[0]],
-        ref: { type: "added", id: this.uv.newRowsOrder[0] },
-      };
+        ref: { type: 'added', id: this.uv.newRowsOrder[0] },
+      }
     } else {
-      return null;
+      return null
     }
   }
 
   // Because we treat the first added row specially we use only second+ new rows here.
   get newRowsPositions() {
-    return this.uv.newRowsOrder.slice(1);
+    return this.uv.newRowsOrder.slice(1)
   }
 
   // When we only have one record displayed, we hide "Delete" button and add is an an action to menu instead.
-  get useDeleteAction(): { type: "show_with_ref"; ref: RowRef } | { type: "show" } | { type: "hide" } {
-    if (this.businessModeEnabled && this.uv.attributes["business_mode_disable_delete"]) {
-      return { type: "hide" };
-    } else if (this.rowPositions.length === 0 && this.newRowsPositions.length === 1) {
-      return { type: "show_with_ref", ref: { type: "added", id: this.newRowsPositions[0] } };
-    } else if (this.rowPositions.length === 1 && this.newRowsPositions.length === 0) {
-      return { type: "show_with_ref", ref: { type: "existing", position: this.rowPositions[0] } };
+  get useDeleteAction():
+    | { type: 'show_with_ref'; ref: RowRef }
+    | { type: 'show' }
+    | { type: 'hide' } {
+    if (
+      this.businessModeEnabled &&
+      this.uv.attributes['business_mode_disable_delete']
+    ) {
+      return { type: 'hide' }
+    } else if (
+      this.rowPositions.length === 0 &&
+      this.newRowsPositions.length === 1
+    ) {
+      return {
+        type: 'show_with_ref',
+        ref: { type: 'added', id: this.newRowsPositions[0] },
+      }
+    } else if (
+      this.rowPositions.length === 1 &&
+      this.newRowsPositions.length === 0
+    ) {
+      return {
+        type: 'show_with_ref',
+        ref: { type: 'existing', position: this.rowPositions[0] },
+      }
     } else {
-      return { type: "show" };
+      return { type: 'show' }
     }
   }
 
   get blockSizes(): number[] | null {
-    const rawBlockSizes = this.uv.attributes["block_sizes"];
+    const rawBlockSizes = this.uv.attributes['block_sizes']
     if (!(rawBlockSizes instanceof Array)) {
-      return null;
+      return null
     }
-    const blockSizes = rawBlockSizes.map(x => {
-      const n = Math.round(Number(x));
-      return Number.isInteger(n)
-        ? Math.max(0, Math.min(n, 12))
-        : undefined;
-    });
-    return blockSizes.every(x => x !== undefined)
-      ? blockSizes as number[]
-      : null;
+    const blockSizes = rawBlockSizes.map((x) => {
+      const n = Math.round(Number(x))
+      return Number.isInteger(n) ? Math.max(0, Math.min(n, 12)) : undefined
+    })
+    return blockSizes.every((x) => x !== undefined)
+      ? (blockSizes as number[])
+      : null
   }
 
   get gridBlocks(): FormGridElement[] {
-    const viewAttrs = this.uv.attributes;
-    const blocks: IGridSection<FormElement>[] =
-      (this.blockSizes ?? [12]).map(size => ({
-        type: "section",
+    const viewAttrs = this.uv.attributes
+    const blocks: IGridSection<FormElement>[] = (this.blockSizes ?? [12]).map(
+      (size) => ({
+        type: 'section',
         size,
         content: [],
         singleUserViewSection: false,
         hasNoContent: true,
-      }));
+      }),
+    )
     // If 'block_sizes' attribute is not used or invalid,
     // then two-column layout is used.
-    const inputWidth = this.blockSizes === null ? 6 : 12;
+    const inputWidth = this.blockSizes === null ? 6 : 12
 
     // Add columns to blocks
     this.uv.info.columns.forEach((columnInfo, i) => {
-      const columnAttrs = this.uv.columnAttributes[i];
-      const getColumnAttr = (name: string) => tryDicts(name, columnAttrs, viewAttrs);
-      const isUserView = Boolean(getColumnAttr("control") === "user_view") ?? false;
+      const columnAttrs = this.uv.columnAttributes[i]
+      const getColumnAttr = (name: string) =>
+        tryDicts(name, columnAttrs, viewAttrs)
+      const isUserView =
+        Boolean(getColumnAttr('control') === 'user_view') ?? false
 
-      const visible = Boolean(getColumnAttr("visible") ?? true);
+      const visible = Boolean(getColumnAttr('visible') ?? true)
       if (!visible) {
-        return;
+        return
       }
 
-      const blockAttr = Number(getColumnAttr("form_block"));
-      const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
-      const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
+      const blockAttr = Number(getColumnAttr('form_block'))
+      const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
+      const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
 
-      const captionAttr = rawToUserString(getColumnAttr("caption"));
-      const caption = captionAttr ?? columnInfo.name;
+      const captionAttr = rawToUserString(getColumnAttr('caption'))
+      const caption = captionAttr ?? columnInfo.name
 
-      const autofocus = columnInfo?.name === this.autofocusElementName;
+      const autofocus = columnInfo?.name === this.autofocusElementName
 
       const element: IGridInput<IElementField> = {
-        type: "element",
+        type: 'element',
         size: inputWidth,
         element: {
-          type: "field",
+          type: 'field',
           index: i,
           columnInfo,
           caption,
           forceCaption: Boolean(captionAttr),
           autofocus,
         },
-      };
-      blocks[block].content.push(element);
+      }
+      blocks[block].content.push(element)
 
-      if (
-        (blocks[block].content.length === 1)
-        && (isUserView)
-      ) {
-        blocks[block].singleUserViewSection = true;
+      if (blocks[block].content.length === 1 && isUserView) {
+        blocks[block].singleUserViewSection = true
       } else {
-        blocks[block].singleUserViewSection = false;
+        blocks[block].singleUserViewSection = false
       }
 
       if (blocks[block].content.length === 0) {
-        blocks[block].hasNoContent = true;
+        blocks[block].hasNoContent = true
       } else {
-        blocks[block].hasNoContent = false;
+        blocks[block].hasNoContent = false
       }
-    });
+    })
 
-    const formButtons = this.uv.attributes["form_buttons"];
+    const formButtons = this.uv.attributes['form_buttons']
     if (formButtons !== undefined && Array.isArray(formButtons)) {
-      console.warn("@form_buttons attribute deprecated,  will be deleted future.");
+      console.warn(
+        '@form_buttons attribute deprecated,  will be deleted future.',
+      )
 
       formButtons.forEach((buttons, i) => {
-        const blockAttr = Number(buttons["form_block"]);
-        const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr;
-        const block = Math.max(0, Math.min(blockNumber, blocks.length - 1));
+        const blockAttr = Number(buttons['form_block'])
+        const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
+        const block = Math.max(0, Math.min(blockNumber, blocks.length - 1))
 
-        const actions: IButtonAction[] = [];
-        if (Array.isArray(buttons["actions"])) {
-          buttons["actions"].forEach(action => {
-            const name = rawToUserString(action.name);
+        const actions: IButtonAction[] = []
+        if (Array.isArray(buttons['actions'])) {
+          buttons['actions'].forEach((action) => {
+            const name = rawToUserString(action.name)
             if (name === null) {
-              return;
+              return
             }
-            if (typeof action.variant !== "string") {
-              return;
+            if (typeof action.variant !== 'string') {
+              return
             }
-            const link = attrToLink(action);
+            const link = attrToLink(action)
             if (link === null) {
-              return;
+              return
             }
-            actions.push({ name: action.name, variant: action.variant, link });
-          });
+            actions.push({ name: action.name, variant: action.variant, link })
+          })
         }
 
         if (actions.length > 0) {
           const element: IGridInput<IElementButtons> = {
-            type: "element",
+            type: 'element',
             size: 12,
             element: {
-              type: "buttons",
+              type: 'buttons',
               actions,
             },
-          };
-          blocks[block].content.push(element);
+          }
+          blocks[block].content.push(element)
         }
-      });
+      })
     }
-    return blocks;
+    return blocks
   }
 
   private async init() {
     if (this.isTopLevel) {
-      this.$emit("update:body-style", `
+      this.$emit(
+        'update:body-style',
+        `
         @media print {
             @page {
                 size: portrait;
             }
         }
-      `);
+      `,
+      )
     }
 
     // Almost dirty hack for saving forms for new entries which has no (required && empty) fields.
     if (this.firstRow) {
-      const isNewEntry = this.uv.args.args === null;
+      const isNewEntry = this.uv.args.args === null
       if (isNewEntry) {
-        const columnNotRequired =
-          (column: IResultColumnInfo) => !column.mainField || column.mainField.field.isNullable || column.mainField.field.defaultValue !== undefined;
-        const canBeSavedImmediately = this.uv.info.columns.every(columnNotRequired);
+        const columnNotRequired = (column: IResultColumnInfo) =>
+          !column.mainField ||
+          column.mainField.field.isNullable ||
+          column.mainField.field.defaultValue !== undefined
+        const canBeSavedImmediately =
+          this.uv.info.columns.every(columnNotRequired)
         if (canBeSavedImmediately) {
-          const firstColumnIndex = this.uv.info.columns.findIndex(c => c.mainField);
+          const firstColumnIndex = this.uv.info.columns.findIndex(
+            (c) => c.mainField,
+          )
           if (firstColumnIndex !== -1) {
-            await this.updateValue({ ...this.firstRow.ref, column: firstColumnIndex }, this.firstRow.row.values[firstColumnIndex].value ?? "");
+            await this.updateValue(
+              { ...this.firstRow.ref, column: firstColumnIndex },
+              this.firstRow.row.values[firstColumnIndex].value ?? '',
+            )
           }
         }
       }
@@ -605,171 +722,195 @@ export default class UserViewForm extends mixins<BaseUserView<IFormValueExtra, I
   }
 
   private get autofocusElementName(): string | null {
-    if (!this.firstRow) return null;
-    const isNewEntry = this.uv.args.args === null;
-    if (!isNewEntry) return null;
+    if (!this.firstRow) return null
+    const isNewEntry = this.uv.args.args === null
+    if (!isNewEntry) return null
 
-    const columnRequiredAndEmpty =
-      (column: IResultColumnInfo) =>
-        column.mainField
-        && !column.mainField.field.isNullable
-        && column.mainField.field.defaultValue === undefined
-        && !(column.name in this.defaultValues);
-    const columnNotRequiredAndEmpty =
-      (column: IResultColumnInfo) =>
-        column.mainField
-        && column.mainField.field.defaultValue === undefined
-        && !(column.name in this.defaultValues);
-    const firstRequiredColumn = this.uv.info.columns.find(columnRequiredAndEmpty);
-    const columnToFocus = firstRequiredColumn ?? this.uv.info.columns.find(columnNotRequiredAndEmpty);
-    return columnToFocus?.name ?? null;
+    const columnRequiredAndEmpty = (column: IResultColumnInfo) =>
+      column.mainField &&
+      !column.mainField.field.isNullable &&
+      column.mainField.field.defaultValue === undefined &&
+      !(column.name in this.defaultValues)
+    const columnNotRequiredAndEmpty = (column: IResultColumnInfo) =>
+      column.mainField &&
+      column.mainField.field.defaultValue === undefined &&
+      !(column.name in this.defaultValues)
+    const firstRequiredColumn = this.uv.info.columns.find(
+      columnRequiredAndEmpty,
+    )
+    const columnToFocus =
+      firstRequiredColumn ??
+      this.uv.info.columns.find(columnNotRequiredAndEmpty)
+    return columnToFocus?.name ?? null
   }
 
   get buttons() {
-    const buttons: Button[] = [];
-    const deleteRef = this.useDeleteAction;
-    if (deleteRef.type === "show_with_ref") {
+    const buttons: Button[] = []
+    const deleteRef = this.useDeleteAction
+    if (deleteRef.type === 'show_with_ref') {
       buttons.push({
-        icon: "delete_outline",
-        caption: this.$t("delete").toString(),
+        icon: 'delete_outline',
+        caption: this.$t('delete').toString(),
         callback: () => this.confirmDelete(deleteRef.ref),
-        variant: bootstrapVariantAttribute("danger"),
-        type: "callback",
-      });
+        variant: bootstrapVariantAttribute('danger'),
+        type: 'callback',
+      })
     }
-    return buttons;
+    return buttons
   }
 
   private confirmDelete(ref: RowRef) {
-    this.toBeDeletedRef = ref;
-    this.$bvModal.show(this.$id("confirmDelete"));
+    this.toBeDeletedRef = ref
+    this.$bvModal.show(this.$id('confirmDelete'))
   }
 
   private deleteRowAndSignal() {
-    this.deleteRow(this.toBeDeletedRef!);
-    this.deletedOne = true;
+    this.deleteRow(this.toBeDeletedRef!)
+    this.deletedOne = true
   }
 
-  @Watch("buttons", { deep: true, immediate: true })
+  @Watch('buttons', { deep: true, immediate: true })
   private updateButtons() {
-    this.$emit("update:buttons", this.buttons);
+    this.$emit('update:buttons', this.buttons)
   }
 
   private created() {
-    void this.init();
+    void this.init()
   }
 
-  @Watch("uv")
+  @Watch('uv')
   private uvChanged() {
-    void this.init();
+    void this.init()
 
     // Select row automatically if saved with a button.
     if (this.selectionMode && !this.autoSaved && this.uv.rows?.length === 1) {
-      const row = this.uv.rows[0];
+      const row = this.uv.rows[0]
       if (row.oldAddedId !== undefined) {
-        this.$emit("select", this.uv.rows[0].extra.selectionEntry);
+        this.$emit('select', this.uv.rows[0].extra.selectionEntry)
       }
     }
   }
 
   private get initialPage() {
-    return !this.isRoot || this.query === null || this.query.root.page === null || this.query.root.page < 1
+    return !this.isRoot ||
+      this.query === null ||
+      this.query.root.page === null ||
+      this.query.root.page < 1
       ? null
-      : this.query.root.page;
+      : this.query.root.page
   }
 
-  @Watch("uv", { immediate: true })
+  @Watch('uv', { immediate: true })
   private uvInit(newUv: any, oldUv: any) {
-    if (oldUv) return; // Fire method once.
+    if (oldUv) return // Fire method once.
 
-    if (this.initialPage !== null && this.uv.extra.lazyLoad.type === "pagination") {
-      this.goToPage(this.initialPage);
+    if (
+      this.initialPage !== null &&
+      this.uv.extra.lazyLoad.type === 'pagination'
+    ) {
+      this.goToPage(this.initialPage)
     }
   }
 
-  @Watch("rowPositions")
+  @Watch('rowPositions')
   private returnIfEmpty() {
     // Go back if we removed all entries.
-    if (this.isRoot && this.deletedOne && this.rowPositions.length === 0 && this.uv.newRowsOrder.length === 0) {
-      this.deletedOne = false; // In case we end up in the same uv.
-      this.$emit("goto-previous");
+    if (
+      this.isRoot &&
+      this.deletedOne &&
+      this.rowPositions.length === 0 &&
+      this.uv.newRowsOrder.length === 0
+    ) {
+      this.deletedOne = false // In case we end up in the same uv.
+      this.$emit('goto-previous')
     }
   }
 
   get rowPositions() {
     if (this.uv.rows === null) {
-      return [];
+      return []
     } else {
-      return mapMaybe((row, rowI) => row.deleted ? undefined : rowI, this.uv.rows);
+      return mapMaybe(
+        (row, rowI) => (row.deleted ? undefined : rowI),
+        this.uv.rows,
+      )
     }
   }
 
   get shownRowPositions() {
-    if (this.uv.extra.lazyLoad.type === "pagination") {
-      const start = this.uv.extra.lazyLoad.pagination.currentPage * this.uv.extra.lazyLoad.pagination.perPage;
-      const end = start + this.uv.extra.lazyLoad.pagination.perPage;
-      return this.rowPositions.slice(start, end);
-    } else if (this.uv.extra.lazyLoad.type === "infinite_scroll") {
-      return this.rowPositions.slice(0, this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength);
+    if (this.uv.extra.lazyLoad.type === 'pagination') {
+      const start =
+        this.uv.extra.lazyLoad.pagination.currentPage *
+        this.uv.extra.lazyLoad.pagination.perPage
+      const end = start + this.uv.extra.lazyLoad.pagination.perPage
+      return this.rowPositions.slice(start, end)
+    } else if (this.uv.extra.lazyLoad.type === 'infinite_scroll') {
+      return this.rowPositions.slice(
+        0,
+        this.uv.extra.lazyLoad.infiniteScroll.shownRowsLength,
+      )
     } else {
-      throw new Error("Wrong lazyLoad type");
+      throw new Error('Wrong lazyLoad type')
     }
   }
 
   get containsOnlyOneIframe() {
-    return this.uv.columnAttributes.length === 1 && this.uv.columnAttributes[0].control === "iframe";
+    return (
+      this.uv.columnAttributes.length === 1 &&
+      this.uv.columnAttributes[0].control === 'iframe'
+    )
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .view-form {
-    /* Don't use `height: 100%` here! It breaks table lazy-loading */
-    padding: 1.875rem 2.25rem !important;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color: var(--userview-background-color);
-    color: var(--form-foregroundColor);
+.view-form {
+  background-color: var(--userview-background-color);
+  /* Don't use `height: 100%` here! It breaks table lazy-loading */
+  padding: 1.875rem 2.25rem !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: var(--form-foregroundColor);
 
-    @include mobile {
-      padding: 1rem !important;
-    }
-
-    &.contains-only-one-iframe {
-      padding: 0 !important;
-
-      ::v-deep .first_level_grid_block {
-        margin-bottom: 0 !important;
-      }
-    }
+  @include mobile {
+    padding: 1rem !important;
   }
 
-  .pagination-wrapper {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 0.7rem;
+  &.contains-only-one-iframe {
+    padding: 0 !important;
 
-    .pagination {
+    ::v-deep .first_level_grid_block {
+      margin-bottom: 0 !important;
+    }
+  }
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.7rem;
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .current-page-wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
+      min-width: 3rem; /* To fit at least `99/99` without changing width */
+    }
 
-      .current-page-wrapper {
-        min-width: 3rem; /* To fit at least `99/99` without changing width */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .pages-count {
-        color: var(--default-foregroundDarkerColor);
-      }
+    .pages-count {
+      color: var(--default-foregroundDarkerColor);
     }
   }
+}
 
-  @media print {
-    .view-form {
-      background-color: white;
-    }
+@media print {
+  .view-form {
+    background-color: white;
   }
+}
 </style>

@@ -1,49 +1,63 @@
-import { Module, ActionContext } from "vuex";
-import { v4 as uuidv4 } from "uuid";
-import jwtDecode from "jwt-decode";
-import { z } from "zod";
-import FunDBAPI, { FunDBError } from "ozma-api";
+import { Module, ActionContext } from 'vuex'
+import { v4 as uuidv4 } from 'uuid'
+import jwtDecode from 'jwt-decode'
+import { z } from 'zod'
+import FunDBAPI, { FunDBError } from 'ozma-api'
 
-import { IRef } from "@/utils";
-import { disableAuth, authClientId, authUrl, developmentMode, apiUrl } from "@/api";
-import * as Utils from "@/utils";
-import { router, getQueryValue, CancelledError } from "@/modules";
+import { IRef } from '@/utils'
+import {
+  disableAuth,
+  authClientId,
+  authUrl,
+  developmentMode,
+  apiUrl,
+} from '@/api'
+import * as Utils from '@/utils'
+import { router, getQueryValue, CancelledError } from '@/modules'
 
 export class CurrentAuth {
-  createdTime: number;
-  token: string | null;
-  refreshToken: string;
-  idToken: string;
-  decodedToken: Record<string, string> | null;
-  decodedRefreshToken: Record<string, string>;
-  decodedIdToken: Record<string, string>;
+  createdTime: number
+  token: string | null
+  refreshToken: string
+  idToken: string
+  decodedToken: Record<string, string> | null
+  decodedRefreshToken: Record<string, string>
+  decodedIdToken: Record<string, string>
 
-  constructor(token: string | null, refreshToken: string, idToken: string, createdTime?: number) {
-    this.createdTime = (createdTime !== undefined) ? createdTime : Utils.sse();
-    this.decodedToken = token ? jwtDecode(token) : null;
-    this.decodedRefreshToken = jwtDecode(refreshToken);
-    this.decodedIdToken = jwtDecode(idToken);
-    this.token = token;
-    this.refreshToken = refreshToken;
-    this.idToken = idToken;
+  constructor(
+    token: string | null,
+    refreshToken: string,
+    idToken: string,
+    createdTime?: number,
+  ) {
+    this.createdTime = createdTime !== undefined ? createdTime : Utils.sse()
+    this.decodedToken = token ? jwtDecode(token) : null
+    this.decodedRefreshToken = jwtDecode(refreshToken)
+    this.decodedIdToken = jwtDecode(idToken)
+    this.token = token
+    this.refreshToken = refreshToken
+    this.idToken = idToken
   }
 
   get username() {
-    return this.decodedIdToken["preferred_username"];
+    return this.decodedIdToken['preferred_username']
   }
 
   get email() {
-    return this.decodedIdToken["email"];
+    return this.decodedIdToken['email']
   }
 
   get refreshValidFor(): number {
-    return Number(this.decodedRefreshToken["exp"]) - Number(this.decodedRefreshToken["iat"]);
+    return (
+      Number(this.decodedRefreshToken['exp']) -
+      Number(this.decodedRefreshToken['iat'])
+    )
   }
 
   get validFor(): number {
     return this.decodedToken
-      ? Number(this.decodedToken["exp"]) - Number(this.decodedToken["iat"])
-      : 0;
+      ? Number(this.decodedToken['exp']) - Number(this.decodedToken['iat'])
+      : 0
   }
 
   /* get session(): string {
@@ -51,26 +65,26 @@ export class CurrentAuth {
   } */
 
   resetToken() {
-    this.token = null;
-    this.decodedToken = null;
+    this.token = null
+    this.decodedToken = null
   }
 }
 
 export interface IAuthState {
-  current: CurrentAuth | INoAuth | null;
-  renewalTimeoutId: NodeJS.Timeout | null;
-  pending: Promise<void> | null;
-  protectedCalls: number; // Used for tracking fetch requests and displaying a progress bar.
-  api: FunDBAPI;
+  current: CurrentAuth | INoAuth | null
+  renewalTimeoutId: NodeJS.Timeout | null
+  pending: Promise<void> | null
+  protectedCalls: number // Used for tracking fetch requests and displaying a progress bar.
+  api: FunDBAPI
 }
 
 export interface INoAuth {
-  refreshToken: null;
+  refreshToken: null
 }
 
 interface IOIDCState {
-  path: string;
-  nonce: string;
+  path: string
+  nonce: string
 }
 
 const AuthPersistedState = z.object({
@@ -78,17 +92,17 @@ const AuthPersistedState = z.object({
   refreshToken: z.string(),
   idToken: z.string(),
   createdTime: z.number(),
-});
+})
 
-type IAuthPersistedState = z.infer<typeof AuthPersistedState>;
+type IAuthPersistedState = z.infer<typeof AuthPersistedState>
 
-const authKey = "auth";
-const authNonceKey = "authNonce";
+const authKey = 'auth'
+const authNonceKey = 'authNonce'
 
 const redirectUri = () => {
-  const returnPath = router.resolve({ name: "auth_response" }).href;
-  return `${window.location.protocol}//${window.location.host}${returnPath}`;
-};
+  const returnPath = router.resolve({ name: 'auth_response' }).href
+  return `${window.location.protocol}//${window.location.host}${returnPath}`
+}
 
 const persistCurrentAuth = (auth: CurrentAuth) => {
   const dump: IAuthPersistedState = {
@@ -96,70 +110,84 @@ const persistCurrentAuth = (auth: CurrentAuth) => {
     refreshToken: auth.refreshToken,
     idToken: auth.idToken,
     createdTime: auth.createdTime,
-  };
-  localStorage.setItem(authKey, JSON.stringify(dump));
-};
+  }
+  localStorage.setItem(authKey, JSON.stringify(dump))
+}
 
 const dropCurrentAuth = () => {
-  localStorage.removeItem(authKey);
-};
+  localStorage.removeItem(authKey)
+}
 
 const loadCurrentAuth = () => {
-  let dump: IAuthPersistedState | undefined;
+  let dump: IAuthPersistedState | undefined
   try {
-    const dumpStr = localStorage.getItem(authKey);
+    const dumpStr = localStorage.getItem(authKey)
     if (dumpStr !== null) {
-      dump = AuthPersistedState.parse(JSON.parse(dumpStr));
+      dump = AuthPersistedState.parse(JSON.parse(dumpStr))
     }
   } catch (e) {
-    console.error(`Failed to get persisted auth data: ${e}`);
+    console.error(`Failed to get persisted auth data: ${e}`)
   }
 
   if (dump) {
-    const auth = new CurrentAuth(dump.token, dump.refreshToken, dump.idToken, dump.createdTime);
-    const timestamp = Utils.sse();
+    const auth = new CurrentAuth(
+      dump.token,
+      dump.refreshToken,
+      dump.idToken,
+      dump.createdTime,
+    )
+    const timestamp = Utils.sse()
     if (auth.createdTime + auth.refreshValidFor > timestamp) {
-      return auth;
+      return auth
     } else {
-      return null;
+      return null
     }
   } else {
-    return null;
+    return null
   }
-};
+}
 
-const requestToken = async (params: Record<string, string>): Promise<CurrentAuth> => {
+const requestToken = async (
+  params: Record<string, string>,
+): Promise<CurrentAuth> => {
   const headers: Record<string, string> = {
-    "Content-Type": "application/x-www-form-urlencoded",
-  };
-  const newParams = { ...params, "client_id": authClientId };
-  const paramsString = new URLSearchParams(newParams).toString();
+    'Content-Type': 'application/x-www-form-urlencoded',
+  }
+  const newParams = { ...params, client_id: authClientId }
+  const paramsString = new URLSearchParams(newParams).toString()
 
   const ret = await Utils.fetchJson(`${authUrl}/token`, {
-    method: "POST",
+    method: 'POST',
     headers,
     body: paramsString,
-  });
+  })
 
-  return new CurrentAuth(ret.access_token as string, ret.refresh_token as string, ret.id_token as string);
-};
+  return new CurrentAuth(
+    ret.access_token as string,
+    ret.refresh_token as string,
+    ret.id_token as string,
+  )
+}
 
 // Forces login on error.
-const tryGetToken = (context: ActionContext<IAuthState, {}>, params: Record<string, string>) => {
-  const { state, commit, dispatch } = context;
+const tryGetToken = (
+  context: ActionContext<IAuthState, {}>,
+  params: Record<string, string>,
+) => {
+  const { state, commit, dispatch } = context
 
   if (state.renewalTimeoutId !== null) {
-    clearTimeout(state.renewalTimeoutId);
-    commit("setRenewalTimeout", null);
+    clearTimeout(state.renewalTimeoutId)
+    commit('setRenewalTimeout', null)
   }
 
-  const oldPending = state.pending;
-  const pending: IRef<Promise<void>> = {};
+  const oldPending = state.pending
+  const pending: IRef<Promise<void>> = {}
   pending.ref = (async () => {
-    await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+    await Utils.waitTimeout() // Delay promise so that it gets saved to `pending` first.
     if (oldPending !== null) {
       try {
-        await oldPending;
+        await oldPending
       } catch (_) {
         // It's handled somewhere else.
       }
@@ -168,209 +196,233 @@ const tryGetToken = (context: ActionContext<IAuthState, {}>, params: Record<stri
       while (true) {
         try {
           // eslint-disable-next-line no-await-in-loop
-          const auth = await requestToken(params);
+          const auth = await requestToken(params)
           if (state.pending !== pending.ref) {
-            throw new CancelledError();
+            throw new CancelledError()
           }
-          updateAuth(context, auth);
+          updateAuth(context, auth)
         } catch (e) {
-          if ((state.pending === pending.ref && e instanceof Utils.NetworkError)
-             || (e instanceof Utils.FetchError && e.response.status >= 500)) {
+          if (
+            (state.pending === pending.ref &&
+              e instanceof Utils.NetworkError) ||
+            (e instanceof Utils.FetchError && e.response.status >= 500)
+          ) {
             // Most likely there are no internet connection now, so wait and try again.
             // eslint-disable-next-line no-await-in-loop
-            await Utils.waitTimeout(10000);
-            continue;
+            await Utils.waitTimeout(10000)
+            continue
           }
-          throw e;
+          throw e
         }
-        break;
+        break
       }
     } catch (e) {
       if (state.pending === pending.ref) {
-        let error: string | null;
-        if (e instanceof Utils.FetchError && typeof e.body === "object") {
+        let error: string | null
+        if (e instanceof Utils.FetchError && typeof e.body === 'object') {
           // try setting a better error
-          if (e.body?.error === "invalid_grant") {
+          if (e.body?.error === 'invalid_grant') {
             // token got revoked, not an error condition.
-            error = null;
-          } else if ("error_description" in e.body) {
-            error = String(e.body.error_description);
+            error = null
+          } else if ('error_description' in e.body) {
+            error = String(e.body.error_description)
           } else {
-            error = String(e);
+            error = String(e)
           }
         } else {
-          error = String(e);
+          error = String(e)
         }
 
         if (error) {
-          void dispatch("setError", `Error when getting token: ${error}`);
+          void dispatch('setError', `Error when getting token: ${error}`)
         }
 
-        await dispatch("removeAuth");
+        await dispatch('removeAuth')
       }
 
-      throw e;
+      throw e
     } finally {
       if (state.pending === pending.ref) {
-        commit("setPending", null);
+        commit('setPending', null)
       }
     }
-  })();
-  commit("setPending", pending.ref);
-  return pending.ref;
-};
+  })()
+  commit('setPending', pending.ref)
+  return pending.ref
+}
 
-const updateAuth = (context: ActionContext<IAuthState, {}>, auth: CurrentAuth | INoAuth, opts?: { noPersist?: boolean }) => {
-  context.commit("setAuth", auth);
+const updateAuth = (
+  context: ActionContext<IAuthState, {}>,
+  auth: CurrentAuth | INoAuth,
+  opts?: { noPersist?: boolean },
+) => {
+  context.commit('setAuth', auth)
   // eslint-disable-next-line
-  Utils.debugLog("Setting new refresh token", auth.refreshToken, "no_persist", opts?.noPersist);
+  Utils.debugLog(
+    'Setting new refresh token',
+    auth.refreshToken,
+    'no_persist',
+    opts?.noPersist,
+  )
   if (auth.refreshToken) {
     if (!opts?.noPersist) {
-      persistCurrentAuth(auth);
+      persistCurrentAuth(auth)
     }
-    startTimeouts(context);
+    startTimeouts(context)
   } else {
-    stopTimeouts(context);
+    stopTimeouts(context)
   }
-};
+}
 
 const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
-  const { state } = context;
+  const { state } = context
 
   if (!state.current?.refreshToken) {
-    throw new Error("Cannot renew without an existing token");
+    throw new Error('Cannot renew without an existing token')
   }
 
   const params: Record<string, string> = {
-    "grant_type": "refresh_token",
-    "refresh_token": state.current.refreshToken,
-  };
-  await tryGetToken(context, params);
-};
+    grant_type: 'refresh_token',
+    refresh_token: state.current.refreshToken,
+  }
+  await tryGetToken(context, params)
+}
 
-const constantFactorStart = 0.8;
-const constantFactorEnd = 0.9;
+const constantFactorStart = 0.8
+const constantFactorEnd = 0.9
 
 const startTimeouts = (context: ActionContext<IAuthState, {}>) => {
-  const { state, commit } = context;
+  const { state, commit } = context
 
   if (!state.current?.refreshToken) {
-    throw new Error("Cannot start timeouts without a token");
+    throw new Error('Cannot start timeouts without a token')
   }
 
-  const validFor = state.current.createdTime - Utils.sse() + state.current.validFor;
+  const validFor =
+    state.current.createdTime - Utils.sse() + state.current.validFor
   // Random timeouts to not overload the server with different tabs.
-  const timeoutSecs = constantFactorStart * validFor + Math.random() * (constantFactorEnd - constantFactorStart) * validFor;
+  const timeoutSecs =
+    constantFactorStart * validFor +
+    Math.random() * (constantFactorEnd - constantFactorStart) * validFor
 
   if (state.renewalTimeoutId !== null) {
-    clearTimeout(state.renewalTimeoutId);
+    clearTimeout(state.renewalTimeoutId)
   }
   if (document.hidden) {
-    commit("setRenewalTimeout", null);
+    commit('setRenewalTimeout', null)
   } else if (timeoutSecs < 0) {
-    void renewAuth(context);
+    void renewAuth(context)
   } else {
-    const timeoutRef: IRef<NodeJS.Timeout> = {};
+    const timeoutRef: IRef<NodeJS.Timeout> = {}
     timeoutRef.ref = setTimeout(() => {
       if (state.pending === null) {
-        void renewAuth(context);
+        void renewAuth(context)
       } else if (state.renewalTimeoutId === timeoutRef.ref) {
-        commit("setRenewalTimeout", null);
+        commit('setRenewalTimeout', null)
       }
-    }, timeoutSecs * 1000);
-    commit("setRenewalTimeout", timeoutRef.ref);
+    }, timeoutSecs * 1000)
+    commit('setRenewalTimeout', timeoutRef.ref)
   }
-};
+}
 
 const goAway = ({ commit }: ActionContext<IAuthState, {}>, url: string) => {
-  window.open(url, "_self");
-  commit("errors/setSilent", true, { root: true });
-  commit("setPending", Utils.never);
-  return Utils.never;
-};
+  window.open(url, '_self')
+  commit('errors/setSilent', true, { root: true })
+  commit('setPending', Utils.never)
+  return Utils.never
+}
 
-const requestLogin = (context: ActionContext<IAuthState, {}>, opts: { tryExisting?: boolean; path?: string }) => {
-  const nonce = uuidv4();
-  sessionStorage.setItem(authNonceKey, nonce);
-  let realPath: string;
+const requestLogin = (
+  context: ActionContext<IAuthState, {}>,
+  opts: { tryExisting?: boolean; path?: string },
+) => {
+  const nonce = uuidv4()
+  sessionStorage.setItem(authNonceKey, nonce)
+  let realPath: string
   if (opts.path) {
-    realPath = opts.path;
-  } else if (router.currentRoute.name === "auth_response") {
-    realPath = router.resolve({ name: "main" }).href;
+    realPath = opts.path
+  } else if (router.currentRoute.name === 'auth_response') {
+    realPath = router.resolve({ name: 'main' }).href
   } else {
-    realPath = router.currentRoute.fullPath;
+    realPath = router.currentRoute.fullPath
   }
   const savedState: IOIDCState = {
     nonce,
     path: realPath,
-  };
+  }
   const params = {
-    "client_id": authClientId,
-    "redirect_uri": redirectUri(),
-    "state": btoa(JSON.stringify(savedState)),
-    "scope": "openid",
-    "response_mode": "query",
-    "response_type": "code",
-    "prompt": opts.tryExisting ? "none" : "login",
-  };
-  const paramsString = new URLSearchParams(params).toString();
+    client_id: authClientId,
+    redirect_uri: redirectUri(),
+    state: btoa(JSON.stringify(savedState)),
+    scope: 'openid',
+    response_mode: 'query',
+    response_type: 'code',
+    prompt: opts.tryExisting ? 'none' : 'login',
+  }
+  const paramsString = new URLSearchParams(params).toString()
 
-  return goAway(context, `${authUrl}/auth?${paramsString}`);
-};
+  return goAway(context, `${authUrl}/auth?${paramsString}`)
+}
 
-const runApiCall = async <Ret>(context: ActionContext<IAuthState, {}>, func: (api: FunDBAPI) => Promise<Ret>) => {
-  const { state, commit, dispatch } = context;
-  commit("increaseProtectedCalls");
+const runApiCall = async <Ret>(
+  context: ActionContext<IAuthState, {}>,
+  func: (api: FunDBAPI) => Promise<Ret>,
+) => {
+  const { state, commit, dispatch } = context
+  commit('increaseProtectedCalls')
 
   try {
     while (true) {
       try {
         // eslint-disable-next-line no-await-in-loop
-        return await func(context.state.api);
+        return await func(context.state.api)
       } catch (e) {
         if (e instanceof FunDBError) {
-          if (e.body.error === "unauthorized") {
+          if (e.body.error === 'unauthorized') {
             if (!state.current?.refreshToken) {
               // eslint-disable-next-line no-await-in-loop
-              await requestLogin(context, { tryExisting: true });
+              await requestLogin(context, { tryExisting: true })
             } else {
-              commit("resetToken");
+              commit('resetToken')
               // eslint-disable-next-line no-await-in-loop
-              await dispatch("setError", `Authentication error during request: ${e.message}`);
+              await dispatch(
+                'setError',
+                `Authentication error during request: ${e.message}`,
+              )
               // eslint-disable-next-line no-await-in-loop
-              await renewAuth(context);
-              continue;
+              await renewAuth(context)
+              continue
             }
           }
         }
-        throw e;
+        throw e
       }
     }
   } finally {
-    commit("decreaseProtectedCalls");
+    commit('decreaseProtectedCalls')
   }
-};
+}
 
 const stopTimeouts = ({ state, commit }: ActionContext<IAuthState, {}>) => {
   if (state.renewalTimeoutId !== null) {
-    clearTimeout(state.renewalTimeoutId);
-    commit("setRenewalTimeout", null);
+    clearTimeout(state.renewalTimeoutId)
+    commit('setRenewalTimeout', null)
   }
-};
+}
 
-const authQueryKey = "__auth";
+const authQueryKey = '__auth'
 
 export const getAuthedLink = (auth: CurrentAuth): string => {
-  const query = { ...router.currentRoute.query };
-  query[authQueryKey] = auth.refreshToken;
-  const href = router.resolve({ path: router.currentRoute.path, query }).href;
-  return window.location.origin + href;
-};
+  const query = { ...router.currentRoute.query }
+  query[authQueryKey] = auth.refreshToken
+  const href = router.resolve({ path: router.currentRoute.path, query }).href
+  return window.location.origin + href
+}
 
-const errorKey = "auth";
+const errorKey = 'auth'
 
 export interface ICallApi {
-  <Ret>({ func }: { func: (api: FunDBAPI) => Promise<Ret> }): Promise<Ret>;
+  <Ret>({ func }: { func: (api: FunDBAPI) => Promise<Ret> }): Promise<Ret>
 }
 
 export const authModule: Module<IAuthState, {}> = {
@@ -384,226 +436,249 @@ export const authModule: Module<IAuthState, {}> = {
   },
   mutations: {
     setAuth: (state, auth: CurrentAuth | INoAuth) => {
-      state.current = auth;
-      state.api.token = auth.refreshToken ? auth.token : null;
+      state.current = auth
+      state.api.token = auth.refreshToken ? auth.token : null
     },
     setRenewalTimeout: (state, renewalTimeoutId: NodeJS.Timeout | null) => {
-      state.renewalTimeoutId = renewalTimeoutId;
+      state.renewalTimeoutId = renewalTimeoutId
     },
-    resetToken: state => {
+    resetToken: (state) => {
       if (state.current?.refreshToken) {
-        state.current.resetToken();
-        state.api.token = null;
+        state.current.resetToken()
+        state.api.token = null
       }
     },
     setPending: (state, pending: Promise<void> | null) => {
-      state.pending = pending;
+      state.pending = pending
     },
-    increaseProtectedCalls: state => {
-      state.protectedCalls += 1;
+    increaseProtectedCalls: (state) => {
+      state.protectedCalls += 1
     },
-    decreaseProtectedCalls: state => {
-      state.protectedCalls -= 1;
+    decreaseProtectedCalls: (state) => {
+      state.protectedCalls -= 1
     },
   },
   actions: {
     removeAuth: {
-      handler: async context => {
-        stopTimeouts(context);
-        return requestLogin(context, { tryExisting: true });
+      handler: async (context) => {
+        stopTimeouts(context)
+        return requestLogin(context, { tryExisting: true })
       },
     },
     stopTimeouts: {
-      handler: context => {
-        stopTimeouts(context);
+      handler: (context) => {
+        stopTimeouts(context)
       },
     },
     setAuth: {
       root: true,
       handler: ({ commit }) => {
-        commit("errors/resetErrors", errorKey, { root: true });
+        commit('errors/resetErrors', errorKey, { root: true })
       },
     },
     setError: ({ commit }, error: string) => {
-      commit("errors/setError", { key: errorKey, error }, { root: true });
+      commit('errors/setError', { key: errorKey, error }, { root: true })
     },
-    startAuth: context => {
-      const { state, commit, dispatch } = context;
+    startAuth: (context) => {
+      const { state, commit, dispatch } = context
 
-      console.assert(state.pending === null);
-      const pending: IRef<Promise<void>> = {};
+      console.assert(state.pending === null)
+      const pending: IRef<Promise<void>> = {}
       pending.ref = (async () => {
-        await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+        await Utils.waitTimeout() // Delay promise so that it gets saved to `pending` first.
 
         try {
           if (disableAuth) {
-            return;
+            return
           }
 
-          await new Promise<void>(resolve => {
-            router.onReady(resolve);
-          }); // Await till router is ready.
+          await new Promise<void>((resolve) => {
+            router.onReady(resolve)
+          }) // Await till router is ready.
 
-          if (router.currentRoute.name === "auth_response") {
-            const stateString = getQueryValue("state");
+          if (router.currentRoute.name === 'auth_response') {
+            const stateString = getQueryValue('state')
             if (stateString !== null) {
-              const savedState: IOIDCState = JSON.parse(atob(stateString));
-              const nonce = sessionStorage.getItem(authNonceKey);
-              sessionStorage.removeItem(authNonceKey);
+              const savedState: IOIDCState = JSON.parse(atob(stateString))
+              const nonce = sessionStorage.getItem(authNonceKey)
+              sessionStorage.removeItem(authNonceKey)
               if (nonce === null || savedState.nonce !== nonce) {
                 // Invalid nonce; silently redirect.
-                console.error("Invalid client nonce");
-                await router.replace({ name: "main" });
+                console.error('Invalid client nonce')
+                await router.replace({ name: 'main' })
               } else {
-                const code = getQueryValue("code");
+                const code = getQueryValue('code')
                 if (code !== null) {
                   const params: Record<string, string> = {
-                    "grant_type": "authorization_code",
-                    "code": code,
-                    "redirect_uri": redirectUri(),
-                  };
-                  const auth = await requestToken(params);
-                  updateAuth(context, auth);
+                    grant_type: 'authorization_code',
+                    code,
+                    redirect_uri: redirectUri(),
+                  }
+                  const auth = await requestToken(params)
+                  updateAuth(context, auth)
                 } else {
-                  const error = getQueryValue("error");
-                  if (error !== "login_required" && error !== "interaction_required") {
-                    const errorDescription = getQueryValue("errorDescription");
-                    void dispatch("setError", `Invalid auth response query parameters, error ${error} ${errorDescription}`);
+                  const error = getQueryValue('error')
+                  if (
+                    error !== 'login_required' &&
+                    error !== 'interaction_required'
+                  ) {
+                    const errorDescription = getQueryValue('errorDescription')
+                    void dispatch(
+                      'setError',
+                      `Invalid auth response query parameters, error ${error} ${errorDescription}`,
+                    )
                   } else {
-                    await requestLogin(context, { path: savedState.path });
+                    await requestLogin(context, { path: savedState.path })
                   }
                 }
-                await router.replace(savedState.path);
+                await router.replace(savedState.path)
               }
             } else {
               // We got here after logout, redirect.
-              await router.replace({ name: "main" });
+              await router.replace({ name: 'main' })
             }
-          } else if (developmentMode && authQueryKey in router.currentRoute.query) {
-            const refreshToken = String(router.currentRoute.query[authQueryKey]);
-            const newQuery = { ...router.currentRoute.query };
-            delete newQuery[authQueryKey];
-            await router.replace({ query: newQuery });
+          } else if (
+            developmentMode &&
+            authQueryKey in router.currentRoute.query
+          ) {
+            const refreshToken = String(router.currentRoute.query[authQueryKey])
+            const newQuery = { ...router.currentRoute.query }
+            delete newQuery[authQueryKey]
+            await router.replace({ query: newQuery })
             const params: Record<string, string> = {
-              "grant_type": "refresh_token",
-              "refresh_token": refreshToken,
-            };
+              grant_type: 'refresh_token',
+              refresh_token: refreshToken,
+            }
             try {
-              const currAuth = await requestToken(params);
-              updateAuth(context, currAuth);
+              const currAuth = await requestToken(params)
+              updateAuth(context, currAuth)
             } catch (e) {
-              console.error("Failed to use refresh token from URL", e);
+              console.error('Failed to use refresh token from URL', e)
             }
           } else {
-            const oldAuth = loadCurrentAuth();
+            const oldAuth = loadCurrentAuth()
             if (oldAuth !== null) {
-              updateAuth(context, oldAuth, { noPersist: true });
+              updateAuth(context, oldAuth, { noPersist: true })
             }
           }
 
           const authStorageHandler = (e: StorageEvent) => {
             if (e.key !== authKey) {
-              return;
+              return
             }
 
             if (e.newValue === null) {
-              void dispatch("removeAuth");
+              void dispatch('removeAuth')
             } else {
-              const newAuth = loadCurrentAuth();
-              Utils.debugLog("Got new current auth", newAuth?.refreshToken, "current", state.current, "current token", state.current?.refreshToken);
-              if (newAuth?.refreshToken && (state.current === null || newAuth.refreshToken !== state.current.refreshToken)) {
+              const newAuth = loadCurrentAuth()
+              Utils.debugLog(
+                'Got new current auth',
+                newAuth?.refreshToken,
+                'current',
+                state.current,
+                'current token',
+                state.current?.refreshToken,
+              )
+              if (
+                newAuth?.refreshToken &&
+                (state.current === null ||
+                  newAuth.refreshToken !== state.current.refreshToken)
+              ) {
                 // Stop running any refresh. We will run it if the token is expired later.
-                commit("setPending", null);
-                updateAuth(context, newAuth, { noPersist: true });
+                commit('setPending', null)
+                updateAuth(context, newAuth, { noPersist: true })
               }
             }
-          };
-          window.addEventListener("storage", authStorageHandler);
+          }
+          window.addEventListener('storage', authStorageHandler)
 
           const visibilityHandler = () => {
             if (document.hidden) {
-              stopTimeouts(context);
+              stopTimeouts(context)
             } else if (state.current?.refreshToken) {
-              startTimeouts(context);
+              startTimeouts(context)
             }
-          };
-          window.addEventListener("visibilitychange", visibilityHandler);
+          }
+          window.addEventListener('visibilitychange', visibilityHandler)
         } finally {
           if (state.pending === pending.ref) {
-            commit("setPending", null);
+            commit('setPending', null)
           }
         }
-        void dispatch("setAuth", undefined, { root: true });
-      })();
-      commit("setPending", pending.ref);
-      return pending.ref;
+        void dispatch('setAuth', undefined, { root: true })
+      })()
+      commit('setPending', pending.ref)
+      return pending.ref
     },
     callApi: {
       root: true,
-      handler: async <Ret>(context: ActionContext<IAuthState, {}>, { func }: { func: (api: FunDBAPI) => Promise<Ret> }): Promise<Ret> => {
-        const { state, commit } = context;
+      handler: async <Ret>(
+        context: ActionContext<IAuthState, {}>,
+        { func }: { func: (api: FunDBAPI) => Promise<Ret> },
+      ): Promise<Ret> => {
+        const { state, commit } = context
         while (state.pending !== null) {
           try {
             // eslint-disable-next-line no-await-in-loop
-            await state.pending;
+            await state.pending
           } catch (_) {
             // It's handled somewhere else.
           }
           // eslint-disable-next-line no-await-in-loop
-          await Utils.waitTimeout();
+          await Utils.waitTimeout()
         }
 
         if (state.current !== null) {
-          return runApiCall(context, func);
+          return runApiCall(context, func)
         } else {
           // Try to perform operation anyway, see if it fails and set the token to empty if not.
-          const pending: IRef<Promise<any>> = {};
+          const pending: IRef<Promise<any>> = {}
           pending.ref = (async () => {
-            await Utils.waitTimeout(); // Delay promise so that it gets saved to `pending` first.
-            const ret = await runApiCall(context, func);
+            await Utils.waitTimeout() // Delay promise so that it gets saved to `pending` first.
+            const ret = await runApiCall(context, func)
             // Apparently we can proceed with no auth at all!
             if (state.pending === pending.ref) {
-              updateAuth(context, { refreshToken: null });
-              commit("setPending", null);
+              updateAuth(context, { refreshToken: null })
+              commit('setPending', null)
             }
-            return ret;
-          })();
-          commit("setPending", state.pending);
-          return pending.ref;
+            return ret
+          })()
+          commit('setPending', state.pending)
+          return pending.ref
         }
       },
     },
-    logout: async context => {
-      const { state, dispatch } = context;
+    logout: async (context) => {
+      const { state, dispatch } = context
 
       if (!(state.current instanceof CurrentAuth)) {
-        throw new Error("Cannot logout without an existing token");
+        throw new Error('Cannot logout without an existing token')
       }
 
       if (disableAuth) {
-        return;
+        return
       }
 
-      if (!await dispatch("staging/askAndReset", undefined, { root: true })) {
-        return;
+      if (!(await dispatch('staging/askAndReset', undefined, { root: true }))) {
+        return
       }
 
       const params: Record<string, string> = {
-        "post_logout_redirect_uri": redirectUri(),
-        "client_id": authClientId,
-        "id_token_hint": state.current.idToken,
-      };
-      const paramsString = new URLSearchParams(params).toString();
+        post_logout_redirect_uri: redirectUri(),
+        client_id: authClientId,
+        id_token_hint: state.current.idToken,
+      }
+      const paramsString = new URLSearchParams(params).toString()
 
-      dropCurrentAuth();
-      await goAway(context, `${authUrl}/logout?${paramsString}`);
+      dropCurrentAuth()
+      await goAway(context, `${authUrl}/logout?${paramsString}`)
     },
-    login: async context => {
+    login: async (context) => {
       if (!context.state.current?.refreshToken) {
-        await requestLogin(context, { tryExisting: true });
+        await requestLogin(context, { tryExisting: true })
       }
     },
   },
-};
+}
 
-export default authModule;
+export default authModule

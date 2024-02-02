@@ -55,13 +55,7 @@
         @goto="$emit('goto', $event)"
       />
 
-      <div
-        v-if="hasTabs"
-        :class="[
-          'tab-headers',
-          { 'is-mobile': $isMobile },
-        ]"
-      >
+      <div v-if="hasTabs" :class="['tab-headers', { 'is-mobile': $isMobile }]">
         <ModalTabHeader
           v-for="(tab, index) in modalTabs"
           :key="tab.key"
@@ -83,9 +77,9 @@
       :class="[
         'content',
         {
-          'fullscreen': fullscreen || $isMobile,
+          fullscreen: fullscreen || $isMobile,
           'is-mobile': $isMobile,
-        }
+        },
       ]"
     >
       <div
@@ -93,10 +87,7 @@
         v-show="index === selectedTab"
         :key="tab.key"
         :data-window="tab.key"
-        :class="[
-          'tab-content',
-          { 'is-mobile': $isMobile },
-        ]"
+        :class="['tab-content', { 'is-mobile': $isMobile }]"
       >
         <ModalContent :content="tab.content" />
       </div>
@@ -107,9 +98,9 @@
       :class="[
         'content',
         {
-          'fullscreen': fullscreen || $isMobile,
+          fullscreen: fullscreen || $isMobile,
           'is-mobile': $isMobile,
-        }
+        },
       ]"
     >
       <slot />
@@ -118,218 +109,220 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { namespace } from 'vuex-class'
 
-import { WindowKey } from "@/state/windows";
-import ModalContent from "@/components/modal/ModalContent";
-import ModalTabHeader from "@/components/modal/ModalTabHeader.vue";
-import { interfaceButtonVariant } from "@/utils_colors";
-import { Button } from "../buttons/buttons";
-import { IModalTab } from "./types";
+import { WindowKey } from '@/state/windows'
+import ModalContent from '@/components/modal/ModalContent'
+import ModalTabHeader from '@/components/modal/ModalTabHeader.vue'
+import { interfaceButtonVariant } from '@/utils_colors'
+import { Button } from '../buttons/buttons'
+import { IModalTab } from './types'
 
-const windows = namespace("windows");
+const windows = namespace('windows')
 
 @Component({ components: { ModalContent, ModalTabHeader } })
 export default class TabbedModal extends Vue {
-  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
-  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
-  @windows.Mutation("activateWindow") activateWindow!: (_: WindowKey) => void;
+  @windows.Mutation('createWindow') createWindow!: (_: WindowKey) => void
+  @windows.Mutation('destroyWindow') destroyWindow!: (_: WindowKey) => void
+  @windows.Mutation('activateWindow') activateWindow!: (_: WindowKey) => void
 
-  @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined;
-  @Prop({ type: Boolean, default: true }) show!: boolean;
-  @Prop({ type: Boolean, default: false }) fullscreen!: boolean;
-  @Prop({ type: String }) width!: string;
-  @Prop({ type: String }) height!: string;
-  @Prop({ type: Number, default: 0 }) startingTab!: number;
+  @Prop({ type: Array }) modalTabs!: IModalTab[] | undefined
+  @Prop({ type: Boolean, default: true }) show!: boolean
+  @Prop({ type: Boolean, default: false }) fullscreen!: boolean
+  @Prop({ type: String }) width!: string
+  @Prop({ type: String }) height!: string
+  @Prop({ type: Number, default: 0 }) startingTab!: number
 
-  private selectedTab = 0;
+  private selectedTab = 0
 
   private mounted() {
     if (this.show) {
-      this.$modal.show(this.uid);
+      this.$modal.show(this.uid)
     }
   }
 
-  @Watch("show")
+  @Watch('show')
   private watchShow(show: boolean, oldShow: boolean) {
-    if (show === oldShow) return;
+    if (show === oldShow) return
 
     if (show) {
-      this.$modal.show(this.uid);
+      this.$modal.show(this.uid)
     } else {
-      this.$modal.hide(this.uid);
+      this.$modal.hide(this.uid)
     }
   }
 
-  @Watch("startingTab", { immediate: true })
+  @Watch('startingTab', { immediate: true })
   private watchStartingTab() {
-    this.selectedTab = this.startingTab;
-    this.fixSelectedTab();
+    this.selectedTab = this.startingTab
+    this.fixSelectedTab()
   }
 
-  @Watch("modalTabs")
+  @Watch('modalTabs')
   private watchModalTabs() {
-    this.fixSelectedTab();
+    this.fixSelectedTab()
   }
 
   private fixSelectedTab() {
-    const tabsCount = this.modalTabs?.length ?? 0;
+    const tabsCount = this.modalTabs?.length ?? 0
     if (tabsCount === 0 || this.selectedTab < 0) {
-      this.selectedTab = 0;
+      this.selectedTab = 0
     } else if (this.selectedTab >= tabsCount) {
-      this.selectedTab = tabsCount - 1;
+      this.selectedTab = tabsCount - 1
     }
   }
 
   get hasTabs() {
-    return this.modalTabs !== undefined;
+    return this.modalTabs !== undefined
   }
 
-  @Watch("selectedTab", { immediate: true })
+  @Watch('selectedTab', { immediate: true })
   private watchSelectedTab() {
-    if (!this.modalTabs) return;
+    if (!this.modalTabs) return
 
     if (this.modalTabs.length > 0) {
-      const tab = this.modalTabs[this.selectedTab];
-      this.activateWindow(tab.key); // TODO: This activation happens before window creation.
+      const tab = this.modalTabs[this.selectedTab]
+      this.activateWindow(tab.key) // TODO: This activation happens before window creation.
     }
   }
 
   private get mainButtons(): Button[] {
     return [
       {
-        type: "callback",
-        icon: "arrow_back",
+        type: 'callback',
+        icon: 'arrow_back',
         variant: interfaceButtonVariant,
-        callback: () => this.$emit("go-back"),
+        callback: () => this.$emit('go-back'),
       },
-    ];
+    ]
   }
 
   // Event is not typed for vue-js-modal
   private beforeClose(ev: any) {
     if (this.show) {
-      ev.cancel();
-      this.$emit("close");
+      ev.cancel()
+      this.$emit('close')
     }
   }
 
   private switchTab(index: number) {
-    this.selectedTab = index;
+    this.selectedTab = index
   }
 
   private get modalWidth(): string {
     return this.$isMobile && this.fullscreen
-      ? window.innerWidth > 512 ? `512px` : "100%"
+      ? window.innerWidth > 512
+        ? `512px`
+        : '100%'
       : this.$isMobile
-        ? "100%"
-        : this.fullscreen ? "100%" : this.width;
+      ? '100%'
+      : this.fullscreen
+      ? '100%'
+      : this.width
   }
 
   private get modalHeight(): string {
-    return (this.fullscreen || this.$isMobile)
-      ? "100%"
-      : this.height;
+    return this.fullscreen || this.$isMobile ? '100%' : this.height
   }
 
   private onOpened() {
     if (!this.modalTabs) {
-      this.createWindow(this.uid);
+      this.createWindow(this.uid)
     }
   }
 
   private onClosed() {
     if (!this.modalTabs) {
-      this.destroyWindow(this.uid);
+      this.destroyWindow(this.uid)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .main-buttons {
-    margin-left: 0.25rem;
-    margin-right: 0.25rem;
-    flex-shrink: 0;
-  }
+.main-buttons {
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+  margin-left: 0.25rem;
+}
 
-  .mobile-close-button-wrapper {
-    position: fixed;
-    top: 0.25rem;
-    right: 0.25rem;
-    padding: 0.15rem;
-    background-color: var(--default-backgroundDarker1Color);
-    line-height: 0;
-    border-radius: 10rem;
-    pointer-events: none;
-  }
+.mobile-close-button-wrapper {
+  position: fixed;
+  top: 0.25rem;
+  right: 0.25rem;
+  border-radius: 10rem;
+  background-color: var(--default-backgroundDarker1Color);
+  padding: 0.15rem;
+  pointer-events: none;
+  line-height: 0;
+}
 
-  .desktop-close-button-wrapper {
-    background-color: var(--default-backgroundDarker1Color);
-    padding: 0.5rem;
-    line-height: 0;
-    border-radius: 10rem;
-    margin: 0.5rem;
-    cursor: pointer;
-  }
+.desktop-close-button-wrapper {
+  cursor: pointer;
+  margin: 0.5rem;
+  border-radius: 10rem;
+  background-color: var(--default-backgroundDarker1Color);
+  padding: 0.5rem;
+  line-height: 0;
+}
 
-  .tab-headers {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    overflow-x: hidden;
+.tab-headers {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  overflow-x: hidden;
 
-    &.is-mobile {
-      overflow: auto;
-    }
-  }
-
-  .content {
+  &.is-mobile {
     overflow: auto;
+  }
+}
+
+.content {
+  height: 100%;
+  overflow: auto;
+}
+
+.fullscreen {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tabbed-modal ::v-deep > .vm--modal {
+  display: flex;
+  flex-grow: 1;
+  flex-flow: column nowrap;
+  margin-top: 38px;
+  border-radius: 1rem;
+  background-color: var(--default-backgroundColor);
+  max-height: calc(100% - 38px - 2rem);
+  color: var(--MainTextColor);
+
+  @include mobile {
+    max-height: calc(100% - 38px);
+  }
+}
+
+.tab-content {
+  height: 100%;
+
+  &.is-mobile {
     height: 100%;
   }
+}
 
-  .fullscreen {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    overflow: hidden;
+::v-deep {
+  .tabbed-modal-transition-enter-active,
+  .tabbed-modal-transition-leave-active {
+    transition: opacity 0.4s, transform 0.4s;
   }
 
-  .tabbed-modal ::v-deep > .vm--modal {
-    background-color: var(--default-backgroundColor);
-    color: var(--MainTextColor);
-    border-radius: 1rem;
-    display: flex;
-    flex-flow: column nowrap;
-    flex-grow: 1;
-    margin-top: 38px;
-    max-height: calc(100% - 38px - 2rem);
-
-    @include mobile {
-      max-height: calc(100% - 38px);
-    }
+  .tabbed-modal-transition-enter,
+  .tabbed-modal-transition-leave-to {
+    transform: translateY(5rem);
+    opacity: 0;
   }
-
-  .tab-content {
-    height: 100%;
-
-    &.is-mobile {
-      height: 100%;
-    }
-  }
-
-  ::v-deep {
-    .tabbed-modal-transition-enter-active,
-    .tabbed-modal-transition-leave-active {
-      transition: opacity 0.4s, transform 0.4s;
-    }
-
-    .tabbed-modal-transition-enter,
-    .tabbed-modal-transition-leave-to {
-      opacity: 0;
-      transform: translateY(5rem);
-    }
-  }
+}
 </style>

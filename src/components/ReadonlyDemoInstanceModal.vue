@@ -39,19 +39,14 @@
     @closed="showOverlay = false"
   >
     <div class="demo-message-container">
-      <div
-        class="material-button close-button"
-        @click="hide"
-      >
+      <div class="material-button close-button" @click="hide">
         <i class="material-icons">close</i>
       </div>
       <i class="material-icons demo-icon">error_outline</i>
       <div class="demo-message">
-        <h5 class="demo-header">
-          {{ $t("header_1") }} {{ $t("header_2") }}
-        </h5>
+        <h5 class="demo-header">{{ $t('header_1') }} {{ $t('header_2') }}</h5>
         <span class="demo-body">
-          {{ $t("description_1") }}
+          {{ $t('description_1') }}
         </span>
       </div>
       <div class="buttons-container">
@@ -62,7 +57,7 @@
           :href="getStartedLink"
           target="_blank"
         >
-          {{ $t("get_started") }}
+          {{ $t('get_started') }}
         </b-button>
 
         <b-button
@@ -71,7 +66,7 @@
           :href="signUpLink"
           target="_blank"
         >
-          {{ $t("sign_up") }}
+          {{ $t('sign_up') }}
         </b-button>
       </div>
     </div>
@@ -79,165 +74,173 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Vue, Component } from 'vue-property-decorator'
+import { namespace } from 'vuex-class'
 
-import { CurrentSettings } from "@/state/settings";
-import ModalWindow from "@/components/modal/ModalWindow.vue";
+import { CurrentSettings } from '@/state/settings'
+import ModalWindow from '@/components/modal/ModalWindow.vue'
 
-import { instanceName } from "@/api";
+import { instanceName } from '@/api'
 
-const settings = namespace("settings");
+const settings = namespace('settings')
 
 @Component({ components: { ModalWindow } })
 export default class ReadonlyDemoInstanceModal extends Vue {
-  @settings.State("current") settings!: CurrentSettings;
+  @settings.State('current') settings!: CurrentSettings
 
-  private showOverlay = false;
+  private showOverlay = false
   private show() {
-    this.$modal.show(this.uid);
+    this.$modal.show(this.uid)
   }
 
   private hide() {
-    this.$modal.hide(this.uid);
+    this.$modal.hide(this.uid)
   }
 
   private get locale() {
-    return this.$root.$i18n.locale;
+    return this.$root.$i18n.locale
   }
 
   private get getStartedLink() {
-    let urlPart = "";
-    if (this.locale === "ru") {
-      urlPart = "ru/";
-    } else if (this.locale === "es") {
-      urlPart = "es/";
+    let urlPart = ''
+    if (this.locale === 'ru') {
+      urlPart = 'ru/'
+    } else if (this.locale === 'es') {
+      urlPart = 'es/'
     } else {
-      urlPart = "";
+      urlPart = ''
     }
-    return this.settings.getEntry("read_only_demo_instance_get_started_link", String, `https://ozma.io/${urlPart}get-started/`);
+    return this.settings.getEntry(
+      'read_only_demo_instance_get_started_link',
+      String,
+      `https://ozma.io/${urlPart}get-started/`,
+    )
   }
 
   private get signUpLink() {
-    return this.settings.getEntry("read_only_demo_instance_sign_up_link", String, `https://onboard.ozma.io/${instanceName}/${this.locale}`);
+    return this.settings.getEntry(
+      'read_only_demo_instance_sign_up_link',
+      String,
+      `https://onboard.ozma.io/${instanceName}/${this.locale}`,
+    )
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .demo-modal ::v-deep > .vm--overlay {
-    background: #1E1E1E !important;
-    opacity: 0.4;
+.demo-modal ::v-deep > .vm--overlay {
+  opacity: 0.4;
+  background: #1e1e1e !important;
+}
+
+.demo-modal ::v-deep > .vm--modal {
+  margin: 0 5%;
+  box-shadow: none;
+
+  border-radius: 0.5rem;
+  max-width: min(90%, 28rem);
+  max-height: 80%;
+}
+
+::v-deep {
+  .demo-modal-transition-enter-active,
+  .demo-modal-transition-leave-active {
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
   }
 
-  .demo-modal ::v-deep > .vm--modal {
-    max-height: 80%;
-    max-width: min(90%, 28rem);
-    margin: 0 5%;
-
-    border-radius: 0.5rem;
-    box-shadow: none;
+  .demo-modal-transition-enter,
+  .demo-modal-transition-leave-to {
+    transform: translateY(100%);
+    opacity: 0;
   }
 
-  ::v-deep {
-    .demo-modal-transition-enter-active,
-    .demo-modal-transition-leave-active {
-      transition: all 0.8s cubic-bezier(0.68, -0.55, 0.26, 1.55);
-    }
-
-    .demo-modal-transition-enter,
-    .demo-modal-transition-leave-to {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-
-    .demo-modal-transition-enter-to,
-    .demo-modal-transition-leave {
-      opacity: 1;
-    }
+  .demo-modal-transition-enter-to,
+  .demo-modal-transition-leave {
+    opacity: 1;
   }
+}
 
+.demo-message-container {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem 2rem;
+  overflow-y: auto;
+}
+@include mobile {
   .demo-message-container {
-    padding: 1.75rem 2rem;
-    display: flex;
-    gap: 1.5rem;
-    flex-flow: column;
-    align-items: center;
-    overflow-y: auto;
+    padding: 1.25rem 1rem;
   }
-  @include mobile {
-    .demo-message-container {
-      padding: 1.25rem 1rem;
-    }
-  }
+}
 
-  .close-button {
-    position: absolute;
-    top: 0.625rem;
-    right: 0.625rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(229, 229, 229, 0.50);
-    color: #777C87;
-    border-radius: 50%;
+.close-button {
+  display: flex;
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background-color: rgba(229, 229, 229, 0.5);
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #777c87;
 
-    .material-icons {
-      font-size: 1rem;
-    }
+  .material-icons {
+    font-size: 1rem;
   }
+}
 
-  .demo-icon {
-    font-size: 3rem;
-    line-height: 3rem;
-    color: #777C87;
-  }
+.demo-icon {
+  color: #777c87;
+  font-size: 3rem;
+  line-height: 3rem;
+}
 
-  .demo-message {
-    display: flex;
-    flex-direction: column;
-  }
+.demo-message {
+  display: flex;
+  flex-direction: column;
+}
 
-  .demo-header {
-    text-align: center;
-    font-weight: 600;
-    color: #1F1F1F;
-  }
+.demo-header {
+  color: #1f1f1f;
+  font-weight: 600;
+  text-align: center;
+}
 
-  .demo-body {
-    font-size: 0.875rem;
-    text-align: center;
-    color: #3D3D3D;
-    opacity: 0.8;
-  }
+.demo-body {
+  opacity: 0.8;
+  color: #3d3d3d;
+  font-size: 0.875rem;
+  text-align: center;
+}
 
-  .buttons-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+.buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
 
-  .button {
-    padding: 1rem;
-    border-radius: 0.5rem;
-  }
+.button {
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
 
-  .primary-button {
-    background-color: #2361FF;
-    &:hover {
-      background-color: #163da3;
-    }
+.primary-button {
+  background-color: #2361ff;
+  &:hover {
+    background-color: #163da3;
   }
+}
 
-  .secondary-button {
-    background-color: #e5edff;
-    border-color: #e5edff;
-    color: #2361FF;
-    &:hover {
-      background-color: #b8becc;
-    }
+.secondary-button {
+  border-color: #e5edff;
+  background-color: #e5edff;
+  color: #2361ff;
+  &:hover {
+    background-color: #b8becc;
   }
+}
 </style>

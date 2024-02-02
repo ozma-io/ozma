@@ -52,11 +52,7 @@
             />
           </div>
           <div class="ok-button-wrapper">
-            <b-button
-              block
-              variant="outline-primary"
-              @click="closeModal"
-            >
+            <b-button block variant="outline-primary" @click="closeModal">
               {{ $t('ok') }}
             </b-button>
           </div>
@@ -71,10 +67,15 @@
           `text_align_${textAlign}`,
           {
             'input_container_cell-edit': isCellEdit,
-          }
+          },
         ]"
       >
-        <div :class="['border-label', { 'increase-z-index': focused && !$isMobile }]">
+        <div
+          :class="[
+            'border-label',
+            { 'increase-z-index': focused && !$isMobile },
+          ]"
+        >
           {{ $ustOrEmpty(label) }}
         </div>
         <div
@@ -83,14 +84,16 @@
             variantClassName,
             'cell-local-variant',
             {
-              'required': required,
-              'empty': empty,
+              required: required,
+              empty: empty,
             },
           ]"
           :style="[
             variantVariables,
             {
-              backgroundColor: backgroundColor ? backgroundColor : 'var(--cell-backgroundColor)',
+              backgroundColor: backgroundColor
+                ? backgroundColor
+                : 'var(--cell-backgroundColor)',
             },
           ]"
         >
@@ -100,7 +103,7 @@
               'indicator-container',
               {
                 'cell-edit': isCellEdit,
-                'required': required,
+                required: required,
               },
             ]"
             :title="$t(required ? 'required_field' : 'readonly_field')"
@@ -110,23 +113,17 @@
               :class="[
                 'required-indicator',
                 {
-                  'empty': empty,
+                  empty: empty,
                 },
               ]"
             />
 
-            <div
-              v-if="disabled"
-              class="disabled-indicator"
-            >
+            <div v-if="disabled" class="disabled-indicator">
               <span class="material-icons">edit_off</span>
             </div>
           </div>
 
-          <slot
-            :onFocus="onNonmodalFocus"
-            :onBlur="onBlur"
-          />
+          <slot :onFocus="onNonmodalFocus" :onBlur="onBlur" />
         </div>
       </b-col>
     </template>
@@ -134,246 +131,247 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
+import { Vue, Component, Prop } from 'vue-property-decorator'
 
-import TabbedModal from "@/components/modal/TabbedModal.vue";
-import Input from "@/components/form/Input.vue";
-import type { ColorVariantAttribute } from "@/utils_colors";
-import { getColorVariantAttributeClassName, getColorVariantAttributeVariables } from "@/utils_colors";
-import type { UserString } from "@/state/translations";
+import TabbedModal from '@/components/modal/TabbedModal.vue'
+import Input from '@/components/form/Input.vue'
+import type { ColorVariantAttribute } from '@/utils_colors'
+import {
+  getColorVariantAttributeClassName,
+  getColorVariantAttributeVariables,
+} from '@/utils_colors'
+import type { UserString } from '@/state/translations'
 
 @Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {
-  @Prop({ required: true }) label!: UserString;
+  @Prop({ required: true }) label!: UserString
   // FIXME: remove this and style parent nodes instead.
-  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
+  @Prop({ type: String }) backgroundColor!: string
   /* @Prop({ type: Object }) colorVariables!: Record<string, unknown> | null; */
-  @Prop({ type: Object }) colorVariantAttribute!: ColorVariantAttribute;
-  @Prop({ type: String, default: "left" }) textAlign!: string;
+  @Prop({ type: Object }) colorVariantAttribute!: ColorVariantAttribute
+  @Prop({ type: String, default: 'left' }) textAlign!: string
   // FIXME:
   // Хм, странно, что у нас теперь модал управляется из InputSlotа - это прямо неправильно.
   // https://bitbucket.org/myprocessx/funwithflags/pull-requests/1097
-  @Prop({ type: Boolean, default: false }) modal!: boolean;
-  @Prop({ type: Boolean, default: false }) modalOnly!: boolean;
-  @Prop({ type: Boolean, default: false }) required!: boolean;
-  @Prop({ type: Boolean, default: false }) disabled!: boolean;
-  @Prop({ type: Boolean, required: true }) empty!: boolean;
-  @Prop({ type: Boolean, required: false }) hideRequiredAndDisabledIcons!: boolean;
+  @Prop({ type: Boolean, default: false }) modal!: boolean
+  @Prop({ type: Boolean, default: false }) modalOnly!: boolean
+  @Prop({ type: Boolean, default: false }) required!: boolean
+  @Prop({ type: Boolean, default: false }) disabled!: boolean
+  @Prop({ type: Boolean, required: true }) empty!: boolean
+  @Prop({ type: Boolean, required: false })
+  hideRequiredAndDisabledIcons!: boolean
 
-  private isModalOpen = false;
-  private focused = false;
+  private isModalOpen = false
+  private focused = false
 
   private created() {
     if (this.modalOnly && this.modal) {
-      this.isModalOpen = true;
+      this.isModalOpen = true
     }
   }
 
   private get variantClassName(): string | null {
-    return getColorVariantAttributeClassName(this.colorVariantAttribute);
+    return getColorVariantAttributeClassName(this.colorVariantAttribute)
   }
 
   private get variantVariables(): Record<string, string> | null {
-    return getColorVariantAttributeVariables(this.colorVariantAttribute);
+    return getColorVariantAttributeVariables(this.colorVariantAttribute)
   }
 
   private get inputName(): string {
-    return `${this.uid}-input`;
+    return `${this.uid}-input`
   }
 
-  private onModalOpen() {
-  }
+  private onModalOpen() {}
 
   private onModalClose() {
-    this.isModalOpen = false;
-    this.$emit("close-modal-input");
+    this.isModalOpen = false
+    this.$emit('close-modal-input')
   }
 
   private onModalFocus() {
-    this.focused = true;
-    this.$emit("focus");
+    this.focused = true
+    this.$emit('focus')
   }
 
   private onNonmodalFocus() {
-    this.focused = true;
+    this.focused = true
     if (this.modal) {
-      this.isModalOpen = true;
+      this.isModalOpen = true
     }
-    this.$emit("focus");
+    this.$emit('focus')
   }
 
   private onBlur() {
-    this.focused = false;
-    this.$emit("blur");
+    this.focused = false
+    this.$emit('blur')
   }
 
   private closeModal() {
-    this.isModalOpen = false;
+    this.isModalOpen = false
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  @include variant-to-local("cell");
+@include variant-to-local('cell');
 
-  .row-override {
-    margin: 0px !important;
+.row-override {
+  margin: 0px !important;
 
-    &:hover {
-      ::v-deep .disabled-indicator {
-        display: block !important;
-      }
+  &:hover {
+    ::v-deep .disabled-indicator {
+      display: block !important;
     }
   }
+}
 
-  .modal-content {
-    height: 100%;
-    background-color: var(--default-backgroundDarker1Color);
+.modal-content {
+  background-color: var(--default-backgroundDarker1Color);
+  height: 100%;
+}
+
+.header {
+  margin-bottom: 0.25rem;
+}
+
+.label {
+  overflow: hidden;
+  font-size: 1.5rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.border-label {
+  position: absolute;
+  top: -0.5rem;
+  left: 1.5rem;
+  z-index: 40;
+  border-radius: 0.5rem;
+  background-color: var(--default-backgroundColor);
+  padding: 0 0.25rem;
+  pointer-events: none;
+  color: var(--default-foregroundDarkerColor);
+  font-size: 0.875rem;
+  line-height: 1;
+
+  &.increase-z-index {
+    z-index: 42;
   }
+}
 
-  .header {
-    margin-bottom: 0.25rem;
-  }
+.longer-input-label {
+  transform: translateX(15px);
+  padding-right: 0;
+  padding-left: 0;
+}
 
-  .label {
-    font-size: 1.5rem;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.input-label-with-indicator {
+  padding-right: 5px;
+}
 
-  .border-label {
+.input_label__container {
+  display: flex;
+  padding: 0;
+  height: 100%;
+}
+
+.input_label {
+  align-self: center;
+  margin-bottom: 0;
+  width: 95%;
+  overflow: hidden;
+  color: var(--form-foregroundDarkenColor);
+  font-weight: 600;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+
+.input_container_cell-edit {
+  padding: 0;
+}
+
+.ok-button-wrapper {
+  padding: 1rem 0;
+}
+
+.input-slot {
+  position: relative;
+  border-radius: 0.5rem;
+
+  .indicator-container {
+    $indicator-size: 1rem;
+    $indicator-padding: 0.125rem;
+    $input-height: 2.5rem;
+    display: flex;
+
     position: absolute;
-    top: -0.5rem;
-    left: 1.5rem;
-    padding: 0 0.25rem;
-    font-size: 0.875rem;
-    line-height: 1;
-    border-radius: 0.5rem;
-    background-color: var(--default-backgroundColor);
-    color: var(--default-foregroundDarkerColor);
-    pointer-events: none;
-    z-index: 40;
+    top: calc($input-height / 2 - $indicator-size / 2);
 
-    &.increase-z-index {
-      z-index: 42;
+    left: -1 * ($indicator-size + 2 * $indicator-padding);
+    justify-content: center;
+    align-items: center;
+    width: $indicator-size + $indicator-padding * 2;
+    height: $indicator-size + $indicator-padding * 2;
+
+    &.cell-edit {
+      top: 0;
+      /* False-positive */
+      /* stylelint-disable-next-line */
+      left: calc(#{-1 * ($indicator-size + 2 * $indicator-padding)} + 1px);
     }
-  }
 
-  .longer-input-label {
-    padding-left: 0;
-    padding-right: 0;
-    transform: translateX(15px);
-  }
+    &.cell-edit {
+      border: 1px solid var(--cell-borderColor);
+      border-right-color: var(--cell-backgroundColor);
+      border-top-left-radius: 50%;
+      border-bottom-left-radius: 50%;
+      background-color: var(--cell-backgroundColor);
+    }
 
-  .input-label-with-indicator {
-    padding-right: 5px;
-  }
-
-  .input_label__container {
-    padding: 0;
-    display: flex;
-    height: 100%;
-  }
-
-  .input_label {
-    align-self: center;
-    margin-bottom: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: pre;
-    color: var(--form-foregroundDarkenColor);
-    font-weight: 600;
-    font-size: 1rem;
-    width: 95%;
-  }
-
-  .input_container_cell-edit {
-    padding: 0;
-  }
-
-  .ok-button-wrapper {
-    padding: 1rem 0;
-  }
-
-  .input-slot {
-    position: relative;
-    border-radius: 0.5rem;
-
-    .indicator-container {
-      $indicator-size: 1rem;
-      $indicator-padding: 0.125rem;
-      $input-height: 2.5rem;
-
+    .required-indicator {
       position: absolute;
-      height: $indicator-size + $indicator-padding * 2;
-      width: $indicator-size + $indicator-padding * 2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      opacity: 0.05;
+      transition: background-color 0.1s, opacity 0.1s;
+      border-radius: 50%;
+      background-color: var(--cell-foregroundColor);
+      width: 0.5 * $indicator-size;
+      height: 0.5 * $indicator-size;
 
-      left: -1 * ($indicator-size  + 2 * $indicator-padding);
-      top: calc($input-height / 2 - $indicator-size / 2);
-
-      &.cell-edit {
-        /* False-positive */
-        /* stylelint-disable-next-line */
-        left: calc(#{-1 * ($indicator-size + 2 * $indicator-padding)} + 1px);
-        top: 0;
+      &.empty {
+        opacity: 1;
+        background-color: rgba(255, 120, 100);
       }
+    }
 
-      &.cell-edit {
-        background-color: var(--cell-backgroundColor);
-        border: 1px solid var(--cell-borderColor);
-        border-right-color: var(--cell-backgroundColor);
-        border-top-left-radius: 50%;
-        border-bottom-left-radius: 50%;
-      }
+    .disabled-indicator {
+      display: none; // to show on input_slot__row hover
+      line-height: 1;
 
-      .required-indicator {
-        position: absolute;
-        height: 0.5 * $indicator-size;
-        width: 0.5 * $indicator-size;
-        border-radius: 50%;
-        background-color: var(--cell-foregroundColor);
-        opacity: 0.05;
-        transition:
-          background-color 0.1s,
-          opacity 0.1s;
-
-        &.empty {
-          background-color: rgba(255, 120, 100);
-          opacity: 1;
-        }
-      }
-
-      .disabled-indicator {
-        line-height: 1;
-        display: none; // to show on input_slot__row hover
-
-        .material-icons {
-          color: var(--default-foregroundDarkerColor);
-        }
+      .material-icons {
+        color: var(--default-foregroundDarkerColor);
       }
     }
   }
+}
 
-  .input-slot_cell-edit {
-    padding: 0;
-    margin: 0;
-  }
+.input-slot_cell-edit {
+  margin: 0;
+  padding: 0;
+}
 
-  .input_modal__input_group {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: 0 1rem;
-    background-color: var(--table-backgroundDarker1Color);
-  }
+.input_modal__input_group {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--table-backgroundDarker1Color);
+  padding: 0 1rem;
+  height: 100%;
+}
 
-  .input_modal__input {
-    overflow: auto;
-  }
+.input_modal__input {
+  overflow: auto;
+}
 </style>

@@ -3,30 +3,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { namespace } from 'vuex-class'
 
-import * as monaco from "monaco-editor";
+import * as monaco from 'monaco-editor'
 
-import { CurrentSettings } from "@/state/settings";
+import { CurrentSettings } from '@/state/settings'
 
-const settings = namespace("settings");
+const settings = namespace('settings')
 
 @Component
 export default class CodeEditor extends Vue {
-  @settings.State("current") settings!: CurrentSettings;
+  @settings.State('current') settings!: CurrentSettings
 
-  @Prop({ default: "" }) content!: string;
-  @Prop({ default: "sql", type: String }) language!: string;
-  @Prop({ default: "" }) theme!: string;
-  @Prop({ default: false }) readOnly!: boolean;
-  @Prop({ default: false }) autofocus!: boolean;
-  @Prop({ default: false }) isModal!: boolean;
+  @Prop({ default: '' }) content!: string
+  @Prop({ default: 'sql', type: String }) language!: string
+  @Prop({ default: '' }) theme!: string
+  @Prop({ default: false }) readOnly!: boolean
+  @Prop({ default: false }) autofocus!: boolean
+  @Prop({ default: false }) isModal!: boolean
 
-  editor: monaco.editor.IStandaloneCodeEditor | null = null;
+  editor: monaco.editor.IStandaloneCodeEditor | null = null
 
   get options(): monaco.editor.IStandaloneEditorConstructionOptions {
-    const fontSize = 12;
+    const fontSize = 12
 
     const options: monaco.editor.IStandaloneEditorConstructionOptions = {
       language: this.language,
@@ -41,31 +41,33 @@ export default class CodeEditor extends Vue {
         nonBasicASCII: false,
       },
       fontSize,
-    };
+    }
 
     const mobileOptions: monaco.editor.IStandaloneEditorConstructionOptions = {
       minimap: { enabled: false },
-      lineNumbers: "off",
+      lineNumbers: 'off',
       glyphMargin: false,
       folding: false,
       lineDecorationsWidth: 0,
       lineNumbersMinChars: 0,
-    };
+    }
 
-    return this.$isMobile ? { ...options, ...mobileOptions } : options;
+    return this.$isMobile ? { ...options, ...mobileOptions } : options
   }
 
-  @Watch("options")
-  private updateOptions(newOptions: monaco.editor.IStandaloneEditorConstructionOptions) {
+  @Watch('options')
+  private updateOptions(
+    newOptions: monaco.editor.IStandaloneEditorConstructionOptions,
+  ) {
     if (this.editor !== null) {
-      this.editor.updateOptions(newOptions);
+      this.editor.updateOptions(newOptions)
     }
   }
 
-  @Watch("content")
+  @Watch('content')
   private updateContent(content: string) {
     if (this.editor !== null && this.editor.getValue() !== content) {
-      this.editor.setValue(content);
+      this.editor.setValue(content)
     }
   }
 
@@ -73,21 +75,21 @@ export default class CodeEditor extends Vue {
     const editor = monaco.editor.create(this.$el as HTMLElement, {
       ...this.options,
       value: this.content,
-    });
+    })
     editor.onDidFocusEditorWidget(() => {
-      this.$root.$emit("form-input-focused");
-      this.$emit("focus");
-    });
+      this.$root.$emit('form-input-focused')
+      this.$emit('focus')
+    })
     editor.onDidBlurEditorWidget(() => {
-      this.$emit("blur");
-    });
-    editor.onDidChangeModelContent(event => {
-      const content = editor.getValue();
+      this.$emit('blur')
+    })
+    editor.onDidChangeModelContent((event) => {
+      const content = editor.getValue()
       if (content !== this.content) {
-        this.$emit("update:content", content);
+        this.$emit('update:content', content)
       }
-    });
-    this.editor = editor;
+    })
+    this.editor = editor
     if (this.autofocus) {
       // FIXME: With the next line autofocus work for the first table cell open
       //        with codeeditor. But close the edit cell for a second time.
@@ -95,27 +97,27 @@ export default class CodeEditor extends Vue {
     }
   }
 
-  @Watch("autofocus")
+  @Watch('autofocus')
   private onAutofocus(autofocus: boolean) {
     if (autofocus && this.editor) {
-      this.editor.focus();
+      this.editor.focus()
     }
   }
 
   private beforeDestroy() {
-    this.editor!.dispose();
+    this.editor!.dispose()
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .code-editor {
-    border: 1px solid var(--MainBorderColor);
-    border-radius: 4px;
-    overflow: hidden;
-  }
+.code-editor {
+  border: 1px solid var(--MainBorderColor);
+  border-radius: 4px;
+  overflow: hidden;
+}
 
-  .monaco-editor_modal {
-    height: 350px;
-  }
+.monaco-editor_modal {
+  height: 350px;
+}
 </style>

@@ -1,16 +1,14 @@
 <template>
   <fragment>
-    <b-input-group
-      v-if="!isCellEdit"
-    >
+    <b-input-group v-if="!isCellEdit">
       <b-input
         :id="inputId"
         ref="control"
         :class="[
           'input-field',
           {
-            'readonly': disabled,
-          }
+            readonly: disabled,
+          },
         ]"
         :style="{ textAlign }"
         autocomplete="off"
@@ -48,24 +46,20 @@
       />
       <ButtonItem v-if="isCellEdit && qrcodeInput" :button="qrCodeButton" />
     </div>
-    <QRCodeScannerModal
-      ref="scanner"
-      raw
-      @select="updateInput"
-    />
+    <QRCodeScannerModal ref="scanner" raw @select="updateInput" />
   </fragment>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { Debounce } from "vue-debounce-decorator";
-import Textarea from "@/components/form/Textarea.vue";
-import QRCodeScannerModal from "@/components/qrcode/QRCodeScannerModal.vue";
-import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import { Button } from "@/components/buttons/buttons";
-import { findLink } from "@/utils";
-import type { TextLink } from "@/utils";
-import { bootstrapVariantAttribute } from "@/utils_colors";
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+import { Debounce } from 'vue-debounce-decorator'
+import Textarea from '@/components/form/Textarea.vue'
+import QRCodeScannerModal from '@/components/qrcode/QRCodeScannerModal.vue'
+import ButtonItem from '@/components/buttons/ButtonItem.vue'
+import { Button } from '@/components/buttons/buttons'
+import { findLink } from '@/utils'
+import type { TextLink } from '@/utils'
+import { bootstrapVariantAttribute } from '@/utils_colors'
 
 @Component({
   components: {
@@ -75,167 +69,171 @@ import { bootstrapVariantAttribute } from "@/utils_colors";
   },
 })
 export default class Input extends Vue {
-  @Prop() value!: unknown;
-  @Prop({ type: Boolean }) disabled!: boolean;
-  @Prop({ type: String, default: "text" }) type!: string;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean;
+  @Prop() value!: unknown
+  @Prop({ type: Boolean }) disabled!: boolean
+  @Prop({ type: String, default: 'text' }) type!: string
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
+  @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean
   // FIXME: remove this and style parent nodes instead.
   // Perhaps we need "autosize" prop instead?
-  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
-  @Prop({ type: String, default: "left" }) textAlign!: string;
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
+  @Prop({ type: String }) backgroundColor!: string
+  @Prop({ type: String, default: 'left' }) textAlign!: string
 
-  private textLink: TextLink | null = null;
+  private textLink: TextLink | null = null
 
   private get qrCodeButton(): Button {
     return {
-      type: "callback",
-      icon: "qr_code_2",
-      variant: bootstrapVariantAttribute("outline-info"),
+      type: 'callback',
+      icon: 'qr_code_2',
+      variant: bootstrapVariantAttribute('outline-info'),
       callback: () => (this.$refs.scanner as QRCodeScannerModal).scan(),
-    };
+    }
   }
 
   private get inputId(): string {
-    return `${this.uid}-input`;
+    return `${this.uid}-input`
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    this.$emit("enter-pressed", event);
+    this.$emit('enter-pressed', event)
   }
 
   private onPressTab(event: KeyboardEvent) {
-    this.$emit("tab-pressed", event);
+    this.$emit('tab-pressed', event)
   }
 
   @Debounce(1000)
   private debouncedRecalculateTextLink() {
-    this.recalculateTextLink();
+    this.recalculateTextLink()
   }
 
   private recalculateTextLink() {
-    this.textLink = this.isCellEdit ? null : findLink(String(this.value));
+    this.textLink = this.isCellEdit ? null : findLink(String(this.value))
   }
 
   private get textLinkIcon(): string | null {
-    if (this.textLink === null) return null;
+    if (this.textLink === null) return null
 
-    const type = this.textLink.type;
+    const type = this.textLink.type
     /* eslint-disable */
-    return type === "url"   ? "link"
-         : type === "tel"   ? "call"
-         : type === "email" ? "email"
-         :                    "error";
+    return type === 'url'
+      ? 'link'
+      : type === 'tel'
+      ? 'call'
+      : type === 'email'
+      ? 'email'
+      : 'error'
     /* eslint-enable */
   }
 
   private get textLinkButton(): Button | null {
-    if (this.textLink === null) return null;
+    if (this.textLink === null) return null
 
     return {
-      type: "link",
+      type: 'link',
       icon: this.textLinkIcon!,
       link: {
-        type: "href",
+        type: 'href',
         href: this.textLink.href,
-        target: "blank",
+        target: 'blank',
       },
-      variant: bootstrapVariantAttribute("outline-primary"),
-    };
+      variant: bootstrapVariantAttribute('outline-primary'),
+    }
   }
 
   private mounted() {
     if (this.autofocus) {
       void Vue.nextTick().then(() => {
         if (this.isCellEdit) {
-          const controlTextareaElement = (this.$refs.controlTextarea as Vue).$el as HTMLInputElement;
-          controlTextareaElement.focus();
-          this.setCursorPositionEnd(controlTextareaElement);
+          const controlTextareaElement = (this.$refs.controlTextarea as Vue)
+            .$el as HTMLInputElement
+          controlTextareaElement.focus()
+          this.setCursorPositionEnd(controlTextareaElement)
         } else {
-          (this.$refs.control as any)?.focus();
+          ;(this.$refs.control as any)?.focus()
         }
-      });
+      })
     }
 
-    this.recalculateTextLink();
+    this.recalculateTextLink()
   }
 
-  @Watch("value")
+  @Watch('value')
   private onValueUpdate(value: string) {
-    this.debouncedRecalculateTextLink();
+    this.debouncedRecalculateTextLink()
   }
 
-  @Watch("autofocus")
+  @Watch('autofocus')
   private onAutofocus(autofocus: boolean) {
     if (autofocus) {
-      (this.$refs.control as HTMLInputElement | undefined)?.focus();
+      ;(this.$refs.control as HTMLInputElement | undefined)?.focus()
     }
   }
 
   private onFocus(evt: Event) {
-    this.$emit("focus", evt);
+    this.$emit('focus', evt)
   }
 
   private setCursorPositionEnd(controlElement: HTMLInputElement) {
-    if (!controlElement) return;
+    if (!controlElement) return
 
-    let selectionStart = 0;
-    if (typeof this.value === "string") {
-      selectionStart = this.value.length;
+    let selectionStart = 0
+    if (typeof this.value === 'string') {
+      selectionStart = this.value.length
     }
-    if (typeof this.value === "number") {
-      selectionStart = String(this.value).length;
+    if (typeof this.value === 'number') {
+      selectionStart = String(this.value).length
     }
-    controlElement.selectionStart = selectionStart;
+    controlElement.selectionStart = selectionStart
   }
 
   private updateInput(value: string) {
     if (this.value !== value) {
-      this.$emit("input", value);
+      this.$emit('input', value)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  ::v-deep .form-control {
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    background-color: transparent;
-    color: var(--cell-foregroundColor);
+::v-deep .form-control {
+  border-radius: 0.5rem;
+  background-color: transparent;
+  padding: 0.5rem 0.75rem;
+  color: var(--cell-foregroundColor);
 
-    &.readonly {
-      cursor: not-allowed;
-    }
+  &.readonly {
+    cursor: not-allowed;
   }
+}
 
-  .textarea-container {
-    display: flex;
-    flex-direction: row;
-  }
+.textarea-container {
+  display: flex;
+  flex-direction: row;
+}
 
-  .input-textarea {
-    padding: 0.15rem 0.1rem; /* Loosely matches .table-td padding */
-    border: none;
-    resize: none;
-    width: 100%;
-    display: block;
-    overflow: auto !important;
-    max-height: 165px;
-    text-align: inherit;
-    line-height: 1.2rem;
-    color: var(--cell-foregroundColor);
-    background-color: var(--cell-backgroundColor);
-    border-color: var(--cell-borderColor);
-  }
+.input-textarea {
+  display: block;
+  border: none;
+  border-color: var(--cell-borderColor);
+  background-color: var(--cell-backgroundColor);
+  padding: 0.15rem 0.1rem; /* Loosely matches .table-td padding */
+  width: 100%;
+  max-height: 165px;
+  overflow: auto !important;
+  resize: none;
+  color: var(--cell-foregroundColor);
+  line-height: 1.2rem;
+  text-align: inherit;
+}
 
-  .input-textarea:focus {
-    outline: none;
-  }
+.input-textarea:focus {
+  outline: none;
+}
 
-  .append-button ::v-deep .btn {
-    padding: 0.4rem 0.3rem;
-    border-radius: 0 0.5rem 0.5rem 0;
-  }
+.append-button ::v-deep .btn {
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0.4rem 0.3rem;
+}
 </style>

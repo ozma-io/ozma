@@ -20,25 +20,16 @@
     class="default-variant default-local-variant"
   >
     <div class="app-container">
-      <ModalPortalTarget
-        name="tabbed-modal"
-        multiple
-      />
+      <ModalPortalTarget name="tabbed-modal" multiple />
 
-      <portal-target
-        name="input-popup-portal"
-        multiple
-      />
+      <portal-target name="input-popup-portal" multiple />
 
       <ReadonlyDemoInstanceModal
         v-if="isReadonlyDemoInstance"
         ref="readonlyDemoInstanceModal"
       />
 
-      <InviteUserModal
-        v-if="hasAuth"
-        ref="inviteUserModal"
-      />
+      <InviteUserModal v-if="hasAuth" ref="inviteUserModal" />
 
       <HelpModal
         v-if="helpPageInfo"
@@ -51,11 +42,8 @@
       />
 
       <template v-if="authErrors.length > 0">
-        <span
-          v-for="error in authErrors"
-          :key="error"
-        >
-          {{ $t("auth_error", { msg: error }) }}
+        <span v-for="error in authErrors" :key="error">
+          {{ $t('auth_error', { msg: error }) }}
         </span>
       </template>
       <router-view v-else />
@@ -64,231 +52,269 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import { namespace, Action } from "vuex-class";
-import { IViewExprResult } from "ozma-api";
-import moment from "moment";
+import { Component, Vue, Watch } from 'vue-property-decorator'
+import { namespace, Action } from 'vuex-class'
+import { IViewExprResult } from 'ozma-api'
+import moment from 'moment'
 
 // TODO: import all languages from instance settings
-import "moment/locale/es";
-import "moment/locale/ru";
+import 'moment/locale/es'
+import 'moment/locale/ru'
 
-import type { ICallApi } from "@/state/auth";
-import { CurrentAuth, INoAuth } from "@/state/auth";
-import { CurrentSettings } from "@/state/settings";
-import type { WindowKey } from "@/state/windows";
-import ModalPortalTarget from "@/components/modal/ModalPortalTarget";
-import { ErrorKey } from "@/state/errors";
-import { colorVariantsToCssRules, bootstrapColorVariants, colorVariantFromRaw, transparentVariant, IThemeRef, ITheme } from "@/utils_colors";
-import { eventBus, IShowHelpModalArgs } from "@/main";
-import { IEmbeddedPageRef } from "@/api";
-import InviteUserModal from "./components/InviteUserModal.vue";
-import { EntityRef } from "./links";
-import { safeJsonParse } from "./utils";
-import { equalEntityRef } from "./values";
-import { IQuery, QueryKey } from "./state/query";
-import { Language } from "./state/translations";
+import type { ICallApi } from '@/state/auth'
+import { CurrentAuth, INoAuth } from '@/state/auth'
+import { CurrentSettings } from '@/state/settings'
+import type { WindowKey } from '@/state/windows'
+import ModalPortalTarget from '@/components/modal/ModalPortalTarget'
+import { ErrorKey } from '@/state/errors'
+import {
+  colorVariantsToCssRules,
+  bootstrapColorVariants,
+  colorVariantFromRaw,
+  transparentVariant,
+  IThemeRef,
+  ITheme,
+} from '@/utils_colors'
+import { eventBus, IShowHelpModalArgs } from '@/main'
+import { IEmbeddedPageRef } from '@/api'
+import InviteUserModal from './components/InviteUserModal.vue'
+import { EntityRef } from './links'
+import { safeJsonParse } from './utils'
+import { equalEntityRef } from './values'
+import { IQuery, QueryKey } from './state/query'
+import { Language } from './state/translations'
 
-const settings = namespace("settings");
-const auth = namespace("auth");
-const errors = namespace("errors");
-const staging = namespace("staging");
-const windows = namespace("windows");
-const query = namespace("query");
-const translations = namespace("translations");
-import { type UserString } from "@/state/translations";
-import { setHeadMeta, setHeadLink } from "@/elements";
+const settings = namespace('settings')
+const auth = namespace('auth')
+const errors = namespace('errors')
+const staging = namespace('staging')
+const windows = namespace('windows')
+const query = namespace('query')
+const translations = namespace('translations')
+import { type UserString } from '@/state/translations'
+import { setHeadMeta, setHeadLink } from '@/elements'
 
 @Component({
   components: {
     ModalPortalTarget,
     InviteUserModal,
-    ReadonlyDemoInstanceModal: () => import("@/components/ReadonlyDemoInstanceModal.vue"),
-    HelpModal: () => import("@/components/HelpModal.vue"),
+    ReadonlyDemoInstanceModal: () =>
+      import('@/components/ReadonlyDemoInstanceModal.vue'),
+    HelpModal: () => import('@/components/HelpModal.vue'),
   },
 })
 export default class App extends Vue {
-  @Action("callApi") callApi!: ICallApi;
-  @settings.State("current") settings!: CurrentSettings;
-  @settings.State("currentThemeRef") currentThemeRef!: IThemeRef | null;
-  @settings.Getter("language") language!: string;
-  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
-  @auth.Action("startAuth") startAuth!: () => Promise<void>;
-  @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
-  @errors.State("silent") silentErrors!: boolean;
-  @staging.Mutation("setAutoSaveTimeout") setAutoSaveTimeout!: (_: number | null) => void;
-  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
-  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
-  @query.Action("push") push!: (_: { key: QueryKey; query: IQuery }) => Promise<void>;
-  @translations.Action("getTranslations") getTranslations!: (_: Language) => Promise<void>;
+  @Action('callApi') callApi!: ICallApi
+  @settings.State('current') settings!: CurrentSettings
+  @settings.State('currentThemeRef') currentThemeRef!: IThemeRef | null
+  @settings.Getter('language') language!: string
+  @auth.State('current') currentAuth!: CurrentAuth | INoAuth | null
+  @auth.Action('startAuth') startAuth!: () => Promise<void>
+  @errors.State('errors') rawErrors!: Record<ErrorKey, string[]>
+  @errors.State('silent') silentErrors!: boolean
+  @staging.Mutation('setAutoSaveTimeout') setAutoSaveTimeout!: (
+    _: number | null,
+  ) => void
+  @windows.Mutation('createWindow') createWindow!: (_: WindowKey) => void
+  @windows.Mutation('destroyWindow') destroyWindow!: (_: WindowKey) => void
+  @query.Action('push') push!: (_: {
+    key: QueryKey
+    query: IQuery
+  }) => Promise<void>
+  @translations.Action('getTranslations') getTranslations!: (
+    _: Language,
+  ) => Promise<void>
 
   helpPageInfo: {
-    key: string | null;
-    ref: IEmbeddedPageRef;
-    markup: string;
-  } | null = null;
+    key: string | null
+    ref: IEmbeddedPageRef
+    markup: string
+  } | null = null
 
   created() {
-    void this.startAuth();
+    void this.startAuth()
 
-    this.createWindow(this.uid);
+    this.createWindow(this.uid)
 
     /* eslint-disable @typescript-eslint/unbound-method */
-    document.addEventListener("copy", this.onCopy);
-    document.addEventListener("cut", this.onCut);
-    document.addEventListener("paste", this.onPaste);
+    document.addEventListener('copy', this.onCopy)
+    document.addEventListener('cut', this.onCut)
+    document.addEventListener('paste', this.onPaste)
 
-    eventBus.on("show-readonly-demo-modal", this.showDemoModal);
-    eventBus.on("show-invite-user-modal", this.showInviteUserModal);
-    eventBus.on("show-help-modal", this.showHelpModal);
-    eventBus.on("close-all-toasts", this.closeAllToasts);
+    eventBus.on('show-readonly-demo-modal', this.showDemoModal)
+    eventBus.on('show-invite-user-modal', this.showInviteUserModal)
+    eventBus.on('show-help-modal', this.showHelpModal)
+    eventBus.on('close-all-toasts', this.closeAllToasts)
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
   destroyed() {
     /* eslint-disable @typescript-eslint/unbound-method */
-    document.removeEventListener("copy", this.onCopy);
-    document.removeEventListener("cut", this.onCut);
-    document.removeEventListener("paste", this.onPaste);
+    document.removeEventListener('copy', this.onCopy)
+    document.removeEventListener('cut', this.onCut)
+    document.removeEventListener('paste', this.onPaste)
 
-    eventBus.off("show-readonly-demo-modal", this.showDemoModal);
-    eventBus.off("show-invite-user-modal", this.showInviteUserModal);
-    eventBus.off("show-help-modal", this.showHelpModal);
-    eventBus.off("close-all-toasts", this.closeAllToasts);
+    eventBus.off('show-readonly-demo-modal', this.showDemoModal)
+    eventBus.off('show-invite-user-modal', this.showInviteUserModal)
+    eventBus.off('show-help-modal', this.showHelpModal)
+    eventBus.off('close-all-toasts', this.closeAllToasts)
     /* eslint-enable @typescript-eslint/unbound-method */
 
-    this.destroyWindow(this.uid);
+    this.destroyWindow(this.uid)
   }
 
   private onCopy(event: ClipboardEvent) {
-    this.$root.$emit("copy", event);
+    this.$root.$emit('copy', event)
   }
 
   private onCut(event: ClipboardEvent) {
-    this.$root.$emit("cut", event);
+    this.$root.$emit('cut', event)
   }
 
   private onPaste(event: ClipboardEvent) {
-    this.$root.$emit("paste", event);
+    this.$root.$emit('paste', event)
   }
 
   get isReadonlyDemoInstance() {
-    return this.settings.getEntry("is_read_only_demo_instance", Boolean, false) && !this.hasAuth;
+    return (
+      this.settings.getEntry('is_read_only_demo_instance', Boolean, false) &&
+      !this.hasAuth
+    )
   }
 
   get hasAuth() {
-    return Boolean(this.currentAuth?.refreshToken);
+    return Boolean(this.currentAuth?.refreshToken)
   }
 
   get authErrors() {
-    return this.silentErrors ? [] : (this.rawErrors["auth"] ?? []);
+    return this.silentErrors ? [] : this.rawErrors['auth'] ?? []
   }
 
   private showDemoModal() {
-    (this.$refs?.readonlyDemoInstanceModal as any)?.show();
+    ;(this.$refs?.readonlyDemoInstanceModal as any)?.show()
   }
 
   private showInviteUserModal() {
-    (this.$refs?.inviteUserModal as any)?.show();
+    ;(this.$refs?.inviteUserModal as any)?.show()
   }
 
   private showHelpModal(args: IShowHelpModalArgs) {
     void (async () => {
-      if (this.helpPageInfo) return;
+      if (this.helpPageInfo) return
 
       if (args.skipIfShown) {
-        const dismissHelpPages = Boolean(localStorage.getItem("dismissHelpPages"));
+        const dismissHelpPages = Boolean(
+          localStorage.getItem('dismissHelpPages'),
+        )
         if (dismissHelpPages) {
-          return;
+          return
         }
 
         if (args.key !== null) {
-          const watchedRef = EntityRef.safeParse(safeJsonParse(localStorage.getItem(`watchedHelpPage_${args.key}`)));
-          const alreadyWatched = watchedRef.success ? equalEntityRef(args.ref, watchedRef.data) : false;
+          const watchedRef = EntityRef.safeParse(
+            safeJsonParse(localStorage.getItem(`watchedHelpPage_${args.key}`)),
+          )
+          const alreadyWatched = watchedRef.success
+            ? equalEntityRef(args.ref, watchedRef.data)
+            : false
           if (alreadyWatched) {
-            return;
+            return
           }
         }
       }
 
-      const uvRef = { schema: "funapp", name: "embedded_page_by_name" };
+      const uvRef = { schema: 'funapp', name: 'embedded_page_by_name' }
       const res: IViewExprResult = await this.callApi({
-        func: api => api.getNamedUserView(uvRef, args.ref as any),
-      });
+        func: (api) => api.getNamedUserView(uvRef, args.ref as any),
+      })
 
-      const markupRaw = (res.result.rows[0]?.values[0].value as string | undefined) ?? null;
-      const markup = markupRaw ?? `Help page markup with name "${args.ref.schema}"."${args.ref.name}" not found.`;
-      this.helpPageInfo = { key: args.key, ref: args.ref, markup };
-    })();
+      const markupRaw =
+        (res.result.rows[0]?.values[0].value as string | undefined) ?? null
+      const markup =
+        markupRaw ??
+        `Help page markup with name "${args.ref.schema}"."${args.ref.name}" not found.`
+      this.helpPageInfo = { key: args.key, ref: args.ref, markup }
+    })()
   }
 
   onHelpModalClose() {
-    this.helpPageInfo = null;
+    this.helpPageInfo = null
   }
 
   dismissHelpPage() {
-    if (!this.helpPageInfo) return;
+    if (!this.helpPageInfo) return
 
-    localStorage.setItem(`watchedHelpPage_${this.helpPageInfo.key}`, JSON.stringify(this.helpPageInfo.ref));
+    localStorage.setItem(
+      `watchedHelpPage_${this.helpPageInfo.key}`,
+      JSON.stringify(this.helpPageInfo.ref),
+    )
 
-    this.helpPageInfo = null;
+    this.helpPageInfo = null
   }
 
   dismissAllHelpPages() {
-    localStorage.setItem("dismissHelpPages", "true");
-    this.helpPageInfo = null;
+    localStorage.setItem('dismissHelpPages', 'true')
+    this.helpPageInfo = null
   }
 
   private closeAllToasts() {
-    this.$bvToast.hide();
+    this.$bvToast.hide()
   }
 
   get url(): UserString {
-    return `${window.location.protocol}://${window.location.host}${this.$route.fullPath}`;
+    return `${window.location.protocol}://${window.location.host}${this.$route.fullPath}`
   }
 
-  @Watch("language", { immediate: true })
+  @Watch('language', { immediate: true })
   private updateLanguage() {
-    this.$root.$i18n.locale = this.language;
+    this.$root.$i18n.locale = this.language
   }
 
-  @Watch("$i18n.locale", { immediate: true })
+  @Watch('$i18n.locale', { immediate: true })
   private loadLanguage(language: string) {
-    moment.locale(language);
-    void this.getTranslations(language);
+    moment.locale(language)
+    void this.getTranslations(language)
   }
 
-  @Watch("settings", { immediate: true })
+  @Watch('settings', { immediate: true })
   private updateSettings() {
-    const rawAutoSaveTimeout = Number(this.settings.getEntry("auto_save_timeout", String, "1"));
-    const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout) ? null : rawAutoSaveTimeout * 1000;
-    this.setAutoSaveTimeout(autoSaveTimeout);
-    const html = document.querySelector("html");
+    const rawAutoSaveTimeout = Number(
+      this.settings.getEntry('auto_save_timeout', String, '1'),
+    )
+    const autoSaveTimeout = Number.isNaN(rawAutoSaveTimeout)
+      ? null
+      : rawAutoSaveTimeout * 1000
+    this.setAutoSaveTimeout(autoSaveTimeout)
+    const html = document.querySelector('html')
     if (html) {
       // `rem` in CSS is calculated only from `font-size` on `<html>`.
-      html.style.fontSize = `${this.fontSize}px`;
+      html.style.fontSize = `${this.fontSize}px`
     }
 
-    const gtmId = this.settings.getEntry("google_tag_manager_container_id", String, null);
+    const gtmId = this.settings.getEntry(
+      'google_tag_manager_container_id',
+      String,
+      null,
+    )
     if (gtmId) {
-      const gtmScript = document.createElement("script");
-      gtmScript.type = "text/javascript";
+      const gtmScript = document.createElement('script')
+      gtmScript.type = 'text/javascript'
       gtmScript.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${gtmId}');`;
-      document.head.appendChild(gtmScript);
+})(window,document,'script','dataLayer','${gtmId}');`
+      document.head.appendChild(gtmScript)
     }
 
-    this.loadColors();
+    this.loadColors()
   }
 
-  @Watch("url", { immediate: true })
+  @Watch('url', { immediate: true })
   private updateUrl(url: UserString) {
-    const urlString = `${this.$ustOrEmpty(url)}`;
-    setHeadLink("canonical", urlString);
-    setHeadMeta("property", "og:url", urlString);
+    const urlString = `${this.$ustOrEmpty(url)}`
+    setHeadLink('canonical', urlString)
+    setHeadMeta('property', 'og:url', urlString)
   }
 
   /* So, about themeing:
@@ -313,41 +339,45 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    * 7. Custom/inline variants works similar but a little simpler, but I'm too tired to explain, sorry.
    */
   get themeStyleSettings() {
-    let currentTheme: ITheme | undefined;
+    let currentTheme: ITheme | undefined
     if (this.currentThemeRef !== null) {
-      currentTheme = this.settings.themes[this.currentThemeRef.schema][this.currentThemeRef.name];
+      currentTheme =
+        this.settings.themes[this.currentThemeRef.schema][
+          this.currentThemeRef.name
+        ]
     }
 
-    const background = this.styleSettings["--OldMainBackgroundColor"];
-    const foreground = this.styleSettings["--OldMainTextColor"];
-    const border = this.styleSettings["--OldMainBorderColor"];
-    const oldDefaultVariant = colorVariantFromRaw({ background });
-    const defaultVariant = currentTheme?.colorVariants["default"] ?? oldDefaultVariant;
+    const background = this.styleSettings['--OldMainBackgroundColor']
+    const foreground = this.styleSettings['--OldMainTextColor']
+    const border = this.styleSettings['--OldMainBorderColor']
+    const oldDefaultVariant = colorVariantFromRaw({ background })
+    const defaultVariant =
+      currentTheme?.colorVariants['default'] ?? oldDefaultVariant
     const interfaceButton = {
       ...transparentVariant,
-      backgroundDarker1: "rgba(0, 0, 0, 0.2)",
-      backgroundDarker2: "rgba(0, 0, 0, 0.4)",
+      backgroundDarker1: 'rgba(0, 0, 0, 0.2)',
+      backgroundDarker2: 'rgba(0, 0, 0, 0.4)',
       foreground: defaultVariant.foreground,
       foregroundContrast: defaultVariant.foregroundContrast,
       foregroundDarker: defaultVariant.foregroundDarker,
-    };
+    }
     const menuEntry = {
       ...interfaceButton,
-      foreground: "#3D3D3D",
-    };
+      foreground: '#3D3D3D',
+    }
     const menuHeader = {
       ...interfaceButton,
-      foreground: "#1F1F1F",
-    };
+      foreground: '#1F1F1F',
+    }
     const outlinedInterfaceButton = {
       ...interfaceButton,
       border: defaultVariant.border,
-    };
+    }
     const ctaButton = colorVariantFromRaw({
-      background: "#2361FF",
-      foreground: "#FFF",
-      border: "#2361FF",
-    });
+      background: '#2361FF',
+      foreground: '#FFF',
+      border: '#2361FF',
+    })
     const defaultColorVariants = {
       default: defaultVariant,
       interfaceButton,
@@ -355,58 +385,126 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       menuEntry,
       menuHeader,
       ctaButton,
-    };
-    const colorVariants = { ...bootstrapColorVariants, ...defaultColorVariants, ...currentTheme?.colorVariants };
-    return colorVariantsToCssRules(colorVariants);
+    }
+    const colorVariants = {
+      ...bootstrapColorVariants,
+      ...defaultColorVariants,
+      ...currentTheme?.colorVariants,
+    }
+    return colorVariantsToCssRules(colorVariants)
   }
 
-  @Watch("themeStyleSettings", { immediate: true })
+  @Watch('themeStyleSettings', { immediate: true })
   private loadColors() {
-    const sheet = (document.getElementById("theme-styles") as any)?.sheet as CSSStyleSheet | undefined;
+    const sheet = (document.getElementById('theme-styles') as any)?.sheet as
+      | CSSStyleSheet
+      | undefined
     if (sheet) {
       while (sheet.cssRules.length > 0) {
-        sheet.deleteRule(0);
+        sheet.deleteRule(0)
       }
 
       for (const rule of this.themeStyleSettings) {
-        sheet.insertRule(rule);
+        sheet.insertRule(rule)
       }
     }
   }
 
   private get fontSize(): number {
-    const defaultSize = 14;
-    const normalSize = this.settings.getEntry("font_size", Number, defaultSize);
-    const mobileSize = this.settings.getEntry("font_size_mobile", Number, 14);
-    return this.$isMobile && mobileSize !== 0
-      ? mobileSize
-      : normalSize;
+    const defaultSize = 14
+    const normalSize = this.settings.getEntry('font_size', Number, defaultSize)
+    const mobileSize = this.settings.getEntry('font_size_mobile', Number, 14)
+    return this.$isMobile && mobileSize !== 0 ? mobileSize : normalSize
   }
 
   get styleSettings() {
     const values = {
       // "NavigationBackColor": this.settings.getEntry("navigation_back_color", String, "white"),
-      "FontSize": `${this.fontSize}px`,
-      "MenuColor": this.settings.getEntry("menu_color", String, "#F5C700"),
-      "TableBackColor": this.settings.getEntry("table_back_color", String, "white"),
-      "TableSelectColor": this.settings.getEntry("table_select_color", String, "#CCCCCC"),
-      "WarningBackColor": this.settings.getEntry("warning_back_color", String, "#fff3cd"),
-      "DangerBackColor": this.settings.getEntry("danger_back_color", String, "#f8d7da"),
-      "SuccessBackColor": this.settings.getEntry("success_back_color", String, "#d4edda"),
-      "SelectBorderColor": this.settings.getEntry("select_border_color", String, "blue"),
-      "ButtonTextColor": this.settings.getEntry("button_text_color", String, "white"),
-      "TableTextColor": this.settings.getEntry("table_text_color", String, "#383838"),
-      "SaveBackColor": this.settings.getEntry("save_back_color", String, "blue"),
-      "NavigationTextColor": this.settings.getEntry("navigation_text_color", String, "white"),
-      "ControlDisableColor": this.settings.getEntry("control_disable_color", String, "#999999"),
+      FontSize: `${this.fontSize}px`,
+      MenuColor: this.settings.getEntry('menu_color', String, '#F5C700'),
+      TableBackColor: this.settings.getEntry(
+        'table_back_color',
+        String,
+        'white',
+      ),
+      TableSelectColor: this.settings.getEntry(
+        'table_select_color',
+        String,
+        '#CCCCCC',
+      ),
+      WarningBackColor: this.settings.getEntry(
+        'warning_back_color',
+        String,
+        '#fff3cd',
+      ),
+      DangerBackColor: this.settings.getEntry(
+        'danger_back_color',
+        String,
+        '#f8d7da',
+      ),
+      SuccessBackColor: this.settings.getEntry(
+        'success_back_color',
+        String,
+        '#d4edda',
+      ),
+      SelectBorderColor: this.settings.getEntry(
+        'select_border_color',
+        String,
+        'blue',
+      ),
+      ButtonTextColor: this.settings.getEntry(
+        'button_text_color',
+        String,
+        'white',
+      ),
+      TableTextColor: this.settings.getEntry(
+        'table_text_color',
+        String,
+        '#383838',
+      ),
+      SaveBackColor: this.settings.getEntry('save_back_color', String, 'blue'),
+      NavigationTextColor: this.settings.getEntry(
+        'navigation_text_color',
+        String,
+        'white',
+      ),
+      ControlDisableColor: this.settings.getEntry(
+        'control_disable_color',
+        String,
+        '#999999',
+      ),
 
       // Light Theme, do not remove
-      "OldMainTextColor": this.settings.getEntry("main_text_color", String, "#rgba(51, 51, 51, 1)"),
-      "OldMainBackgroundColor": this.settings.getEntry("main_background_color", String, "white"),
-      "SecondaryBackgroundColor": this.settings.getEntry("secondary_background_color", String, "#f8f9fa"),
-      "OldMainTextColorLight": this.settings.getEntry("main_text_color_light", String, "rgba(153, 153, 153, 1)"),
-      "OldMainBorderColor": this.settings.getEntry("main_border_color", String, "rgb(204, 204, 204)"),
-      "MainBorderTextColor": this.settings.getEntry("main_border_text_color", String, "#68766d"),
+      OldMainTextColor: this.settings.getEntry(
+        'main_text_color',
+        String,
+        '#rgba(51, 51, 51, 1)',
+      ),
+      OldMainBackgroundColor: this.settings.getEntry(
+        'main_background_color',
+        String,
+        'white',
+      ),
+      SecondaryBackgroundColor: this.settings.getEntry(
+        'secondary_background_color',
+        String,
+        '#f8f9fa',
+      ),
+      OldMainTextColorLight: this.settings.getEntry(
+        'main_text_color_light',
+        String,
+        'rgba(153, 153, 153, 1)',
+      ),
+      OldMainBorderColor: this.settings.getEntry(
+        'main_border_color',
+        String,
+        'rgb(204, 204, 204)',
+      ),
+      MainBorderTextColor: this.settings.getEntry(
+        'main_border_text_color',
+        String,
+        '#68766d',
+      ),
 
       // Dark Theme, do not remove
       // "MainTextColor": this.settings.getEntry("main_text_color", String, "#b2b2b2"),
@@ -414,39 +512,61 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       // "MainTextColorLight": this.settings.getEntry("main_text_color_light", String, "#8a8a8a"),
       // "MainBorderColor": this.settings.getEntry("main_border_color", String, "#2c936f"),
 
-      "SuccessColor": this.settings.getEntry("success_color", String, "#28a745"),
-      "FailColor": this.settings.getEntry("fail_color", String, "#dc3545"),
-      "FailPlaceholderColor": this.settings.getEntry("fail_placeholder_color", String, "#2c0b0e"),
-      "WarningColor": this.settings.getEntry("fail_color", String, "#ffc107"),
-      "WarningPlaceholderColor": this.settings.getEntry("warning_placeholder_color", String, "#4c3a02"),
-      "StateTextColor": this.settings.getEntry("state_text_color", String, "white"),
+      SuccessColor: this.settings.getEntry('success_color', String, '#28a745'),
+      FailColor: this.settings.getEntry('fail_color', String, '#dc3545'),
+      FailPlaceholderColor: this.settings.getEntry(
+        'fail_placeholder_color',
+        String,
+        '#2c0b0e',
+      ),
+      WarningColor: this.settings.getEntry('fail_color', String, '#ffc107'),
+      WarningPlaceholderColor: this.settings.getEntry(
+        'warning_placeholder_color',
+        String,
+        '#4c3a02',
+      ),
+      StateTextColor: this.settings.getEntry(
+        'state_text_color',
+        String,
+        'white',
+      ),
 
-      "CellSelectColor": this.settings.getEntry("cell_select_color", String, "rgba(238,238,238,0.3)"),
-    };
+      CellSelectColor: this.settings.getEntry(
+        'cell_select_color',
+        String,
+        'rgba(238,238,238,0.3)',
+      ),
+    }
     return Object.entries(values).reduce((currSettings, [name, value]) => {
-      currSettings[`--${name}`] = value;
-      return currSettings;
-    }, {} as Record<string, unknown>);
+      currSettings[`--${name}`] = value
+      return currSettings
+    }, {} as Record<string, unknown>)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  #app {
-    --MainTextColor: var(--foregroundColor, var(--OldMainTextColor)) !important;
-    --MainTextColorLight: var(--foregroundDarkerColor, var(--OldMainTextColorLight)) !important;
-    --MainBackgroundColor: var(--backgroundColor, var(--OldMainBackgroundColor)) !important;
-    --MainBorderColor: var(--borderColor, var(--OldMainBorderColor)) !important;
+#app {
+  --MainTextColor: var(--foregroundColor, var(--OldMainTextColor)) !important;
+  --MainTextColorLight: var(
+    --foregroundDarkerColor,
+    var(--OldMainTextColorLight)
+  ) !important;
+  --MainBackgroundColor: var(
+    --backgroundColor,
+    var(--OldMainBackgroundColor)
+  ) !important;
+  --MainBorderColor: var(--borderColor, var(--OldMainBorderColor)) !important;
 
-    background-color: var(--backgroundColor);
-    color: var(--foregroundColor);
-  }
+  background-color: var(--backgroundColor);
+  color: var(--foregroundColor);
+}
 
-  @include variant-to-local("default");
+@include variant-to-local('default');
 
-  .app-container {
-    position: relative;
-    height: 100%;
-    overflow: auto;
-  }
+.app-container {
+  position: relative;
+  height: 100%;
+  overflow: auto;
+}
 </style>

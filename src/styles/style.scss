@@ -8,15 +8,10 @@ $input-placeholder-color: var(--cell-foregroundDarkerColor);
 $border-color: var(--MainBorderColor);
 $input-border-color: var(--cell-borderColor, $border-color);
 
-@import "../../node_modules/bootstrap/scss/bootstrap";
-@import "../../node_modules/vue-popperjs/dist/vue-popper.css";
+@import 'reset.css';
+@import '../../node_modules/bootstrap/scss/bootstrap';
+@import '../../node_modules/vue-popperjs/dist/vue-popper.css';
 
-/*
- *общие настройки
- *текста
- *отступов (т.к bootstrap их по дефолту выстовляет свои)
- *минимальных размеров и максимальных размеров для удобства выставление собственных размеров
- */
 html {
   overflow-x: hidden;
   overflow-y: hidden;
@@ -25,62 +20,51 @@ html {
 * {
   margin: 0;
   min-width: 0;
-  // transition: $color-transition;
 }
 
-/*
- *позиционирование боди под наши стили
- *установка размеров боди для наследования и размеров дочерних элементов выставленных в % (чтобы браузер мог их высчитать)
- *overflow:hidden запрещает скролл для удобства пролистывания таблиц и прочего (где нужно можно выставить возможность скрола на самой странице)
- */
 body {
+  position: absolute;
   top: 0;
+  bottom: 0;
   margin-top: 0;
   margin-bottom: 1px;
-  font-size: var(--FontSize);
   width: 100%;
   height: 100%;
-  position: absolute;
   overflow: hidden;
-  bottom: 0;
+  font-size: var(--FontSize);
   -webkit-text-size-adjust: none;
 
   --FocusBorderColor: #{$input-focus-border-color};
 
-  --userview-background-color: #F2F4F7;
+  --userview-background-color: #f2f4f7;
 
   div#app {
-    height: 100%;
     display: flex;
     flex-direction: column;
+    height: 100%;
     font-family: Inter;
   }
 }
 
-/*
- *стили печати
- *запрет браузеру менять цвета при печати
- *отступы для правильного отображения страницы на печатном листе
- */
 @media print {
   @page {
     margin: 50px;
   }
 
+  $sizes: 'sm', 'md', 'lg', 'xl';
+
   body {
+    background-color: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    background-color: white !important;
   }
-
-  $sizes: "sm", "md", "lg", "xl";
 
   @for $i from 1 through 12 {
     @each $size in $sizes {
       .col-#{$size}-#{$i} {
-        width: #{percentage(calc(round($i*8.33) / 100))} !important;
-        max-width: #{percentage(calc(round($i*8.33) / 100))} !important;
         float: left;
+        width: #{percentage(calc(round($i * 8.33) / 100))} !important;
+        max-width: #{percentage(calc(round($i * 8.33) / 100))} !important;
       }
     }
   }
@@ -88,18 +72,18 @@ body {
 
 // Works like `no-gutters` for Bootstrap's `.row`.
 .sm-gutters {
-  margin-left: -5px;
   margin-right: -5px;
+  margin-left: -5px;
 
-  > div[class*="col-"] {
+  > div[class*='col-'] {
     padding-right: 5px;
     padding-left: 5px;
   }
 }
 
 button:not(.btn) {
-  border: none;
   outline: none;
+  border: none;
 }
 
 .input-field,
@@ -122,15 +106,24 @@ button:not(.btn) {
 
 /* Source: https://google.github.io/material-design-icons/ */
 .material-icons,
-.md-24 { font-size: icon-size(); }
-.md-14 { font-size: icon-size(14px); }
-.md-18 { font-size: icon-size(18px); }
-.md-36 { font-size: icon-size(36px); }
-.md-48 { font-size: icon-size(48px); }
+.md-24 {
+  font-size: icon-size();
+}
+.md-14 {
+  font-size: icon-size(14px);
+}
+.md-18 {
+  font-size: icon-size(18px);
+}
+.md-36 {
+  font-size: icon-size(36px);
+}
+.md-48 {
+  font-size: icon-size(48px);
+}
 
 .material-icons {
   user-select: none;
-  font-size: 1.3rem;
 }
 
 .material-button {
@@ -138,10 +131,10 @@ button:not(.btn) {
 }
 
 .list-group-item-action {
-  padding: 0.5rem 0.8rem;
   display: flex;
   align-items: center;
   border: 0;
+  padding: 0.5rem 0.8rem;
 
   .icon {
     line-height: 0;
@@ -155,11 +148,11 @@ button:not(.btn) {
 .button-only-icon,
 .button-only-caption,
 .button-icon-caption {
-  @include material-button("button");
-
-  padding: 0.2rem;
+  @include material-button('button');
   display: flex;
   align-items: center;
+
+  padding: 0.2rem;
 }
 
 .button-only-icon,
@@ -181,10 +174,10 @@ button:not(.btn) {
 .with-material-icon {
   &.btn,
   &.input-group-text {
-    padding: 0 4px !important;
     display: flex !important;
     align-items: center !important;
     border: 1px solid var(--MainBorderColor);
+    padding: 0 4px !important;
   }
 
   .material-icons {
@@ -194,11 +187,10 @@ button:not(.btn) {
 
 input.readonly,
 input.disabled {
-  cursor: not-allowed;
-  background-color: var(--cell-backgroundColor) !important;
-
   /* Fixes for Safari */
   opacity: 1;
+  cursor: not-allowed;
+  background-color: var(--cell-backgroundColor) !important;
   -webkit-text-fill-color: var(--cell-foregroundColor);
 }
 
@@ -211,11 +203,11 @@ input.with-clear-content-button {
 }
 
 .btn.clear-content-button {
-  border-left-width: 0;
+  opacity: 1;
   border-right-width: 0;
+  border-left-width: 0;
   border-color: $input-border-color;
   color: var(--cell-foregroundDarkerColor, var(--MainTextColorLight));
-  opacity: 1;
 
   .material-icons {
     transition: opacity 0.1s;
@@ -253,37 +245,37 @@ $input-focus-border-color: #80bdff;
 $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 
 .form-control:focus {
-  background-color: var(--cell-backgroundColor);
   box-shadow: $input-focus-shadow;
+  background-color: var(--cell-backgroundColor);
 }
 
 .input-group.focus-entire:focus-within {
-  border-color: $input-focus-border-color !important;
-  box-shadow: $input-focus-shadow !important;
-  border-radius: 0.5rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  box-shadow: $input-focus-shadow !important;
+  border-color: $input-focus-border-color !important;
+  border-radius: 0.5rem;
 
   .form-control,
   .input-group-prepend .btn,
   .input-group-prepend .input-group-text,
   .input-group-append .btn,
   .input-group-append .input-group-text {
-    border-color: $input-focus-border-color !important;
     box-shadow: none;
+    border-color: $input-focus-border-color !important;
   }
 }
 
 .popper {
-  min-width: 100px;
-  padding: 0rem;
   background-color: var(--default-backgroundColor);
+  padding: 0rem;
+  min-width: 100px;
   color: var(--default-foregroundColor);
   font-size: inherit;
 
-  &[x-placement^="bottom"],
-  &[x-placement^="right"],
-  &[x-placement^="left"],
-  &[x-placement^="top"] {
+  &[x-placement^='bottom'],
+  &[x-placement^='right'],
+  &[x-placement^='left'],
+  &[x-placement^='top'] {
     margin: 0;
   }
 }
@@ -297,13 +289,13 @@ $input-focus-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .help-button-variant {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.9);
+  animation: help-button-anim 12s linear infinite;
+  box-shadow: 0 0 0.4rem rgba(255, 100, 100, 1);
   border-radius: 50px;
   background: linear-gradient(-45deg, #ffa63d, #ff3d77, #338aff, #3cf0c5);
   background-size: 600%;
-  animation: help-button-anim 12s linear infinite;
-  box-shadow: 0 0 0.4rem rgba(255, 100, 100, 1);
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
 
   &:hover {
     background: linear-gradient(-45deg, #ff3d77, #338aff, #3cf0c5, #ffa63d);

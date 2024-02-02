@@ -15,6 +15,7 @@
 
   <FunLink
     v-else-if="button.type === 'link'"
+    class="funlink"
     :link="button.link"
     @goto="$emit('goto', $event)"
     @click="onClickLink"
@@ -37,10 +38,7 @@
     @click="onClickCallback"
   />
 
-  <label
-    v-else-if="button.type === 'upload-file'"
-    class="m-0"
-  >
+  <label v-else-if="button.type === 'upload-file'" class="m-0">
     <ButtonView
       :button="button"
       :list-item="listItem"
@@ -52,7 +50,7 @@
       class="position-fixed"
       type="file"
       @change="uploadFile($event.target, button.uploadFile)"
-    >
+    />
   </label>
 
   <ButtonView
@@ -65,10 +63,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator'
 
-import ButtonView from "@/components/buttons/ButtonView.vue";
-import type { Button } from "@/components/buttons/buttons";
+import ButtonView from '@/components/buttons/ButtonView.vue'
+import type { Button } from '@/components/buttons/buttons'
 
 @Component({
   components: {
@@ -76,26 +74,32 @@ import type { Button } from "@/components/buttons/buttons";
   },
 })
 export default class ButtonItem extends Vue {
-  @Prop({ type: Object, required: true }) button!: Button;
-  @Prop({ type: Boolean, default: false }) listItem!: boolean;
-  @Prop({ type: Boolean, default: false }) listItemHasRightMargin!: boolean;
-  @Prop({ type: Boolean, default: false }) alignRight!: boolean;
+  @Prop({ type: Object, required: true }) button!: Button
+  @Prop({ type: Boolean, default: false }) listItem!: boolean
+  @Prop({ type: Boolean, default: false }) listItemHasRightMargin!: boolean
+  @Prop({ type: Boolean, default: false }) alignRight!: boolean
 
   private uploadFile(input: HTMLInputElement, next: (file: File) => void) {
-    const files = input.files as FileList;
-    next(files[0]);
+    const files = input.files as FileList
+    next(files[0])
   }
 
   private onClickLink() {
-    this.$emit("button-click", this.button);
+    this.$emit('button-click', this.button)
   }
 
   private onClickCallback() {
-    this.$emit("button-click", this.button);
+    this.$emit('button-click', this.button)
 
-    if (this.button.type === "callback") {
-      this.button.callback();
+    if (this.button.type === 'callback') {
+      this.button.callback()
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.funlink:hover {
+  text-decoration: none;
+}
+</style>

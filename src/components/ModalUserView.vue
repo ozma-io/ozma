@@ -53,9 +53,7 @@
     </template>
 
     <section class="section-modal">
-      <div
-        class="view-container"
-      >
+      <div class="view-container">
         <UserView
           ref="userViewRef"
           is-root
@@ -81,176 +79,189 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Component, Vue, Prop } from 'vue-property-decorator'
+import { namespace } from 'vuex-class'
 
-import type { IQuery } from "@/state/query";
-import { queryLocation } from "@/state/query";
-import { CurrentChanges, ISubmitResult, ScopeName } from "@/state/staging_changes";
-import ModalPortal from "@/components/modal/ModalPortal";
-import { router } from "@/modules";
-import type { Button } from "@/components/buttons/buttons";
-import HeaderPanel from "@/components/panels/HeaderPanel.vue";
-import { convertToWords } from "@/utils";
-import { ErrorKey } from "@/state/errors";
-import { UserString } from "@/state/translations";
-import { IArgumentEditorProps } from "./ArgumentEditor.vue";
+import type { IQuery } from '@/state/query'
+import { queryLocation } from '@/state/query'
+import {
+  CurrentChanges,
+  ISubmitResult,
+  ScopeName,
+} from '@/state/staging_changes'
+import ModalPortal from '@/components/modal/ModalPortal'
+import { router } from '@/modules'
+import type { Button } from '@/components/buttons/buttons'
+import HeaderPanel from '@/components/panels/HeaderPanel.vue'
+import { convertToWords } from '@/utils'
+import { ErrorKey } from '@/state/errors'
+import { UserString } from '@/state/translations'
+import { IArgumentEditorProps } from './ArgumentEditor.vue'
 
-const staging = namespace("staging");
-const errors = namespace("errors");
-const auth = namespace("auth");
+const staging = namespace('staging')
+const errors = namespace('errors')
+const auth = namespace('auth')
 
 @Component({ components: { ModalPortal, HeaderPanel } })
 export default class ModalUserView extends Vue {
-  @auth.State("protectedCalls") protectedCalls!: number;
-  @staging.State("current") changes!: CurrentChanges;
-  @staging.Action("submit") submitChanges!: (_: { scope?: ScopeName; preReload?: () => Promise<void>; errorOnIncomplete?: boolean }) => Promise<ISubmitResult>;
-  @staging.Action("clearAdded") clearAdded!: (_: { scope?: ScopeName; onlyUntouched?: boolean }) => Promise<void>;
-  @errors.State("errors") rawErrors!: Record<ErrorKey, string[]>;
-  @Prop({ type: Boolean, default: false }) selectionMode!: boolean;
-  @Prop({ type: Object, required: true }) view!: IQuery;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
+  @auth.State('protectedCalls') protectedCalls!: number
+  @staging.State('current') changes!: CurrentChanges
+  @staging.Action('submit') submitChanges!: (_: {
+    scope?: ScopeName
+    preReload?: () => Promise<void>
+    errorOnIncomplete?: boolean
+  }) => Promise<ISubmitResult>
+  @staging.Action('clearAdded') clearAdded!: (_: {
+    scope?: ScopeName
+    onlyUntouched?: boolean
+  }) => Promise<void>
+  @errors.State('errors') rawErrors!: Record<ErrorKey, string[]>
+  @Prop({ type: Boolean, default: false }) selectionMode!: boolean
+  @Prop({ type: Object, required: true }) view!: IQuery
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
 
-  private title: UserString | null = null;
-  private buttons: Button[] = [];
+  private title: UserString | null = null
+  private buttons: Button[] = []
 
-  private enableFilter = false;
-  private filterString = "";
-  private isUserViewLoading = false;
+  private enableFilter = false
+  private filterString = ''
+  private isUserViewLoading = false
 
-  private argumentEditorProps: IArgumentEditorProps | null = null;
+  private argumentEditorProps: IArgumentEditorProps | null = null
 
   private savedRecently: { show: boolean; timeoutId: NodeJS.Timeout | null } = {
     show: false,
     timeoutId: null,
-  };
+  }
 
   private get isSaving(): boolean {
-    return this.protectedCalls > 0;
+    return this.protectedCalls > 0
   }
 
   get errors() {
-    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) => keyErrors.map(error => {
-      return this.$t(`${key}_error`, { msg: error });
-    }));
+    return Object.entries(this.rawErrors).flatMap(([key, keyErrors]) =>
+      keyErrors.map((error) => {
+        return this.$t(`${key}_error`, { msg: error })
+      }),
+    )
   }
 
   private makeErrorToast() {
-    this.$bvToast.hide();
-    this.errors.forEach(error => {
+    this.$bvToast.hide()
+    this.errors.forEach((error) => {
       this.$bvToast.toast(error.toString(), {
-        title: this.$t("error").toString(),
-        variant: "danger",
+        title: this.$t('error').toString(),
+        variant: 'danger',
         solid: true,
         autoHideDelay: 10000,
-      });
-    });
+      })
+    })
   }
 
   get titleOrNewEntry(): string | null {
     if (this.view.args.args === null) {
-      return this.$t("new_entry").toString();
+      return this.$t('new_entry').toString()
     } else {
-      return this.title ? this.$ustOrEmpty(this.title) : null;
+      return this.title ? this.$ustOrEmpty(this.title) : null
     }
   }
 
   get filterWords() {
-    const value = this.filterString;
-    if (value !== "") {
-      return Array.from(new Set(convertToWords(value.toString())));
+    const value = this.filterString
+    if (value !== '') {
+      return Array.from(new Set(convertToWords(value.toString())))
     }
-    return [];
+    return []
   }
 
   private openFullscreen() {
-    void router.push(queryLocation(this.view));
+    void router.push(queryLocation(this.view))
   }
 
   private destroyed() {
-    void this.clearAdded({ scope: this.uid });
+    void this.clearAdded({ scope: this.uid })
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .section-modal {
-    height: 100%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.section-modal {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
 
-  .view-container {
-    overflow: auto;
-    height: 100%;
-  }
+.view-container {
+  height: 100%;
+  overflow: auto;
+}
 
-  .fullscreen-button {
-    cursor: pointer;
-  }
+.fullscreen-button {
+  cursor: pointer;
+}
 
-  .save-cluster {
-    position: absolute;
-    bottom: 1rem;
+.save-cluster {
+  display: flex;
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1000;
+
+  &.is-mobile {
     right: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 1000;
-
-    &.is-mobile {
-      bottom: 1rem;
-      right: 1rem;
-    }
+    bottom: 1rem;
   }
+}
 
-  .save-cluster-button {
-    height: 3rem;
-    width: 3rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
+.save-cluster-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+}
+
+.save-cluster-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  color: var(--default-backgroundDarker2Color);
+
+  .material-icons {
+    font-size: 2rem;
   }
+}
 
-  .save-cluster-indicator {
-    height: 3rem;
-    width: 3rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    color: var(--default-backgroundDarker2Color);
+.show-errors-button {
+  margin-bottom: 0.5rem;
+  background-color: #df4151;
+  width: 3rem;
+  height: 3rem;
+  color: #831721;
+}
 
-    .material-icons {
-      font-size: 2rem;
-    }
+.save-button {
+  color: var(--StateTextColor);
+
+  &.save {
+    background-color: #39ac00;
   }
+}
 
-  .show-errors-button {
-    height: 3rem;
-    width: 3rem;
-    margin-bottom: 0.5rem;
-    background-color: #df4151;
-    color: #831721;
-  }
-
-  .save-button {
-    color: var(--StateTextColor);
-
-    &.save {
-      background-color: #39ac00;
-    }
-  }
-
-  .saving-spinner {
-    height: 3rem;
-    width: 3rem;
-    border-color: #39ac00;
-    border-right-color: transparent;
-    border-width: 0.5rem;
-    opacity: 0.5;
-  }
+.saving-spinner {
+  opacity: 0.5;
+  border-width: 0.5rem;
+  border-color: #39ac00;
+  border-right-color: transparent;
+  width: 3rem;
+  height: 3rem;
+}
 </style>

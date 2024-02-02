@@ -38,92 +38,56 @@
     <p>
       <label>
         {{ $t('schema_name') }}:
-        <input
-          v-model="schema"
-          :placeholder="$tc('schema_name')"
-        >
+        <input v-model="schema" :placeholder="$tc('schema_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('view_name') }}:
-        <input
-          v-model="view"
-          :placeholder="$tc('view_name')"
-        >
+        <input v-model="view" :placeholder="$tc('view_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('user_name') }}:
-        <input
-          v-model="userName"
-          :placeholder="$tc('user_name')"
-        >
+        <input v-model="userName" :placeholder="$tc('user_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('role_schema') }}:
-        <input
-          v-model="roleSchema"
-          :placeholder="$tc('role_schema')"
-        >
+        <input v-model="roleSchema" :placeholder="$tc('role_schema')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('role_name') }}:
-        <input
-          v-model="roleName"
-          :placeholder="$tc('role_name')"
-        >
+        <input v-model="roleName" :placeholder="$tc('role_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('arguments') }}:
-        <input
-          v-model="rawArguments"
-          :placeholder="$tc('arguments')"
-        >
+        <input v-model="rawArguments" :placeholder="$tc('arguments')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('limit') }}:
-        <input
-          v-model="limit"
-          :placeholder="$tc('limit')"
-        >
+        <input v-model="limit" :placeholder="$tc('limit')" />
       </label>
     </p>
     <p>
-      <input
-        v-model="analyze"
-        type="checkbox"
-      >
-      <label>
-        ANALYZE
-      </label>
+      <input v-model="analyze" type="checkbox" />
+      <label> ANALYZE </label>
     </p>
     <p>
-      <input
-        v-model="verbose"
-        type="checkbox"
-      >
-      <label>
-        VERBOSE
-      </label>
+      <input v-model="verbose" type="checkbox" />
+      <label> VERBOSE </label>
     </p>
     <p>
-      <input
-        v-model="costs"
-        type="checkbox"
-      >
-      <label>
-        COSTS
-      </label>
+      <input v-model="costs" type="checkbox" />
+      <label> COSTS </label>
     </p>
     <p>
       <button @click="explainView">
@@ -159,93 +123,111 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { Action } from "vuex-class";
-import { IEntityRef, IUserViewRef, IViewExplainResult, IEntriesExplainOpts, ArgumentName, IQueryChunk } from "ozma-api";
+import { Component, Vue } from 'vue-property-decorator'
+import { Action } from 'vuex-class'
+import {
+  IEntityRef,
+  IUserViewRef,
+  IViewExplainResult,
+  IEntriesExplainOpts,
+  ArgumentName,
+  IQueryChunk,
+} from 'ozma-api'
 
-import type { ICallApi } from "@/state/auth";
+import type { ICallApi } from '@/state/auth'
 
 @Component
 export default class ExplainQuery extends Vue {
-  @Action("callApi") callApi!: ICallApi;
+  @Action('callApi') callApi!: ICallApi
 
-  schema = "";
-  view = "";
-  userName = "";
-  roleSchema = "";
-  roleName = "";
-  analyze = false;
-  verbose = false;
-  costs = true;
-  rawArguments = "";
-  limit = "";
+  schema = ''
+  view = ''
+  userName = ''
+  roleSchema = ''
+  roleName = ''
+  analyze = false
+  verbose = false
+  costs = true
+  rawArguments = ''
+  limit = ''
 
-  lastError = "";
-  attributesQuery = "";
-  attributesPlan = "";
-  rowsQuery = "";
-  rowsPlan = "";
+  lastError = ''
+  attributesQuery = ''
+  attributesPlan = ''
+  rowsQuery = ''
+  rowsPlan = ''
 
   async copyToClipboard(str: string) {
-    await navigator.clipboard.writeText(str);
+    await navigator.clipboard.writeText(str)
   }
 
   async explainView() {
-    this.attributesQuery = "";
-    this.attributesPlan = "";
-    this.rowsQuery = "";
-    this.rowsPlan = "";
-    this.lastError = "";
+    this.attributesQuery = ''
+    this.attributesPlan = ''
+    this.rowsQuery = ''
+    this.rowsPlan = ''
+    this.lastError = ''
 
     try {
       const ref: IUserViewRef = {
         schema: this.schema,
         name: this.view,
-      };
-      if ((this.roleSchema === "") !== (this.roleName === "")) {
-        throw new Error("You should specify both role schema and role name, or none of them");
       }
-      const roleRef: IEntityRef | undefined = this.roleSchema === "" ? undefined : { schema: this.roleSchema, name: this.roleName };
-      const args: Record<ArgumentName, any> | undefined = this.rawArguments === "" ? undefined : JSON.parse(this.rawArguments);
-      const chunk: IQueryChunk | undefined = this.limit === "" ? undefined : { limit: Number(this.limit) };
+      if ((this.roleSchema === '') !== (this.roleName === '')) {
+        throw new Error(
+          'You should specify both role schema and role name, or none of them',
+        )
+      }
+      const roleRef: IEntityRef | undefined =
+        this.roleSchema === ''
+          ? undefined
+          : { schema: this.roleSchema, name: this.roleName }
+      const args: Record<ArgumentName, any> | undefined =
+        this.rawArguments === '' ? undefined : JSON.parse(this.rawArguments)
+      const chunk: IQueryChunk | undefined =
+        this.limit === '' ? undefined : { limit: Number(this.limit) }
       const opts: IEntriesExplainOpts = {
         chunk,
-        pretendUser: this.userName === "" ? undefined : this.userName,
+        pretendUser: this.userName === '' ? undefined : this.userName,
         pretendRole: roleRef,
         analyze: this.analyze,
         verbose: this.verbose,
         costs: this.costs,
-      };
+      }
       const res: IViewExplainResult = await this.callApi({
-        func: api => api.getNamedUserViewExplain(ref, args, opts),
-      });
+        func: (api) => api.getNamedUserViewExplain(ref, args, opts),
+      })
 
       if (res.attributes) {
-        this.attributesQuery = res.attributes.query;
-        this.attributesPlan = JSON.stringify(res.attributes.explanation, undefined, 2);
+        this.attributesQuery = res.attributes.query
+        this.attributesPlan = JSON.stringify(
+          res.attributes.explanation,
+          undefined,
+          2,
+        )
       }
-      this.rowsQuery = res.rows.query;
-      this.rowsPlan = JSON.stringify(res.rows.explanation, undefined, 2);
+      this.rowsQuery = res.rows.query
+      this.rowsPlan = JSON.stringify(res.rows.explanation, undefined, 2)
     } catch (e) {
-      this.lastError = String(e);
-      throw e;
+      this.lastError = String(e)
+      throw e
     }
   }
 }
 </script>
 
 <style scoped>
-  .explain {
-    height: 100%;
-    overflow: auto;
-  }
+.explain {
+  height: 100%;
+  overflow: auto;
+}
 
-  .query {
-    font-family: monospace;
-  }
+.query {
+  font-family: monospace;
+}
 
-  .plan {
-    font-size: 100%;
-    display: inline-block;
-  }
+.plan {
+  display: inline-block;
+  font-size: 100%;
+}
 </style>

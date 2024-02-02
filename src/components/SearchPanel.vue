@@ -13,28 +13,19 @@
 </i18n>
 
 <template>
-  <div
-    class="search-wrapper"
-  >
-    <transition
-      name="resize-fade"
-      @after-leave="showOpenButton = true"
-    >
-      <b-form
-        v-if="showInput"
-        inline
-        @submit.prevent="updateInput"
-      >
-        <b-input-group
-          size="sm"
-          class="input-group focus-entire"
-        >
+  <div class="search-wrapper">
+    <transition name="resize-fade" @after-leave="showOpenButton = true">
+      <b-form v-if="showInput" inline @submit.prevent="updateInput">
+        <b-input-group size="sm" class="input-group focus-entire">
           <b-input
             ref="searchInput"
             :value="localFilterString"
             class="search-input form-control with-clear-content-button"
             :placeholder="$t('search_placeholder')"
-            @update="localFilterString = $event; debouncedUpdateInput()"
+            @update="
+              localFilterString = $event
+              debouncedUpdateInput()
+            "
             @change="updateInput"
             @blur="updateInput"
             @focus="$root.$emit('form-input-focused')"
@@ -44,11 +35,12 @@
               class="button with-material-icon clear-content-button"
               :disabled="localFilterString.length === 0"
               variant="outline-secondary"
-              @click.prevent="localFilterString = ''; updateInput()"
+              @click.prevent="
+                localFilterString = ''
+                updateInput()
+              "
             >
-              <i
-                class="material-icons"
-              >clear</i>
+              <i class="material-icons">clear</i>
             </b-button>
             <b-button
               class="button with-material-icon"
@@ -75,108 +67,106 @@
 </template>
 
 <script lang="ts">
-
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { Debounce } from "vue-debounce-decorator";
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Debounce } from 'vue-debounce-decorator'
 
 @Component
 export default class SearchPanel extends Vue {
-  @Prop({ type: String, required: true }) filterString!: string;
+  @Prop({ type: String, required: true }) filterString!: string
 
-  private showInput = false;
-  private showOpenButton = true;
-  private localFilterString = "";
+  private showInput = false
+  private showOpenButton = true
+  private localFilterString = ''
 
   created() {
-    this.showInput = this.filterString !== "";
-    this.showOpenButton = this.filterString === "";
-    this.localFilterString = this.filterString;
+    this.showInput = this.filterString !== ''
+    this.showOpenButton = this.filterString === ''
+    this.localFilterString = this.filterString
   }
 
   private toggleShowInput() {
-    this.showInput = !this.showInput;
+    this.showInput = !this.showInput
     if (this.showInput === true) {
-      this.showOpenButton = false;
+      this.showOpenButton = false
     }
   }
 
   private updateInput() {
     if (this.localFilterString !== this.filterString) {
-      this.$emit("update:filter-string", this.localFilterString);
+      this.$emit('update:filter-string', this.localFilterString)
     }
   }
 
   @Debounce(2000)
   private debouncedUpdateInput() {
-    this.updateInput();
+    this.updateInput()
   }
 
-  @Watch("showInput")
+  @Watch('showInput')
   private setFocusOnField(newValue: boolean, oldValue: boolean) {
-    if (newValue === oldValue) return;
+    if (newValue === oldValue) return
 
     if (newValue) {
-      this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus());
+      this.$nextTick(() => (this.$refs.searchInput as HTMLElement).focus())
     } else {
-      this.localFilterString = "";
-      this.updateInput();
+      this.localFilterString = ''
+      this.updateInput()
     }
   }
 }
-
 </script>
 
 <style lang="scss" scoped>
-  .search-wrapper {
-    display: flex;
-    align-items: center;
-    width: auto;
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  width: auto;
+}
+
+.search-input {
+  background-color: var(--cell-backgroundColor);
+  color: var(--cell-foregroundColor);
+
+  ::placeholder {
+    color: var(--cell-foregroundDarkerColor);
   }
 
-  .search-input {
+  &:focus {
     background-color: var(--cell-backgroundColor);
     color: var(--cell-foregroundColor);
-
-    ::placeholder {
-      color: var(--cell-foregroundDarkerColor);
-    }
-
-    &:focus {
-      background-color: var(--cell-backgroundColor);
-      color: var(--cell-foregroundColor);
-    }
   }
+}
 
-  .open-search-button {
-    --button-backgroundColor: transparent;
-    --button-backgroundDarker1Color: rgba(0, 0, 0, 0.2);
-    --button-backgroundDarker2Color: rgba(0, 0, 0, 0.4);
-    --button-borderColor: transparent;
-  }
+.open-search-button {
+  --button-backgroundColor: transparent;
+  --button-backgroundDarker1Color: rgba(0, 0, 0, 0.2);
+  --button-backgroundDarker2Color: rgba(0, 0, 0, 0.4);
+  --button-borderColor: transparent;
+}
 
-  .input-group {
-    background-color: var(--MainBackgroundColor);
-    border-radius: 0.5rem;
-  }
+.input-group {
+  border-radius: 0.5rem;
+  background-color: var(--MainBackgroundColor);
+}
 
-  .resize-fade-enter-active {
-    transition: all 0.025s;
-  }
+.resize-fade-enter-active {
+  transition: all 0.025s;
+}
 
-  .resize-fade-leave-active {
-    transition: all 0.025s;
-  }
+.resize-fade-leave-active {
+  transition: all 0.025s;
+}
 
-  .resize-fade-enter,
-  .resize-fade-leave-to {
-    opacity: 0.1;
-    width: 100px;
-  }
+.resize-fade-enter,
+.resize-fade-leave-to {
+  opacity: 0.1;
+  width: 100px;
+}
 
-  .resize-fade-enter-to,
-  .resize-fade-leave {
-    /* TODO: Currently input-group's width is 257px and it's inherits from some Bootstrap rules and it's not very good.
+.resize-fade-enter-to,
+.resize-fade-leave {
+  /* TODO: Currently input-group's width is 257px and it's inherits from some Bootstrap rules and it's not very good.
              Would be cool to make it autiresizeable by text width or something like this. */
-    width: 257px;
-  }
+  width: 257px;
+}
 </style>

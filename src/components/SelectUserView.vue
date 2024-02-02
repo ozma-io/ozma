@@ -28,70 +28,75 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
-import { namespace } from "vuex-class";
-import { IEntityRef, IEntity } from "ozma-api";
+import { Component, Vue, Prop } from 'vue-property-decorator'
+import { namespace } from 'vuex-class'
+import { IEntityRef, IEntity } from 'ozma-api'
 
-import { inheritedFromEntity } from "@/values";
-import type { IQuery } from "@/state/query";
-import { ErrorKey } from "@/state/errors";
-import { ISelectionRef } from "@/components/BaseUserView";
-import ModalUserView from "@/components/ModalUserView.vue";
-import type { ScopeName } from "@/state/staging_changes";
+import { inheritedFromEntity } from '@/values'
+import type { IQuery } from '@/state/query'
+import { ErrorKey } from '@/state/errors'
+import { ISelectionRef } from '@/components/BaseUserView'
+import ModalUserView from '@/components/ModalUserView.vue'
+import type { ScopeName } from '@/state/staging_changes'
 
-const entities = namespace("entities");
-const staging = namespace("staging");
-const errors = namespace("errors");
+const entities = namespace('entities')
+const staging = namespace('staging')
+const errors = namespace('errors')
 
-const errorKey = "modal_user_view";
+const errorKey = 'modal_user_view'
 
 @Component({ components: { ModalUserView } })
 export default class SelectUserView extends Vue {
-  @entities.Action("getEntity") getEntity!: (ref: IEntityRef) => Promise<IEntity>;
-  @errors.Mutation("setError") setError!: (args: { key: ErrorKey; error: string }) => void;
-  @errors.Mutation("resetErrors") resetErrors!: (key: ErrorKey) => void;
-  @staging.Mutation("lockScope") lockScope!: (scope: ScopeName) => void;
-  @staging.Mutation("unlockScope") unlockScope!: (scope: ScopeName) => void;
-  @Prop({ type: Object }) selectEntity!: IEntityRef | undefined;
-  @Prop({ type: Object, required: true }) initialView!: IQuery;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: String, required: true }) parentScope!: ScopeName;
+  @entities.Action('getEntity') getEntity!: (
+    ref: IEntityRef,
+  ) => Promise<IEntity>
+  @errors.Mutation('setError') setError!: (args: {
+    key: ErrorKey
+    error: string
+  }) => void
+  @errors.Mutation('resetErrors') resetErrors!: (key: ErrorKey) => void
+  @staging.Mutation('lockScope') lockScope!: (scope: ScopeName) => void
+  @staging.Mutation('unlockScope') unlockScope!: (scope: ScopeName) => void
+  @Prop({ type: Object }) selectEntity!: IEntityRef | undefined
+  @Prop({ type: Object, required: true }) initialView!: IQuery
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
+  @Prop({ type: String, required: true }) parentScope!: ScopeName
 
-  private currentView: IQuery = null as any;
+  private currentView: IQuery = null as any
 
   private created() {
-    this.currentView = this.initialView;
-    this.lockScope(this.parentScope);
+    this.currentView = this.initialView
+    this.lockScope(this.parentScope)
   }
 
   private async selectFromView(selection: ISelectionRef) {
     if (this.selectEntity === undefined) {
-      throw new Error("Impossible");
+      throw new Error('Impossible')
     }
 
-    const entityInfo = await this.getEntity(this.selectEntity);
+    const entityInfo = await this.getEntity(this.selectEntity)
     if (!inheritedFromEntity(this.selectEntity, entityInfo, selection.entity)) {
-      const message = "Entry from invalid entity selected";
-      this.setError({ key: errorKey, error: message });
-      throw new Error(message);
+      const message = 'Entry from invalid entity selected'
+      this.setError({ key: errorKey, error: message })
+      throw new Error(message)
     } else {
-      this.resetErrors(errorKey);
+      this.resetErrors(errorKey)
     }
 
-    this.$emit("select", selection.id);
+    this.$emit('select', selection.id)
   }
 
   private closeView() {
-    this.$emit("close");
+    this.$emit('close')
   }
 
   private destroyed() {
-    this.resetErrors(errorKey);
-    this.unlockScope(this.parentScope);
+    this.resetErrors(errorKey)
+    this.unlockScope(this.parentScope)
   }
 
   private goto({ query }: { query: IQuery; replace?: boolean }) {
-    this.currentView = query;
+    this.currentView = query
   }
 }
 </script>

@@ -21,38 +21,42 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator'
 
-import type { IElementField, IFormCombinedUserView, IFormExtendedRowCommon } from "../Form.vue";
-import type { ICombinedValue } from "@/user_views/combined";
-import FormValueControl from "@/components/FormValueControl";
+import type {
+  IElementField,
+  IFormCombinedUserView,
+  IFormExtendedRowCommon,
+} from '../Form.vue'
+import type { ICombinedValue } from '@/user_views/combined'
+import FormValueControl from '@/components/FormValueControl'
 
 @Component({ components: { FormValueControl } })
 export default class FormField extends Vue {
-  @Prop({ type: Object, required: true }) uv!: IFormCombinedUserView;
-  @Prop({ type: Object, required: true }) row!: IFormExtendedRowCommon;
-  @Prop({ type: Object, required: true }) element!: IElementField;
-  @Prop({ type: String, required: true }) scope!: string;
-  @Prop({ type: Number, required: true }) level!: number;
-  @Prop({ type: Boolean, default: false }) locked!: boolean;
-  @Prop({ type: Object, required: true }) value!: ICombinedValue;
+  @Prop({ type: Object, required: true }) uv!: IFormCombinedUserView
+  @Prop({ type: Object, required: true }) row!: IFormExtendedRowCommon
+  @Prop({ type: Object, required: true }) element!: IElementField
+  @Prop({ type: String, required: true }) scope!: string
+  @Prop({ type: Number, required: true }) level!: number
+  @Prop({ type: Boolean, default: false }) locked!: boolean
+  @Prop({ type: Object, required: true }) value!: ICombinedValue
 
   get visible() {
-    return Boolean(this.attributes["visible"] ?? true);
+    return Boolean(this.attributes['visible'] ?? true)
   }
 
   get softDisabled() {
-    return Boolean(this.attributes["soft_disabled"]);
+    return Boolean(this.attributes['soft_disabled'])
   }
 
   get attributes() {
-    const columnAttrs = this.uv.columnAttributes[this.element.index];
+    const columnAttrs = this.uv.columnAttributes[this.element.index]
     return {
       ...this.uv.attributes,
       ...this.row.attributes,
       ...columnAttrs,
       ...this.value.attributes,
-    };
+    }
   }
 }
 </script>

@@ -23,11 +23,10 @@
       'popup-container',
       {
         'is-open': isPopupOpen,
-        'disabled': disabled,
-
-      }
+        disabled: disabled,
+      },
     ]"
-    :style="{ minWidth: isCellEdit ? '15rem' : undefined}"
+    :style="{ minWidth: isCellEdit ? '15rem' : undefined }"
   >
     <popper
       ref="popup"
@@ -41,7 +40,10 @@
         placement: 'bottom-start',
         positionFixed: true,
         modifiers: {
-          preventOverflow: { escapeWithReference: true, boundariesElement: 'viewport' },
+          preventOverflow: {
+            escapeWithReference: true,
+            boundariesElement: 'viewport',
+          },
         },
       }"
       @show="onOpenPopup"
@@ -49,16 +51,10 @@
     >
       <!-- eslint-disable vue/no-deprecated-slot-attribute -->
       <!-- TODO: Find or make not deprecated popper.js wrapper -->
-      <div
-        slot="reference"
-        class="calendar_container"
-        @click="openPopup"
-      >
+      <div slot="reference" class="calendar_container" @click="openPopup">
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
         <div class="main-input">
-          <b-input-group
-            class="focus-entire"
-          >
+          <b-input-group class="focus-entire">
             <b-input
               ref="control"
               type="text"
@@ -86,31 +82,26 @@
 
       <div class="popper border rounded overflow-hidden shadow">
         <div class="popper-inner">
-          <div
-            class="days"
-          >
-            <div
-              v-if="!required"
-              class="clear-button-wrapper"
-            >
+          <div class="days">
+            <div v-if="!required" class="clear-button-wrapper">
               <button
                 type="button"
                 :disabled="value === null"
-                :class="['material-button clear-button', { 'disabled': value === null }]"
+                :class="[
+                  'material-button clear-button',
+                  { disabled: value === null },
+                ]"
                 @click="selectValue(null)"
               >
                 <span class="material-icons md-18 mr-1">clear</span>
-                {{ $t("clear") }}
+                {{ $t('clear') }}
               </button>
             </div>
 
-            <DatePicker
-              :value="dateValue"
-              @update:value="updateDate"
-            />
+            <DatePicker :value="dateValue" @update:value="updateDate" />
             <button class="today material-button" @click="setDateToday($event)">
               <span class="material-icons md-18 mr-1">today</span>
-              {{ $t("today").toString() }}
+              {{ $t('today').toString() }}
             </button>
           </div>
 
@@ -129,7 +120,7 @@
               class="now material-button"
               @click="setTimeNow($event)"
             >
-              {{ $t("now").toString() }}
+              {{ $t('now').toString() }}
             </button>
           </div>
         </div>
@@ -139,307 +130,309 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import moment, { Moment } from "moment";
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import moment, { Moment } from 'moment'
 
-import Popper from "vue-popperjs";
-import DatePicker from "@/components/calendar/DatePicker.vue";
-import TimePicker from "@/components/calendar/TimePicker.vue";
+import Popper from 'vue-popperjs'
+import DatePicker from '@/components/calendar/DatePicker.vue'
+import TimePicker from '@/components/calendar/TimePicker.vue'
 
 export interface ITime {
-  hour: number;
-  min: number;
+  hour: number
+  min: number
 }
 
 @Component({
   components: {
-    DatePicker, TimePicker, Popper,
+    DatePicker,
+    TimePicker,
+    Popper,
   },
 })
 export default class Calendar extends Vue {
-  @Prop() value!: Moment | string | undefined | null;
-  @Prop({ type: Boolean }) error!: boolean;
-  @Prop({ type: Boolean }) required!: boolean;
-  @Prop({ type: Boolean, default: false }) disabled!: boolean;
-  @Prop({ default: true, type: Boolean }) showTime!: boolean;
-  @Prop({ type: String }) format!: string | undefined;
-  @Prop({ type: Number }) timeStep!: number | undefined;
-  @Prop({ type: Object }) timeDefault!: ITime | undefined;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: String }) backgroundColor!: string;
-  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
+  @Prop() value!: Moment | string | undefined | null
+  @Prop({ type: Boolean }) error!: boolean
+  @Prop({ type: Boolean }) required!: boolean
+  @Prop({ type: Boolean, default: false }) disabled!: boolean
+  @Prop({ default: true, type: Boolean }) showTime!: boolean
+  @Prop({ type: String }) format!: string | undefined
+  @Prop({ type: Number }) timeStep!: number | undefined
+  @Prop({ type: Object }) timeDefault!: ITime | undefined
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
+  @Prop({ type: String }) backgroundColor!: string
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
 
-  private isPopupOpen = false;
+  private isPopupOpen = false
 
   get usedFormat() {
     if (this.format) {
-      return this.format;
+      return this.format
     } else if (this.showTime) {
-      return "L LT";
+      return 'L LT'
     } else {
-      return "L";
+      return 'L'
     }
   }
 
   get dateValue() {
-    return moment(this.value, this.usedFormat);
+    return moment(this.value, this.usedFormat)
   }
 
   get textValue() {
-    if (typeof this.value === "string") {
-      return this.value;
+    if (typeof this.value === 'string') {
+      return this.value
     } else if (this.dateValue.isValid()) {
-      return this.dateValue.local().format(this.usedFormat);
+      return this.dateValue.local().format(this.usedFormat)
     } else {
-      return "";
+      return ''
     }
   }
 
   get isEmpty(): boolean {
-    return !this.value;
+    return !this.value
   }
 
   private async togglePopup() {
     if (this.isPopupOpen) {
-      await this.closePopup();
+      await this.closePopup()
     } else {
-      await this.openPopup();
+      await this.openPopup()
     }
   }
 
   private async openPopup() {
-    if (this.disabled) return;
-    const popupRef: any = this.$refs.popup;
-    if (!popupRef) return;
+    if (this.disabled) return
+    const popupRef: any = this.$refs.popup
+    if (!popupRef) return
 
-    await popupRef.doShow();
+    await popupRef.doShow()
   }
 
   private async closePopup() {
-    const popupRef: any = this.$refs.popup;
-    if (!popupRef) return;
+    const popupRef: any = this.$refs.popup
+    if (!popupRef) return
 
-    await popupRef.doClose();
+    await popupRef.doClose()
   }
 
   private async onOpenPopup() {
-    this.$emit("focus");
-    this.isPopupOpen = true;
+    this.$emit('focus')
+    this.isPopupOpen = true
 
-    await Vue.nextTick();
-    this.focusInput();
-    (this.$refs.timePicker as TimePicker | undefined)?.scrollToValue();
+    await Vue.nextTick()
+    this.focusInput()
+    ;(this.$refs.timePicker as TimePicker | undefined)?.scrollToValue()
   }
 
   private onClosePopup() {
-    this.$emit("blur");
-    this.isPopupOpen = false;
+    this.$emit('blur')
+    this.isPopupOpen = false
   }
 
   private focusInput() {
-    (this.$refs.control as HTMLInputElement | undefined)?.focus();
+    ;(this.$refs.control as HTMLInputElement | undefined)?.focus()
   }
 
-  @Watch("autofocus", { immediate: true })
+  @Watch('autofocus', { immediate: true })
   private async onAutofocus(autofocus: boolean) {
     if (autofocus) {
-      await this.$nextTick();
-      void this.openPopup();
+      await this.$nextTick()
+      void this.openPopup()
     }
   }
 
   private selectValue(newValue: Moment | null) {
-    if (moment.isMoment(newValue) && newValue.isSame(this.value)) return;
-    this.$emit("update:value", newValue);
+    if (moment.isMoment(newValue) && newValue.isSame(this.value)) return
+    this.$emit('update:value', newValue)
     if (!this.showTime) {
-      void this.closePopup();
+      void this.closePopup()
     }
   }
 
   private onPressEnter(event: KeyboardEvent) {
-    const target = event.target! as HTMLInputElement;
-    this.$emit("update:value", target.value);
-    target.blur();
-    this.$emit("blur");
-    this.$emit("enter-pressed", event);
+    const target = event.target! as HTMLInputElement
+    this.$emit('update:value', target.value)
+    target.blur()
+    this.$emit('blur')
+    this.$emit('enter-pressed', event)
   }
 
   private onInputFocus() {
     // FIXME: this `blur()` fixes not good behavior on mobiles,
     // but it can broke some cases on smartphones with keyboard and it's just a little ugly fix.
     if (this.$isMobile && !this.isPopupOpen) {
-      (this.$refs.control as HTMLInputElement).blur();
+      ;(this.$refs.control as HTMLInputElement).blur()
     }
   }
 
   get timeForPicker(): ITime {
-    return (this.dateValue.isUTC())
+    return this.dateValue.isUTC()
       ? {
-        hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
-        min: this.dateValue.utcOffset(moment().utcOffset()).minute(),
-      }
+          hour: this.dateValue.utcOffset(moment().utcOffset()).hour(),
+          min: this.dateValue.utcOffset(moment().utcOffset()).minute(),
+        }
       : {
-        hour: this.dateValue.hour(),
-        min: this.dateValue.minute(),
-      };
+          hour: this.dateValue.hour(),
+          min: this.dateValue.minute(),
+        }
   }
 
   private updatePart(mutate: (m: Moment) => void) {
-    const defaultHours = this.timeDefault?.hour ?? 9;
-    const defaultMinutes = this.timeDefault?.min ?? 0;
+    const defaultHours = this.timeDefault?.hour ?? 9
+    const defaultMinutes = this.timeDefault?.min ?? 0
     const newValue = this.dateValue.isValid()
       ? this.dateValue.clone().local()
       : moment()
-        .hours(defaultHours)
-        .minutes(defaultMinutes)
-        .seconds(0)
-        .milliseconds(0);
-    mutate(newValue.local());
-    this.selectValue(newValue);
+          .hours(defaultHours)
+          .minutes(defaultMinutes)
+          .seconds(0)
+          .milliseconds(0)
+    mutate(newValue.local())
+    this.selectValue(newValue)
   }
 
   private updateDate(val: Moment) {
-    this.updatePart(newValue => {
-      newValue.year(val.year());
-      newValue.month(val.month());
-      newValue.date(val.date());
-    });
+    this.updatePart((newValue) => {
+      newValue.year(val.year())
+      newValue.month(val.month())
+      newValue.date(val.date())
+    })
   }
 
   private updateMins(val: number) {
-    this.updatePart(newValue => {
-      newValue.minute(val);
-      newValue.second(0);
-    });
+    this.updatePart((newValue) => {
+      newValue.minute(val)
+      newValue.second(0)
+    })
   }
 
   private updateHours(val: number) {
-    this.updatePart(newValue => {
-      newValue.hour(val);
-    });
+    this.updatePart((newValue) => {
+      newValue.hour(val)
+    })
   }
 
   private setTimeNow(event: Event) {
-    event.preventDefault();
-    const time = moment();
-    this.updatePart(newValue => {
-      newValue.hour(time.hour());
-      newValue.minute(time.minute());
-      newValue.second(time.second());
-    });
+    event.preventDefault()
+    const time = moment()
+    this.updatePart((newValue) => {
+      newValue.hour(time.hour())
+      newValue.minute(time.minute())
+      newValue.second(time.second())
+    })
   }
 
   private setDateToday(event: Event) {
-    event.preventDefault();
-    const time = moment();
-    this.updateDate(time);
+    event.preventDefault()
+    const time = moment()
+    this.updateDate(time)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: all 1s;
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 1s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-enter-to,
+.fade-leave {
+  opacity: 1;
+}
+
+.popup-container {
+  position: relative;
+  z-index: 30;
+  border-radius: 0.5rem;
+  width: 100%;
+
+  &.is-open {
+    z-index: 41; /* To be above other components with popups */
   }
+}
 
-  .fade-enter,
-  .fade-leave-to {
-    opacity: 0;
-  }
+.calendar-icon {
+  cursor: pointer;
+  border: 1px solid var(--cell-borderColor);
+  border-left-width: 0;
+  background-color: var(--cell-backgroundColor);
+  color: var(--cell-foregroundDarkerColor);
+}
 
-  .fade-enter-to,
-  .fade-leave {
-    opacity: 1;
-  }
+.calendar-input {
+  border-right-width: 0;
+  font-size: 1rem !important;
+}
 
-  .popup-container {
-    width: 100%;
-    position: relative;
-    z-index: 30;
-    border-radius: 0.5rem;
-
-    &.is-open {
-      z-index: 41; /* To be above other components with popups */
-    }
-  }
-
+.disabled {
+  .calendar-input,
   .calendar-icon {
+    cursor: not-allowed;
+  }
+}
+
+.popper-inner {
+  display: flex;
+}
+
+.main-input {
+  display: flex;
+  flex-direction: row;
+  border-radius: 0.5rem;
+  background-color: var(--cell-backgroundColor);
+  color: var(--cell-foregroundColor);
+
+  ::v-deep .form-control {
+    border-radius: 0.5rem 0 0 0.5rem;
     background-color: var(--cell-backgroundColor);
-    color: var(--cell-foregroundDarkerColor);
-    border: 1px solid var(--cell-borderColor);
-    cursor: pointer;
-    border-left-width: 0;
   }
-
-  .calendar-input {
-    border-right-width: 0;
-    font-size: 1rem !important;
-  }
-
-  .disabled {
-    .calendar-input,
-    .calendar-icon {
-      cursor: not-allowed;
-    }
-  }
-
-  .popper-inner {
-    display: flex;
-  }
-
-  .main-input {
-    display: flex;
-    flex-direction: row;
-    border-radius: 0.5rem;
+  ::v-deep .input-group-text {
+    border-radius: 0 0.5rem 0.5rem 0;
     background-color: var(--cell-backgroundColor);
-    color: var(--cell-foregroundColor);
-
-    ::v-deep .form-control {
-      background-color: var(--cell-backgroundColor);
-      border-radius: 0.5rem 0 0 0.5rem;
-    }
-    ::v-deep .input-group-text {
-      background-color: var(--cell-backgroundColor);
-      border-radius: 0 0.5rem 0.5rem 0;
-    }
   }
+}
 
-  .main-input__trigger {
-    display: inline-block;
-  }
+.main-input__trigger {
+  display: inline-block;
+}
 
-  .clear-button {
-    padding: 0.5rem 0.75rem;
-    border-radius: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    background: var(--default-backgroundColor);
-  }
+.clear-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0;
+  background: var(--default-backgroundColor);
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+}
 
-  .days {
-    display: inline-flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.days {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-  .time {
-    display: inline-flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
+.time {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-  .today {
-    display: flex;
-    justify-content: center;
-  }
+.today {
+  display: flex;
+  justify-content: center;
+}
 
-  .today,
-  .now {
-    background: var(--default-backgroundColor);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0;
-  }
+.today,
+.now {
+  border-radius: 0;
+  background: var(--default-backgroundColor);
+  padding: 0.5rem 0.75rem;
+}
 </style>

@@ -15,11 +15,16 @@
 <template>
   <div
     class="loading-container h-100 p-3 d-flex flex-column justify-content-center align-items-center"
-    style="background-color: rgba(0, 0, 0, 0.05); cursor: wait;"
+    style="background-color: rgba(0, 0, 0, 0.05); cursor: wait"
   >
     <div
       class="spinner-border"
-      style="width: 3em; height: 3em; border-color: rgba(0, 0, 0, 0.5); border-right-color: transparent;"
+      style="
+        width: 3em;
+        height: 3em;
+        border-color: rgba(0, 0, 0, 0.5);
+        border-right-color: transparent;
+      "
     />
     <p class="message">
       {{ $t('in_progress') }}
@@ -28,25 +33,24 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue } from 'vue-property-decorator'
 
 @Component
-export default class AuthResponse extends Vue {
-}
+export default class AuthResponse extends Vue {}
 </script>
 
 <style lang="scss" scoped>
-  @keyframes fade-in {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes fade-in {
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
+}
 
-  .message {
-    margin-top: 10px;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: fade-in 0.5s 3s forwards;
-  }
+.message {
+  transform: translateY(10px);
+  opacity: 0;
+  animation: fade-in 0.5s 3s forwards;
+  margin-top: 10px;
+}
 </style>

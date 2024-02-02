@@ -28,10 +28,7 @@
     >
       {{ datetimeText }}
     </span>
-    <span
-      v-if="phenom.type === 'event'"
-      class="event-text"
-    >
+    <span v-if="phenom.type === 'event'" class="event-text">
       {{ eventText }}
     </span>
     <div
@@ -47,26 +44,29 @@
     <div
       v-if="phenom.type === 'message'"
       class="message-text border rounded shadow-sm"
-    >{{ messageText }}</div>
+    >
+      {{ messageText }}
+    </div>
     <!-- eslint-enable vue/multiline-html-element-content-newline -->
   </li>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import moment, { Moment } from "moment";
-import Avatar from "@/components/Avatar.vue";
-import { IRowPhenom } from "@/components/views/Timeline.vue";
+import { Vue, Component, Prop } from 'vue-property-decorator'
+import moment, { Moment } from 'moment'
+import Avatar from '@/components/Avatar.vue'
+import { IRowPhenom } from '@/components/views/Timeline.vue'
 
-export const phenomTypes = ["message", "event"] as const;
-export type PhenomType = typeof phenomTypes[number];
-export const isPhenomType = (str: string): str is PhenomType => phenomTypes.includes(str as PhenomType);
+export const phenomTypes = ['message', 'event'] as const
+export type PhenomType = (typeof phenomTypes)[number]
+export const isPhenomType = (str: string): str is PhenomType =>
+  phenomTypes.includes(str as PhenomType)
 export interface IPhenom<PhenomT> {
-  key: unknown;
-  type: PhenomType;
-  datetime: Moment;
-  username: string | null;
-  phenom: PhenomT;
+  key: unknown
+  type: PhenomType
+  datetime: Moment
+  username: string | null
+  phenom: PhenomT
 }
 
 // "Phenom" is shortening from "phenomenon",
@@ -74,70 +74,74 @@ export interface IPhenom<PhenomT> {
 // Also Trello uses this name for same thing in code.
 @Component({ components: { Avatar } })
 export default class Phenom extends Vue {
-  @Prop({ type: Object, required: true }) phenom!: IPhenom<IRowPhenom>;
+  @Prop({ type: Object, required: true }) phenom!: IPhenom<IRowPhenom>
 
   private get datetimeText() {
-    const datetime = this.phenom.datetime;
-    const current = moment();
-    const isCurrentDay = datetime.isSame(current, "day");
+    const datetime = this.phenom.datetime
+    const current = moment()
+    const isCurrentDay = datetime.isSame(current, 'day')
 
     if (isCurrentDay) {
-      return datetime.local().fromNow();
+      return datetime.local().fromNow()
     } else {
-      const isCurrentYear = datetime.isSame(current, "year");
-      const year = isCurrentYear ? "" : " YY";
-      return datetime.local().format(this.$t("format", { year }).toString());
+      const isCurrentYear = datetime.isSame(current, 'year')
+      const year = isCurrentYear ? '' : ' YY'
+      return datetime.local().format(this.$t('format', { year }).toString())
     }
   }
 
   private get datetimeTooltipText() {
-    return this.phenom.datetime.local().format(this.$t("format", { year: " YYYY" }).toString());
+    return this.phenom.datetime
+      .local()
+      .format(this.$t('format', { year: ' YYYY' }).toString())
   }
 
   private get messageText() {
-    return this.phenom.phenom.columns.map((row: any) => row.valueText).join("\n");
+    return this.phenom.phenom.columns
+      .map((row: any) => row.valueText)
+      .join('\n')
   }
 
   private get eventText() {
-    return this.phenom.phenom.columns.map((row: any) => row.valueText).join(" ");
+    return this.phenom.phenom.columns.map((row: any) => row.valueText).join(' ')
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .phenom {
-    min-height: 3rem;
-    position: relative;
-    margin-left: 2.5rem;
-    margin-bottom: 0.5rem;
-    color: var(--MainTextColor);
-    list-style-type: none;
+.phenom {
+  position: relative;
+  margin-bottom: 0.5rem;
+  margin-left: 2.5rem;
+  min-height: 3rem;
+  color: var(--MainTextColor);
+  list-style-type: none;
 
-    .avatar-container {
-      position: absolute;
-      left: -2.5rem;
-    }
-
-    .username {
-      font-weight: bold;
-      color: var(--default-foregroundColor);
-    }
-
-    .datetime {
-      color: var(--default-foregroundDarkerColor);
-      font-size: 0.8rem;
-    }
-
-    .event-text {
-      overflow-wrap: break-word;
-    }
-
-    .message-text {
-      margin-top: 0.25rem;
-      padding: 0.25rem 0.5rem;
-      background-color: var(--default-backgroundColor);
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-    }
+  .avatar-container {
+    position: absolute;
+    left: -2.5rem;
   }
+
+  .username {
+    color: var(--default-foregroundColor);
+    font-weight: bold;
+  }
+
+  .datetime {
+    color: var(--default-foregroundDarkerColor);
+    font-size: 0.8rem;
+  }
+
+  .event-text {
+    overflow-wrap: break-word;
+  }
+
+  .message-text {
+    margin-top: 0.25rem;
+    background-color: var(--default-backgroundColor);
+    padding: 0.25rem 0.5rem;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+}
 </style>

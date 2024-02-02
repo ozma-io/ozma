@@ -1,50 +1,47 @@
-import { Module } from "vuex";
-import FunDBAPI, { IViewExprResult, SchemaName } from "ozma-api";
-import { z } from "zod";
-import Vue from "vue";
+import { Module } from 'vuex'
+import FunDBAPI, { IViewExprResult, SchemaName } from 'ozma-api'
+import { z } from 'zod'
+import Vue from 'vue'
 
-import { IRef, waitTimeout } from "@/utils";
-import { funappSchema } from "@/api";
-import { CancelledError } from "@/modules";
+import { IRef, waitTimeout } from '@/utils'
+import { funappSchema } from '@/api'
+import { CancelledError } from '@/modules'
 
-const userString = z.union([z.string(), z.record(z.string(), z.string())]);
+const userString = z.union([z.string(), z.record(z.string(), z.string())])
 
-export type Language = string;
+export type Language = string
 
 export interface ITranslatedString {
-  default: Language;
-  strings: Record<Language, string>;
+  default: Language
+  strings: Record<Language, string>
 }
 
 export interface IMessageString {
-  schema: SchemaName;
-  message: string;
+  schema: SchemaName
+  message: string
 }
 
-export type UserString = string | ITranslatedString | IMessageString;
+export type UserString = string | ITranslatedString | IMessageString
 
-const errorKey = "translations";
+const errorKey = 'translations'
 
-export type TranslationsMap = Record<SchemaName, Record<string, string>>;
+export type TranslationsMap = Record<SchemaName, Record<string, string>>
 
 export class CurrentTranslations {
-  language: Language;
-  translations: TranslationsMap;
+  language: Language
+  translations: TranslationsMap
 
-  constructor(
-    language: Language,
-    translations: TranslationsMap,
-  ) {
-    this.language = language;
-    this.translations = translations;
+  constructor(language: Language, translations: TranslationsMap) {
+    this.language = language
+    this.translations = translations
   }
 }
 
-const emptyTranslations = new CurrentTranslations("", {});
+const emptyTranslations = new CurrentTranslations('', {})
 
 export interface ITranslationsState {
-  current: CurrentTranslations;
-  pending: Promise<CurrentTranslations> | null;
+  current: CurrentTranslations
+  pending: Promise<CurrentTranslations> | null
 }
 
 const translationsModule: Module<ITranslationsState, {}> = {
@@ -55,72 +52,87 @@ const translationsModule: Module<ITranslationsState, {}> = {
   },
   mutations: {
     setTranslations: (state, translations: CurrentTranslations) => {
-      state.current = translations;
-      state.pending = null;
+      state.current = translations
+      state.pending = null
     },
     setPending: (state, pending: Promise<CurrentTranslations> | null) => {
-      state.pending = pending;
+      state.pending = pending
     },
-    clearTranslations: state => {
-      state.current = emptyTranslations;
-      state.pending = null;
+    clearTranslations: (state) => {
+      state.current = emptyTranslations
+      state.pending = null
     },
   },
   actions: {
     getTranslations: ({ state, commit, dispatch }, language: Language) => {
-      const pending: IRef<Promise<CurrentTranslations>> = {};
+      const pending: IRef<Promise<CurrentTranslations>> = {}
       pending.ref = (async () => {
-        await waitTimeout(); // Delay promise so that it gets saved to `pending` first.
+        await waitTimeout() // Delay promise so that it gets saved to `pending` first.
         try {
-          const res = await dispatch("callApi", {
-            func: (api: FunDBAPI) => api.getNamedUserView(
-              { schema: funappSchema, name: "translations_by_language" },
-              { language },
-            ),
-          }, { root: true }) as IViewExprResult;
+          const res = (await dispatch(
+            'callApi',
+            {
+              func: (api: FunDBAPI) =>
+                api.getNamedUserView(
+                  { schema: funappSchema, name: 'translations_by_language' },
+                  { language },
+                ),
+            },
+            { root: true },
+          )) as IViewExprResult
 
           if (state.pending !== pending.ref) {
-            throw new CancelledError();
+            throw new CancelledError()
           }
 
-          const schemaColumnIndex = res.info.columns.findIndex(column => column.name === "schema_name");
-          const messageColumnIndex = res.info.columns.findIndex(column => column.name === "message");
-          const translationColumnIndex = res.info.columns.findIndex(column => column.name === "translation");
-          const translationsMap = {} as TranslationsMap;
+          const schemaColumnIndex = res.info.columns.findIndex(
+            (column) => column.name === 'schema_name',
+          )
+          const messageColumnIndex = res.info.columns.findIndex(
+            (column) => column.name === 'message',
+          )
+          const translationColumnIndex = res.info.columns.findIndex(
+            (column) => column.name === 'translation',
+          )
+          const translationsMap = {} as TranslationsMap
           for (const row of res.result.rows) {
-            const schemaName = row.values[schemaColumnIndex].value as SchemaName;
-            const message = row.values[messageColumnIndex].value as string;
-            const translation = row.values[translationColumnIndex].value as string;
+            const schemaName = row.values[schemaColumnIndex].value as SchemaName
+            const message = row.values[messageColumnIndex].value as string
+            const translation = row.values[translationColumnIndex]
+              .value as string
 
-            let schemaTranslations = translationsMap[schemaName];
+            let schemaTranslations = translationsMap[schemaName]
             if (schemaTranslations === undefined) {
-              schemaTranslations = {};
-              translationsMap[schemaName] = schemaTranslations;
+              schemaTranslations = {}
+              translationsMap[schemaName] = schemaTranslations
             }
-            schemaTranslations[message] = translation;
+            schemaTranslations[message] = translation
           }
-          const translations = new CurrentTranslations(language, translationsMap);
-          commit("setTranslations", translations);
-          commit("errors/resetErrors", errorKey, { root: true });
+          const translations = new CurrentTranslations(
+            language,
+            translationsMap,
+          )
+          commit('setTranslations', translations)
+          commit('errors/resetErrors', errorKey, { root: true })
 
-          return translations;
+          return translations
         } catch (e) {
           if (state.pending === pending.ref) {
-            void dispatch("setError", String(e));
+            void dispatch('setError', String(e))
           }
-          throw e;
+          throw e
         }
-      })();
-      commit("setPending", pending.ref);
-      return pending.ref;
+      })()
+      commit('setPending', pending.ref)
+      return pending.ref
     },
   },
-};
+}
 
-declare module "vue/types/vue" {
+declare module 'vue/types/vue' {
   // eslint-disable-next-line no-shadow
   interface Vue {
-    $ustOrEmpty: (str: UserString) => string;
+    $ustOrEmpty: (str: UserString) => string
   }
 }
 
@@ -129,72 +141,75 @@ Vue.mixin({
     // eslint-disable-next-line func-names
     $ustOrEmpty(str: UserString | null | undefined): string {
       if (!str) {
-        return "";
+        return ''
       }
-      if (typeof str === "string") {
-        return str;
+      if (typeof str === 'string') {
+        return str
       } else {
-        const currentLocale = this.$i18n.locale;
-        if ("strings" in str) {
+        const currentLocale = this.$i18n.locale
+        if ('strings' in str) {
           if (currentLocale in str.strings) {
-            return str.strings[currentLocale];
+            return str.strings[currentLocale]
           } else {
-            return str.default;
+            return str.default
           }
-        } else if ("message" in str) {
-          const currentTranslations = (this.$store.state.translations as ITranslationsState).current;
+        } else if ('message' in str) {
+          const currentTranslations = (
+            this.$store.state.translations as ITranslationsState
+          ).current
           if (currentTranslations.language === currentLocale) {
-            const translation = currentTranslations.translations[str.schema]?.[str.message];
+            const translation =
+              currentTranslations.translations[str.schema]?.[str.message]
             if (translation !== undefined) {
-              return translation;
+              return translation
             }
           }
-          return str.message;
+          return str.message
         } else {
-          throw new Error("Invalid UserString");
+          throw new Error('Invalid UserString')
         }
       }
     },
   },
-});
+})
 
 export const rawToUserString = (raw: unknown): UserString | null => {
-  const ret = userString.safeParse(raw);
+  const ret = userString.safeParse(raw)
   if (!ret.success) {
-    return null;
-  } else if (typeof ret.data === "string") {
-    return ret.data;
-  } else if ("message" in ret.data && "schema" in ret.data) {
+    return null
+  } else if (typeof ret.data === 'string') {
+    return ret.data
+  } else if ('message' in ret.data && 'schema' in ret.data) {
     return {
       schema: ret.data.schema,
       message: ret.data.message,
-    };
+    }
   } else {
-    let defaultLang: Language | undefined;
-    if ("default" in ret.data) {
-      const defLang = ret.data["default"];
+    let defaultLang: Language | undefined
+    if ('default' in ret.data) {
+      const defLang = ret.data['default']
       if (defLang in ret.data) {
-        delete ret.data[defLang];
-        defaultLang = defLang;
+        delete ret.data[defLang]
+        defaultLang = defLang
       }
     }
-    if ("en" in ret.data) {
-      defaultLang = "en";
+    if ('en' in ret.data) {
+      defaultLang = 'en'
     }
-    const variants = Object.keys(ret.data);
+    const variants = Object.keys(ret.data)
     if (variants.length === 1) {
-      defaultLang = variants[0];
+      defaultLang = variants[0]
     }
 
     if (defaultLang) {
       return {
         default: defaultLang,
         strings: ret.data,
-      };
+      }
     } else {
-      return null;
+      return null
     }
   }
-};
+}
 
-export default translationsModule;
+export default translationsModule

@@ -41,101 +41,62 @@
     <p>
       <label>
         {{ $t('schema_name') }}:
-        <input
-          v-model="schema"
-          :placeholder="$tc('schema_name')"
-        >
+        <input v-model="schema" :placeholder="$tc('schema_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('entity_name') }}:
-        <input
-          v-model="entity"
-          :placeholder="$tc('entity_name')"
-        >
+        <input v-model="entity" :placeholder="$tc('entity_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('field_name') }}:
-        <input
-          v-model="field"
-          :placeholder="$tc('field_name')"
-        >
+        <input v-model="field" :placeholder="$tc('field_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('user_name') }}:
-        <input
-          v-model="userName"
-          :placeholder="$tc('user_name')"
-        >
+        <input v-model="userName" :placeholder="$tc('user_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('role_schema') }}:
-        <input
-          v-model="roleSchema"
-          :placeholder="$tc('role_schema')"
-        >
+        <input v-model="roleSchema" :placeholder="$tc('role_schema')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('role_name') }}:
-        <input
-          v-model="roleName"
-          :placeholder="$tc('role_name')"
-        >
+        <input v-model="roleName" :placeholder="$tc('role_name')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('row_id') }}:
-        <input
-          v-model="rowId"
-          :placeholder="$tc('row_id')"
-        >
+        <input v-model="rowId" :placeholder="$tc('row_id')" />
       </label>
     </p>
     <p>
       <label>
         {{ $t('limit') }}:
-        <input
-          v-model="limit"
-          :placeholder="$tc('limit')"
-        >
+        <input v-model="limit" :placeholder="$tc('limit')" />
       </label>
     </p>
     <p>
-      <input
-        v-model="analyze"
-        type="checkbox"
-      >
-      <label>
-        ANALYZE
-      </label>
+      <input v-model="analyze" type="checkbox" />
+      <label> ANALYZE </label>
     </p>
     <p>
-      <input
-        v-model="verbose"
-        type="checkbox"
-      >
-      <label>
-        VERBOSE
-      </label>
+      <input v-model="verbose" type="checkbox" />
+      <label> VERBOSE </label>
     </p>
     <p>
-      <input
-        v-model="costs"
-        type="checkbox"
-      >
-      <label>
-        COSTS
-      </label>
+      <input v-model="costs" type="checkbox" />
+      <label> COSTS </label>
     </p>
     <p>
       <button @click="explainView">
@@ -160,40 +121,46 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { Action } from "vuex-class";
-import { IEntityRef, IEntriesExplainOpts, IQueryChunk, IFieldRef, IExplainedQuery } from "ozma-api";
+import { Component, Vue } from 'vue-property-decorator'
+import { Action } from 'vuex-class'
+import {
+  IEntityRef,
+  IEntriesExplainOpts,
+  IQueryChunk,
+  IFieldRef,
+  IExplainedQuery,
+} from 'ozma-api'
 
-import type { ICallApi } from "@/state/auth";
+import type { ICallApi } from '@/state/auth'
 
 @Component
 export default class ExplainDomains extends Vue {
-  @Action("callApi") callApi!: ICallApi;
+  @Action('callApi') callApi!: ICallApi
 
-  schema = "";
-  entity = "";
-  field = "";
-  rowId = "";
-  userName = "";
-  roleSchema = "";
-  roleName = "";
-  analyze = false;
-  verbose = false;
-  costs = true;
-  limit = "";
+  schema = ''
+  entity = ''
+  field = ''
+  rowId = ''
+  userName = ''
+  roleSchema = ''
+  roleName = ''
+  analyze = false
+  verbose = false
+  costs = true
+  limit = ''
 
-  lastError = "";
-  rowsQuery = "";
-  rowsPlan = "";
+  lastError = ''
+  rowsQuery = ''
+  rowsPlan = ''
 
   async copyToClipboard(str: string) {
-    await navigator.clipboard.writeText(str);
+    await navigator.clipboard.writeText(str)
   }
 
   async explainView() {
-    this.rowsQuery = "";
-    this.rowsPlan = "";
-    this.lastError = "";
+    this.rowsQuery = ''
+    this.rowsPlan = ''
+    this.lastError = ''
 
     try {
       const ref: IFieldRef = {
@@ -202,47 +169,54 @@ export default class ExplainDomains extends Vue {
           name: this.entity,
         },
         name: this.field,
-      };
-      if ((this.roleSchema === "") !== (this.roleName === "")) {
-        throw new Error("You should specify both role schema and role name, or none of them");
       }
-      const roleRef: IEntityRef | undefined = this.roleSchema === "" ? undefined : { schema: this.roleSchema, name: this.roleName };
-      const rowId: number | undefined = this.rowId === "" ? undefined : Number(this.rowId);
-      const chunk: IQueryChunk | undefined = this.limit === "" ? undefined : { limit: Number(this.limit) };
+      if ((this.roleSchema === '') !== (this.roleName === '')) {
+        throw new Error(
+          'You should specify both role schema and role name, or none of them',
+        )
+      }
+      const roleRef: IEntityRef | undefined =
+        this.roleSchema === ''
+          ? undefined
+          : { schema: this.roleSchema, name: this.roleName }
+      const rowId: number | undefined =
+        this.rowId === '' ? undefined : Number(this.rowId)
+      const chunk: IQueryChunk | undefined =
+        this.limit === '' ? undefined : { limit: Number(this.limit) }
       const opts: IEntriesExplainOpts = {
         chunk,
-        pretendUser: this.userName === "" ? undefined : this.userName,
+        pretendUser: this.userName === '' ? undefined : this.userName,
         pretendRole: roleRef,
         analyze: this.analyze,
         verbose: this.verbose,
         costs: this.costs,
-      };
+      }
       const res: IExplainedQuery = await this.callApi({
-        func: api => api.getDomainExplain(ref, rowId, opts),
-      });
+        func: (api) => api.getDomainExplain(ref, rowId, opts),
+      })
 
-      this.rowsQuery = res.query;
-      this.rowsPlan = JSON.stringify(res.explanation, undefined, 2);
+      this.rowsQuery = res.query
+      this.rowsPlan = JSON.stringify(res.explanation, undefined, 2)
     } catch (e) {
-      this.lastError = String(e);
-      throw e;
+      this.lastError = String(e)
+      throw e
     }
   }
 }
 </script>
 
 <style scoped>
-  .explain {
-    height: 100%;
-    overflow: auto;
-  }
+.explain {
+  height: 100%;
+  overflow: auto;
+}
 
-  .query {
-    font-family: monospace;
-  }
+.query {
+  font-family: monospace;
+}
 
-  .plan {
-    font-size: 100%;
-    display: inline-block;
-  }
+.plan {
+  display: inline-block;
+  font-size: 100%;
+}
 </style>

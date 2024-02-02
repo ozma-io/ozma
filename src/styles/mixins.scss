@@ -1,19 +1,19 @@
 $color-transition: background-color 0.3s, color 0.3s;
 
-@mixin material-button($variant: "default") {
+@mixin material-button($variant: 'default') {
   transition: background 0.1s, opacity 0.2s, $color-transition;
   cursor: pointer;
-  background-color: var(--#{$variant}-backgroundColor);
   border: 1px solid var(--#{$variant}-borderColor);
+  background-color: var(--#{$variant}-backgroundColor);
   color: var(--#{$variant}-foregroundColor);
 
   &:focus:not(.disabled),
   &:hover:not(.disabled) {
-    background-color: var(--#{$variant}-backgroundDarker1Color) !important;
-    border-color: var(--#{$variant}-borderColor) !important;
-    color: var(--#{$variant}-foregroundContrastColor) !important;
-    transition: background 0s, opacity 0.2s, $color-transition;
     opacity: 0.7;
+    transition: background 0s, opacity 0.2s, $color-transition;
+    border-color: var(--#{$variant}-borderColor) !important;
+    background-color: var(--#{$variant}-backgroundDarker1Color) !important;
+    color: var(--#{$variant}-foregroundContrastColor) !important;
   }
 
   &:focus:not(.disabled) {
@@ -22,50 +22,42 @@ $color-transition: background-color 0.3s, color 0.3s;
   }
 
   &:active:not(.disabled) {
-    background-color: var(--#{$variant}-backgroundDarker2Color) !important;
-    border-color: var(--#{$variant}-borderColor) !important;
-    color: var(--#{$variant}-foregroundContrastColor);
     transition: $color-transition, background 0s, opacity 0.2s;
+    border-color: var(--#{$variant}-borderColor) !important;
+    background-color: var(--#{$variant}-backgroundDarker2Color) !important;
+    color: var(--#{$variant}-foregroundContrastColor);
   }
 
   &.disabled {
-    cursor: not-allowed;
-    color: var(--#{$variant}-foregroundDarkerColor) !important;
-    background-color: var(--#{$variant}-backgroundColor) !important;
-    border-color: var(--#{$variant}-backgroundColor) !important;
     opacity: 0.7;
+    cursor: not-allowed;
+    border-color: var(--#{$variant}-backgroundColor) !important;
+    background-color: var(--#{$variant}-backgroundColor) !important;
+    color: var(--#{$variant}-foregroundDarkerColor) !important;
   }
 }
 
 @mixin common-variant($name) {
+  border-color: var(--#{$name}-borderColor);
   background-color: var(--#{$name}-backgroundColor);
   color: var(--#{$name}-foregroundColor);
-  border-color: var(--#{$name}-borderColor);
 }
 
 /* 24px is material icons best size and 14px is default font size */
-// $icon-size: (24px / 12px) + rem;
-@function icon-size($base-size: 19px) {
-  @return (calc($base-size / 12px)) + rem;
+@function icon-size($base-size: 24px) {
+  @return (calc($base-size / 16px)) + rem;
 }
 
 @mixin variant-to-local($local-name) {
   /* stylelint-disable value-keyword-case */
-  $keys: foregroundColor,
-    foregroundDarkerColor,
-    foregroundContrastColor,
-    backgroundColor,
-    backgroundDarker1Color,
-    backgroundDarker2Color,
-    borderColor;
+  $keys: foregroundColor, foregroundDarkerColor, foregroundContrastColor,
+    backgroundColor, backgroundDarker1Color, backgroundDarker2Color, borderColor;
 
   .#{$local-name}-local-variant {
     @each $key in $keys {
       @if $local-name == default {
         --#{$local-name}-#{$key}: var(--#{$key});
-      }
-
-      @else {
+      } @else {
         --#{$local-name}-#{$key}: var(--#{$key}, var(--default-#{$key}));
       }
     }

@@ -19,15 +19,8 @@
 </i18n>
 
 <template>
-  <Errorbox
-    v-if="markup === undefined"
-    :message="$t('markup_not_found')"
-  />
-  <div
-    v-else
-    class="iframe-container"
-    :style="style"
-  >
+  <Errorbox v-if="markup === undefined" :message="$t('markup_not_found')" />
+  <div v-else class="iframe-container" :style="style">
     <EmbeddedContainer
       :srcdoc="iframeRef ? markup : srcdoc"
       :src="src"
@@ -41,73 +34,77 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { Action } from "vuex-class";
-import { IViewExprResult } from "ozma-api";
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+import { Action } from 'vuex-class'
+import { IViewExprResult } from 'ozma-api'
 
-import { IIframeRef } from "@/api";
-import Errorbox from "@/components/Errorbox.vue";
-import EmbeddedContainer from "./EmbeddedContainer.vue";
-import type { ICallApi } from "@/state/auth";
+import { IIframeRef } from '@/api'
+import Errorbox from '@/components/Errorbox.vue'
+import EmbeddedContainer from './EmbeddedContainer.vue'
+import type { ICallApi } from '@/state/auth'
 
 @Component({ components: { Errorbox, EmbeddedContainer } })
 export default class IframeControl extends Vue {
-  @Prop({ type: String }) src!: string | undefined;
-  @Prop({ type: String }) srcdoc!: string | undefined;
-  @Prop({ type: Object }) iframeRef!: IIframeRef | undefined;
-  @Prop({ required: true }) value!: unknown;
-  @Prop({ type: Number }) height!: number;
+  @Prop({ type: String }) src!: string | undefined
+  @Prop({ type: String }) srcdoc!: string | undefined
+  @Prop({ type: Object }) iframeRef!: IIframeRef | undefined
+  @Prop({ required: true }) value!: unknown
+  @Prop({ type: Number }) height!: number
 
-  @Action("callApi") callApi!: ICallApi;
+  @Action('callApi') callApi!: ICallApi
 
-  private requestedHeight: number | null = null;
-  markup: string | null | undefined = null; // `undefined` here means that markup is not found.
+  private requestedHeight: number | null = null
+  markup: string | null | undefined = null // `undefined` here means that markup is not found.
 
-  @Watch("iframeRef", { immediate: true })
+  @Watch('iframeRef', { immediate: true })
   private async loadMarkup() {
-    if (this.iframeRef === undefined) return;
-    this.requestedHeight = null;
+    if (this.iframeRef === undefined) return
+    this.requestedHeight = null
 
-    const uvRef = { schema: "funapp", name: "iframe_markup_by_name" };
-    const res = await this.callApi({
-      func: api => api.getNamedUserView(uvRef, this.iframeRef as Record<string, unknown> | undefined),
-    }) as IViewExprResult;
-    this.markup = res.result.rows[0]?.values[0].value as string | undefined;
+    const uvRef = { schema: 'funapp', name: 'iframe_markup_by_name' }
+    const res = (await this.callApi({
+      func: (api) =>
+        api.getNamedUserView(
+          uvRef,
+          this.iframeRef as Record<string, unknown> | undefined,
+        ),
+    })) as IViewExprResult
+    this.markup = res.result.rows[0]?.values[0].value as string | undefined
   }
 
   updateHeight(newHeight: number) {
-    this.requestedHeight = newHeight;
+    this.requestedHeight = newHeight
   }
 
-  @Watch("src")
-  @Watch("srcdoc")
+  @Watch('src')
+  @Watch('srcdoc')
   private watchValue() {
-    this.markup = null;
-    this.requestedHeight = null;
+    this.markup = null
+    this.requestedHeight = null
   }
 
   get style() {
     if (this.height || this.requestedHeight) {
       return {
         height: `${this.requestedHeight ?? this.height}px`,
-      };
+      }
     }
-    return undefined;
+    return undefined
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .iframe-container {
-    border-radius: 0.5rem;
-    overflow: hidden;
-  }
+.iframe-container {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
 
-  .iframe {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-    border: none;
-  }
+.iframe {
+  margin: 0;
+  border: none;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
 </style>

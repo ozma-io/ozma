@@ -3,9 +3,14 @@
     <div class="select-panel">
       <div class="year-control">
         <span
-          :class="['select_panel_year', {'material-button': mode === 'days'}, { 'current-year': startValue.isSame(today, 'year') }]"
+          :class="[
+            'select_panel_year',
+            { 'material-button': mode === 'days' },
+            { 'current-year': startValue.isSame(today, 'year') },
+          ]"
           @click="mode = 'months'"
-        >{{ startValue.format("YYYY") }}</span>
+          >{{ startValue.format('YYYY') }}</span
+        >
       </div>
 
       <span class="delimiter" />
@@ -14,18 +19,24 @@
         <span
           class="material-button material-icons md-18 month-arrow"
           @click="changeDate(-1)"
-        >arrow_left</span>
+          >arrow_left</span
+        >
 
         <span
           v-if="mode === 'days'"
-          :class="['select_panel_month material-button', { 'current-month': startValue.isSame(today, 'month') }]"
+          :class="[
+            'select_panel_month material-button',
+            { 'current-month': startValue.isSame(today, 'month') },
+          ]"
           @click="mode = 'months'"
-        >{{ startValue.format("MMM") }}</span>
+          >{{ startValue.format('MMM') }}</span
+        >
 
         <span
           class="material-button material-icons md-18 month-arrow"
           @click="changeDate(1)"
-        >arrow_right</span>
+          >arrow_right</span
+        >
       </div>
     </div>
     <MonthsInYear
@@ -43,106 +54,106 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import moment, { Moment } from "moment";
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import moment, { Moment } from 'moment'
 
-import DaysInMonth from "@/components/calendar/DaysInMonth.vue";
-import MonthsInYear from "@/components/calendar/MonthsInYear.vue";
+import DaysInMonth from '@/components/calendar/DaysInMonth.vue'
+import MonthsInYear from '@/components/calendar/MonthsInYear.vue'
 
-type Mode = "days" | "months";
+type Mode = 'days' | 'months'
 
 @Component({
   components: { DaysInMonth, MonthsInYear },
 })
 export default class DatePicker extends Vue {
-  @Prop({ type: moment, required: true }) value!: Moment;
+  @Prop({ type: moment, required: true }) value!: Moment
 
-  private startValue: Moment = moment.invalid();
-  private mode: Mode = "days";
+  private startValue: Moment = moment.invalid()
+  private mode: Mode = 'days'
 
   created() {
-    this.startValue = this.value.isValid() ? this.value : moment.utc();
+    this.startValue = this.value.isValid() ? this.value : moment.utc()
   }
 
   get shownValue() {
-    return this.value.isValid() ? this.value : moment.utc();
+    return this.value.isValid() ? this.value : moment.utc()
   }
 
   get today() {
-    return moment();
+    return moment()
   }
 
-  @Watch("shownValue")
+  @Watch('shownValue')
   private changeValue() {
-    this.startValue = this.shownValue;
+    this.startValue = this.shownValue
   }
 
   private setMonth(month: number) {
-    this.startValue = this.startValue.clone().month(month);
-    this.mode = "days";
+    this.startValue = this.startValue.clone().month(month)
+    this.mode = 'days'
   }
 
   private changeDate(increment: number) {
-    if (this.mode === "days") {
-      this.startValue = this.startValue.clone().add(increment, "months");
-    } else if (this.mode === "months") {
-      this.startValue = this.startValue.clone().add(increment, "years");
+    if (this.mode === 'days') {
+      this.startValue = this.startValue.clone().add(increment, 'months')
+    } else if (this.mode === 'months') {
+      this.startValue = this.startValue.clone().add(increment, 'years')
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .select-panel {
-    padding: 0 0.5rem;
-    display: flex;
-  }
+.select-panel {
+  display: flex;
+  padding: 0 0.5rem;
+}
 
-  .year-control {
-    width: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+.year-control {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50%;
+}
 
-  .month-control {
-    width: 50%;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-  }
+.month-control {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 50%;
+}
 
-  .month-arrow {
-    border: none;
+.month-arrow {
+  border: none;
+  border-radius: 3px;
+}
+
+.select_panel_year {
+  margin-right: 10px;
+  padding-right: 5px;
+  padding-left: 5px;
+
+  &.current-year {
+    border: solid silver;
+    border-width: 0.5px;
     border-radius: 3px;
   }
+}
 
-  .select_panel_year {
-    margin-right: 10px;
-    padding-left: 5px;
-    padding-right: 5px;
+.delimiter {
+  border-right: 1px solid var(--default-foregroundDarkerColor);
+  width: 1px;
+}
 
-    &.current-year {
-      border-radius: 3px;
-      border: solid silver;
-      border-width: 0.5px;
-    }
+.select_panel_month {
+  border: none;
+  border-radius: 3px;
+  padding-right: 5px;
+  padding-left: 5px;
+
+  &.current-month {
+    border: solid silver;
+    border-width: 0.5px;
   }
-
-  .delimiter {
-    width: 1px;
-    border-right: 1px solid var(--default-foregroundDarkerColor);
-  }
-
-  .select_panel_month {
-    border: none;
-    border-radius: 3px;
-    padding-left: 5px;
-    padding-right: 5px;
-
-    &.current-month {
-      border: solid silver;
-      border-width: 0.5px;
-    }
-  }
+}
 </style>

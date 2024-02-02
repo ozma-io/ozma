@@ -46,17 +46,14 @@
   <b-container class="mt-5">
     <b-row>
       <b-col cols="12" md="6">
-        <h4>{{ $t("save_schema") }}</h4>
+        <h4>{{ $t('save_schema') }}</h4>
 
         <b-form-group
           id="schema-name-group"
           :label="$t('schema_name').toString()"
           label-for="schema-name"
         >
-          <b-input
-            id="schema-name"
-            v-model="schema"
-          />
+          <b-input id="schema-name" v-model="schema" />
         </b-form-group>
 
         <b-form-checkbox
@@ -75,12 +72,10 @@
       </b-col>
 
       <b-col cols="12" md="6">
-        <h4>{{ $t("restore_schema") }}</h4>
+        <h4>{{ $t('restore_schema') }}</h4>
 
         <b-form-group :label="$t('from_file').toString()">
-          <b-form-file
-            v-model="fileForRestore"
-          />
+          <b-form-file v-model="fileForRestore" />
         </b-form-group>
 
         <b-form-checkbox
@@ -110,95 +105,95 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { Action } from "vuex-class";
-import type { IRestoreSchemasOptions, ISaveSchemasOptions } from "ozma-api";
-import type { ICallApi } from "@/state/auth";
+import { Component, Vue } from 'vue-property-decorator'
+import { Action } from 'vuex-class'
+import type { IRestoreSchemasOptions, ISaveSchemasOptions } from 'ozma-api'
+import type { ICallApi } from '@/state/auth'
 
 @Component
 export default class SaveRestoreSchema extends Vue {
-  @Action("callApi") callApi!: ICallApi;
+  @Action('callApi') callApi!: ICallApi
 
-  schema = "";
-  fileForRestore: File | null = null;
-  dropOthers = false;
-  skipPreloaded = true;
-  forceAllowBroken = false;
+  schema = ''
+  fileForRestore: File | null = null
+  dropOthers = false
+  skipPreloaded = true
+  forceAllowBroken = false
 
   async saveSchema() {
     try {
-      const schemas = this.schema === "" ? "all" : [this.schema];
+      const schemas = this.schema === '' ? 'all' : [this.schema]
       const opts: ISaveSchemasOptions = {
         skipPreloaded: this.skipPreloaded,
-      };
+      }
       const res: Blob = await this.callApi({
-        func: api => api.saveSchemas(schemas, opts),
-      });
+        func: (api) => api.saveSchemas(schemas, opts),
+      })
 
-      const url = URL.createObjectURL(res);
+      const url = URL.createObjectURL(res)
       try {
-        const element = document.createElement("a");
+        const element = document.createElement('a')
         try {
-          element.setAttribute("href", url);
-          const name = this.schema === "" ? "schemas" : this.schema;
-          element.setAttribute("download", `${name}.zip`);
-          element.style.display = "none";
+          element.setAttribute('href', url)
+          const name = this.schema === '' ? 'schemas' : this.schema
+          element.setAttribute('download', `${name}.zip`)
+          element.style.display = 'none'
 
-          document.body.appendChild(element);
-          element.click();
+          document.body.appendChild(element)
+          element.click()
         } finally {
-          document.body.removeChild(element);
+          document.body.removeChild(element)
         }
       } finally {
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url)
       }
 
-      this.$bvToast.toast(this.$t("success").toString(), {
-        variant: "success",
+      this.$bvToast.toast(this.$t('success').toString(), {
+        variant: 'success',
         solid: true,
         autoHideDelay: 2500,
-      });
+      })
     } catch (e) {
       this.$bvToast.toast(String(e), {
-        title: this.$t("error").toString(),
-        variant: "danger",
+        title: this.$t('error').toString(),
+        variant: 'danger',
         solid: true,
         autoHideDelay: 10000,
-      });
-      throw e;
+      })
+      throw e
     }
   }
 
   async restoreSchemas() {
-    if (!this.fileForRestore) return;
+    if (!this.fileForRestore) return
 
     const opts: IRestoreSchemasOptions = {
       dropOthers: this.dropOthers,
       forceAllowBroken: this.forceAllowBroken,
-    };
+    }
     try {
       await this.callApi({
-        func: api => api.restoreSchemas(this.fileForRestore!, opts),
-      });
+        func: (api) => api.restoreSchemas(this.fileForRestore!, opts),
+      })
 
-      this.$bvToast.toast(this.$t("success").toString(), {
-        variant: "success",
+      this.$bvToast.toast(this.$t('success').toString(), {
+        variant: 'success',
         solid: true,
         autoHideDelay: 2500,
-      });
+      })
     } catch (e) {
       this.$bvToast.toast(String(e), {
-        title: this.$t("error").toString(),
-        variant: "danger",
+        title: this.$t('error').toString(),
+        variant: 'danger',
         solid: true,
         autoHideDelay: 10000,
-      });
-      throw e;
+      })
+      throw e
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  @include variant-to-local("cell");
+@include variant-to-local('cell');
 </style>

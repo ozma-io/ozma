@@ -17,7 +17,7 @@
 
 <template>
   <MultiSelect
-    :style="{ minWidth: isCellEdit ? '25rem' : undefined}"
+    :style="{ minWidth: isCellEdit ? '25rem' : undefined }"
     :value="selectedValue"
     :label="label"
     :options="options"
@@ -39,13 +39,16 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { ISelectOption, default as MultiSelect } from "@/components/multiselect/MultiSelect.vue";
+import {
+  ISelectOption,
+  default as MultiSelect,
+} from '@/components/multiselect/MultiSelect.vue'
 
-import { valueIsNull } from "@/values";
-import type { ColorVariantAttribute } from "@/utils_colors";
-import { UserString } from "@/state/translations";
+import { valueIsNull } from '@/values'
+import type { ColorVariantAttribute } from '@/utils_colors'
+import { UserString } from '@/state/translations'
 
 @Component({
   components: {
@@ -53,68 +56,69 @@ import { UserString } from "@/state/translations";
   },
 })
 export default class ValueSelect extends Vue {
-  @Prop({ required: true }) value!: unknown[] | unknown | null;
-  @Prop({ type: Boolean, default: false }) single!: boolean;
-  @Prop({ type: Array, required: true }) options!: ISelectOption<unknown>[];
-  @Prop({ type: Boolean, default: false }) required!: boolean;
-  @Prop({ type: Boolean, default: false }) disabled!: boolean;
-  @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Number }) optionsListHeight!: number | undefined;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean;
-  @Prop() label!: UserString | undefined;
-  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
+  @Prop({ required: true }) value!: unknown[] | unknown | null
+  @Prop({ type: Boolean, default: false }) single!: boolean
+  @Prop({ type: Array, required: true }) options!: ISelectOption<unknown>[]
+  @Prop({ type: Boolean, default: false }) required!: boolean
+  @Prop({ type: Boolean, default: false }) disabled!: boolean
+  @Prop({ type: Number }) height!: number | undefined
+  @Prop({ type: Number }) optionsListHeight!: number | undefined
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
+  @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
+  @Prop() label!: UserString | undefined
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 
   private getValueIndex(value: unknown) {
-    const idx = this.options.findIndex(opt => opt.value === value);
+    const idx = this.options.findIndex((opt) => opt.value === value)
     if (idx === -1) {
-      throw new Error("Can't find selected option in options array");
+      throw new Error("Can't find selected option in options array")
     }
-    return idx;
+    return idx
   }
 
   get selectedValue() {
     if (this.single) {
       if (valueIsNull(this.value)) {
-        return null;
+        return null
       } else {
-        return this.getValueIndex(this.value);
+        return this.getValueIndex(this.value)
       }
     } else {
-      const values = this.value as unknown[] | null;
-      return values?.map(value => this.getValueIndex(value)) ?? [];
+      const values = this.value as unknown[] | null
+      return values?.map((value) => this.getValueIndex(value)) ?? []
     }
   }
 
   private updateValue(index: number | null) {
     if (index === null) {
-      this.$emit("update:value", null);
+      this.$emit('update:value', null)
     } else {
-      this.$emit("update:value", this.options[index].value);
+      this.$emit('update:value', this.options[index].value)
     }
   }
 
   private addValue(index: number) {
-    const value = this.options[index];
+    const value = this.options[index]
     if (valueIsNull(this.value)) {
-      this.$emit("update:value", [value.value]);
+      this.$emit('update:value', [value.value])
     } else {
-      this.$emit("update:value", [...this.value as unknown[], value.value]);
+      this.$emit('update:value', [...(this.value as unknown[]), value.value])
     }
   }
 
   private removeValue(index: number) {
-    if (this.value === null) return;
+    if (this.value === null) return
 
-    const rawNewValue = (this.value as unknown[]).slice();
-    rawNewValue.splice(index, 1);
-    const newValue = rawNewValue.length === 0 && !this.required ? null : rawNewValue;
-    this.$emit("update:value", newValue);
+    const rawNewValue = (this.value as unknown[]).slice()
+    rawNewValue.splice(index, 1)
+    const newValue =
+      rawNewValue.length === 0 && !this.required ? null : rawNewValue
+    this.$emit('update:value', newValue)
   }
 
   private clearValues() {
-    const newValue = !this.required ? null : [];
-    this.$emit("update:value", newValue);
+    const newValue = !this.required ? null : []
+    this.$emit('update:value', newValue)
   }
 }
 </script>

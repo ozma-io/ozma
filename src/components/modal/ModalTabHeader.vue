@@ -3,10 +3,10 @@
     :class="[
       'modal__tab_header align-items-center',
       {
-        'selected': isActive,
-        'only_tab': onlyTab,
+        selected: isActive,
+        only_tab: onlyTab,
         'is-mobile': $isMobile,
-      }
+      },
     ]"
     :data-window="windowKey"
     @click="$emit('tab-click')"
@@ -17,144 +17,146 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
-import { namespace } from "vuex-class";
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+import { namespace } from 'vuex-class'
 
-import ButtonItem from "@/components/buttons/ButtonItem.vue";
-import { Button } from "@/components/buttons/buttons";
-import { interfaceButtonVariant } from "@/utils_colors";
-import { WindowKey } from "@/state/windows";
+import ButtonItem from '@/components/buttons/ButtonItem.vue'
+import { Button } from '@/components/buttons/buttons'
+import { interfaceButtonVariant } from '@/utils_colors'
+import { WindowKey } from '@/state/windows'
 
-const windows = namespace("windows");
+const windows = namespace('windows')
 
 @Component({ components: { ButtonItem } })
 export default class ModalTabHeader extends Vue {
-  @windows.Mutation("createWindow") createWindow!: (_: WindowKey) => void;
-  @windows.Mutation("destroyWindow") destroyWindow!: (_: WindowKey) => void;
-  @windows.Mutation("activateWindow") activateWindow!: (_: WindowKey) => void;
+  @windows.Mutation('createWindow') createWindow!: (_: WindowKey) => void
+  @windows.Mutation('destroyWindow') destroyWindow!: (_: WindowKey) => void
+  @windows.Mutation('activateWindow') activateWindow!: (_: WindowKey) => void
 
-  @Prop({ type: Boolean, default: false }) isActive!: boolean;
-  @Prop({ type: Boolean, default: false }) onlyTab!: boolean;
-  @Prop({ type: String, required: true }) windowKey!: string;
+  @Prop({ type: Boolean, default: false }) isActive!: boolean
+  @Prop({ type: Boolean, default: false }) onlyTab!: boolean
+  @Prop({ type: String, required: true }) windowKey!: string
 
-  @Watch("windowKey", { immediate: true })
-  private createWindowByKey(windowKey: string, oldWindowKey: string | undefined) {
-    if (windowKey === oldWindowKey) return;
+  @Watch('windowKey', { immediate: true })
+  private createWindowByKey(
+    windowKey: string,
+    oldWindowKey: string | undefined,
+  ) {
+    if (windowKey === oldWindowKey) return
 
     if (oldWindowKey) {
-      throw new Error("Changing window key is not supported");
+      throw new Error('Changing window key is not supported')
     }
-    this.createWindow(windowKey);
+    this.createWindow(windowKey)
   }
 
   mounted() {
     if (this.isActive) {
-      this.activateWindow(this.windowKey);
+      this.activateWindow(this.windowKey)
     }
   }
 
   destroyed() {
-    this.destroyWindow(this.windowKey);
+    this.destroyWindow(this.windowKey)
   }
 
-  @Watch("isActive")
+  @Watch('isActive')
   private setActive() {
     if (this.isActive) {
-      this.activateWindow(this.windowKey);
+      this.activateWindow(this.windowKey)
     }
   }
 
   private get closeButton(): Button {
     return {
-      type: "callback",
-      icon: "close",
+      type: 'callback',
+      icon: 'close',
       variant: interfaceButtonVariant,
-      callback: () => this.$emit("tab-close"),
-    };
+      callback: () => this.$emit('tab-close'),
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.nested-menu {
+  width: 100%;
+}
 
-  .nested-menu {
-    width: 100%;
+.modal__tab_header {
+  display: flex;
+  flex: 1 1 auto;
+  padding: 2px;
+  width: 100%;
+  overflow-x: hidden;
+
+  &.is-mobile {
+    min-width: 80%;
   }
+}
 
-  .modal__tab_header {
-    width: 100%;
-    display: flex;
-    padding: 2px;
-    flex: 1 1 auto;
-    overflow-x: hidden;
+.modal__tab_header_title {
+  margin-right: auto;
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 1.25em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
-    &.is-mobile {
-      min-width: 80%;
-    }
+  &:focus {
+    outline: none;
   }
+}
 
-  .modal__tab_header_title {
-    font-weight: 600;
-    font-size: 1.25em;
-    margin-right: auto;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.modal__tab_header.selected,
+.modal__tab_header:hover {
+  cursor: pointer;
+  border-color: var(--MainBorderColor);
+}
 
-    &:focus {
-      outline: none;
-    }
-  }
+.modal__tab_header.only_tab {
+  cursor: grab;
+  border-color: transparent;
+  background-color: var(--default-backgroundColor);
+}
 
-  .modal__tab_header.selected,
-  .modal__tab_header:hover {
-    border-color: var(--MainBorderColor);
+.modal__tab_header:not(.only_tab) {
+  cursor: grab;
+
+  &:not(.selected) {
     cursor: pointer;
-  }
+    background-color: var(--default-backgroundDarker1Color, #eaeaea);
 
-  .modal__tab_header.only_tab {
-    border-color: transparent;
-    cursor: grab;
-    background-color: var(--default-backgroundColor);
-  }
-
-  .modal__tab_header:not(.only_tab) {
-    cursor: grab;
-
-    &:not(.selected) {
-      background-color: var(--default-backgroundDarker1Color, #eaeaea);
-      cursor: pointer;
-
-      ::v-deep {
-        .button-element,
-        .filters-button,
-        .search-wrapper {
-          display: none !important;
-        }
+    ::v-deep {
+      .button-element,
+      .filters-button,
+      .search-wrapper {
+        display: none !important;
       }
     }
-
-    &:not(:first-child):not(.selected) {
-      border-left: 1px solid var(--MainBorderColor);
-    }
   }
 
-  .modal__tab_close_button {
-    visibility: hidden;
-    line-height: 1.25em;
-    background: none;
-    border: none;
-    cursor: pointer;
-    float: right;
+  &:not(:first-child):not(.selected) {
+    border-left: 1px solid var(--MainBorderColor);
   }
+}
 
-  .modal__tab_header.selected > .modal__tab_close_button,
-  .modal__tab_header:hover > .modal__tab_close_button {
-    visibility: visible;
-    cursor: pointer;
-  }
+.modal__tab_close_button {
+  float: right;
+  visibility: hidden;
+  cursor: pointer;
+  border: none;
+  background: none;
+  line-height: 1.25em;
+}
 
-  .modal__tab_header.only_tab > .modal__tab_close_button {
-    display: none;
-  }
+.modal__tab_header.selected > .modal__tab_close_button,
+.modal__tab_header:hover > .modal__tab_close_button {
+  visibility: visible;
+  cursor: pointer;
+}
+
+.modal__tab_header.only_tab > .modal__tab_close_button {
+  display: none;
+}
 </style>

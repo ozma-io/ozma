@@ -74,7 +74,7 @@
         offset: { offset: '0, 25' },
         preventOverflow: { enabled: true, boundariesElement: 'viewport' },
         hide: { enabled: true },
-      }
+      },
     }"
     :disabled="!show"
     :force-show="show"
@@ -82,11 +82,7 @@
   >
     <div class="popper">
       <div class="profile-block">
-        <Avatar
-          round
-          :size="2.625"
-          :username="username"
-        />
+        <Avatar round :size="2.625" :username="username" />
         <div class="user-info">
           <div v-if="showUsername" class="user-name">
             {{ username }}
@@ -96,10 +92,7 @@
           </div>
         </div>
       </div>
-      <ButtonList
-        :buttons="buttons"
-        @goto="$emit('goto', $event)"
-      />
+      <ButtonList :buttons="buttons" @goto="$emit('goto', $event)" />
     </div>
     <!-- eslint-disable vue/no-deprecated-slot-attribute -->
     <button
@@ -109,110 +102,118 @@
       :style="{ padding: 0 }"
       @click.capture="show = !show"
     >
-      <Avatar
-        round
-        :username="username"
-      />
+      <Avatar round :username="username" />
     </button>
   </popper>
 </template>
 
 <script lang="ts">
-import { namespace } from "vuex-class";
-import { Component, Vue } from "vue-property-decorator";
-import Popper from "vue-popperjs";
+import { namespace } from 'vuex-class'
+import { Component, Vue } from 'vue-property-decorator'
+import Popper from 'vue-popperjs'
 
-import * as Api from "@/api";
-import { Button } from "@/components/buttons/buttons";
-import { defaultVariantAttribute, IThemeRef } from "@/utils_colors";
-import { CurrentAuth, getAuthedLink, INoAuth } from "@/state/auth";
-import { eventBus } from "@/main";
-import { CurrentSettings, DisplayMode } from "@/state/settings";
-import ButtonList from "@/components/buttons/ButtonList.vue";
-import Avatar from "@/components/Avatar.vue";
+import * as Api from '@/api'
+import { Button } from '@/components/buttons/buttons'
+import { defaultVariantAttribute, IThemeRef } from '@/utils_colors'
+import { CurrentAuth, getAuthedLink, INoAuth } from '@/state/auth'
+import { eventBus } from '@/main'
+import { CurrentSettings, DisplayMode } from '@/state/settings'
+import ButtonList from '@/components/buttons/ButtonList.vue'
+import Avatar from '@/components/Avatar.vue'
 
-const auth = namespace("auth");
-const settings = namespace("settings");
+const auth = namespace('auth')
+const settings = namespace('settings')
 
 @Component({ components: { ButtonList, Popper, Avatar } })
 export default class AppHeader extends Vue {
-  @auth.State("current") currentAuth!: CurrentAuth | INoAuth | null;
-  @settings.State("current") currentSettings!: CurrentSettings;
-  @settings.Action("setCurrentTheme") setCurrentTheme!: (theme: IThemeRef) => Promise<void>;
-  @settings.Action("writeUserSettings") writeUserSettings!: (setting: { name: string; value: string }) => Promise<void>;
-  @settings.State("userIsRoot") userIsRoot!: boolean;
-  @settings.Action("setDisplayMode") setDisplayMode!: (mode: DisplayMode) => Promise<void>;
-  @settings.Getter("developmentModeEnabled") developmentModeEnabled!: boolean;
-  @auth.Action("logout") logout!: () => Promise<void>;
-  @auth.Action("login") login!: () => Promise<void>;
+  @auth.State('current') currentAuth!: CurrentAuth | INoAuth | null
+  @settings.State('current') currentSettings!: CurrentSettings
+  @settings.Action('setCurrentTheme') setCurrentTheme!: (
+    theme: IThemeRef,
+  ) => Promise<void>
+  @settings.Action('writeUserSettings') writeUserSettings!: (setting: {
+    name: string
+    value: string
+  }) => Promise<void>
+  @settings.State('userIsRoot') userIsRoot!: boolean
+  @settings.Action('setDisplayMode') setDisplayMode!: (
+    mode: DisplayMode,
+  ) => Promise<void>
+  @settings.Getter('developmentModeEnabled') developmentModeEnabled!: boolean
+  @auth.Action('logout') logout!: () => Promise<void>
+  @auth.Action('login') login!: () => Promise<void>
 
-  private show = false;
+  private show = false
 
   private get username() {
-    const currentAuth = this.currentAuth as CurrentAuth | null;
-    return currentAuth?.username ?? currentAuth?.email ?? null;
+    const currentAuth = this.currentAuth as CurrentAuth | null
+    return currentAuth?.username ?? currentAuth?.email ?? null
   }
 
   private get userEmail() {
-    const currentAuth = this.currentAuth as CurrentAuth | null;
-    return currentAuth?.email ?? null;
+    const currentAuth = this.currentAuth as CurrentAuth | null
+    return currentAuth?.email ?? null
   }
 
   private get showUsername() {
-    return this.userEmail !== this.username;
+    return this.userEmail !== this.username
   }
 
   private get allowBusinessMode() {
-    return this.currentSettings.getEntry("allow_business_mode", Boolean, false);
+    return this.currentSettings.getEntry('allow_business_mode', Boolean, false)
   }
 
   private toggleDeveloperMode() {
     if (this.allowBusinessMode && this.userIsRoot) {
-      void this.setDisplayMode(this.developmentModeEnabled ? "business" : "development");
+      void this.setDisplayMode(
+        this.developmentModeEnabled ? 'business' : 'development',
+      )
     }
   }
 
   private get themeButtons(): Button[] {
-    const locale = this.$i18n.locale;
-    return Object.entries(this.currentSettings.themes).flatMap(([schemaName, themesSchema]) => {
-      return Object.entries(themesSchema).map(([themeName, theme]) => {
-        const ref = {
-          schema: schemaName,
-          name: themeName,
-        };
-        let name: string;
-        if (locale in theme.localized) {
-          name = theme.localized[locale];
-        } else if ("en" in theme.localized) {
-          name = theme.localized["en"];
-        } else {
-          name = `${schemaName}.${themeName}`;
-        }
-        return {
-          caption: name,
-          variant: defaultVariantAttribute,
-          type: "callback",
-          callback: () => this.setCurrentTheme(ref),
-        };
-      });
-    });
+    const locale = this.$i18n.locale
+    return Object.entries(this.currentSettings.themes).flatMap(
+      ([schemaName, themesSchema]) => {
+        return Object.entries(themesSchema).map(([themeName, theme]) => {
+          const ref = {
+            schema: schemaName,
+            name: themeName,
+          }
+          let name: string
+          if (locale in theme.localized) {
+            name = theme.localized[locale]
+          } else if ('en' in theme.localized) {
+            name = theme.localized['en']
+          } else {
+            name = `${schemaName}.${themeName}`
+          }
+          return {
+            caption: name,
+            variant: defaultVariantAttribute,
+            type: 'callback',
+            callback: () => this.setCurrentTheme(ref),
+          }
+        })
+      },
+    )
   }
 
   private get buttons() {
-    const buttons: Button[] = [];
+    const buttons: Button[] = []
 
     if (this.currentAuth?.refreshToken) {
       buttons.push({
-        caption: this.$t("account").toString(),
-        type: "link",
-        link: { href: Api.accountUrl, type: "href", target: "blank" },
+        caption: this.$t('account').toString(),
+        type: 'link',
+        link: { href: Api.accountUrl, type: 'href', target: 'blank' },
         variant: defaultVariantAttribute,
-      });
+      })
 
       buttons.push({
-        type: "divider",
+        type: 'divider',
         variant: defaultVariantAttribute,
-      });
+      })
     }
     /*
     if (this.themeButtons.length > 0) {
@@ -226,134 +227,145 @@ export default class AppHeader extends Vue {
     */
 
     buttons.push({
-      caption: this.$t("change_language").toString(),
+      caption: this.$t('change_language').toString(),
       variant: defaultVariantAttribute,
-      type: "button-group",
-      buttons: ["en", "es", "ru"].map(language =>
-        ({
-          caption: this.$t(language).toString(),
-          variant: defaultVariantAttribute,
-          type: "callback",
-          callback: () => {
-            void this.writeUserSettings({ name: "language", value: language });
-          },
-        })),
-    });
+      type: 'button-group',
+      buttons: ['en', 'es', 'ru'].map((language) => ({
+        caption: this.$t(language).toString(),
+        variant: defaultVariantAttribute,
+        type: 'callback',
+        callback: () => {
+          void this.writeUserSettings({ name: 'language', value: language })
+        },
+      })),
+    })
 
     if (this.currentAuth?.refreshToken) {
       buttons.push({
-        caption: this.$t("invite_user").toString(),
+        caption: this.$t('invite_user').toString(),
         variant: defaultVariantAttribute,
-        type: "callback",
-        callback: () => eventBus.emit("show-invite-user-modal"),
-      });
+        type: 'callback',
+        callback: () => eventBus.emit('show-invite-user-modal'),
+      })
 
       if (this.allowBusinessMode && this.userIsRoot) {
         buttons.push({
-          caption: this.$t(this.developmentModeEnabled ? "disable_development_mode" : "enable_development_mode").toString(),
-          tooltip: "Ctrl+Shift+D",
-          type: "callback",
+          caption: this.$t(
+            this.developmentModeEnabled
+              ? 'disable_development_mode'
+              : 'enable_development_mode',
+          ).toString(),
+          tooltip: 'Ctrl+Shift+D',
+          type: 'callback',
           callback: () => this.toggleDeveloperMode(),
           variant: defaultVariantAttribute,
           keepButtonGroupOpened: true,
-        });
+        })
       }
 
       if (this.developmentModeEnabled) {
         buttons.push({
-          caption: this.$t("documentation").toString(),
+          caption: this.$t('documentation').toString(),
           variant: defaultVariantAttribute,
-          type: "link",
-          link: { type: "href", href: "https://wiki.ozma.io", target: "blank" },
-        });
+          type: 'link',
+          link: { type: 'href', href: 'https://wiki.ozma.io', target: 'blank' },
+        })
 
         buttons.push({
-          caption: this.$t("workspaces").toString(),
+          caption: this.$t('workspaces').toString(),
           variant: defaultVariantAttribute,
-          type: "link",
-          link: { type: "href", href: "https://admin.ozma.io", target: "blank" },
-        });
+          type: 'link',
+          link: {
+            type: 'href',
+            href: 'https://admin.ozma.io',
+            target: 'blank',
+          },
+        })
 
         if (Api.developmentMode) {
-          const currentAuth = this.currentAuth;
+          const currentAuth = this.currentAuth
           buttons.push({
-            caption: this.$t("authed_link").toString(),
+            caption: this.$t('authed_link').toString(),
             variant: defaultVariantAttribute,
-            type: "callback",
+            type: 'callback',
             callback: () => {
-              const link = getAuthedLink(currentAuth);
-              void navigator.clipboard.writeText(link);
+              const link = getAuthedLink(currentAuth)
+              void navigator.clipboard.writeText(link)
             },
-          });
+          })
         }
 
         buttons.push({
-          caption: this.$t("forget_dismissed_help_pages").toString(),
+          caption: this.$t('forget_dismissed_help_pages').toString(),
           variant: defaultVariantAttribute,
-          type: "callback",
+          type: 'callback',
           callback: () => {
-            const allKeys = Object.keys(localStorage);
-            const keys = ["dismissHelpPages", ...allKeys.filter(key => key.startsWith("watchedHelpPage_"))];
+            const allKeys = Object.keys(localStorage)
+            const keys = [
+              'dismissHelpPages',
+              ...allKeys.filter((key) => key.startsWith('watchedHelpPage_')),
+            ]
             for (const key of keys) {
-              localStorage.removeItem(key);
+              localStorage.removeItem(key)
             }
           },
-        });
+        })
       }
 
       buttons.push({
-        type: "divider",
-        variant: { type: "existing", className: "" },
-      });
+        type: 'divider',
+        variant: { type: 'existing', className: '' },
+      })
       buttons.push({
-        caption: this.$t("logout").toString(),
-        type: "callback",
+        caption: this.$t('logout').toString(),
+        type: 'callback',
         callback: () => void this.logout(),
         variant: defaultVariantAttribute,
-      });
+      })
     } else {
       buttons.push({
-        caption: this.$t("login").toString(),
-        type: "callback",
+        caption: this.$t('login').toString(),
+        type: 'callback',
         callback: () => void this.login(),
         variant: defaultVariantAttribute,
-      });
+      })
     }
 
-    return buttons;
+    return buttons
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .popper {
-    padding: 1.25rem 0 0.75rem 0;
-    display: flex;
-    flex-direction: column;
-    border-radius: 0.5rem;
-    box-shadow: 0px 5px 12px 0px rgba(0, 0, 0, 0.08), 0px 15px 30px -7px rgba(33, 35, 38, 0.12);
-  }
+.popper {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0px 5px 12px 0px rgba(0, 0, 0, 0.08),
+    0px 15px 30px -7px rgba(33, 35, 38, 0.12);
+  border-radius: 0.5rem;
+  padding: 1.25rem 0 0.75rem 0;
+}
 
-  .profile-block {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-  }
+.profile-block {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
 
-  .user-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-  }
-  .user-name {
-    font-size: 0.875rem;
-    color: #1F1F1F;
-    font-weight: 600;
-  }
-  .user-email {
-    font-size: 0.75rem;
-    color: #3D3D3D;
-    font-weight: 500;
-  }
+.user-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.user-name {
+  color: #1f1f1f;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.user-email {
+  color: #3d3d3d;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
 </style>

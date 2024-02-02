@@ -16,25 +16,15 @@
 </i18n>
 
 <template>
-  <div
-    class="column_container"
-    data-dragscroll
-    :style="style"
-  >
-    <div
-      class="column_header"
-      data-dragscroll
-    >
-      <div
-        class="column_header__title_block"
-        data-dragscroll
-      >
+  <div class="column_container" data-dragscroll :style="style">
+    <div class="column_header" data-dragscroll>
+      <div class="column_header__title_block" data-dragscroll>
         <span
           class="column_header__title"
           :title="title ?? undefined"
           data-dragscroll
         >
-          {{ title ?? ". . ." }}
+          {{ title ?? '. . .' }}
         </span>
         <span
           v-b-tooltip.hover.d1000.noninteractive
@@ -48,7 +38,8 @@
             v-if="createButton"
             class="material-icons material-button add-button"
             @click="$emit('create')"
-          >add</i>
+            >add</i
+          >
         </span>
       </div>
     </div>
@@ -85,7 +76,7 @@
         :color-variant-attribute="card.colorVariant"
         :class="[
           {
-            'handle': !$isMobile,
+            handle: !$isMobile,
           },
         ]"
       >
@@ -93,7 +84,7 @@
           :class="[
             'mob-handle',
             {
-              'handle': $isMobile,
+              handle: $isMobile,
             },
           ]"
         />
@@ -111,11 +102,8 @@
           @infinite="updateShownCardsLength"
         >
           <template #no-results>
-            <div
-              v-if="cards.length === 0"
-              class="no-card"
-            >
-              {{ $t("no_cards") }}
+            <div v-if="cards.length === 0" class="no-card">
+              {{ $t('no_cards') }}
             </div>
             <span v-else />
           </template>
@@ -132,214 +120,222 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from "vue-property-decorator";
-import InfiniteLoading, { StateChanger } from "vue-infinite-loading";
-import draggable from "vuedraggable";
+import { Vue, Component, Prop } from 'vue-property-decorator'
+import InfiniteLoading, { StateChanger } from 'vue-infinite-loading'
+import draggable from 'vuedraggable'
 
-import Card from "@/components/kanban/Card.vue";
-import { nextRender } from "@/utils";
-import type { ColorVariantAttribute } from "@/utils_colors";
+import Card from '@/components/kanban/Card.vue'
+import { nextRender } from '@/utils'
+import type { ColorVariantAttribute } from '@/utils_colors'
 
 export interface ICard<CardT> {
-  key: unknown;
-  card: CardT;
-  backgroundColor?: string;
-  colorVariant: ColorVariantAttribute;
+  key: unknown
+  card: CardT
+  backgroundColor?: string
+  colorVariant: ColorVariantAttribute
 }
 
-const showStep = 10;
+const showStep = 10
 
 @Component({ components: { Card, draggable, InfiniteLoading } })
 export default class KanbanColumn extends Vue {
-  @Prop({ type: Array, required: true }) cards!: ICard<unknown>[];
-  @Prop({ required: true }) title!: string | null;
-  @Prop({ type: Boolean, default: false }) createButton!: boolean;
-  @Prop({ type: Number, default: 300 }) width!: number;
-  @Prop({ type: Object }) colorVariables!: Record<string, string>;
-  @Prop({ type: String, default: "none" }) backgroundColor!: string;
-  @Prop({ type: Boolean, default: false }) allowDragging!: string;
+  @Prop({ type: Array, required: true }) cards!: ICard<unknown>[]
+  @Prop({ required: true }) title!: string | null
+  @Prop({ type: Boolean, default: false }) createButton!: boolean
+  @Prop({ type: Number, default: 300 }) width!: number
+  @Prop({ type: Object }) colorVariables!: Record<string, string>
+  @Prop({ type: String, default: 'none' }) backgroundColor!: string
+  @Prop({ type: Boolean, default: false }) allowDragging!: string
 
-  private draggedIndex: number | null = null;
-  private shownCardsLength = 0;
+  private draggedIndex: number | null = null
+  private shownCardsLength = 0
 
   private updateShownCardsLength(ev: StateChanger) {
-    this.shownCardsLength = Math.min(this.shownCardsLength + showStep, this.cards.length);
+    this.shownCardsLength = Math.min(
+      this.shownCardsLength + showStep,
+      this.cards.length,
+    )
 
     if (this.shownCardsLength >= this.cards.length) {
-      ev.complete();
+      ev.complete()
     } else {
-      ev.loaded();
+      ev.loaded()
     }
   }
 
   private get allCardsShown() {
-    return this.shownCardsLength >= this.cards.length;
+    return this.shownCardsLength >= this.cards.length
   }
 
   private get shownCards() {
-    return this.cards.slice(0, this.shownCardsLength);
+    return this.cards.slice(0, this.shownCardsLength)
   }
 
   get style() {
     return {
       width: `${this.width}px`,
       minWidth: `${this.width}px`,
-    };
+    }
   }
 
   get cardCount() {
-    return (this.cards.length > 0) ? `${this.cards.length}` : "";
+    return this.cards.length > 0 ? `${this.cards.length}` : ''
   }
 
   private onDragStart(evt: any) {
-    this.draggedIndex = evt.oldIndex;
-    this.$emit("drag-start", evt.oldIndex);
+    this.draggedIndex = evt.oldIndex
+    this.$emit('drag-start', evt.oldIndex)
   }
 
   private onDragEnd() {
     // On slow browsers `dragging` is unset too fast, which causes disabled links in draggable to be clicked.
     void nextRender().then(() => {
-      this.draggedIndex = null;
-      this.$emit("drag-end");
-    });
+      this.draggedIndex = null
+      this.$emit('drag-end')
+    })
   }
 
   private onChange(event: any) {
-    if ("added" in event) {
-      this.$emit("add", event.added.element.card, event.added.newIndex);
-    } else if ("moved" in event) {
-      this.$emit("move", event.moved.element.card, event.moved.oldIndex, event.moved.newIndex);
-    } else if ("removed" in event) {
-      this.$emit("remove", event.removed.element.card, event.removed.oldIndex);
+    if ('added' in event) {
+      this.$emit('add', event.added.element.card, event.added.newIndex)
+    } else if ('moved' in event) {
+      this.$emit(
+        'move',
+        event.moved.element.card,
+        event.moved.oldIndex,
+        event.moved.newIndex,
+      )
+    } else if ('removed' in event) {
+      this.$emit('remove', event.removed.element.card, event.removed.oldIndex)
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-  .column_container {
-    height: fit-content;
-    max-height: 100%;
-    padding: 1.25rem 0.5rem 0.25rem 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    background-color: var(--kanban-backgroundColor);
-    color: var(--MainTextColor);
-    border-radius: 0.75rem;
+.column_container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  background-color: var(--kanban-backgroundColor);
+  padding: 1.25rem 0.5rem 0.25rem 0.5rem;
+  height: fit-content;
+  max-height: 100%;
+  color: var(--MainTextColor);
 
-    &:hover {
-      ::-webkit-scrollbar {
-        display: block;
-      }
+  &:hover {
+    ::-webkit-scrollbar {
+      display: block;
     }
   }
+}
 
-  .column_header {
-    padding: 0 0.5rem;
-    display: flex;
+.column_header {
+  display: flex;
+  padding: 0 0.5rem;
+}
+
+.column_header__title_block {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  color: var(--kanban-foregroundColor);
+}
+
+.column_header__title {
+  overflow: hidden;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.column_header__count {
+  position: relative;
+  bottom: 0.25rem;
+  left: 0.5rem;
+  color: var(--kanban-foregroundDarkerColor);
+  font-size: 0.75rem;
+}
+
+.column_select_checkbox {
+  vertical-align: middle;
+}
+
+.column_body {
+  padding-bottom: 0;
+  height: 100%;
+  min-height: 100px;
+  overflow-x: hidden;
+}
+
+.column_controls {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.column_controls > i {
+  vertical-align: middle;
+}
+
+.add-button {
+  border: 0;
+}
+
+.no-card {
+  border: 1px dashed var(--kanban-foregroundDarkerColor);
+  border-radius: 0.25rem;
+  padding: 2rem 0;
+  color: var(--kanban-foregroundDarkerColor);
+}
+
+::v-deep .card_dragging_ghost {
+  border-width: 0;
+  border-radius: 0.25rem;
+  background-color: var(--kanban-backgroundDarker2Color, #ddd) !important;
+
+  > * {
+    visibility: hidden;
   }
+}
 
-  .column_header__title_block {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    color: var(--kanban-foregroundColor);
+.card_dragging_drag {
+  transform: rotate(3deg);
+  opacity: 1 !important;
+  box-shadow: 0 10px 10px -10px;
+}
+
+@media screen and (max-width: 460px) {
+  .mob-handle {
+    border-radius: 0.25rem 0.25rem 0 0;
+    background-color: var(--kanban-backgroundDarker2Color, #ddd);
+    height: 20px;
   }
+}
 
-  .column_header__title {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    font-weight: bold;
-  }
+::-webkit-scrollbar {
+  display: none;
+  width: 3px;
+  height: 10px;
+}
 
-  .column_header__count {
-    position: relative;
-    bottom: 0.25rem;
-    left: 0.5rem;
-    font-size: 0.75rem;
-    color: var(--kanban-foregroundDarkerColor);
-  }
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: rgba(150, 150, 150, 0.5);
+}
 
-  .column_select_checkbox {
-    vertical-align: middle;
-  }
+::-webkit-scrollbar-track {
+  border-radius: 5px;
+  background: rgba(50, 50, 50, 0.1);
+}
 
-  .column_body {
-    padding-bottom: 0;
-    overflow-x: hidden;
-    height: 100%;
-    min-height: 100px;
-  }
+::-webkit-scrollbar-thumb:vertical:hover {
+  background: #999;
+  width: 100px;
+}
 
-  .column_controls {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-  }
-
-  .column_controls > i {
-    vertical-align: middle;
-  }
-
-  .add-button {
-    border: 0;
-  }
-
-  .no-card {
-    padding: 2rem 0;
-    color: var(--kanban-foregroundDarkerColor);
-    border: 1px dashed var(--kanban-foregroundDarkerColor);
-    border-radius: 0.25rem;
-  }
-
-  ::v-deep .card_dragging_ghost {
-    background-color: var(--kanban-backgroundDarker2Color, #ddd) !important;
-    border-radius: 0.25rem;
-    border-width: 0;
-
-    > * {
-      visibility: hidden;
-    }
-  }
-
-  .card_dragging_drag {
-    opacity: 1 !important;
-    transform: rotate(3deg);
-    box-shadow: 0 10px 10px -10px;
-  }
-
-  @media screen and (max-width: 460px) {
-    .mob-handle {
-      height: 20px;
-      background-color: var(--kanban-backgroundDarker2Color, #ddd);
-      border-radius: 0.25rem 0.25rem 0 0;
-    }
-  }
-
-  ::-webkit-scrollbar {
-    width: 3px;
-    height: 10px;
-    display: none;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(150, 150, 150, 0.5);
-    border-radius: 5px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: rgba(50, 50, 50, 0.1);
-    border-radius: 5px;
-  }
-
-  ::-webkit-scrollbar-thumb:vertical:hover {
-    background: #999;
-    width: 100px;
-  }
-
-  ::-webkit-scrollbar-thumb:vertical:active {
-    background: #777;
-  }
+::-webkit-scrollbar-thumb:vertical:active {
+  background: #777;
+}
 </style>

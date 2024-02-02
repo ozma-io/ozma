@@ -21,21 +21,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop } from 'vue-property-decorator'
 
 @Component
 export default class BarCode extends Vue {
-  @Prop({ type: String, default: "" }) content!: string;
+  @Prop({ type: String, default: '' }) content!: string
 
-  private currentCode = "";
+  private currentCode = ''
 
   private created() {
-    this.currentCode = this.content;
+    this.currentCode = this.content
   }
 
   private onScanned(code: string) {
-    this.$emit("scanned", code);
-    this.currentCode = "";
+    this.$emit('scanned', code)
+    this.currentCode = ''
   }
 }
 </script>

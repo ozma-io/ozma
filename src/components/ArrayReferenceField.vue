@@ -39,14 +39,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import type { IEntityRef, SchemaName } from "ozma-api";
+import { Component, Prop, Vue } from 'vue-property-decorator'
+import type { IEntityRef, SchemaName } from 'ozma-api'
 
-import ReferenceMultiSelect from "@/components/ReferenceMultiSelect.vue";
-import { valueIsNull } from "@/values";
-import { EntriesRef } from "@/state/entries";
-import type { IQuery } from "@/state/query";
-import type { ColorVariantAttribute } from "@/utils_colors";
+import ReferenceMultiSelect from '@/components/ReferenceMultiSelect.vue'
+import { valueIsNull } from '@/values'
+import { EntriesRef } from '@/state/entries'
+import type { IQuery } from '@/state/query'
+import type { ColorVariantAttribute } from '@/utils_colors'
 
 @Component({
   components: {
@@ -54,58 +54,59 @@ import type { ColorVariantAttribute } from "@/utils_colors";
   },
 })
 export default class ArrayReferenceField extends Vue {
-  @Prop({ required: true }) value!: unknown[] | null;
-  @Prop({ type: Object }) optionsView!: IQuery | undefined;
-  @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef;
-  @Prop({ type: Boolean, default: false }) required!: boolean;
-  @Prop({ type: Boolean, default: false }) disabled!: boolean;
-  @Prop({ type: Number }) height!: number | undefined;
-  @Prop({ type: Number }) optionsListHeight!: number | undefined;
-  @Prop({ type: Boolean, default: false }) autofocus!: boolean;
-  @Prop({ type: String }) homeSchema!: SchemaName | undefined;
-  @Prop({ type: String }) label!: string | undefined;
-  @Prop({ type: Boolean, default: false }) compactMode!: boolean;
-  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute;
+  @Prop({ required: true }) value!: unknown[] | null
+  @Prop({ type: Object }) optionsView!: IQuery | undefined
+  @Prop({ type: Object, required: true }) referenceEntity!: IEntityRef
+  @Prop({ type: Boolean, default: false }) required!: boolean
+  @Prop({ type: Boolean, default: false }) disabled!: boolean
+  @Prop({ type: Number }) height!: number | undefined
+  @Prop({ type: Number }) optionsListHeight!: number | undefined
+  @Prop({ type: Boolean, default: false }) autofocus!: boolean
+  @Prop({ type: String }) homeSchema!: SchemaName | undefined
+  @Prop({ type: String }) label!: string | undefined
+  @Prop({ type: Boolean, default: false }) compactMode!: boolean
+  @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 
   get entriesRef(): EntriesRef {
     if (this.optionsView) {
       return {
-        fetchBy: "options_view",
+        fetchBy: 'options_view',
         optionsView: this.optionsView,
         referencedTo: this.referenceEntity,
-      };
+      }
     } else {
       return {
-        fetchBy: "entity",
+        fetchBy: 'entity',
         entity: this.referenceEntity,
-      };
+      }
     }
   }
 
   private get values() {
-    return this.value?.map(value => ({ value, pun: undefined })) ?? [];
+    return this.value?.map((value) => ({ value, pun: undefined })) ?? []
   }
 
   private addValue(id: number) {
     if (valueIsNull(this.value)) {
-      this.$emit("update:value", [id]);
+      this.$emit('update:value', [id])
     } else {
-      this.$emit("update:value", [...this.value, id]);
+      this.$emit('update:value', [...this.value, id])
     }
   }
 
   private removeIndex(index: number) {
-    if (this.value === null) return;
+    if (this.value === null) return
 
-    const rawNewValue = this.value.slice();
-    rawNewValue.splice(index, 1);
-    const newValue = rawNewValue.length === 0 && !this.required ? null : rawNewValue;
-    this.$emit("update:value", newValue);
+    const rawNewValue = this.value.slice()
+    rawNewValue.splice(index, 1)
+    const newValue =
+      rawNewValue.length === 0 && !this.required ? null : rawNewValue
+    this.$emit('update:value', newValue)
   }
 
   private clearValues() {
-    const newValue = !this.required ? null : [];
-    this.$emit("update:value", newValue);
+    const newValue = !this.required ? null : []
+    this.$emit('update:value', newValue)
   }
 }
 </script>

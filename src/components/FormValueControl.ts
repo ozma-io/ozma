@@ -1,10 +1,10 @@
-import Vue from "vue";
+import Vue from 'vue'
 
-import { currentValue, ICombinedValue } from "@/user_views/combined";
-import { vueEmit } from "@/utils";
+import { currentValue, ICombinedValue } from '@/user_views/combined'
+import { vueEmit } from '@/utils'
 
 export default Vue.extend({
-  name: "FormValueControl",
+  name: 'FormValueControl',
   functional: true,
   props: {
     value: { type: Object, required: true },
@@ -25,11 +25,17 @@ export default Vue.extend({
     forceModalOnMobile: { type: Boolean },
   },
   render(createElement, context) {
-    const value = context.props.value as ICombinedValue;
-    const isNullable = value.info === undefined || value.info.field === null || value.info.field.isNullable;
-    const locked = Boolean(context.props.locked || !value.info?.field);
-    const passHandler = (name: string) => (...args: unknown[]) => vueEmit(context, name, ...args);
-    return createElement("FormControl", {
+    const value = context.props.value as ICombinedValue
+    const isNullable =
+      value.info === undefined ||
+      value.info.field === null ||
+      value.info.field.isNullable
+    const locked = Boolean(context.props.locked || !value.info?.field)
+    const passHandler =
+      (name: string) =>
+      (...args: unknown[]) =>
+        vueEmit(context, name, ...args)
+    return createElement('FormControl', {
       attrs: {
         ...context.props,
         value: currentValue(value),
@@ -41,11 +47,11 @@ export default Vue.extend({
         locked,
       },
       on: {
-        update: passHandler("update"),
-        closeModalInput: passHandler("close-modal-input"),
-        goto: passHandler("goto"),
-        blur: passHandler("blur"),
+        update: passHandler('update'),
+        closeModalInput: passHandler('close-modal-input'),
+        goto: passHandler('goto'),
+        blur: passHandler('blur'),
       },
-    });
+    })
   },
-});
+})

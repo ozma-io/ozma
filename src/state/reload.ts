@@ -1,10 +1,10 @@
-import { Module } from "vuex";
-import Vue from "vue";
+import { Module } from 'vuex'
+import Vue from 'vue'
 
-export type ReloadKey = string;
+export type ReloadKey = string
 
 export interface IReloadState {
-  handlers: Record<ReloadKey, () => void>;
+  handlers: Record<ReloadKey, () => void>
 }
 
 const reloadModule: Module<IReloadState, {}> = {
@@ -13,23 +13,26 @@ const reloadModule: Module<IReloadState, {}> = {
     handlers: {},
   },
   mutations: {
-    setHandler: (state, { key, handler }: { key: ReloadKey; handler: () => void }) => {
-      Vue.set(state.handlers, key, handler);
+    setHandler: (
+      state,
+      { key, handler }: { key: ReloadKey; handler: () => void },
+    ) => {
+      Vue.set(state.handlers, key, handler)
     },
     removeHandler: (state, key: ReloadKey) => {
-      Vue.delete(state.handlers, key);
+      Vue.delete(state.handlers, key)
     },
   },
   actions: {
     reload: {
       root: true,
       handler: ({ state }) => {
-        Object.values(state.handlers).forEach(handler => {
-          handler();
-        });
+        Object.values(state.handlers).forEach((handler) => {
+          handler()
+        })
       },
     },
   },
-};
+}
 
-export default reloadModule;
+export default reloadModule
