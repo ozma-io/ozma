@@ -10,7 +10,7 @@
  */
 *:where(
     :not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)
-  ) {
+  ):where(:not([contenteditable]))/* To fix MarkdownEditor */ {
   all: unset;
   display: revert;
 }

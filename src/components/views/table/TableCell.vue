@@ -24,7 +24,7 @@
       cellVariantClassName,
       'cell-local-variant',
       {
-        'fixed-column': column.fixed,
+        // 'fixed-column': column.fixed,
         select_fixed: value.extra.selected && column.fixed,
         selected: value.extra.selected && !value.extra.cursor,
         cursor: value.extra.cursor,
@@ -309,9 +309,9 @@ export default class TableCell extends Vue {
       style['height'] = `${this.height}px`
     }
 
-    if (this.fixedLeft !== undefined) {
-      style['left'] = `${this.fixedLeft}px`
-    }
+    // if (this.fixedLeft !== undefined) {
+    // style['left'] = `${this.fixedLeft}px`
+    // }
 
     if (this.getCellAttr('text_type') === 'codeeditor') {
       style['font-family'] = 'monospace'
@@ -343,6 +343,7 @@ export default class TableCell extends Vue {
   max-width: 100%;
   color: var(--option-foregroundColor);
   word-wrap: break-word;
+  max-height: 100%;
 
   .option-link {
     @include material-button('reference');
@@ -435,6 +436,8 @@ export default class TableCell extends Vue {
   height: inherit;
   min-height: 2rem;
   max-height: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   ::v-deep .checkbox {
     padding: 0;

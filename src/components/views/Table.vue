@@ -15,7 +15,7 @@
       "paste_no_referencefield_data": "Clipboard has no reference field data",
       "paste_error_too_many_columns": "Clipboard has too many columns",
       "non_rectangular_copy": "Only rectangular selections on copying are supported",
-      "no_results": "Empty",
+      "no_results": "No entries to show",
       "add_entry": "Add entry",
       "add_entry_in_modal": "Add new entry (in modal window)",
       "ok": "OK",
@@ -91,9 +91,9 @@
           mobile: $isMobile,
           'multiple-cells-selected': selectedCells.length > 1,
           'select-row-fixed-column-border':
-            !showLinkColumn && showFixedColumnBorder,
+            !showLinkColumn && showFixedColumnBorder && stickFixedColumns,
           'add-entry-fixed-column-border':
-            showLinkColumn && showFixedColumnBorder,
+            showLinkColumn && showFixedColumnBorder && stickFixedColumns,
           'stick-fixed-columns': stickFixedColumns,
         },
       ]"
@@ -568,7 +568,7 @@ export interface IVisualPosition {
 const showStep = 15
 const doubleClickTime = 700
 // FIXME: Use CSS variables to avoid this constant
-const techincalColumnWidth = 35 // select-row's and add-entry's td width
+const techincalColumnWidth = 64 // select-row's and add-entry's td width
 
 export type ITableCombinedUserView = ICombinedUserView<
   ITableValueExtra,
@@ -2603,7 +2603,7 @@ export default class UserViewTable extends mixins<
         )
       },
     )
-    if (this.$refs['table']) {
+    if (this.$refs['table-wrapper']) {
       this.tableResizeObserver = new ResizeObserver(this.onTableResize)
       this.tableResizeObserver.observe(
         this.$refs['table-wrapper'] as HTMLElement,
@@ -2634,7 +2634,7 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
     )
-    if (this.$refs['table']) {
+    if (this.$refs['table-wrapper']) {
       this.tableResizeObserver?.unobserve(
         this.$refs['table-wrapper'] as HTMLElement,
       )
@@ -3629,7 +3629,7 @@ th,
 
 .no-results {
   margin-left: 1rem;
-  color: var(--default-foregroundDarkerColor);
+  color: #bfbfbf;
   text-align: left;
 }
 
@@ -3665,8 +3665,8 @@ th,
   border-spacing: 0;
   background-color: var(--table-backgroundColor);
   width: 0;
+  height: 0; /* Fix for `height: 100%` in cells for Chrome/Safari, https://stackoverflow.com/questions/22220698 */
   table-layout: fixed;
-  font-size: 0.9rem;
 }
 
 th {
@@ -3675,7 +3675,7 @@ th {
   vertical-align: middle;
   z-index: 20;
   border-top: 1px solid #efefef;
-  height: 100%;
+  height: 4rem;
   user-select: none;
 
   &:not(.select-row-cell):not(.add-entry-cell) .table-th {
@@ -3745,11 +3745,10 @@ th {
   height: 100%;
 }
 
-::v-deep .select-row-fixed-column-border .select-row-cell {
+.select-row-fixed-column-border ::v-deep .select-row-cell {
   border-right: 1px solid #efefef;
 }
-
-::v-deep .add-entry-fixed-column-border .add-entry-cell {
+.add-entry-fixed-column-border ::v-deep .add-entry-cell {
   border-right: 1px solid #efefef;
 }
 
@@ -3758,28 +3757,26 @@ th {
 }
 
 tr {
-  height: 4rem; /* Fix for Firefox */
+  height: 4rem;
 }
 
-.stick-fixed-columns th.fixed-column {
-  z-index: 25;
-}
-::v-deep .stick-fixed-columns td.fixed-column {
-  z-index: 24;
-}
-
-::v-deep .stick-fixed-columns .fixed-column {
-  position: sticky;
-  &.select-row-cell {
-    left: 0;
+.stick-fixed-columns ::v-deep {
+  // ::v-deep {
+  .fixed-column {
+    position: sticky;
+    &.select-row-cell {
+      left: 0;
+    }
+    &.add-entry-cell {
+      left: var(--technical-column-width);
+    }
   }
-  &.add-entry-cell {
-    left: var(--technical-column-width);
+  th.fixed-column {
+    z-index: 25;
   }
-}
-
-::v-deep .fixed-column-border {
-  border-right: 1px solid #efefef;
+  td.fixed-column {
+    z-index: 24;
+  }
 }
 
 @media screen and (max-device-width: 650px) {
@@ -3824,10 +3821,6 @@ tr {
 .select-row-col,
 .open-form-col {
   width: var(--technical-column-width);
-}
-
-thead {
-  line-height: 2rem;
 }
 
 .table-wrapper:not(.multiple-cells-selected) ::v-deep {
