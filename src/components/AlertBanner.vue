@@ -180,7 +180,7 @@ export default class AlertBanner extends Vue {
 <style lang="scss" scoped>
 .banner-wrapper {
   background-color: var(--userview-background-color);
-  padding: 1.875rem 2.25rem 0 2.25rem;
+  padding: 1.875rem 2.25rem 1rem 2.25rem;
   @include mobile {
     padding: 1rem;
   }
