@@ -1,9 +1,11 @@
 <template>
   <div
+    ref="headerPanel"
     :class="[
       'header-panel',
       {
         'is-root': type === 'root',
+        compact: useCompactLayout,
       },
     ]"
   >
@@ -57,12 +59,12 @@
           @update:filter-string="$emit('update:filter-string', $event)"
         />
         <ArgumentEditor
-          v-if="!$isMobile && argumentEditorProps"
+          v-if="!useCompactLayout && argumentEditorProps"
           :userView="argumentEditorProps.userView"
           :applyArguments="argumentEditorProps.applyArguments"
         />
         <ButtonsPanel
-          v-if="!$isMobile && headerButtons.length > 0"
+          v-if="!useCompactLayout && headerButtons.length > 0"
           :buttons="headerButtons"
           @goto="$emit('goto', $event)"
         />
@@ -79,7 +81,7 @@
     </div>
     <div
       v-if="
-        $isMobile &&
+        useCompactLayout &&
         (headerButtons.length > 0 ||
           Object.keys(argumentEditorProps?.userView.argumentsMap ?? {}).length >
             0)
@@ -166,6 +168,21 @@ export default class HeaderPanel extends Vue {
       },
     }
   }
+
+  private useCompactLayout = false
+  private panelResizeObserver: ResizeObserver | null = null
+  private onPanelResize() {
+    const breakpoint = 800
+    const ref = this.$refs['headerPanel'] as HTMLElement | undefined
+    const panelWidth = ref?.offsetWidth ?? breakpoint
+    this.useCompactLayout = this.$isMobile || panelWidth < breakpoint
+  }
+  private mounted() {
+    if (this.$refs['headerPanel']) {
+      this.panelResizeObserver = new ResizeObserver(this.onPanelResize)
+      this.panelResizeObserver.observe(this.$refs['headerPanel'] as HTMLElement)
+    }
+  }
 }
 </script>
 
@@ -178,7 +195,8 @@ export default class HeaderPanel extends Vue {
   padding-top: 0.65rem;
   padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
   width: 100%;
-  @include mobile {
+  // @include mobile {
+  &.compact {
     padding: 0.5rem 0 0.5rem 0;
   }
 }
@@ -218,7 +236,7 @@ export default class HeaderPanel extends Vue {
 .left-part {
   flex: 1 0 13rem;
   overflow: hidden;
-  @include mobile {
+  .compact & {
     flex: 1 0 0;
   }
 
@@ -238,7 +256,7 @@ export default class HeaderPanel extends Vue {
   gap: 0.5rem;
   padding: 0.25rem;
   overflow-x: hidden;
-  @include mobile {
+  .compact & {
     padding-left: 0;
   }
 
@@ -256,7 +274,7 @@ export default class HeaderPanel extends Vue {
   overflow-x: auto;
   overflow-y: hidden;
 
-  @include mobile {
+  .compact & {
     overflow-x: hidden;
   }
 

@@ -76,6 +76,7 @@
 
     <div :class="'userview-upper-div'">
       <HeaderPanel
+        class="header-panel"
         :title="titleOrNewEntry ?? undefined"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
@@ -615,6 +616,10 @@ export default class TopLevelUserView extends Vue {
     padding-right: 0.25rem;
     padding-left: 0;
   }
+}
+
+.header-panel {
+  border-bottom: 1px solid var(--userview-background-color);
 }
 
 .main-div {

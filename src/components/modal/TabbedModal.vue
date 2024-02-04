@@ -267,6 +267,10 @@ export default class TabbedModal extends Vue {
   line-height: 0;
 }
 
+.header {
+  border-bottom: 1px solid var(--userview-background-color);
+}
+
 .tab-headers {
   display: flex;
   flex-direction: row;

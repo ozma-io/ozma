@@ -79,7 +79,7 @@
     </template>
 
     <div
-      ref="table-wrapper"
+      ref="tableWrapper"
       v-hotkey="keymap"
       :class="[
         'table-wrapper',
@@ -2582,7 +2582,7 @@ export default class UserViewTable extends mixins<
   private tableResizeObserver: ResizeObserver | null = null
   private onTableResize() {
     const breakpoint = 1000
-    const ref = this.$refs['table-wrapper'] as HTMLElement | undefined
+    const ref = this.$refs['tablleWrapper'] as HTMLElement | undefined
     const tableWidth = ref?.offsetWidth ?? breakpoint
     this.stickFixedColumns = tableWidth > breakpoint
   }
@@ -2595,18 +2595,18 @@ export default class UserViewTable extends mixins<
     )
     document.addEventListener('mousemove', this.handleColumnResizeMouseMove)
     document.addEventListener('mouseup', this.handleColumnResizeMouseUp)
-    ;(this.$refs['table-wrapper'] as HTMLElement)?.addEventListener(
+    ;(this.$refs['tablleWrapper'] as HTMLElement)?.addEventListener(
       'scroll',
       () => {
         this.showFixedColumnBorder = Boolean(
-          (this.$refs['table-wrapper'] as HTMLElement).scrollLeft,
+          (this.$refs['tablleWrapper'] as HTMLElement).scrollLeft,
         )
       },
     )
-    if (this.$refs['table-wrapper']) {
+    if (this.$refs['tablleWrapper']) {
       this.tableResizeObserver = new ResizeObserver(this.onTableResize)
       this.tableResizeObserver.observe(
-        this.$refs['table-wrapper'] as HTMLElement,
+        this.$refs['tablleWrapper'] as HTMLElement,
       )
     }
     this.rootEvents.forEach(([name, callback]) =>
@@ -2634,9 +2634,9 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
     )
-    if (this.$refs['table-wrapper']) {
+    if (this.$refs['tablleWrapper']) {
       this.tableResizeObserver?.unobserve(
-        this.$refs['table-wrapper'] as HTMLElement,
+        this.$refs['tablleWrapper'] as HTMLElement,
       )
     }
     /* eslint-enable @typescript-eslint/unbound-method */
