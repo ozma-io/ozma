@@ -181,6 +181,9 @@ export default class AlertBanner extends Vue {
 .banner-wrapper {
   background-color: var(--userview-background-color);
   padding: 1.875rem 2.25rem 0 2.25rem;
+  @include mobile {
+    padding: 1rem;
+  }
 }
 
 .custom-alert {
@@ -215,8 +218,8 @@ export default class AlertBanner extends Vue {
   opacity: 1;
   border-radius: 50%;
   background-color: #eef2fb;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
   color: #777c87;
 }
 

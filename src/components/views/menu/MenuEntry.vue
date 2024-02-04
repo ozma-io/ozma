@@ -182,6 +182,9 @@ export default class MenuEntry extends Vue {
   display: flex;
   flex-direction: column;
   padding: 0 calc(0.625rem / 2);
+  @include mobile {
+    padding: 0;
+  }
 }
 
 .menu_category_block {

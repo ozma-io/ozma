@@ -258,7 +258,7 @@ export default class UserViewMenu extends mixins<EmptyBaseUserView>(
   overflow-y: auto;
 
   &.is-mobile {
-    padding: 3rem 0.3rem 0 0.3rem;
+    padding: 2rem 1rem 0 1rem;
 
     ::v-deep .row {
       margin: 0;
