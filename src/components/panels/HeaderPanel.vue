@@ -179,6 +179,7 @@ export default class HeaderPanel extends Vue {
   }
   private mounted() {
     if (this.$refs['headerPanel']) {
+      /* eslint-disable-next-line @typescript-eslint/unbound-method */
       this.panelResizeObserver = new ResizeObserver(this.onPanelResize)
       this.panelResizeObserver.observe(this.$refs['headerPanel'] as HTMLElement)
     }

@@ -657,7 +657,7 @@ export default class UserViewCommon extends mixins<
       })
     }
 
-    if (this.communicationButtons.length > 0) {
+    if (this.communicationButtons.length > 0 && this.isRoot) {
       const communicationButton: Button = {
         icon: 'contact_support',
         caption: this.$t('contacts').toString(),
