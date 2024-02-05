@@ -3581,10 +3581,14 @@ th,
 .footer {
   display: flex;
   position: sticky;
+  bottom: 0;
   left: 0;
   flex-direction: column;
   align-items: flex-end;
+  z-index: 30;
   margin-top: auto;
+  border-top: 1px solid #efefef;
+  background-color: var(--table-backgroundColor);
   padding: 0.75rem;
 }
 
