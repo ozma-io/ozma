@@ -172,7 +172,7 @@ export default class HeaderPanel extends Vue {
   private useCompactLayout = false
   private panelResizeObserver: ResizeObserver | null = null
   private onPanelResize() {
-    const breakpoint = 800
+    const breakpoint = 480
     const ref = this.$refs['headerPanel'] as HTMLElement | undefined
     const panelWidth = ref?.offsetWidth ?? breakpoint
     this.useCompactLayout = this.$isMobile || panelWidth < breakpoint
@@ -196,7 +196,6 @@ export default class HeaderPanel extends Vue {
   padding-top: 0.65rem;
   padding-right: 0.25rem; /* Other 0.25rem is from .buttons-panel margins, otherwise outline on click shows incorrectly */
   width: 100%;
-  // @include mobile {
   &.compact {
     padding: 0.5rem 0 0.5rem 0;
   }
