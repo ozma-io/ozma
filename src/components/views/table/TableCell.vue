@@ -87,6 +87,7 @@
                 (fieldTypeName == 'enum' || fieldTypeName == 'reference') &&
                 valueHtml.length > 0,
               tree: showTree && column.treeUnfoldColumn,
+              'date-time': valueType.type === 'datetime',
             },
           ]"
           :style="optionVariantVariables"
@@ -298,12 +299,7 @@ export default class TableCell extends Vue {
   }
 
   get style() {
-    const style: Record<string, unknown> = {}
-
-    const textAlignAttr = this.getCellAttr('text_align')
-    if (textAlignAttr !== undefined) {
-      style['text-align'] = String(textAlignAttr)
-    }
+    const { style } = this.column
 
     if (this.height) {
       style['height'] = `${this.height}px`
@@ -341,9 +337,8 @@ export default class TableCell extends Vue {
   background-color: var(--option-backgroundColor);
   padding: 0.1rem 0.5rem;
   max-width: 100%;
-  color: var(--option-foregroundColor);
-  word-wrap: break-word;
   max-height: 100%;
+  color: var(--option-foregroundColor);
 
   .option-link {
     @include material-button('reference');
@@ -507,8 +502,9 @@ export default class TableCell extends Vue {
 
 span.reference-text {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: normal;
-  word-break: break-word;
 }
 
 .cell-text {
@@ -516,17 +512,21 @@ span.reference-text {
   line-height: 1.1rem;
   white-space: break-spaces;
   word-break: break-word;
+  &.tree {
+    display: flex;
+    justify-content: flex-begin;
+    align-items: center;
+    align-self: center;
+  }
+  &.date-time {
+    text-overflow: ellipsis;
+    white-space: pre;
+    word-break: keep-all;
+  }
 }
 
 .text {
   color: var(--cell-foregroundColor);
-}
-
-.cell-text.tree {
-  display: flex;
-  justify-content: flex-begin;
-  align-items: center;
-  align-self: center;
 }
 
 .cell-buttons-panel {

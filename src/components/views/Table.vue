@@ -237,18 +237,20 @@
                   <span class="column-capture">
                     {{ $ustOrEmpty(columns[i].caption) }}
                   </span>
-                  <i
-                    v-if="uv.extra.sortColumn === i"
-                    class="material-icons sorting-icon"
-                    >{{ uv.extra.sortAsc ? 'expand_more' : 'expand_less' }}</i
-                  >
-                  <span
+                  <div v-if="uv.extra.sortColumn === i" class="sorting-wrapper">
+                    <i class="material-icons sorting-icon">{{
+                      uv.extra.sortAsc ? 'expand_more' : 'expand_less'
+                    }}</i>
+                  </div>
+                  <div
                     class="resize-column-thumb"
                     @mousedown="
                       (event) => handleColumnResizeMouseDown(i, event)
                     "
                     @click.stop
-                  />
+                  >
+                    <i class="material-icons">height</i>
+                  </div>
                 </div>
               </th>
             </tr>
@@ -3753,18 +3755,41 @@ th {
 }
 
 .column-capture {
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.sorting-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: 1rem;
+}
+
 .resize-column-thumb {
-  display: block;
+  display: flex;
   position: absolute;
   top: 0;
   right: 0;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: all 0.2s;
   cursor: col-resize;
+  background-color: #efefef;
   width: 1rem;
   height: 100%;
+
+  .material-icons {
+    transform: rotate(90deg);
+    color: #444;
+    font-size: 0.75rem;
+  }
+
+  thead:hover & {
+    opacity: 1;
+  }
 }
 
 .select-row-fixed-column-border ::v-deep .select-row-cell {
