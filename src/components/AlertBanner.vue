@@ -195,7 +195,7 @@ export default class AlertBanner extends Vue {
   color: var(--banner-foregroundColor, black);
 
   @include mobile {
-    padding: 1.25rem 1rem;
+    padding: 1.5rem;
     padding-right: 3rem;
   }
 
@@ -233,6 +233,7 @@ export default class AlertBanner extends Vue {
 
   @include mobile {
     flex-direction: column;
+    align-items: flex-start;
   }
 }
 
