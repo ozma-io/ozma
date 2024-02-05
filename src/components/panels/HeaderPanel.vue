@@ -175,7 +175,7 @@ export default class HeaderPanel extends Vue {
     const breakpoint = 480
     const ref = this.$refs['headerPanel'] as HTMLElement | undefined
     const panelWidth = ref?.offsetWidth ?? breakpoint
-    this.useCompactLayout = this.$isMobile || panelWidth < breakpoint
+    this.useCompactLayout = panelWidth < breakpoint
   }
   private mounted() {
     if (this.$refs['headerPanel']) {
