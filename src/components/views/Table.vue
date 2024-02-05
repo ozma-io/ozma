@@ -3586,6 +3586,7 @@ th,
   flex-direction: column;
   align-items: flex-end;
   z-index: 30;
+  margin-top: revert; // Fix for Safari, huge margin otherwise. Caused by `reset.css`.
   margin-top: auto;
   border-top: 1px solid #efefef;
   background-color: var(--table-backgroundColor);
