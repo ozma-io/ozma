@@ -390,6 +390,10 @@
               </div>
               <ButtonItem
                 class="pagination-arrow-button"
+                :button="firstPageButton"
+              />
+              <ButtonItem
+                class="pagination-arrow-button"
                 :button="prevPageButton"
               />
               <div class="current-page-wrapper">
@@ -1692,12 +1696,24 @@ export default class UserViewTable extends mixins<
     }
   }
 
+  get firstPageButton(): Button | null {
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return null
+
+    return {
+      type: 'callback',
+      icon: 'first_page',
+      variant: outlinedInterfaceButtonVariant,
+      disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
+      callback: () => this.goToFirstPage(),
+    }
+  }
+
   get prevPageButton(): Button | null {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return null
 
     return {
       type: 'callback',
-      icon: 'arrow_left',
+      icon: 'navigate_before',
       variant: outlinedInterfaceButtonVariant,
       disabled: this.uv.extra.lazyLoad.pagination.currentPage === 0,
       callback: () => this.goToPrevPage(),
@@ -1709,7 +1725,7 @@ export default class UserViewTable extends mixins<
 
     return {
       type: 'callback',
-      icon: 'arrow_right',
+      icon: 'navigate_next',
       variant: outlinedInterfaceButtonVariant,
       disabled:
         (this.uv.rowLoadState.complete && this.onLastPage) ||
@@ -3604,6 +3620,7 @@ th,
   }
 
   .pagination-arrow-button {
+    border: none;
     padding: 0;
     width: 1.5rem;
     height: 1.25rem;
