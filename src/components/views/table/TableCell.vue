@@ -412,15 +412,6 @@ export default class TableCell extends Vue {
   }
 }
 
-.selection-overlay {
-  position: absolute;
-  opacity: 0.5;
-  background-color: var(--FocusBorderColor);
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
 .table-td.cursor {
   box-shadow: inset 2px 2px 0 var(--FocusBorderColor),
     inset -2px -2px 0 var(--FocusBorderColor);
@@ -430,6 +421,18 @@ export default class TableCell extends Vue {
   position: relative;
   padding: 1rem 0.5rem;
   touch-action: manipulation;
+  user-select: none;
+}
+
+.selection-overlay {
+  position: absolute;
+  top: -0.5rem;
+  left: -1rem;
+  opacity: 0.5;
+  background-color: var(--FocusBorderColor);
+  width: calc(100% + 2rem);
+  height: calc(100% + 1rem);
+  pointer-events: none;
 }
 
 .td-content {
