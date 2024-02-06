@@ -115,6 +115,10 @@ export default class CodeEditor extends Vue {
   border: 1px solid var(--MainBorderColor);
   border-radius: 4px;
   overflow: hidden;
+
+  ::v-deep textarea {
+    white-space: pre; // `reset.css` broke spaces in Chrome/Safari.
+  }
 }
 
 .monaco-editor_modal {
