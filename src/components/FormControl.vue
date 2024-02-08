@@ -984,6 +984,7 @@ export default class FormControl extends Vue {
             single: true,
           }
         case 'int':
+        case 'decimal':
           return { name: 'text', type: 'number', style: this.controlStyle() }
         case 'date':
           return {

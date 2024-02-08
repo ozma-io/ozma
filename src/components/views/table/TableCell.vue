@@ -113,7 +113,7 @@
               @click.stop="toggleChildren"
               @dblclick.stop
             >
-              <span class="material-icons">chevron_right</span>
+              <span class="material-icons">arrow_forward_ios</span>
             </div>
           </div>
 
@@ -382,10 +382,10 @@ export default class TableCell extends Vue {
 }
 
 .tree-level-circle-inner {
-  border: 1px solid var(--icon-color);
   border-radius: 50%;
-  width: 0.3rem;
-  height: 0.3rem;
+  background-color: var(--icon-color);
+  width: 0.1875rem;
+  height: 0.1875rem;
 }
 
 .tree-toggle-expand {

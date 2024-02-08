@@ -37,6 +37,7 @@
         :readonly="disabled"
         rows="1"
         class="input-textarea"
+        :style="{ textAlign }"
         @input="updateInput"
         @focus.native="onFocus"
         @blur.native="$emit('blur', $event)"
