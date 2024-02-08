@@ -299,7 +299,7 @@ export default class TableCell extends Vue {
   }
 
   get style() {
-    const { style } = this.column
+    const style = { ...this.column.style }
 
     if (this.height) {
       style['height'] = `${this.height}px`
