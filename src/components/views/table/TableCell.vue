@@ -411,6 +411,7 @@ export default class TableCell extends Vue {
   position: relative;
   padding: 1rem 0.5rem;
   touch-action: manipulation;
+  font-size: 0.875rem;
   user-select: none;
 
   &.cursor {
@@ -509,19 +510,18 @@ span.reference-text {
 
 .cell-text {
   overflow: hidden;
-  line-height: 1.1rem;
+  line-height: 1rem;
+  text-overflow: ellipsis;
   white-space: break-spaces;
-  word-break: break-word;
+  word-break: keep-all;
+  &.date-time {
+    white-space: pre;
+  }
   &.tree {
     display: flex;
     justify-content: flex-begin;
     align-items: center;
     align-self: center;
-  }
-  &.date-time {
-    text-overflow: ellipsis;
-    white-space: pre;
-    word-break: keep-all;
   }
 }
 

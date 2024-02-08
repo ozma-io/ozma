@@ -64,8 +64,22 @@ $color-transition: background-color 0.3s, color 0.3s;
   }
 }
 
+$mobile-breakpoint: 480px;
+
 @mixin mobile {
-  @media (max-width: 480px) {
+  @media (max-width: $mobile-breakpoint) or (max-height: $mobile-breakpoint) {
+    @content;
+  }
+}
+
+@mixin mobile-portrait {
+  @media (max-width: $mobile-breakpoint) {
+    @content;
+  }
+}
+
+@mixin mobile-landscape {
+  @media (max-height: $mobile-breakpoint) {
     @content;
   }
 }

@@ -121,13 +121,16 @@ export default class TableCellEdit extends Vue {
   position: fixed;
   top: 0;
   z-index: 9999;
-
-  /* First shadow is as `shadow-lg` */
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175),
-    0 0 0 0.2rem var(--FocusBorderColor);
+    0 0 0 0.2rem var(--FocusBorderColor); /* First shadow is as `shadow-lg` */
   background: var(--cell-backgroundColor);
+  padding: 1rem 0.5rem;
   width: auto;
   height: auto !important;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+
+  ::v-deep .input-textarea {
+    padding: 0;
+  }
 }
 </style>

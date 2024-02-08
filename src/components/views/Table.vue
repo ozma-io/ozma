@@ -3594,6 +3594,10 @@ th,
   border-top: 1px solid #efefef;
   background-color: var(--table-backgroundColor);
   padding: 0.75rem;
+
+  @include mobile-landscape {
+    position: static;
+  }
 }
 
 .total-rows {
@@ -3702,6 +3706,10 @@ th {
   border-top: 1px solid #efefef;
   height: 4rem;
   user-select: none;
+
+  @include mobile-landscape {
+    position: static;
+  }
 
   &:not(.select-row-cell):not(.add-entry-cell) .table-th {
     padding: 0 0.5rem;
