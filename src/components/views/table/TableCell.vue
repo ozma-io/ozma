@@ -526,7 +526,9 @@ span.reference-text {
 }
 
 .text {
+  overflow: hidden;
   color: var(--cell-foregroundColor);
+  text-overflow: ellipsis;
 }
 
 .cell-buttons-panel {
