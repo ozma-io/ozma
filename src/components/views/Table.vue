@@ -95,6 +95,7 @@
           'add-entry-fixed-column-border':
             showLinkColumn && showFixedColumnBorder && stickFixedColumns,
           'stick-fixed-columns': stickFixedColumns,
+          'selection-column-enabled': showSelectionColumn,
         },
       ]"
       :infinite-wrapper="isRoot"
@@ -2600,7 +2601,7 @@ export default class UserViewTable extends mixins<
   private tableResizeObserver: ResizeObserver | null = null
   private onTableResize() {
     const breakpoint = 1000
-    const ref = this.$refs['tablleWrapper'] as HTMLElement | undefined
+    const ref = this.$refs['tableWrapper'] as HTMLElement | undefined
     const tableWidth = ref?.offsetWidth ?? breakpoint
     this.stickFixedColumns = tableWidth > breakpoint
   }
@@ -2613,18 +2614,18 @@ export default class UserViewTable extends mixins<
     )
     document.addEventListener('mousemove', this.handleColumnResizeMouseMove)
     document.addEventListener('mouseup', this.handleColumnResizeMouseUp)
-    ;(this.$refs['tablleWrapper'] as HTMLElement)?.addEventListener(
+    ;(this.$refs['tableWrapper'] as HTMLElement)?.addEventListener(
       'scroll',
       () => {
         this.showFixedColumnBorder = Boolean(
-          (this.$refs['tablleWrapper'] as HTMLElement).scrollLeft,
+          (this.$refs['tableWrapper'] as HTMLElement).scrollLeft,
         )
       },
     )
-    if (this.$refs['tablleWrapper']) {
+    if (this.$refs['tableWrapper']) {
       this.tableResizeObserver = new ResizeObserver(this.onTableResize)
       this.tableResizeObserver.observe(
-        this.$refs['tablleWrapper'] as HTMLElement,
+        this.$refs['tableWrapper'] as HTMLElement,
       )
     }
     this.rootEvents.forEach(([name, callback]) =>
@@ -2652,9 +2653,9 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
     )
-    if (this.$refs['tablleWrapper']) {
+    if (this.$refs['tableWrapper']) {
       this.tableResizeObserver?.unobserve(
-        this.$refs['tablleWrapper'] as HTMLElement,
+        this.$refs['tableWrapper'] as HTMLElement,
       )
     }
     /* eslint-enable @typescript-eslint/unbound-method */
@@ -3808,15 +3809,15 @@ tr {
 }
 
 .stick-fixed-columns ::v-deep {
-  // ::v-deep {
   .fixed-column {
     position: sticky;
+    &.add-entry-cell,
     &.select-row-cell {
       left: 0;
     }
-    &.add-entry-cell {
-      left: var(--technical-column-width);
-    }
+  }
+  &.selection-column-enabled .fixed-column.add-entry-cell {
+    left: var(--technical-column-width);
   }
   th.fixed-column {
     z-index: 25;
