@@ -350,21 +350,22 @@
         </InfiniteLoading>
 
         <div
-          v-if="showAddRowButtons"
-          ref="bottomButtonContainer"
-          class="button-container"
+          v-if="
+            uv.extra.lazyLoad.type === 'pagination' ||
+            statusLine ||
+            showBottomAddButton
+          "
+          class="footer"
+          :style="{
+            justifyContent: showBottomAddButton ? 'space-between' : 'flex-end',
+          }"
         >
           <ButtonItem
+            v-if="showBottomAddButton"
             class="add-row-button"
             :button="bottomAddButton"
             align-right
           />
-        </div>
-
-        <div
-          v-if="uv.extra.lazyLoad.type === 'pagination' || statusLine"
-          class="footer"
-        >
           <div
             v-if="uv.extra.lazyLoad.type === 'pagination'"
             class="pagination-wrapper"
@@ -1966,6 +1967,14 @@ export default class UserViewTable extends mixins<
     }
   }
 
+  private get showBottomAddButton() {
+    return (
+      this.showAddRowButtons &&
+      (this.uv.extra.lazyLoad.type === 'pagination' ||
+        (this.uv.extra.lazyLoad.infiniteScroll &&
+          this.uv.rowLoadState.complete))
+    )
+  }
   private get bottomAddButton(): Button {
     return {
       type: 'callback',
@@ -1973,11 +1982,7 @@ export default class UserViewTable extends mixins<
       variant: outlinedInterfaceButtonVariant,
       caption: this.$t('add_entry').toString(),
       callback: () =>
-        void this.loadAllRowsAndAddNewRowOnPosition('bottom_back').then(() =>
-          (
-            this.$refs.bottomButtonContainer as Element | undefined
-          )?.scrollIntoView({ block: 'nearest' }),
-        ),
+        void this.loadAllRowsAndAddNewRowOnPosition('bottom_back'),
     }
   }
 
@@ -2618,7 +2623,7 @@ export default class UserViewTable extends mixins<
       'scroll',
       () => {
         this.showFixedColumnBorder = Boolean(
-          (this.$refs['tableWrapper'] as HTMLElement).scrollLeft,
+          (this.$refs['tableWrapper'] as HTMLElement | undefined)?.scrollLeft,
         )
       },
     )
@@ -2793,6 +2798,14 @@ export default class UserViewTable extends mixins<
       if (row === null || this.autofocusColumnIndex === null) {
         console.error('Unable to autofocus to new row')
         return
+      }
+      if (side === 'bottom_back') {
+        const ref = this.$refs['tableWrapper'] as HTMLElement | undefined
+        ref?.scrollTo({
+          top: ref.scrollHeight,
+          // @ts-expect-error
+          behavior: 'instant',
+        })
       }
       const column = this.getVisualColumnIndex(this.autofocusColumnIndex)
       const cellToFocus = this.getValueRefByVisualPosition({ row, column })
@@ -3586,8 +3599,8 @@ th,
   position: sticky;
   bottom: 0;
   left: 0;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   z-index: 30;
   margin-top: revert; // Fix for Safari, huge margin otherwise. Caused by `reset.css`.
   margin-top: auto;
@@ -3675,7 +3688,7 @@ th,
 
   &.root {
     border-radius: 0.625rem;
-    height: 100%;
+    max-height: 100%;
     overflow-y: auto;
   }
 }
