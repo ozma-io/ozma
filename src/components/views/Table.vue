@@ -3600,7 +3600,9 @@ th,
   bottom: 0;
   left: 0;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 0.5rem;
   z-index: 30;
   margin-top: revert; // Fix for Safari, huge margin otherwise. Caused by `reset.css`.
   margin-top: auto;
@@ -3611,12 +3613,17 @@ th,
   @include mobile-landscape {
     position: static;
   }
+
+  .pagination-wrapper {
+    margin-left: auto;
+  }
 }
 
 .total-rows {
   position: sticky;
   right: 1.25rem;
   z-index: 30;
+  margin-left: auto;
   font-size: 0.75rem;
 }
 
@@ -3634,6 +3641,7 @@ th,
   .current-rows {
     margin-right: 1.25rem;
     font-size: 0.75rem;
+    white-space: nowrap;
   }
 
   .current-page-wrapper {
