@@ -15,31 +15,25 @@
           <slot name="left-slot" />
         </div>
         <div v-if="title && type === 'root'" class="middle-part">
+          <div v-if="isLoading" class="title-placeholder" />
           <!-- `tabindex` is required for closing tooltip on blur -->
           <h1
+            v-else
             v-b-tooltip.click.blur.bottom.noninteractive.viewport
             tabindex="0"
-            :class="[
-              'userview-title',
-              {
-                'is-loading': isLoading,
-              },
-            ]"
+            class="userview-title"
           >
             {{ $ustOrEmpty(title) }}
           </h1>
         </div>
         <div v-else class="userview-title-wrapper">
+          <div v-if="isLoading" class="title-placeholder" />
           <h2
+            v-else
             v-b-tooltip.click.blur.bottom.noninteractive.viewport
             tabindex="0"
             :title="$ustOrEmpty(title)"
-            :class="[
-              'userview-title',
-              {
-                'is-loading': isLoading,
-              },
-            ]"
+            class="userview-title"
           >
             {{ $ustOrEmpty(title) }}
           </h2>
@@ -47,6 +41,9 @@
       </div>
 
       <div class="right-part">
+        <div v-if="isLoading && type === 'root'" class="placeholder-buttons">
+          <div v-for="index in 3" :key="index" class="placeholder-button" />
+        </div>
         <ButtonsPanel
           v-if="helpButtons.length > 0"
           :buttons="helpButtons"
@@ -305,6 +302,16 @@ export default class HeaderPanel extends Vue {
   overflow-x: hidden;
 }
 
+.title-placeholder {
+  margin: 0.5rem;
+  margin-right: auto;
+  border-radius: 1.8125rem;
+  background: #efefef;
+  width: 15rem;
+  max-width: 100%;
+  height: 1.25rem;
+}
+
 .userview-title {
   margin: 0.5rem;
   margin-right: auto;
@@ -312,14 +319,9 @@ export default class HeaderPanel extends Vue {
   overflow: hidden;
   color: var(--MainTextColor);
   font-weight: 600;
-  font-size: 1.25em;
+  font-size: 1.25rem;
   text-overflow: ellipsis;
   white-space: pre;
-
-  &.is-loading {
-    opacity: 0.6;
-    color: var(--MainTextColorLight);
-  }
 
   .header-panel:not(.is-root) & {
     padding-left: 0.7rem;
@@ -332,5 +334,16 @@ export default class HeaderPanel extends Vue {
   border: none;
   background: none;
   color: var(--MainTextColor);
+}
+
+.placeholder-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+.placeholder-button {
+  border-radius: 0.5rem;
+  background-color: #efefef;
+  width: 5rem;
+  height: 2rem;
 }
 </style>

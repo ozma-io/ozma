@@ -411,7 +411,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   }
 
   private get fontSize(): number {
-    const defaultSize = 14
+    const defaultSize = 16
     const normalSize = this.settings.getEntry('font_size', Number, defaultSize)
     const mobileSize = this.settings.getEntry('font_size_mobile', Number, 14)
     return this.$isMobile && mobileSize !== 0 ? mobileSize : normalSize

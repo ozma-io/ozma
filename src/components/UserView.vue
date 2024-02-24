@@ -191,44 +191,25 @@
       :class="isRoot ? 'm-2' : ''"
       :message="state.message"
     />
-    <transition name="fade-2">
-      <div
-        v-if="
-          state.state === 'loading' || (state.state === 'error' && silentErrors)
-        "
-        :class="[
-          'loading-container',
-          {
-            nested: !isRoot,
-          },
-        ]"
-      >
-        <div
-          :class="[
-            'loading-background',
-            'h-100',
-            'd-flex',
-            'justify-content-center',
-            'align-items-center',
-            'rounded',
-            'shadow-sm',
-          ]"
-        >
-          <div
-            class="spinner-border"
-            style="
-              width: 3em;
-              height: 3em;
-              border-color: var(
-                --default-foregroundDarkerColor,
-                rgba(0, 0, 0, 0.5)
-              );
-              border-right-color: transparent;
-            "
-          />
+    <div
+      v-if="
+        state.state === 'loading' || (state.state === 'error' && silentErrors)
+      "
+      :class="[
+        'loading-container',
+        {
+          nested: !isRoot,
+        },
+      ]"
+    >
+      <div class="loading-background">
+        <div v-for="index in isRoot ? 9 : 1" :key="index" class="loading-box">
+          <div class="loading-line" style="width: 30%" />
+          <div class="loading-line" />
+          <div class="loading-line" />
         </div>
       </div>
-    </transition>
+    </div>
   </div>
 </template>
 
@@ -1196,13 +1177,39 @@ export default class UserView extends Vue {
 }
 
 .loading-container {
+  width: 100%;
   height: 100%;
   min-height: 100px;
 
   .loading-background {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
     cursor: wait;
-    background-color: var(--default-backgroundColor, rgba(240, 240, 240));
-    padding: 30px;
+    background-color: var(--userview-background-color);
+    padding: 2.5rem 1.7rem;
+    width: 100%;
+    height: 100%;
+  }
+  &.nested .loading-background {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    padding: 0;
+  }
+
+  .loading-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    border-radius: 0.625rem;
+    background: #fff;
+    padding: 2.5rem 1.7rem;
+  }
+
+  .loading-line {
+    border-radius: 1.8125rem;
+    background: #efefef;
+    width: 100%;
+    height: 0.6875rem;
   }
 
   &.fade-2-leave-active {

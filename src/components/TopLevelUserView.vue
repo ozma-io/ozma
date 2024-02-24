@@ -77,12 +77,13 @@
     <div :class="'userview-upper-div'">
       <HeaderPanel
         class="header-panel"
+        type="root"
         :title="titleOrNewEntry ?? undefined"
         :buttons="buttons"
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
-        :type="'root'"
         :argumentEditorProps="argumentEditorProps"
+        :is-loading="uvLoading"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
       >
@@ -120,6 +121,7 @@
           @update:title="title = $event"
           @update:description="description = $event"
           @update:url="url = $event"
+          @update:is-loading="uvLoading = $event"
           @update:current-page="replacePage({ key: null, page: $event })"
           @update:argument-editor-props="argumentEditorProps = $event"
         />
@@ -341,6 +343,7 @@ export default class TopLevelUserView extends Vue {
   private title: UserString | null = null
   private description: UserString | null = null
   private url: UserString | null = null
+  private uvLoading = true
 
   private buttons: Button[] = []
   private argumentEditorProps: IArgumentEditorProps | null = null
