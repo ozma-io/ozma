@@ -3583,9 +3583,12 @@ th,
 
   .add-row-button {
     position: sticky;
-    left: 1.25rem;
-    font-size: 0.875rem;
+    left: 0.75rem;
   }
+}
+
+.add-row-button {
+  font-size: 0.875rem;
 }
 
 .context-menu-wrapper {
