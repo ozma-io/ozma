@@ -326,6 +326,18 @@
             />
           </tbody>
         </table>
+
+        <div
+          v-if="
+            uv.extra.lazyLoad.type === 'pagination' &&
+            !uv.extra.lazyLoad.pagination.loading &&
+            allRows.length === 0
+          "
+          class="no-results"
+        >
+          {{ $t('no_results') }}
+        </div>
+
         <InfiniteLoading
           v-if="useInfiniteScrolling"
           ref="infiniteLoading"
@@ -3681,7 +3693,7 @@ th,
 }
 
 .no-results {
-  margin-left: 1rem;
+  padding: 1rem;
   color: #bfbfbf;
   text-align: left;
 }
