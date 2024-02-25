@@ -42,7 +42,11 @@
 
       <div class="right-part">
         <div v-if="isLoading && type === 'root'" class="placeholder-buttons">
-          <div v-for="index in 3" :key="index" class="placeholder-button" />
+          <div
+            v-for="index in $isMobile ? 1 : 3"
+            :key="index"
+            class="placeholder-button"
+          />
         </div>
         <ButtonsPanel
           v-if="helpButtons.length > 0"

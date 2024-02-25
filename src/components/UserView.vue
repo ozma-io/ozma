@@ -203,7 +203,11 @@
       ]"
     >
       <div class="loading-background">
-        <div v-for="index in isRoot ? 9 : 1" :key="index" class="loading-box">
+        <div
+          v-for="index in isRoot && !$isMobile ? 9 : 1"
+          :key="index"
+          class="loading-box"
+        >
           <div class="loading-line" style="width: 30%" />
           <div class="loading-line" />
           <div class="loading-line" />
@@ -1190,6 +1194,11 @@ export default class UserView extends Vue {
     padding: 2.5rem 1.7rem;
     width: 100%;
     height: 100%;
+
+    @include mobile {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      padding: 1rem;
+    }
   }
   &.nested .loading-background {
     grid-template-columns: repeat(1, minmax(0, 1fr));
