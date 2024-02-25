@@ -481,6 +481,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 <style lang="scss" scoped>
 .single-value__link {
   display: flex;
+  flex-shrink: 0;
 }
 
 .open-modal-button {
