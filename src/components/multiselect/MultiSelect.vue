@@ -865,6 +865,7 @@ export default class MultiSelect extends Vue {
 .filter-group {
   padding: 0.25rem;
   width: auto;
+  text-align: start;
 
   .filter-input {
     border-right-width: 0;
