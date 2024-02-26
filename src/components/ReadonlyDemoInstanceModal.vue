@@ -1,25 +1,25 @@
 <i18n>
     {
         "en": {
-            "header_1": "Schedule a demo call",
+            "header_1": "Create your own app",
             "header_2": "to continue",
-            "description_1": "It's read-only example. To start making changes, contact our team, and we will create a personal demonstration instance just for you.",
+            "description_1": "This is a read-only example. To start making changes, set up a personalized demo instance exclusively for yourself. Or contact our team to determine if ozma is the right fit for your needs.",
             "get_started": "Demo call",
             "sign_up": "Start your app with this demo"
         },
         "ru": {
-            "header_1": "Свяжитесь с ozma.io",
+            "header_1": "Создайте собственное приложение,",
             "header_2": "чтобы продолжить",
-            "description_1": "Это демо-пример. Чтобы начать вносить изменения,",
-            "description_2": "свяжитесь с менеджером ozma.io.",
+            "description_1": "Это демо-пример. Чтобы начать вносить изменения, создайте вашу собственную копию",
+            "description_2": "или свяжитесь с менеджером ozma.io.",
             "get_started": "Связаться с менеджером ozma.io",
             "sign_up": "Начать ваше приложение с этим демо"
         },
         "es": {
-            "header_1": "Conéctate con ozma.io",
-            "header_2": "a continuar",
-            "description_1": "Es un ejemplo de solo lectura. Para comenzar, haga cambios,",
-            "description_2": "haga una cita con un gerente y crearemos una instancia personal para usted.",
+            "header_1": "Crea tu propia aplicación",
+            "header_2": "para continuar",
+            "description_1": "Este es un ejemplo de solo lectura. Para continuar, crea tu propia aplicación",
+            "description_2": "o ponte en contacto con el equipo de ozma.io.",
             "get_started": "Hacer una cita con el gerente",
             "sign_up": "Comience su aplicación con este demo"
         }
@@ -54,19 +54,19 @@
           class="button primary-button"
           block
           variant="primary"
-          :href="getStartedLink"
+          :href="signUpLink"
           target="_blank"
         >
-          {{ $t('get_started') }}
+          {{ $t('sign_up') }}
         </b-button>
 
         <b-button
           class="button secondary-button"
           variant="outline-primary"
-          :href="signUpLink"
+          :href="getStartedLink"
           target="_blank"
         >
-          {{ $t('sign_up') }}
+          {{ $t('get_started') }}
         </b-button>
       </div>
     </div>
