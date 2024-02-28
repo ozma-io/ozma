@@ -38,6 +38,7 @@
         rows="1"
         class="input-textarea"
         :style="{ textAlign }"
+        :min-height="40"
         @input="updateInput"
         @focus.native="onFocus"
         @blur.native="$emit('blur', $event)"

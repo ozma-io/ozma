@@ -8,7 +8,7 @@
       '--table-cell-edit-height': height ? `${height}px` : 'auto',
       minHeight: minHeight ? `${minHeight}px` : 'auto',
       maxHeight: `${maxHeight}px`,
-      minWidth: width ? `${width}px` : '200px',
+      minWidth: width && width > 200 ? `${width}px` : '200px',
     }"
   >
     <slot />
@@ -118,15 +118,15 @@ export default class TableCellEdit extends Vue {
 @include variant-to-local('cell');
 
 .table-cell-edit {
+  display: flex;
   position: fixed;
   top: 0;
   z-index: 9999;
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175),
     0 0 0 0.2rem var(--FocusBorderColor); /* First shadow is as `shadow-lg` */
   background: var(--cell-backgroundColor);
-  padding: 1rem 0.5rem;
+  padding: 1rem 0 0 0.5rem;
   width: auto;
-  height: auto !important;
   font-size: 0.875rem;
 
   ::v-deep .input-textarea {

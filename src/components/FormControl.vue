@@ -31,7 +31,7 @@
 </i18n>
 
 <template>
-  <div>
+  <div style="width: 100%">
     <InputSlot
       v-if="
         inputType.name !== 'user_view' && inputType.name !== 'empty_user_view'
