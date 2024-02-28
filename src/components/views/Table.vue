@@ -3864,7 +3864,7 @@ tr {
     left: var(--technical-column-width);
   }
   th.fixed-column {
-    z-index: 25;
+    z-index: 31; // Should be bigger than footer's z-index for dropdown overlap
   }
   td.fixed-column {
     z-index: 24;
