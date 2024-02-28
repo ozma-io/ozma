@@ -204,7 +204,7 @@
     >
       <div class="loading-background">
         <div
-          v-for="index in isRoot && !$isMobile ? 9 : 1"
+          v-for="index in isRoot && !$isMobile ? 9 : 3"
           :key="index"
           class="loading-box"
         >
@@ -1212,6 +1212,10 @@ export default class UserView extends Vue {
     border-radius: 0.625rem;
     background: #fff;
     padding: 2.5rem 1.7rem;
+
+    @include mobile {
+      // height: 30%;
+    }
   }
 
   .loading-line {
