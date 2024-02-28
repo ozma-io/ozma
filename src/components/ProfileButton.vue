@@ -348,8 +348,9 @@ export default class AppHeader extends Vue {
 
 .profile-block {
   display: flex;
-  justify-content: center;
+  justify-content: start;
   gap: 0.5rem;
+  padding: 0 1.5rem;
 }
 
 .user-info {
