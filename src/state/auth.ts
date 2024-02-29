@@ -13,7 +13,7 @@ import {
   apiUrl,
 } from '@/api'
 import * as Utils from '@/utils'
-import { router, getQueryValue, CancelledError } from '@/modules'
+import { router, getQueryValue } from '@/modules'
 
 export class CurrentAuth {
   createdTime: number
@@ -176,30 +176,23 @@ const tryGetToken = (
 ) => {
   const { state, commit, dispatch } = context
 
+  if (state.pending !== null) {
+    throw new Error("Auth already in progress, can't start another one")
+  }
+
   if (state.renewalTimeoutId !== null) {
     clearTimeout(state.renewalTimeoutId)
     commit('setRenewalTimeout', null)
   }
 
-  const oldPending = state.pending
   const pending: IRef<Promise<void>> = {}
   pending.ref = (async () => {
     await Utils.waitTimeout() // Delay promise so that it gets saved to `pending` first.
-    if (oldPending !== null) {
-      try {
-        await oldPending
-      } catch (_) {
-        // It's handled somewhere else.
-      }
-    }
     try {
       while (true) {
         try {
           // eslint-disable-next-line no-await-in-loop
           const auth = await requestToken(params)
-          if (state.pending !== pending.ref) {
-            throw new CancelledError()
-          }
           updateAuth(context, auth)
         } catch (e) {
           if (
@@ -276,6 +269,12 @@ const updateAuth = (
 
 const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
   const { state } = context
+
+  if (state.pending !== null) {
+    // Something already renews; let's hope it helps.
+    await state.pending;
+    return;
+  }
 
   if (!state.current?.refreshToken) {
     throw new Error('Cannot renew without an existing token')
@@ -385,11 +384,6 @@ const runApiCall = async <Ret>(
             } else {
               commit('resetToken')
               // eslint-disable-next-line no-await-in-loop
-              await dispatch(
-                'setError',
-                `Authentication error during request: ${e.message}`,
-              )
-              // eslint-disable-next-line no-await-in-loop
               await renewAuth(context)
               continue
             }
@@ -482,7 +476,9 @@ export const authModule: Module<IAuthState, {}> = {
     startAuth: (context) => {
       const { state, commit, dispatch } = context
 
-      console.assert(state.pending === null)
+      if (state.pending !== null) {
+        throw new Error("Auth already in progress, can't start another one")
+      }
       const pending: IRef<Promise<void>> = {}
       pending.ref = (async () => {
         await Utils.waitTimeout() // Delay promise so that it gets saved to `pending` first.
