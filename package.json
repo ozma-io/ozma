@@ -10,7 +10,13 @@
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build --no-module",
     "lint": "vue-cli-service lint",
-    "lint:style": "stylelint src/"
+    "lint:style": "stylelint src/",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts,vue,html,css}": "prettier --write",
+    "*.css": "stylelint --fix",
+    "src/**/*.{js,ts,vue}": "vue-cli-service lint"
   },
   "dependencies": {
     "@chenfengyuan/vue-qrcode": "1.0.1",
@@ -86,6 +92,8 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "eslint-plugin-vue": "^9.4.0",
     "fast-async": "^7.0.6",
+    "husky": ">=6",
+    "lint-staged": ">=10",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "postcss": "^8.4.23",
     "prettier": "^2.7.1",
