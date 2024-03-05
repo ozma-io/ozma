@@ -596,8 +596,6 @@ export interface IVisualPosition {
 
 const showStep = 15
 const doubleClickTime = 700
-// FIXME: Use CSS variables to avoid this constant
-const techincalColumnWidth = 64 // select-row's and add-entry's td width
 
 export type ITableCombinedUserView = ICombinedUserView<
   ITableValueExtra,
@@ -1647,9 +1645,18 @@ export default class UserViewTable extends mixins<
     return columns
   }
 
+  get technicalColumnWidth() {
+    // FIXME It's  already calculated in App.vue but I don' want to pass it here.
+    const defaultSize = 16
+    const normalSize = this.settings.getEntry('font_size', Number, defaultSize)
+    const mobileSize = this.settings.getEntry('font_size_mobile', Number, 14)
+    const fontSize =
+      this.$isMobile && mobileSize !== 0 ? mobileSize : normalSize
+    return 4 * fontSize
+  }
   get technicalColumnsWidth() {
-    const first = this.showSelectionColumn ? techincalColumnWidth : 0
-    const second = this.uv.extra.hasRowLinks ? techincalColumnWidth : 0
+    const first = this.showSelectionColumn ? this.technicalColumnWidth : 0
+    const second = this.uv.extra.hasRowLinks ? this.technicalColumnWidth : 0
     return first + second
   }
 
