@@ -90,10 +90,8 @@
           'active-editing': editingValue !== null,
           mobile: $isMobile,
           'multiple-cells-selected': selectedCells.length > 1,
-          'select-row-fixed-column-border':
-            !showLinkColumn && showFixedColumnBorder && stickFixedColumns,
-          'add-entry-fixed-column-border':
-            showLinkColumn && showFixedColumnBorder && stickFixedColumns,
+          'show-fixed-column-border':
+            showFixedColumnBorder && stickFixedColumns,
           'stick-fixed-columns': stickFixedColumns,
           'selection-column-enabled': showSelectionColumn,
         },
@@ -193,7 +191,11 @@
             <tr>
               <th
                 v-if="showSelectionColumn"
-                class="fixed-column select-row-cell"
+                class="fixed-cell select-row-cell"
+                :class="{
+                  'last-fixed-cell':
+                    !showLinkColumn && fixedColumnsLength === 0,
+                }"
                 @click="toggleAllRows"
               >
                 <div class="table-th">
@@ -205,13 +207,11 @@
               </th>
               <th
                 v-if="showLinkColumn"
-                :class="[
-                  'fixed-column',
-                  'add-entry-cell',
-                  {
-                    'without-selection-cell': !showSelectionColumn,
-                  },
-                ]"
+                class="fixed-cell add-entry-cell"
+                :class="{
+                  'without-selection-cell': !showSelectionColumn,
+                  'last-fixed-cell': fixedColumnsLength === 0,
+                }"
               >
                 <div class="table-th">
                   <ButtonGroup
@@ -227,10 +227,19 @@
                 </div>
               </th>
               <th
-                v-for="i in columnIndexes"
+                v-for="(i, index) in columnIndexes"
                 :key="i"
-                :class="{ 'fixed-column': columns[i].fixed }"
-                :style="columns[i].style"
+                :class="{
+                  'fixed-cell': columns[i].fixed,
+                  'last-fixed-cell': index === fixedColumnsLength - 1,
+                }"
+                :style="{
+                  ...columns[i].style,
+                  left:
+                    stickFixedColumns && fixedColumnPositions[i]
+                      ? `${fixedColumnPositions[i]}px`
+                      : undefined,
+                }"
                 :title="$ustOrEmpty(columns[i].caption)"
                 @click="loadAllRowsAndUpdateSort(i)"
               >
@@ -2147,7 +2156,7 @@ export default class UserViewTable extends mixins<
       .filter((c) => c.visible)
     const fixed = columns.filter((c) => c.fixed)
     const nonFixed = columns.filter((c) => !c.fixed)
-    return fixed.concat(nonFixed).map((c) => c.index)
+    return [...fixed, ...nonFixed].map((c) => c.index)
   }
 
   get fixedColumnIndexes() {
@@ -3834,10 +3843,7 @@ th {
   }
 }
 
-.select-row-fixed-column-border ::v-deep .select-row-cell {
-  border-right: 1px solid #efefef;
-}
-.add-entry-fixed-column-border ::v-deep .add-entry-cell {
+.show-fixed-column-border ::v-deep .last-fixed-cell {
   border-right: 1px solid #efefef;
 }
 
@@ -3850,21 +3856,28 @@ tr {
 }
 
 .stick-fixed-columns ::v-deep {
-  .fixed-column {
+  .fixed-cell {
     position: sticky;
     &.add-entry-cell,
     &.select-row-cell {
       left: 0;
     }
   }
-  &.selection-column-enabled .fixed-column.add-entry-cell {
+  &.selection-column-enabled .fixed-cell.add-entry-cell {
     left: var(--technical-column-width);
   }
-  th.fixed-column {
+  th.fixed-cell {
     z-index: 31; // Should be bigger than footer's z-index for dropdown overlap
   }
-  td.fixed-column {
+  td.fixed-cell {
     z-index: 24;
+  }
+}
+
+.table-wrapper:not(.stick-fixed-columns) ::v-deep {
+  td.fixed-cell {
+    position: static;
+    left: 0 !important;
   }
 }
 

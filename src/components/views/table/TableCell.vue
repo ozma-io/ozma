@@ -24,7 +24,8 @@
       cellVariantClassName,
       'cell-local-variant',
       {
-        // 'fixed-column': column.fixed,
+        'fixed-cell': column.fixed,
+        'last-fixed-cell': lastFixed,
         select_fixed: value.extra.selected && column.fixed,
         selected: value.extra.selected && !value.extra.cursor,
         cursor: value.extra.cursor,
@@ -169,7 +170,7 @@ export default class TableCell extends Vue {
   @Prop({ type: Object, required: true }) column!: IColumn
   @Prop({ type: Number, required: true }) columnIndex!: number
   @Prop({ type: String, default: 'existing' }) from!: string
-  @Prop({ type: Boolean, default: false }) firstNonFixed!: boolean
+  @Prop({ type: Boolean, default: false }) lastFixed!: boolean
   @Prop({ type: Number }) fixedLeft!: number | undefined
   @Prop({ type: Object }) tree!: ITableRowTree | undefined
   @Prop({ type: Boolean, required: true }) showTree!: boolean
@@ -305,9 +306,9 @@ export default class TableCell extends Vue {
       style['height'] = `${this.height}px`
     }
 
-    // if (this.fixedLeft !== undefined) {
-    // style['left'] = `${this.fixedLeft}px`
-    // }
+    if (this.fixedLeft !== undefined) {
+      style['left'] = `${this.fixedLeft}px`
+    }
 
     if (this.getCellAttr('text_type') === 'codeeditor') {
       style['font-family'] = 'monospace'

@@ -2,7 +2,10 @@
   <tr :style="style" :class="['table-tr', { selected: row.extra.selected }]">
     <td
       v-if="showSelectionColumn"
-      class="fixed-column select-row-cell"
+      class="fixed-cell select-row-cell"
+      :class="{
+        'last-fixed-cell': !showLinkColumn && fixedColumnsLength === 0,
+      }"
       @click="$emit('select', $event)"
     >
       <div class="cell-wrapper">
@@ -11,14 +14,12 @@
     </td>
     <td
       v-if="showLinkColumn"
-      :class="[
-        'fixed-column',
-        'add-entry-cell',
-        {
-          'without-selection-cell': !showSelectionColumn,
-          'has-link': row.extra.link,
-        },
-      ]"
+      class="fixed-cell add-entry-cell"
+      :class="{
+        'without-selection-cell': !showSelectionColumn,
+        'has-link': row.extra.link,
+        'last-fixed-cell': fixedColumnsLength === 0,
+      }"
     >
       <FunLink
         v-if="row.extra.link"
@@ -40,7 +41,7 @@
       :column-index="i"
       :column="columns[i]"
       :not-existing="notExisting"
-      :first-non-fixed="tableColI == fixedColumnsLength"
+      :last-fixed="tableColI === fixedColumnsLength - 1"
       :fixed-left="fixedColumnPositions[i]"
       :show-tree="showTree"
       :height="height"
@@ -213,7 +214,7 @@ td.selected {
     z-index: 20;
   }
 
-  .table-tr.selected .fixed-column {
+  .table-tr.selected .fixed-cell {
     background-color: var(--table-backgroundDarker1Color);
   }
 }
