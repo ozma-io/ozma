@@ -1577,41 +1577,39 @@ export default class UserViewTable extends mixins<
 
       const style: Record<string, unknown> = {}
 
-      const columnWidthAttr = Number(getColumnAttr('column_width'))
-      const rawColumnWidth = Number.isNaN(columnWidthAttr)
-        ? 200
-        : columnWidthAttr
       const minColumnWidth = 50
-      const columnWidth = Math.max(
-        rawColumnWidth + (this.resizedColumnDeltaXs[i] ?? 0),
-        minColumnWidth,
-      )
+      const initialColumnWidth = z
+        .number()
+        .default(200)
+        .parse(getColumnAttr('column_width'))
+      const resizedColumnWidth =
+        initialColumnWidth + (this.resizedColumnDeltaXs[i] ?? 0)
+      const columnWidth = Math.max(minColumnWidth, resizedColumnWidth)
       style['width'] = `${columnWidth}px`
 
-      const textAlignRightTypes: ValueType['type'][] = ['int', 'decimal']
-      const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
-      if (textAlignRightTypes.includes(punOrValue.type)) {
-        style['text-align'] = 'right'
+      const textAlignResult = z
+        .enum(['left', 'center', 'right'])
+        .safeParse(getColumnAttr('text_align'))
+      if (textAlignResult.success) {
+        style['text-align'] = textAlignResult.data
+      } else {
+        const textAlignRightTypes: ValueType['type'][] = ['int', 'decimal']
+        const punOrValue: ValueType = columnInfo.punType ?? columnInfo.valueType
+        if (textAlignRightTypes.includes(punOrValue.type)) {
+          style['text-align'] = 'right'
+        }
       }
 
-      const textAlignAttr = getColumnAttr('text_align')
-      if (textAlignAttr !== undefined) {
-        style['text-align'] = String(textAlignAttr)
-      }
+      const fixedColumn = z.coerce.boolean().parse(getColumnAttr('fixed'))
 
-      const fixedColumnAttr = getColumnAttr('fixed')
-      const fixedColumn =
-        fixedColumnAttr === undefined ? false : Boolean(fixedColumnAttr)
+      const visibleColumn = z.coerce
+        .boolean()
+        .default(true)
+        .parse(getColumnAttr('visible'))
 
-      const visibleColumnAttr = getColumnAttr('visible')
-      const visibleColumn =
-        visibleColumnAttr === undefined ? true : Boolean(visibleColumnAttr)
-
-      const treeUnfoldColumnAttr = getColumnAttr('tree_unfold_column')
-      const treeUnfoldColumn =
-        treeUnfoldColumnAttr === undefined
-          ? false
-          : Boolean(treeUnfoldColumnAttr)
+      const treeUnfoldColumn = z.coerce
+        .boolean()
+        .parse(getColumnAttr('tree_unfold_column'))
       if (treeUnfoldColumn) {
         isTreeUnfoldColumnSet = true
       }
