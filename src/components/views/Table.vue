@@ -250,7 +250,7 @@
                     "
                     @click.stop
                   >
-                    <i class="material-icons">height</i>
+                    <i class="material-icons">drag_indicator</i>
                   </div>
                 </div>
               </th>
@@ -3827,7 +3827,6 @@ th {
   height: 100%;
 
   .material-icons {
-    transform: rotate(90deg);
     color: #444;
     font-size: 0.75rem;
   }
