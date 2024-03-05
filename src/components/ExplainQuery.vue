@@ -78,16 +78,16 @@
       </label>
     </p>
     <p>
-      <input v-model="analyze" type="checkbox" />
-      <label> ANALYZE </label>
+      <input id="analyze" v-model="analyze" type="checkbox" />
+      <label for="analyze"> ANALYZE </label>
     </p>
     <p>
-      <input v-model="verbose" type="checkbox" />
-      <label> VERBOSE </label>
+      <input id="verbose" v-model="verbose" type="checkbox" />
+      <label for="verbose"> VERBOSE </label>
     </p>
     <p>
-      <input v-model="costs" type="checkbox" />
-      <label> COSTS </label>
+      <input id="costs" v-model="costs" type="checkbox" />
+      <label for="costs"> COSTS </label>
     </p>
     <p>
       <button @click="explainView">
@@ -229,5 +229,9 @@ export default class ExplainQuery extends Vue {
 .plan {
   display: inline-block;
   font-size: 100%;
+}
+
+input[type='checkbox'] {
+  all: revert;
 }
 </style>
