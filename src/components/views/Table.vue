@@ -1585,9 +1585,10 @@ export default class UserViewTable extends mixins<
       const style: Record<string, unknown> = {}
 
       const minColumnWidth = 50
-      const initialColumnWidth = z
+      const initialColumnWidth = z.coerce
         .number()
         .default(200)
+        .catch(200)
         .parse(getColumnAttr('column_width'))
       const resizedColumnWidth =
         initialColumnWidth + (this.resizedColumnDeltaXs[i] ?? 0)
