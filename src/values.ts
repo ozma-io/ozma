@@ -261,10 +261,14 @@ export const valueFromRaw = (
       return Number.isInteger(int) ? int : undefined
     }
     case 'json':
-      try {
-        return JSON.parse(String(value))
-      } catch (e) {
-        return undefined
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value)
+        } catch (e) {
+          return undefined
+        }
+      } else {
+        return value
       }
     default:
       throw new Error(`Invalid field type ${(fieldType as any).type}`)
