@@ -355,6 +355,10 @@ export default class TableCell extends Vue {
     opacity: 1;
     text-decoration: none;
   }
+
+  .text {
+    color: var(--option-foregroundColor);
+  }
 }
 
 .add-child {
