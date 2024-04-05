@@ -497,7 +497,7 @@ export default class TopLevelUserView extends Vue {
   private updateTitle(title: string | null) {
     let titleString = 'ozma.io'
     if (title) {
-      titleString = `ozma.io - ${title}`
+      titleString = `${title} - ozma.io`
     }
     setHeadTitle(titleString)
     setHeadMeta('property', 'og:title', titleString)
