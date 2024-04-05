@@ -41,6 +41,13 @@
         @goto="push({ ...$event, key: null })"
       />
 
+      <!--
+      <iframe
+        style="height: 25rem; width: 50rem"
+        src="http://localhost:3000/widget?website_token=AGUKpf1d9trsxXsQSezigzRG#/"
+      />
+      -->
+
       <template v-if="authErrors.length > 0">
         <span v-for="error in authErrors" :key="error">
           {{ $t('auth_error', { msg: error }) }}
