@@ -51,7 +51,7 @@
           <slot :mode="mode" :isOpen="show" />
         </div>
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
-        <div class="popper popup border rounded shadow">
+        <div class="popper popup">
           <div class="popup-inner-slot">
             <slot name="inner" />
           </div>
@@ -119,7 +119,7 @@ export default class InputPopup extends Vue {
   position: relative;
   flex-direction: column;
   justify-content: center;
-  background-color: var(--default-backgroundDarker1Color);
+  background-color: var(--default-backgroundColor);
   padding: 0.5rem;
   height: 100%;
 }
@@ -142,13 +142,16 @@ export default class InputPopup extends Vue {
 .popup {
   display: flex;
   flex-direction: column;
-  width: 30rem;
+  box-shadow: 0px 3px 12px 0px rgba(0, 0, 0, 0.08);
+  border: 1px solid #efefef;
+  border-radius: 0.5rem;
+  width: 20rem;
   max-width: 98%;
-  height: 15rem;
+  height: 19rem;
   max-height: 80vh;
   overflow: auto;
   resize: both;
-  font-size: 0.9rem;
+  font-size: 1rem;
 
   .popup-inner-slot {
     flex: 1 1;

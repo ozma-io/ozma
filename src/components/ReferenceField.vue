@@ -3,7 +3,7 @@
     class="reference-field"
     :style="{
       backgroundColor: backgroundColor,
-      minWidth: isCellEdit ? '25rem' : undefined,
+      maxWidth: isCellEdit ? '25rem' : undefined,
     }"
   >
     <ReferenceMultiSelect

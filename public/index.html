@@ -120,24 +120,6 @@
       }
     </script>
 
-    <script>
-      ;(function (d, t) {
-        var BASE_URL = 'http://0.0.0.0:3000'
-        var g = d.createElement(t),
-          s = d.getElementsByTagName(t)[0]
-        g.src = BASE_URL + '/packs/js/sdk.js'
-        g.defer = true
-        g.async = true
-        s.parentNode.insertBefore(g, s)
-        g.onload = function () {
-          window.chatwootSDK.run({
-            websiteToken: 'AGUKpf1d9trsxXsQSezigzRG',
-            baseUrl: BASE_URL,
-          })
-        }
-      })(document, 'script')
-    </script>
-
     <script src="<%= webpackConfig.output.publicPath %>config.js"></script>
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"

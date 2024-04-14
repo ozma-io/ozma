@@ -26,7 +26,7 @@
         disabled: disabled,
       },
     ]"
-    :style="{ minWidth: isCellEdit ? '15rem' : undefined }"
+    :style="{ minWidth: isCellEdit ? '10rem' : undefined }"
   >
     <popper
       ref="popup"

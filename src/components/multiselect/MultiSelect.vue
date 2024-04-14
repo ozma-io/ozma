@@ -145,14 +145,6 @@
               @keydown.esc.prevent.stop="showPopup = false"
               @focus="onFilterInputFocus"
             />
-            <b-input-group-append>
-              <b-input-group-text
-                class="with-material-icon filter-icon"
-                variant="outline-secondary"
-              >
-                <i class="material-icons"> search </i>
-              </b-input-group-text>
-            </b-input-group-append>
             <slot name="qrcode-button" />
           </b-input-group>
 
@@ -160,10 +152,11 @@
             <div
               v-if="single && !required && value !== null"
               class="clear-option-button-wrapper"
+              @mouseover="hoveredOptionIndex = null"
             >
               <button
                 type="button"
-                class="material-button clear-option-button"
+                class="clear-option-button"
                 @click="unselectAll"
               >
                 <i class="material-icons"> highlight_off </i>
@@ -224,24 +217,15 @@
                 :key="selectedOptions.length + index"
                 :class="[
                   'option-wrapper',
-                  optionVariantClassName,
-                  'option-local-variant',
                   {
                     'hovered-value': hoveredOptionIndex === index,
                   },
                 ]"
-                :style="{ ...listValueStyle, ...optionVariantVariables }"
+                :style="listValueStyle"
                 @mouseover="hoveredOptionIndex = index"
                 @click.stop="selectOption(option.index)"
               >
-                <div
-                  :class="[
-                    optionVariantClassName,
-                    'option-local-variant',
-                    'single-value',
-                  ]"
-                  :style="optionVariantVariables"
-                >
+                <div class="option">
                   <slot name="option" :option="option">
                     <!-- eslint-disable vue/no-v-html -->
                     <span v-html="option.labelHtml" />
@@ -282,6 +266,7 @@
           <div
             v-if="$slots['actions']"
             class="select-container__options__actions"
+            @mouseover="hoveredOptionIndex = null"
           >
             <slot name="actions" />
           </div>
@@ -364,16 +349,16 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 
-  private filterValue = ''
-  private hoveredOptionIndex: number | null = null
-  private showPopup = false
-  private oldLoadingState: LoadingState = {
+  filterValue = ''
+  hoveredOptionIndex: number | null = null
+  showPopup = false
+  oldLoadingState: LoadingState = {
     status: 'ok',
     moreAvailable: false,
   }
 
   // Due to trigram indexes require at least 3 symbols.
-  private get useInfiniteScrolling() {
+  get useInfiniteScrolling() {
     return this.filterValue.length === 0 || this.filterValue.length >= 3
   }
 
@@ -411,16 +396,16 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private get optionVariantClassName(): string | null {
+  get optionVariantClassName(): string | null {
     return getColorVariantAttributeClassName(this.optionColorVariantAttribute)
   }
 
-  private get optionVariantVariables(): Record<string, string> | null {
+  get optionVariantVariables(): Record<string, string> | null {
     return getColorVariantAttributeVariables(this.optionColorVariantAttribute)
   }
 
   @Watch('loadingState', { immediate: true })
-  private loadingStateChanged(newValue: LoadingState) {
+  loadingStateChanged(newValue: LoadingState) {
     const loader = this.$refs['infiniteLoading'] as InfiniteLoading | undefined
     if (!loader) return
 
@@ -461,7 +446,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private loadMoreWithEvent(ev: StateChanger) {
+  loadMoreWithEvent(ev: StateChanger) {
     this.$emit('load-more', (state: LoadingResult) => {
       if (state.status === 'error') {
         ev.error()
@@ -476,7 +461,7 @@ export default class MultiSelect extends Vue {
     })
   }
 
-  private infiniteHandler(ev: StateChanger) {
+  infiniteHandler(ev: StateChanger) {
     if (this.loadingState.status === 'ok' && !this.loadingState.moreAvailable) {
       ev.loaded()
       ev.complete()
@@ -503,21 +488,21 @@ export default class MultiSelect extends Vue {
   }
 
   @Watch('visibleOptions')
-  private updatePopupPosition() {
+  updatePopupPosition() {
     void nextRender().then(() =>
       (this.$refs.popup as InputPopup | undefined)?.updatePopper(),
     )
   }
 
   @Watch('disabled')
-  private disabledChanged() {
+  disabledChanged() {
     if (this.disabled) {
       this.showPopup = false
     }
   }
 
   @Watch('filterValue')
-  private emitFilterValue() {
+  emitFilterValue() {
     this.$emit('update:filter', this.filterValue)
 
     if (this.loadingState.status === 'ok') {
@@ -528,8 +513,14 @@ export default class MultiSelect extends Vue {
   }
 
   @Watch('autofocus', { immediate: true })
-  private onAutofocus() {
+  onAutofocus() {
     if (this.autofocus && !this.disabled) {
+      this.showPopup = true
+    }
+  }
+
+  openPopup() {
+    if (!this.disabled) {
       this.showPopup = true
     }
   }
@@ -544,7 +535,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private onBackspace() {
+  onBackspace() {
     if (
       this.filterValue === '' &&
       !this.disabled &&
@@ -593,20 +584,20 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private focusInput() {
+  focusInput() {
     ;(this.$refs.filterInput as HTMLInputElement | undefined)?.focus()
   }
 
-  private focusSelect() {
+  focusSelect() {
     ;(this.$refs.selectContainer as HTMLElement | undefined)?.focus()
   }
 
-  private onFilterInputFocus() {
+  onFilterInputFocus() {
     this.$emit('focus')
   }
 
   @Watch('showPopup', { immediate: true })
-  private async onPopupChanged(newValue: boolean, oldValue: boolean) {
+  async onPopupChanged(newValue: boolean, oldValue: boolean) {
     if (newValue === oldValue) {
       return
     }
@@ -631,18 +622,18 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private setShowPopup(newValue: boolean) {
+  setShowPopup(newValue: boolean) {
     if (!this.disabled) {
       this.showPopup = newValue
     }
   }
 
   @Watch('visibleOptions', { immediate: true })
-  private visibleOptionsUpdated() {
+  visibleOptionsUpdated() {
     this.offsetHoveredOption(0)
   }
 
-  private offsetHoveredOption(offset: number) {
+  offsetHoveredOption(offset: number) {
     if (this.visibleOptions.length === 0) {
       this.hoveredOptionIndex = null
     } else {
@@ -657,7 +648,7 @@ export default class MultiSelect extends Vue {
   }
 
   @Watch('hoveredOptionIndex')
-  private scrollToHoveredOption(hoveredOptionIndex: number | null) {
+  scrollToHoveredOption(hoveredOptionIndex: number | null) {
     if (hoveredOptionIndex === null) return
 
     const container = this.$refs.optionsContainer as HTMLElement | undefined
@@ -665,7 +656,7 @@ export default class MultiSelect extends Vue {
     item?.scrollIntoView({ block: 'nearest' })
   }
 
-  private selectOption(index: number) {
+  selectOption(index: number) {
     console.assert(!this.disabled)
 
     if (this.single) {
@@ -684,7 +675,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private unselectOption(index: number, closePopup = true) {
+  unselectOption(index: number, closePopup = true) {
     console.assert(!this.disabled)
 
     if (this.single) {
@@ -703,7 +694,7 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  private unselectAll() {
+  unselectAll() {
     console.assert(!this.disabled)
 
     if (this.single) {
@@ -713,7 +704,7 @@ export default class MultiSelect extends Vue {
     this.$emit('clear-values')
   }
 
-  private async filterInputFinished() {
+  async filterInputFinished() {
     if (this.processFilter && (await this.processFilter(this.filterValue))) {
       this.filterValue = ''
     } else if (this.hoveredOptionIndex !== null) {
@@ -746,6 +737,7 @@ export default class MultiSelect extends Vue {
   position: relative;
   z-index: 30;
   width: 100%;
+  font-size: 0.875rem;
 
   &.is-open {
     position: relative;
@@ -795,29 +787,6 @@ export default class MultiSelect extends Vue {
     border-color: #80bdff;
   }
 
-  .clear-options-button {
-    opacity: 0.5;
-    border: none;
-    border-width: 0;
-    border-radius: 0;
-
-    &:hover {
-      opacity: 1;
-      background-color: var(--cell-backgroundDarker1Color);
-      color: var(--cell-foregroundDarkerColor);
-    }
-
-    &:focus {
-      /* Maybe bad for accessibily, but tried to mimic Bootstrap's "b-input-group-append" style here */
-      box-shadow: none;
-    }
-
-    &:active {
-      background-color: var(--cell-backgroundDarker2Color);
-      color: var(--cell-foregroundDarkerColor);
-    }
-  }
-
   .select-icon {
     display: none;
     cursor: pointer;
@@ -863,49 +832,29 @@ export default class MultiSelect extends Vue {
 }
 
 .filter-group {
-  padding: 0.25rem;
-  width: auto;
+  border-bottom: 1px solid var(--default-borderColor);
+  padding: 0.5rem 1rem;
   text-align: start;
 
   .filter-input {
-    border-right-width: 0;
+    border: none;
     border-color: var(--default-borderColor);
     background-color: var(--default-backgroundColor);
-    color: var(--default-foregroundColor);
+    padding: 0;
+    color: #000;
 
     &::placeholder {
-      color: var(--default-foregroundDarkerColor);
+      color: #777c87;
     }
 
     &:focus {
       outline: none;
       box-shadow: none;
-      border-color: var(--default-borderColor);
     }
   }
 
   &:focus-within {
     outline: none;
-  }
-}
-
-.input-button {
-  display: flex;
-  justify-content: center;
-  opacity: 0.2;
-  z-index: 10;
-  transition: opacity 0.1s;
-  cursor: pointer;
-  margin-left: auto;
-  border: 0;
-  background: 0;
-  padding: 0;
-  color: var(--MainTextColor);
-  font-size: 21px;
-
-  .select-container:hover &,
-  .select-container:focus-within & {
-    opacity: 1;
   }
 }
 
@@ -915,6 +864,7 @@ export default class MultiSelect extends Vue {
   z-index: 1001;
   height: 100%;
   overflow: hidden;
+  font-size: 0.875rem;
 }
 
 .all-options-wrapper {
@@ -924,13 +874,14 @@ export default class MultiSelect extends Vue {
 .clear-option-button {
   display: flex;
   align-items: center;
+  gap: 0.25rem;
   border-radius: 0;
   background: var(--default-backgroundColor);
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem;
   width: 100%;
 
-  .material-icons {
-    margin-right: 0.3rem;
+  &:hover {
+    background: #ffeeee;
   }
 }
 
@@ -951,8 +902,7 @@ export default class MultiSelect extends Vue {
 
 .hovered-value {
   cursor: pointer !important;
-  background-color: var(--option-backgroundDarker1Color) !important;
-  color: var(--option-foregroundColor) !important;
+  background-color: #eff6ff !important;
 }
 
 div.select-container__options__actions {
@@ -970,16 +920,19 @@ div.select-container__options__actions {
 .single-value {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--option-borderColor);
   border-radius: 0.25rem;
-  background-color: var(--option-backgroundColor);
   padding: 0.125rem 0.5rem;
   height: 1.3rem;
   overflow: hidden;
-  color: var(--option-foregroundColor);
   line-height: 0.9rem;
   white-space: pre;
   word-break: break-word;
+
+  .selected-values > & {
+    border: 1px solid var(--option-borderColor);
+    background-color: var(--option-backgroundColor);
+    color: var(--option-foregroundColor);
+  }
 
   > span {
     text-align: left;
@@ -994,10 +947,16 @@ div.select-container__options__actions {
   display: flex;
   flex-direction: row;
   cursor: pointer;
-  padding: 0.15rem 0.25rem;
+  padding: 0.375rem 1rem;
 
   &:hover {
-    background-color: var(--option-backgroundDarker1Color) !important;
+    background-color: #eff6ff !important;
+  }
+
+  .option {
+    border-radius: 0.25rem;
+    background: #f2f4f7;
+    padding: 0.3125rem 0.75rem;
   }
 }
 

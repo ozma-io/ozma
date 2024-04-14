@@ -1,14 +1,17 @@
 <i18n>
   {
     "en": {
+      "no_label": "No label",
       "error": "Error",
       "error_qrcode_is_inappropriate" : "QRCode is inappropriate"
     },
     "ru": {
+      "no_label": "Без названия",
       "error": "Ошибка",
       "error_qrcode_is_inappropriate" : "QRCode не соответствует назначению"
     },
     "es": {
+      "no_label": "Sin etiqueta",
       "error": "Error",
       "error_qrcode_is_inappropriate" : "El código QR es inapropiado"
     }
@@ -52,10 +55,10 @@
       @popup-closed="onPopupClosed"
     >
       <template #option="select">
-        <fragment>
+        <div class="option-wrapper">
           <FunLink
             v-if="select.option.value.link"
-            class="single-value__link"
+            class="option-link"
             :link="select.option.value.link"
             @goto="$emit('goto', $event)"
           >
@@ -70,23 +73,22 @@
               title: select.option.label,
               disabled: $isMobile,
             }"
-            class="value-text"
-            v-html="select.option.labelHtml"
+            class="option-text"
+            :class="{ 'no-label': !select.option.labelHtml }"
+            v-html="select.option.labelHtml || $t('no_label')"
           />
           <!-- eslint-enable vue/no-v-html -->
-        </fragment>
+        </div>
       </template>
       <template #actions>
         <button
           v-for="(action, index) in selectViews"
           :key="index"
           type="button"
-          class="material-button action-button"
+          class="action-button"
           @click="beginSelect(action)"
         >
-          <i class="material-icons md-18 rounded-circle open-modal-button">
-            add
-          </i>
+          <i class="material-icons md-18"> add </i>
           {{ action.name }}
         </button>
       </template>
@@ -208,15 +210,15 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 
-  private selectedView: IQuery | null = null
+  selectedView: IQuery | null = null
 
-  private openQRCodeScanner() {
+  openQRCodeScanner() {
     ;(this.$refs.scanner as QRCodeScannerModal).scan()
   }
 
   @Watch('value', { immediate: true })
   // TODO: Possible unnecessary requests there, check this.
-  private loadPun() {
+  loadPun() {
     if (this.single) {
       const value = this.value as ICombinedValue
       const rawValue = currentValue(value)
@@ -234,11 +236,11 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   /* @Watch("entries")
-   * private entriesRefChanged(newValue: EntriesRef) {
+   *  entriesRefChanged(newValue: EntriesRef) {
    *   void this.fetchEntries(newValue, this.requestedSearch, this.requestedLimit);
    * } */
 
-  private findValue(value: ICombinedValue): number | undefined {
+  findValue(value: ICombinedValue): number | undefined {
     const currentId = currentValue(value) as number | null | undefined
     const idx = this.options!.findIndex((opt) => opt.value.id === currentId)
     return idx === -1 ? undefined : idx
@@ -266,7 +268,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     return this.homeSchema ? { homeSchema: this.homeSchema } : undefined
   }
 
-  private makeOption(id: RowId, pun: string): ReferenceSelectOption {
+  makeOption(id: RowId, pun: string): ReferenceSelectOption {
     return {
       label: pun,
       value: {
@@ -333,7 +335,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     )
   }
 
-  private setValue(id: number) {
+  setValue(id: number) {
     if (this.single) {
       this.$emit('update:value', id)
     } else {
@@ -341,7 +343,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     }
   }
 
-  private async setRawId(id: number): Promise<boolean> {
+  async setRawId(id: number): Promise<boolean> {
     const puns = await this.fetchEntriesByIds(this.entries, [id])
     if (!(id in puns)) {
       return false
@@ -351,11 +353,11 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     return true
   }
 
-  private async selectFromScanner(content: IQRCode): Promise<boolean> {
+  async selectFromScanner(content: IQRCode): Promise<boolean> {
     return this.setRawId(content.id)
   }
 
-  private async processQRCode(filterValue: string): Promise<boolean> {
+  async processQRCode(filterValue: string): Promise<boolean> {
     const qrcode = parseQRCode(filterValue)
     if (qrcode === null) {
       return false
@@ -369,7 +371,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     return this.setRawId(qrcode.id)
   }
 
-  private async processRawId(filterValue: string): Promise<boolean> {
+  async processRawId(filterValue: string): Promise<boolean> {
     const id = Number(filterValue)
     if (filterValue === '' || Number.isNaN(id)) {
       return false
@@ -378,7 +380,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     return this.setRawId(id)
   }
 
-  private async processFilter(filterValue: string): Promise<boolean> {
+  async processFilter(filterValue: string): Promise<boolean> {
     if (await this.processQRCode(filterValue)) {
       return true
     }
@@ -386,7 +388,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     return this.processRawId(filterValue)
   }
 
-  private makeToast(message: string) {
+  makeToast(message: string) {
     this.$bvToast.toast(message, {
       title: this.$t('error').toString(),
       variant: 'danger',
@@ -395,27 +397,27 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     })
   }
 
-  private iconValue(target: string) {
+  iconValue(target: string) {
     return 'open_in_new'
   }
 
-  private selectFromView(id: number) {
+  selectFromView(id: number) {
     this.selectedView = null
     this.setValue(id)
   }
 
-  private closeSelectView() {
+  closeSelectView() {
     this.selectedView = null
     this.$emit('popup-closed')
   }
 
-  private onPopupClosed() {
+  onPopupClosed() {
     if (this.selectedView === null) {
       this.$emit('popup-closed')
     }
   }
 
-  private beginSelect(action: IReferenceSelectAction) {
+  beginSelect(action: IReferenceSelectAction) {
     this.selectedView = action.query
   }
 
@@ -440,23 +442,23 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     }
   }
 
-  private updateValue(index: number | null) {
+  updateValue(index: number | null) {
     this.$emit(
       'update:value',
       index === null ? null : this.options![index].value.id,
     )
   }
 
-  private addValue(index: number) {
+  addValue(index: number) {
     this.$emit('add-value', this.options![index].value.id)
   }
 
-  private removeValue(index: number) {
+  removeValue(index: number) {
     // We pass `remove-value` as is to support repeating ids.
     this.$emit('remove-index', index)
   }
 
-  private async loadMore(next: (_: LoadingResult) => void) {
+  async loadMore(next: (_: LoadingResult) => void) {
     try {
       const moreAvailable = await this.fetchEntries(
         this.entries,
@@ -472,54 +474,69 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   }
 
   @Debounce(200)
-  private updateFilter(filter: string) {
+  updateFilter(filter: string) {
     void this.fetchEntries(this.entries, filter, 20)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.single-value__link {
-  display: flex;
-  flex-shrink: 0;
-}
-
-.open-modal-button {
-  @include material-button('option');
-
-  margin: 0;
-  margin-right: 0.25rem;
-  margin-left: -0.25rem;
-  border: none;
-  padding: 0;
-
-  &:not(:hover) {
-    opacity: 0.5;
-  }
-}
-
 .action-button {
   display: flex;
   align-items: center;
+  gap: 0.25rem;
   border-radius: 0;
-  background: var(--default-backgroundColor);
-  padding: 0.5rem 0.25rem;
+  background-color: var(--default-backgroundColor);
+  padding: 0.6rem 1rem;
   width: 100%;
+  color: #2361ff;
+  &:hover {
+    background-color: #eff6ff;
+  }
 }
 
 .loading-box {
   height: 2rem;
 }
 
-.value-text {
+.option-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.option-link {
+  display: flex;
+  flex-shrink: 0;
+  color: #000;
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.open-modal-button {
+  @include material-button('option');
+
+  transition: box-shadow 0.1s;
+  &:hover {
+    box-shadow: 0 0 0rem 0.25rem rgba(0, 0, 0, 0.2),
+      inset 0 1rem rgba(0, 0, 0, 0.2);
+  }
+}
+
+.option-text {
   overflow: hidden;
   line-height: 1.1rem;
   text-align: left;
   text-overflow: ellipsis;
+
+  &.no-label {
+    opacity: 0.5;
+  }
 }
 
 .compact-mode {
-  .value-text {
+  .option-text {
     overflow: hidden;
     line-height: 1.1rem;
     text-overflow: ellipsis;
