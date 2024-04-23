@@ -13,7 +13,9 @@
 import { Vue, Prop, Watch, Component } from 'vue-property-decorator'
 import { Embedded } from 'ozma-api'
 
+import { namespace } from 'vuex-class'
 import { Link, HrefTargetType, attrToQueryLink, linkHandler } from '../links'
+import { CurrentAuth, INoAuth } from '@/state/auth'
 
 type SupportedVecrsion = 0 | 1
 
@@ -27,6 +29,7 @@ type API1ClientRequestData =
   | Embedded.IChangeHeightRequestData
   | Embedded.IUpdateValueRequestData
   | Embedded.IGotoRequestData
+  | Embedded.IIDTokenRequestData
 
 // More restrictive than one from user views; for example, we don't allow actions.
 const convertLink = (rawLink: Embedded.Link): Link | null => {
@@ -55,8 +58,11 @@ const convertLink = (rawLink: Embedded.Link): Link | null => {
   return null
 }
 
+const auth = namespace('auth')
+
 @Component
 export default class EmbeddedContainer extends Vue {
+  @auth.State('current') currentAuth!: CurrentAuth | INoAuth | null
   @Prop({ type: String }) src!: string | undefined
   @Prop({ type: String }) srcdoc!: string | undefined
   @Prop({ type: Boolean, default: false }) isControl!: boolean
@@ -149,6 +155,15 @@ export default class EmbeddedContainer extends Vue {
             return { result: undefined }
           } else {
             return { error: 'badRequest', message: 'Invalid link' }
+          }
+        },
+        idToken: (request: Embedded.IIDTokenRequestData) => {
+          if (!(this.currentAuth instanceof CurrentAuth)) {
+            return { result: {} };
+          } else {
+            return { result: {
+              idToken: this.currentAuth.idToken,
+            } }
           }
         },
       })
