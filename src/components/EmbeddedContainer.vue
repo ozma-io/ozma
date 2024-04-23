@@ -159,11 +159,13 @@ export default class EmbeddedContainer extends Vue {
         },
         idToken: (request: Embedded.IIDTokenRequestData) => {
           if (!(this.currentAuth instanceof CurrentAuth)) {
-            return { result: {} };
+            return { result: {} }
           } else {
-            return { result: {
-              idToken: this.currentAuth.idToken,
-            } }
+            return {
+              result: {
+                idToken: this.currentAuth.idToken,
+              },
+            }
           }
         },
       })
@@ -259,11 +261,11 @@ export default class EmbeddedContainer extends Vue {
         // FIXME: smth with the type signature.
         const result = (handler as any)(request as any) as HandlerResult
         if ('result' in result) {
-          const response: Embedded.IResponseSuccess<typeof result> = {
+          const response: Embedded.IResponseSuccess<typeof result.result> = {
             type: 'response',
             id: msg.id,
             status: 'ok',
-            result,
+            result: result.result,
           }
           this.sendMessage(response)
         } else {
