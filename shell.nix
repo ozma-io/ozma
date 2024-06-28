@@ -1,11 +1,18 @@
-{ pkgs ? import <nixpkgs> {} }:
+{pkgs ? import <nixpkgs> {}}: let
+  nodejs = pkgs.nodejs_22;
 
-let
   env = pkgs.buildFHSUserEnv {
-    name = "funapp";
-    targetPkgs = pkgs: with pkgs.nodejs_18.pkgs; [
-      nodejs tern yarn "@vue/cli" vue-language-server
-    ];
+    name = "ozma";
+    targetPkgs = pkgs:
+      with pkgs;
+      with nodejs.pkgs; [
+        alejandra
+        nodejs
+        tern
+        yarn
+        "@vue/cli"
+        vue-language-server
+      ];
     runScript = pkgs.writeScript "env-shell" ''
       #!${pkgs.stdenv.shell}
       exec ${userShell}
@@ -13,13 +20,12 @@ let
   };
 
   userShell = builtins.getEnv "SHELL";
+in
+  pkgs.stdenv.mkDerivation {
+    name = "ozma-fhs-dev";
 
-in pkgs.stdenv.mkDerivation {
-  name = "funapp-fhs-dev";
-
-  shellHook = ''
-    exec ${env}/bin/funapp
-  '';
-  buildCommand = "exit 1";
-}
-
+    shellHook = ''
+      exec ${env}/bin/ozma
+    '';
+    buildCommand = "exit 1";
+  }
