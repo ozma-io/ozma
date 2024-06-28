@@ -1,5 +1,5 @@
 import { Module } from 'vuex'
-import FunDBAPI, { IEntityRef, IEntity } from 'ozma-api'
+import FunDBAPI, { IEntityRef, IEntity } from '@ozma-io/ozmadb-js/client'
 
 import { IRef, ObjectMap, waitTimeout } from '@/utils'
 import { CancelledError } from '@/modules'

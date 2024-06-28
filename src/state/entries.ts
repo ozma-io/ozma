@@ -9,7 +9,7 @@ import FunDBAPI, {
   IViewExprResult,
   IEntriesRequestOpts,
   ValueType,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 import Vue from 'vue'
 import R from 'ramda'
 

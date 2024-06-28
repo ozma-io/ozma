@@ -1,0 +1,24 @@
+diff --git a/package.json b/package.json
+index e8a851ea77ae4db3fb68127a36b73024ebff8f76..aa991620b9218dd99623df6c36fa8aee7af08cf7 100644
+--- a/package.json
++++ b/package.json
+@@ -5,16 +5,16 @@
+   "main": "dist/vuex.common.js",
+   "exports": {
+     ".": {
++      "types": "./types/index.d.ts",
+       "module": "./dist/vuex.esm.js",
+       "require": "./dist/vuex.common.js",
+       "import": "./dist/vuex.mjs"
+-    },
+-    "./": "./"
++    }
+   },
+   "module": "dist/vuex.esm.js",
+   "unpkg": "dist/vuex.js",
+   "jsdelivr": "dist/vuex.js",
+-  "typings": "types/index.d.ts",
++  "types": "types/index.d.ts",
+   "sideEffects": false,
+   "files": [
+     "dist",

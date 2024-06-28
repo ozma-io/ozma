@@ -1,4 +1,4 @@
-import { FunDBError, IEntityRef, ClientApiError } from 'ozma-api'
+import { OzmaDBError, IEntityRef, ClientApiError } from '@ozma-io/ozmadb-js/client'
 
 const hostnameParts = location.hostname.split('.')
 export const instanceName =
@@ -48,7 +48,7 @@ const findErrorInfoUserData = (e: ClientApiError): unknown => {
 }
 
 export const findErrorUserData = (e: Error): unknown => {
-  if (e instanceof FunDBError) {
+  if (e instanceof OzmaDBError) {
     return findErrorInfoUserData(e.body)
   } else {
     return undefined

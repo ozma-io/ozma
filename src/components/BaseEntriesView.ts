@@ -1,7 +1,7 @@
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { namespace } from 'vuex-class'
 
-import { RowId } from 'ozma-api'
+import { RowId } from '@ozma-io/ozmadb-js/client'
 import { ReferenceName, deepClone, deepEquals, waitTimeout } from '@/utils'
 import {
   CurrentEntries,

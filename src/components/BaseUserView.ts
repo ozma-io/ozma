@@ -1,6 +1,6 @@
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import { namespace } from 'vuex-class'
-import { RowId, IEntityRef, IFieldRef } from 'ozma-api'
+import { RowId, IEntityRef, IFieldRef } from '@ozma-io/ozmadb-js/client'
 
 import { ErrorKey } from '@/state/errors'
 import type {

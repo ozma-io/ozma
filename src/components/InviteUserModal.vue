@@ -105,7 +105,7 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import { IEntityRef } from 'ozma-api'
+import { IEntityRef } from '@ozma-io/ozmadb-js/client'
 import { namespace } from 'vuex-class'
 import { invitesServiceUrl, instanceName, instancesHost } from '@/api'
 

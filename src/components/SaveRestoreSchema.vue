@@ -107,7 +107,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import { Action } from 'vuex-class'
-import type { IRestoreSchemasOptions, ISaveSchemasOptions } from 'ozma-api'
+import type { IRestoreSchemasOptions, ISaveSchemasOptions } from '@ozma-io/ozmadb-js/client'
 import type { ICallApi } from '@/state/auth'
 
 @Component

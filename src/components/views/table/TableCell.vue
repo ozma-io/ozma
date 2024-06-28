@@ -129,7 +129,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
-import { ValueType } from 'ozma-api'
+import { ValueType } from '@ozma-io/ozmadb-js/client'
 
 import { valueIsNull } from '@/values'
 import Checkbox from '@/components/checkbox/Checkbox.vue'

@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { AttributeName, IExecutedValue, ValueType } from 'ozma-api'
+import { AttributeName, IExecutedValue, ValueType } from '@ozma-io/ozmadb-js/client'
 
 import {
   getNumberFormatter,

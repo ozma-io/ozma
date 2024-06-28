@@ -1,6 +1,6 @@
 import { rgba, toRgba, parseToRgba, readableColor, mix } from 'color2k'
 import { z } from 'zod'
-import FunDBAPI, { IViewExprResult, SchemaName, RowId } from 'ozma-api'
+import FunDBAPI, { IViewExprResult, SchemaName, RowId } from '@ozma-io/ozmadb-js/client'
 import { store } from '@/main'
 import { mapMaybe, objectMap } from '@/utils'
 

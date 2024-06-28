@@ -9,7 +9,7 @@ import type {
   ScalarFieldType,
   IScalarSimpleType,
   SimpleType,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 import moment, {
   Moment,
   Duration,

@@ -323,11 +323,11 @@ import type {
   IFieldRef,
   RowId,
   ValueType,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 import { z } from 'zod'
 import { namespace } from 'vuex-class'
 
-import { IEntityRef } from 'ozma-api'
+import { IEntityRef } from '@ozma-io/ozmadb-js/client'
 import { valueIsNull, valueToText } from '@/values'
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from '@/state/query'
 import { ISelectOption } from '@/components/multiselect/MultiSelect.vue'

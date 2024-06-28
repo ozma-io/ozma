@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { redirectClick } from 'ozma-api'
+import { redirectClick } from '@ozma-io/ozma-embedded'
 
 import { vueEmit } from '@/utils'
 import { Link, linkHandler, ILinkHandlerParams } from '@/links'

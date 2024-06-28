@@ -36,7 +36,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 import { Action } from 'vuex-class'
-import { IViewExprResult } from 'ozma-api'
+import { IViewExprResult } from '@ozma-io/ozmadb-js/client'
 
 import { IIframeRef } from '@/api'
 import Errorbox from '@/components/Errorbox.vue'

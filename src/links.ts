@@ -1,4 +1,4 @@
-import { IActionRef } from 'ozma-api'
+import { IActionRef } from '@ozma-io/ozmadb-js/client'
 import { z } from 'zod'
 
 import { app } from '@/main'

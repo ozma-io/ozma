@@ -1,8 +1,8 @@
 import { Module, ActionContext } from 'vuex'
 import { v4 as uuidv4 } from 'uuid'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 import { z } from 'zod'
-import FunDBAPI, { FunDBError } from 'ozma-api'
+import FunDBAPI, { OzmaDBError } from '@ozma-io/ozmadb-js/client'
 
 import { IRef } from '@/utils'
 import {
@@ -376,7 +376,7 @@ const runApiCall = async <Ret>(
         // eslint-disable-next-line no-await-in-loop
         return await func(context.state.api)
       } catch (e) {
-        if (e instanceof FunDBError) {
+        if (e instanceof OzmaDBError) {
           if (e.body.error === 'unauthorized') {
             if (!state.current?.refreshToken) {
               // eslint-disable-next-line no-await-in-loop

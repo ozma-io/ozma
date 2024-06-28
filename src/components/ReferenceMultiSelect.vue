@@ -127,7 +127,7 @@
 import { Component, Prop, Watch } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
 
-import type { IEntityRef, RowId, SchemaName, ValueType } from 'ozma-api'
+import type { IEntityRef, RowId, SchemaName, ValueType } from '@ozma-io/ozmadb-js/client'
 import { Debounce } from 'vue-debounce-decorator'
 import {
   ISelectOption,

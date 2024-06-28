@@ -18,7 +18,7 @@ import FunDBAPI, {
   IUpdateEntityResult,
   IDeleteEntityResult,
   TransactionOp,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 
 import { RecordSet, deepClone, mapMaybe, waitTimeout } from '@/utils'
 import {

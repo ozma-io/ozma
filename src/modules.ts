@@ -5,7 +5,6 @@ import Vuex from 'vuex'
 import BootstrapVue from 'bootstrap-vue'
 import UniqueId from 'vue-unique-id'
 import vClickOutside from 'v-click-outside'
-import { RawLocation, Dictionary } from 'vue-router/types/router'
 import PortalVue from 'portal-vue'
 import VueJSModal from 'vue-js-modal'
 import { Fragment } from 'vue-frag'
@@ -117,12 +116,14 @@ export const i18n = new VueI18n({
 })
 
 export type RouterQueryValues = string | (string | null)[]
-export type RouterQuery = Dictionary<RouterQueryValues>
+export type RouterQuery = Record<string, RouterQueryValues>
 
 export const routerQueryValue = (values: RouterQueryValues): string | null => {
   // Array is always non-empty
   return Array.isArray(values) ? values[values.length - 1] : values
 }
+
+export type RawLocation = Parameters<typeof router.push>[0]
 
 export const asyncPush = async (location: RawLocation) =>
   new Promise((resolve, reject) => {

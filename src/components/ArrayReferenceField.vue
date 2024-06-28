@@ -40,7 +40,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
-import type { IEntityRef, SchemaName } from 'ozma-api'
+import type { IEntityRef, SchemaName } from '@ozma-io/ozmadb-js/client'
 
 import ReferenceMultiSelect from '@/components/ReferenceMultiSelect.vue'
 import { valueIsNull } from '@/values'

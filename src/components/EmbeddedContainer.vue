@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { Vue, Prop, Watch, Component } from 'vue-property-decorator'
-import { Embedded } from 'ozma-api'
+import * as Embedded from '@ozma-io/ozma-embedded'
 
 import { namespace } from 'vuex-class'
 import { Link, HrefTargetType, attrToQueryLink, linkHandler } from '../links'

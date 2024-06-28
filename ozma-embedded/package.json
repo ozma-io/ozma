@@ -1,0 +1,42 @@
+{
+  "name": "@ozma-io/ozma-embedded",
+  "version": "0.0.1",
+  "description": "ozma.io embedded API client",
+  "keywords": [
+    "ozma-io",
+    "api",
+    "embedded",
+    "client"
+  ],
+  "author": "ozma-io (https://ozma.io/)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/ozma-io/ozma",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozma-io/ozma.git"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc && rollup -c",
+    "lint": "eslint --ext .ts src/"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "types": {
+    ".": "./dist/index.d.ts"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "rollup": "^4.21.2",
+    "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "@ozma-io/ozmadb-js": "^0.0.4"
+  }
+}

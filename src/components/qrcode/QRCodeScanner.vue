@@ -55,7 +55,7 @@
 import { Component, Prop } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
 import { namespace } from 'vuex-class'
-import type { IEntity, IEntityRef } from 'ozma-api'
+import type { IEntity, IEntityRef } from '@ozma-io/ozmadb-js/client'
 
 import type { Link } from '@/links'
 import { linkHandler } from '@/links'

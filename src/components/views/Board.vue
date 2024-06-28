@@ -60,7 +60,7 @@ import * as R from 'ramda'
 import { Component } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
 import { namespace } from 'vuex-class'
-import { RowId } from 'ozma-api'
+import { RowId } from '@ozma-io/ozmadb-js/client'
 
 import { mapMaybe, NeverError, tryDicts } from '@/utils'
 import {
@@ -404,7 +404,7 @@ export default class UserViewBoard extends mixins<
     const toGroupText = (card: ICard<IRowCard>) => {
       return String(serializeValue(type, card.card.group))
     }
-    return R.groupBy(toGroupText, cards)
+    return R.groupBy(toGroupText, cards) as Record<string, ICard<IRowCard>[]>
   }
 
   get columns(): IColumn<IRowCard, IGroupColumn>[] | null {

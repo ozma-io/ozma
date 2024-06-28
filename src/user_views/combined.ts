@@ -19,7 +19,7 @@ import {
   IArgument,
   AttributeName,
   IBoundMapping,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 import {
   AddedRowId,
   IAddedEntry,

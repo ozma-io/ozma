@@ -1,12 +1,12 @@
 import FunDBAPI, {
   IViewInfoResult,
   IViewExprResult,
-  FunDBError,
+  OzmaDBError,
   IInfoRequestOpts,
   IEntriesRequestOpts,
   ClientHttpError,
   UserViewError as UVError,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 
 import { Store } from 'vuex'
 
@@ -15,7 +15,7 @@ import { IUserViewArguments, ICombinedUserViewDataParams } from './combined'
 
 export type ClientUserViewError = UVError | ClientHttpError
 
-export class UserViewError extends FunDBError {
+export class UserViewError extends OzmaDBError {
   body: ClientUserViewError
   args: IUserViewArguments
 
@@ -131,7 +131,7 @@ export const fetchUserViewData = async (
       throw new Error('Invalid source type')
     }
   } catch (e) {
-    if (!(e instanceof FunDBError)) {
+    if (!(e instanceof OzmaDBError)) {
       throw e
     }
 

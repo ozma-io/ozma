@@ -54,7 +54,7 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import { namespace, Action } from 'vuex-class'
-import { IViewExprResult } from 'ozma-api'
+import { IViewExprResult } from '@ozma-io/ozmadb-js/client'
 import moment from 'moment'
 
 // TODO: import all languages from instance settings

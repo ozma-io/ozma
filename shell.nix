@@ -1,5 +1,5 @@
 {pkgs ? import <nixpkgs> {}}: let
-  nodejs = pkgs.nodejs_22;
+  nodejs = pkgs.nodejs_18;
 
   env = pkgs.buildFHSUserEnv {
     name = "ozma";

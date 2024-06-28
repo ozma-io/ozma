@@ -9,8 +9,8 @@ $border-color: var(--MainBorderColor);
 $input-border-color: var(--cell-borderColor, $border-color);
 
 @import 'reset.css';
-@import '../../node_modules/bootstrap/scss/bootstrap';
-@import '../../node_modules/vue-popperjs/dist/vue-popper.css';
+@import '~bootstrap/scss/bootstrap';
+@import '~vue-popperjs/dist/vue-popper.css';
 
 html {
   overflow-x: hidden;

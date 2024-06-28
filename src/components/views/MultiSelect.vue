@@ -35,7 +35,7 @@
 <script lang="ts">
 import { Component, Prop } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
-import { RowId } from 'ozma-api'
+import { RowId } from '@ozma-io/ozmadb-js/client'
 
 import { tryDicts, mapMaybe } from '@/utils'
 import { UserView } from '@/components'

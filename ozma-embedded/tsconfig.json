@@ -4,23 +4,14 @@
     "target": "es2022",
     "module": "es2022",
     "declaration": true,
+    "rootDir": "./src",
     "moduleResolution": "bundler",
     "outDir": "dist",
     "baseUrl": "./src",
-    "paths": {
-        "@/*": ["*"]
-    },
     "strict": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": true
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.tsx"
-  ]
+  }
 }

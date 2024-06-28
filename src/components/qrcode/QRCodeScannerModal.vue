@@ -28,7 +28,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
-import type { IEntityRef } from 'ozma-api'
+import type { IEntityRef } from '@ozma-io/ozmadb-js/client'
 
 import type { Link } from '@/links'
 import { IQRCode } from '@/components/qrcode/QRCode.vue'

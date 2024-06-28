@@ -129,7 +129,7 @@ import {
   IQueryChunk,
   IFieldRef,
   IExplainedQuery,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 
 import type { ICallApi } from '@/state/auth'
 

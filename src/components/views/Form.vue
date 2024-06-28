@@ -162,7 +162,7 @@
 <script lang="ts">
 import { Component, Watch } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
-import { IResultColumnInfo, ValueType } from 'ozma-api'
+import { IResultColumnInfo, ValueType } from '@ozma-io/ozmadb-js/client'
 import { namespace } from 'vuex-class'
 import InfiniteLoading, { StateChanger } from 'vue-infinite-loading'
 

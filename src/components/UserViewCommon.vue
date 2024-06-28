@@ -93,13 +93,13 @@
 import { Component, Watch } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
 import {
-  FunDBError,
+  OzmaDBError,
   IEntity,
   IEntityRef,
   IEntriesRequestOpts,
   IInsertEntityOp,
   ITransaction,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 import { Action, namespace } from 'vuex-class'
 
 import { AutoSaveLock } from '@/state/staging_changes'
@@ -454,7 +454,7 @@ export default class UserViewCommon extends mixins<
               break
             } catch (e) {
               if (
-                e instanceof FunDBError &&
+                e instanceof OzmaDBError &&
                 (e.name === 'concurrent_update' ||
                   e.name === 'network_failure') &&
                 currentTry < maxTries

@@ -30,7 +30,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { namespace } from 'vuex-class'
-import { IEntityRef, IEntity } from 'ozma-api'
+import { IEntityRef, IEntity } from '@ozma-io/ozmadb-js/client'
 
 import { inheritedFromEntity } from '@/values'
 import type { IQuery } from '@/state/query'

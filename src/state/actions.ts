@@ -1,5 +1,5 @@
 import { Store } from 'vuex'
-import FunDBAPI, { IActionRef, IActionResult } from 'ozma-api'
+import FunDBAPI, { IActionRef, IActionResult } from '@ozma-io/ozmadb-js/client'
 
 import { findErrorUserData } from '@/api'
 import { app, eventBus } from '@/main'

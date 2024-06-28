@@ -1,6 +1,6 @@
 import { Module } from 'vuex'
 import FunDBAPI, {
-  FunDBError,
+  OzmaDBError,
   IEntityRef,
   IPermissionsInfo,
   ITransaction,
@@ -8,7 +8,7 @@ import FunDBAPI, {
   IViewExprResult,
   RowKey,
   goodName,
-} from 'ozma-api'
+} from '@ozma-io/ozmadb-js/client'
 
 import { IRef, convertString, waitTimeout } from '@/utils'
 import { funappSchema } from '@/api'
@@ -218,7 +218,7 @@ const settingsModule: Module<ISettingsState, {}> = {
       } catch (e) {
         // If we can't update entry because it doesn't exist, we insert it.
         if (
-          !(e instanceof FunDBError) ||
+          !(e instanceof OzmaDBError) ||
           e.body.error !== 'transaction' ||
           e.body.inner.error !== 'entryNotFound'
         )

@@ -220,7 +220,7 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
 import { namespace } from 'vuex-class'
-import { AttributesMap, IEntityRef, IEntriesRequestOpts } from 'ozma-api'
+import { AttributesMap, IEntityRef, IEntriesRequestOpts } from '@ozma-io/ozmadb-js/client'
 
 import {
   RecordSet,
