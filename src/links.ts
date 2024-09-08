@@ -495,7 +495,6 @@ export const linkHandler = (
             variant: 'danger',
             solid: true,
           })
-          return
         }
       } catch (e) {
         app.$bvToast.toast(String(e), {

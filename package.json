@@ -104,6 +104,7 @@
     "stylelint-scss": "^6.4.1",
     "typescript": "^5.5.3",
     "vue-debounce-decorator": "^1.0.1",
+    "vue-eslint-parser": "^9.4.3",
     "vue-template-babel-compiler": "^2.0.0",
     "vue-template-compiler": "^2.7.10",
     "webpack": "^5.94.0",

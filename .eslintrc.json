@@ -105,7 +105,11 @@
     // Also buggy.
     "@typescript-eslint/no-unsafe-argument": "off",
     // Buggy too.
-    "@typescript-eslint/no-unnecessary-type-assertion": "off"
+    "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    // Errors out on `$t` usage.
+    "@typescript-eslint/no-base-to-string": "off",
+    // Buggy.
+    "@typescript-eslint/no-redundant-type-constituents": "off"
   },
   "overrides": [
     {
