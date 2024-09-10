@@ -30,9 +30,8 @@ export default class FunOverlay extends Vue {
     const left = overlayElement?.scrollLeft ?? 0
     const top = overlayElement?.scrollTop ?? 0
     // `z-index: 30` to work well with popups from ArgumentEditor.
-    ;(
-      overlayElement.querySelector('.b-overlay') as HTMLElement
-    ).style.cssText = `width: 100%; height: 100%; left: ${left}px; top: ${top}px; z-index: 30;`
+    ;(overlayElement.querySelector('.b-overlay') as HTMLElement).style.cssText =
+      `width: 100%; height: 100%; left: ${left}px; top: ${top}px; z-index: 30;`
   }
 
   private handleArgumentOverlayShown() {

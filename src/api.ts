@@ -1,4 +1,8 @@
-import { OzmaDBError, IEntityRef, ClientApiError } from '@ozma-io/ozmadb-js/client'
+import {
+  OzmaDBError,
+  IEntityRef,
+  ClientApiError,
+} from '@ozma-io/ozmadb-js/client'
 
 const hostnameParts = location.hostname.split('.')
 export const instanceName =

@@ -2373,7 +2373,10 @@ export default class UserViewTable extends mixins<
       (cell) => this.getCellVisualPosition(cell) as IVisualPosition,
     )
     const positions2D = Object.values(
-      R.groupBy((cell) => String(cell.row), positions) as Record<string, IVisualPosition[]>,
+      R.groupBy((cell) => String(cell.row), positions) as Record<
+        string,
+        IVisualPosition[]
+      >,
     ).map((row) => row.sort((c1, c2) => c1.column - c2.column))
     const isRectangular = positions2D.every(
       (row) => row.length === positions2D[0].length,
@@ -3934,7 +3937,8 @@ tr {
 
 .table-wrapper:not(.multiple-cells-selected) ::v-deep {
   .table-td.selected {
-    box-shadow: inset 2px 2px 0 var(--FocusBorderColor),
+    box-shadow:
+      inset 2px 2px 0 var(--FocusBorderColor),
       inset -2px -2px 0 var(--FocusBorderColor);
   }
 

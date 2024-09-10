@@ -187,7 +187,7 @@ export default class App extends Vue {
   }
 
   get authErrors() {
-    return this.silentErrors ? [] : this.rawErrors['auth'] ?? []
+    return this.silentErrors ? [] : (this.rawErrors['auth'] ?? [])
   }
 
   private showDemoModal() {
@@ -537,10 +537,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         'rgba(238,238,238,0.3)',
       ),
     }
-    return Object.entries(values).reduce((currSettings, [name, value]) => {
-      currSettings[`--${name}`] = value
-      return currSettings
-    }, {} as Record<string, unknown>)
+    return Object.entries(values).reduce(
+      (currSettings, [name, value]) => {
+        currSettings[`--${name}`] = value
+        return currSettings
+      },
+      {} as Record<string, unknown>,
+    )
   }
 }
 </script>

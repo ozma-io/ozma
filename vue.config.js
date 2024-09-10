@@ -87,7 +87,7 @@ module.exports = {
     loaderOptions: {
       sass: {
         additionalData: `@use "sass:math"; @import "~@/styles/mixins.scss";`,
-        sassOptions: {quietDeps: true}
+        sassOptions: { quietDeps: true },
       },
     },
   },

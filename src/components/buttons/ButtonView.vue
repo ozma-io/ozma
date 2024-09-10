@@ -26,8 +26,8 @@
       button.tooltip !== undefined
         ? $ustOrEmpty(button.tooltip)
         : button.caption
-        ? $ustOrEmpty(button.caption)
-        : undefined
+          ? $ustOrEmpty(button.caption)
+          : undefined
     "
     :disabled="button.disabled"
     :tabindex="tabindex"
@@ -62,8 +62,8 @@ export default class ButtonView extends Vue {
     return !this.button.caption
       ? 'button-only-icon'
       : this.button.icon
-      ? 'button-icon-caption'
-      : 'button-only-caption'
+        ? 'button-icon-caption'
+        : 'button-only-caption'
   }
 
   private get variantClassName(): string | null {

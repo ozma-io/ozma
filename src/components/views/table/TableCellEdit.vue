@@ -122,7 +122,8 @@ export default class TableCellEdit extends Vue {
   position: fixed;
   top: 0;
   z-index: 9999;
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175),
+  box-shadow:
+    0 1rem 3rem rgba(0, 0, 0, 0.175),
     0 0 0 0.2rem var(--FocusBorderColor); /* First shadow is as `shadow-lg` */
   background: var(--cell-backgroundColor);
   padding: 1rem 0.5rem 0 0.5rem;

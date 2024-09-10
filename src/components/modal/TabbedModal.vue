@@ -216,10 +216,10 @@ export default class TabbedModal extends Vue {
         ? `512px`
         : '100%'
       : this.$isMobile
-      ? '100%'
-      : this.fullscreen
-      ? '100%'
-      : this.width
+        ? '100%'
+        : this.fullscreen
+          ? '100%'
+          : this.width
   }
 
   private get modalHeight(): string {
@@ -320,7 +320,9 @@ export default class TabbedModal extends Vue {
 ::v-deep {
   .tabbed-modal-transition-enter-active,
   .tabbed-modal-transition-leave-active {
-    transition: opacity 0.4s, transform 0.4s;
+    transition:
+      opacity 0.4s,
+      transform 0.4s;
   }
 
   .tabbed-modal-transition-enter,

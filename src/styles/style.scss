@@ -62,7 +62,9 @@ body {
       .col-#{$size}-#{$i} {
         float: left;
         width: #{math.percentage(calc(math.round($i * 8.33) / 100))} !important;
-        max-width: #{math.percentage(calc(math.round($i * 8.33) / 100))} !important;
+        max-width: #{math.percentage(
+            calc(math.round($i * 8.33) / 100)
+          )} !important;
       }
     }
   }
@@ -93,7 +95,9 @@ button:not(.btn) {
 @for $i from 1 through 10 {
   .fade-#{$i}-enter-active,
   .fade-#{$i}-leave-active {
-    transition: opacity #{calc($i / 10)}s, $color-transition;
+    transition:
+      opacity #{calc($i / 10)}s,
+      $color-transition;
   }
 
   .fade-#{$i}-enter,
@@ -254,7 +258,9 @@ $input-focus-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
 }
 
 .input-group.focus-entire:focus-within {
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
   box-shadow: $input-focus-shadow !important;
   border-color: $input-focus-border-color !important;
   border-radius: 0.5rem;

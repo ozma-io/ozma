@@ -97,7 +97,12 @@ import Popper from 'vue-popperjs'
 import { Debounce } from 'vue-debounce-decorator'
 import { namespace } from 'vuex-class'
 
-import { ArgumentName, AttributesMap, FieldType, ValueType } from '@ozma-io/ozmadb-js/client'
+import {
+  ArgumentName,
+  AttributesMap,
+  FieldType,
+  ValueType,
+} from '@ozma-io/ozmadb-js/client'
 import { deserializeValueFunction, fieldToValueType } from '@/values'
 import FormControl from '@/components/FormControl.vue'
 import type {

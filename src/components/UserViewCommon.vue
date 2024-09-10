@@ -943,7 +943,10 @@ export default class UserViewCommon extends mixins<
 
 .fade-transform-enter-active,
 .fade-transform-leave-active {
-  transition: opacity 0.4s, transform 0.4s, $color-transition;
+  transition:
+    opacity 0.4s,
+    transform 0.4s,
+    $color-transition;
 }
 
 .fade-transform-enter,

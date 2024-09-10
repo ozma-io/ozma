@@ -429,13 +429,10 @@ export interface ICombinedUserView<ValueT, RowT, ViewT>
   ): A[]
 }
 
-export type ICombinedUserViewT<T> = T extends IUserViewHandler<
-  infer ValueT,
-  infer RowT,
-  infer ViewT
->
-  ? ICombinedUserView<ValueT, RowT, ViewT>
-  : never
+export type ICombinedUserViewT<T> =
+  T extends IUserViewHandler<infer ValueT, infer RowT, infer ViewT>
+    ? ICombinedUserView<ValueT, RowT, ViewT>
+    : never
 export type ICombinedUserViewAny = ICombinedUserView<any, any, any>
 
 export interface IUserViewHandler<ValueT, RowT, ViewT> {
@@ -1857,10 +1854,7 @@ export class CombinedUserView<
   }
 }
 
-export type CombinedUserViewT<T> = T extends IUserViewHandler<
-  infer ValueT,
-  infer RowT,
-  infer ViewT
->
-  ? CombinedUserView<T, ValueT, RowT, ViewT>
-  : never
+export type CombinedUserViewT<T> =
+  T extends IUserViewHandler<infer ValueT, infer RowT, infer ViewT>
+    ? CombinedUserView<T, ValueT, RowT, ViewT>
+    : never

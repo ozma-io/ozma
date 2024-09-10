@@ -71,8 +71,8 @@ export class FetchError extends Error {
       typeof body === 'object' && 'message' in body
         ? body.message
         : rawBody !== ''
-        ? rawBody
-        : response.statusText
+          ? rawBody
+          : response.statusText
     super(String(message))
     this.body = body
     this.response = response
@@ -170,8 +170,8 @@ export const convertString = <T>(
     return lowercasedValue === 'true'
       ? true
       : lowercasedValue === 'false'
-      ? false
-      : (defValue as any)
+        ? false
+        : (defValue as any)
   } else {
     const conv = constructor(value)
     if (conv instanceof constructor) {

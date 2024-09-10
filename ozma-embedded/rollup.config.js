@@ -1,12 +1,10 @@
-import terser from "@rollup/plugin-terser";
+import terser from '@rollup/plugin-terser'
 
 export default {
-  input: "dist/global.js",
+  input: 'dist/global.js',
   output: {
-    file: "bundle/embedded.min.js",
-    format: "iife",
+    file: 'bundle/embedded.min.js',
+    format: 'iife',
   },
-  plugins: [
-    terser({ mangle: false }),
-  ],
-};
+  plugins: [terser({ mangle: false })],
+}

@@ -220,7 +220,11 @@
 <script lang="ts">
 import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
 import { namespace } from 'vuex-class'
-import { AttributesMap, IEntityRef, IEntriesRequestOpts } from '@ozma-io/ozmadb-js/client'
+import {
+  AttributesMap,
+  IEntityRef,
+  IEntriesRequestOpts,
+} from '@ozma-io/ozmadb-js/client'
 
 import {
   RecordSet,
@@ -859,9 +863,9 @@ export default class UserView extends Vue {
             limit = loadAllChunksLimitless
               ? undefined
               : fetchAll
-              ? fetchAllLimit
-              : options?.limit ??
-                this.state.uv.rowLoadState.fetchedRowCount + delta
+                ? fetchAllLimit
+                : (options?.limit ??
+                  this.state.uv.rowLoadState.fetchedRowCount + delta)
           }
         } else {
           limit = maxPerFetch
@@ -1269,7 +1273,9 @@ export default class UserView extends Vue {
 
 .fade-move-enter-active,
 .fade-move-leave-active {
-  transition: opacity 0.4s, transform 0.4s;
+  transition:
+    opacity 0.4s,
+    transform 0.4s;
 }
 
 .fade-move-enter,

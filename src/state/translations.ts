@@ -1,5 +1,8 @@
 import { Module } from 'vuex'
-import FunDBAPI, { IViewExprResult, SchemaName } from '@ozma-io/ozmadb-js/client'
+import FunDBAPI, {
+  IViewExprResult,
+  SchemaName,
+} from '@ozma-io/ozmadb-js/client'
 import { z } from 'zod'
 import Vue from 'vue'
 

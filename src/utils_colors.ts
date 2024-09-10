@@ -1,6 +1,10 @@
 import { rgba, toRgba, parseToRgba, readableColor, mix } from 'color2k'
 import { z } from 'zod'
-import FunDBAPI, { IViewExprResult, SchemaName, RowId } from '@ozma-io/ozmadb-js/client'
+import FunDBAPI, {
+  IViewExprResult,
+  SchemaName,
+  RowId,
+} from '@ozma-io/ozmadb-js/client'
 import { store } from '@/main'
 import { mapMaybe, objectMap } from '@/utils'
 
@@ -157,7 +161,7 @@ export const outlinedInterfaceButtonVariant: ColorVariantAttribute = {
 } as const
 
 export const bootstrapVariantAttribute = (name: BootstrapVariantName) =>
-  ({ type: 'existing', className: name } as const)
+  ({ type: 'existing', className: name }) as const
 
 const loadColorThemeHeaders = async (): Promise<
   Record<SchemaName, Record<ThemeName, { id: RowId; theme: ITheme }>>
@@ -316,11 +320,11 @@ export const colorVariantFromAttribute = (
   typeof attribute === 'string'
     ? { type: 'existing', className: `${attribute}` }
     : typeof attribute === 'object' && attribute !== null
-    ? {
-        type: 'inline',
-        variables: colorVariantToCssVariables(colorVariantFromRaw(attribute)),
-      }
-    : defaultVariant
+      ? {
+          type: 'inline',
+          variables: colorVariantToCssVariables(colorVariantFromRaw(attribute)),
+        }
+      : defaultVariant
 
 export const getColorVariantAttributeClassName = (
   attribute: ColorVariantAttribute,

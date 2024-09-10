@@ -335,7 +335,9 @@ export default class InputSlot extends Vue {
     .required-indicator {
       position: absolute;
       opacity: 0.05;
-      transition: background-color 0.1s, opacity 0.1s;
+      transition:
+        background-color 0.1s,
+        opacity 0.1s;
       border-radius: 50%;
       background-color: var(--cell-foregroundColor);
       width: 0.5 * $indicator-size;

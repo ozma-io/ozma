@@ -340,7 +340,8 @@ export default class AppHeader extends Vue {
 .popper {
   display: flex;
   flex-direction: column;
-  box-shadow: 0px 5px 12px 0px rgba(0, 0, 0, 0.08),
+  box-shadow:
+    0px 5px 12px 0px rgba(0, 0, 0, 0.08),
     0px 15px 30px -7px rgba(33, 35, 38, 0.12);
   border-radius: 0.5rem;
   padding: 1.25rem 0 0.75rem 0;

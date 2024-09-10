@@ -34,7 +34,12 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import { namespace } from 'vuex-class'
-import type { IEntityRef, IFieldRef, RowId, SchemaName } from '@ozma-io/ozmadb-js/client'
+import type {
+  IEntityRef,
+  IFieldRef,
+  RowId,
+  SchemaName,
+} from '@ozma-io/ozmadb-js/client'
 
 import type {
   IReferenceSelectAction,

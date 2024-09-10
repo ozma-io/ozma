@@ -127,7 +127,12 @@
 import { Component, Prop, Watch } from 'vue-property-decorator'
 import { mixins } from 'vue-class-component'
 
-import type { IEntityRef, RowId, SchemaName, ValueType } from '@ozma-io/ozmadb-js/client'
+import type {
+  IEntityRef,
+  RowId,
+  SchemaName,
+  ValueType,
+} from '@ozma-io/ozmadb-js/client'
 import { Debounce } from 'vue-debounce-decorator'
 import {
   ISelectOption,
@@ -521,7 +526,8 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     transition: box-shadow 0.1s;
   }
   &:hover {
-    box-shadow: 0 0 0rem 0.25rem rgba(0, 0, 0, 0.2),
+    box-shadow:
+      0 0 0rem 0.25rem rgba(0, 0, 0, 0.2),
       inset 0 1rem rgba(0, 0, 0, 0.2);
   }
 }

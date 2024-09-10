@@ -3,6 +3,7 @@
     "We use stylelint directly, not `vue-cli-service lint:style`, because the latter doesn't return proper error codes."
   ],
   "name": "@ozma-io/ozma",
+  "type": "module",
   "version": "0.1.0",
   "description": "A business CRM/ERP database based on OzmaDB.",
   "license": "Apache-2.0",

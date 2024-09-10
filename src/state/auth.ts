@@ -272,8 +272,8 @@ const renewAuth = async (context: ActionContext<IAuthState, {}>) => {
 
   if (state.pending !== null) {
     // Something already renews; let's hope it helps.
-    await state.pending;
-    return;
+    await state.pending
+    return
   }
 
   if (!state.current?.refreshToken) {

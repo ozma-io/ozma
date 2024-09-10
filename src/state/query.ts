@@ -1,6 +1,11 @@
 import { Module } from 'vuex'
 import { Location, Route } from 'vue-router'
-import { UserViewSource, SchemaName, IUserViewRef, RowId } from '@ozma-io/ozmadb-js/client'
+import {
+  UserViewSource,
+  SchemaName,
+  IUserViewRef,
+  RowId,
+} from '@ozma-io/ozmadb-js/client'
 
 import { deepSyncObject, mapMaybe, deepClone } from '@/utils'
 import { router } from '@/modules'

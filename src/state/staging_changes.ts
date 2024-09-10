@@ -1080,7 +1080,7 @@ const stagingModule: Module<IStagingState, {}> = {
         commit('finishSubmit')
         if (!(result instanceof Error)) {
           const opResults = R.zipWith(
-            (op, res) => ({ ...op, ...res } as CombinedTransactionResult),
+            (op, res) => ({ ...op, ...res }) as CombinedTransactionResult,
             ops,
             result.results,
           )

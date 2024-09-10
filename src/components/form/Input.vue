@@ -122,10 +122,10 @@ export default class Input extends Vue {
     return type === 'url'
       ? 'link'
       : type === 'tel'
-      ? 'call'
-      : type === 'email'
-      ? 'email'
-      : 'error'
+        ? 'call'
+        : type === 'email'
+          ? 'email'
+          : 'error'
     /* eslint-enable */
   }
 

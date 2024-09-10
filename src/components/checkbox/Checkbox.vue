@@ -4,8 +4,8 @@
       indeterminate
         ? 'indeterminate_check_box'
         : checked
-        ? 'check_box'
-        : 'check_box_outline_blank'
+          ? 'check_box'
+          : 'check_box_outline_blank'
     }}</i>
     <span v-if="label" class="label">{{ label }}</span>
   </div>

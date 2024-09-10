@@ -422,7 +422,8 @@ export default class TableCell extends Vue {
   user-select: none;
 
   &.cursor {
-    box-shadow: inset 2px 2px 0 var(--FocusBorderColor),
+    box-shadow:
+      inset 2px 2px 0 var(--FocusBorderColor),
       inset -2px -2px 0 var(--FocusBorderColor);
   }
   &.cursor,
