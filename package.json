@@ -13,10 +13,11 @@
     "build": "vue-cli-service build --no-module",
     "lint": "vue-cli-service lint",
     "lint:style": "stylelint src/",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prettier": "prettier --write ./"
   },
   "lint-staged": {
-    "src/**/*.{js,ts,vue,html,scss}": "prettier --write",
+    "src/**/*.{js,ts,vue,html,scss}": "prettier",
     "*.scss": "stylelint --fix",
     "src/**/*.{js,ts,vue}": "vue-cli-service lint"
   },
