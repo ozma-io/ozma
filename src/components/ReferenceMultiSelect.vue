@@ -517,7 +517,9 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
 .open-modal-button {
   @include material-button('option');
 
-  transition: box-shadow 0.1s;
+  & {
+    transition: box-shadow 0.1s;
+  }
   &:hover {
     box-shadow: 0 0 0rem 0.25rem rgba(0, 0, 0, 0.2),
       inset 0 1rem rgba(0, 0, 0, 0.2);

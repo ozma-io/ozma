@@ -9,7 +9,7 @@
         alejandra
         nodejs
         tern
-        yarn
+        yarn-berry
         "@vue/cli"
         vue-language-server
       ];

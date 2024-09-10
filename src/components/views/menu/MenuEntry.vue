@@ -221,19 +221,22 @@ export default class MenuEntry extends Vue {
 
 .menu-entry {
   @include material-button('menuEntry');
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  border-color: transparent;
-  border-radius: 0.25rem;
-  background: transparent;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
 
-  width: 100%;
-  max-width: 100%;
-  color: var(--menuEntry-foregroundColor);
-  text-decoration: none;
+  & {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    border-color: transparent;
+    border-radius: 0.25rem;
+    background: transparent;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+
+    width: 100%;
+    max-width: 100%;
+    color: var(--menuEntry-foregroundColor);
+    text-decoration: none;
+  }
 
   .icon {
     user-select: none;

@@ -15,14 +15,14 @@
 <template>
   <div
     class="loading-container h-100 p-3 d-flex flex-column justify-content-center align-items-center"
-    style="background-color: rgba(0, 0, 0, 0.05); cursor: wait"
+    style="background-color: rgb(0 0 0 / 5%); cursor: wait"
   >
     <div
       class="spinner-border"
       style="
         width: 3em;
         height: 3em;
-        border-color: rgba(0, 0, 0, 0.5);
+        border-color: rgb(0 0 0 / 50%);
         border-right-color: transparent;
       "
     />

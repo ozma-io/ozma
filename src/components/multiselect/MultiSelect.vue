@@ -963,12 +963,14 @@ div.select-container__options__actions {
 .one-of-many-value > .remove-value {
   @include material-button('reference');
 
-  margin: 0;
-  margin-right: -0.25rem;
-  margin-left: 0.25rem;
-  border: none;
-  background: none;
-  padding: 0;
+  & {
+    margin: 0;
+    margin-right: -0.25rem;
+    margin-left: 0.25rem;
+    border: none;
+    background: none;
+    padding: 0;
+  }
 
   &:not(:hover) {
     opacity: 0.5;

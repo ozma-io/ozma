@@ -15,8 +15,8 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "src/**/*.{js,ts,vue,html,css}": "prettier --write",
-    "*.css": "stylelint --fix",
+    "src/**/*.{js,ts,vue,html,scss}": "prettier --write",
+    "*.scss": "stylelint --fix",
     "src/**/*.{js,ts,vue}": "vue-cli-service lint"
   },
   "dependencies": {
@@ -95,13 +95,16 @@
     "lint-staged": ">=10",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "postcss": "^8.4.23",
+    "postcss-html": "^1.7.0",
     "prettier": "^3.3.3",
     "prettier-plugin-css-order": "^2.1.2",
     "sass": "^1.54.9",
     "sass-loader": "^14.2.1",
     "stylelint": "^16.7.0",
+    "stylelint-config-recommended-scss": "^14.1.0",
     "stylelint-config-standard": "^36.0.1",
-    "stylelint-scss": "^6.4.1",
+    "stylelint-config-standard-scss": "^13.1.0",
+    "stylelint-config-standard-vue": "^1.0.0",
     "typescript": "^5.5.3",
     "vue-debounce-decorator": "^1.0.1",
     "vue-eslint-parser": "^9.4.3",

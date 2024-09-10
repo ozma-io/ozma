@@ -153,7 +153,7 @@ export default class TimePicker extends Vue {
 }
 
 .wrapper::-webkit-scrollbar-track {
-  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: inset 0 0 6px rgb(0 0 0 / 10%);
   border-radius: 10px;
   background-color: var(--MainBorderColor);
 }
@@ -164,7 +164,7 @@ export default class TimePicker extends Vue {
 }
 
 .wrapper::-webkit-scrollbar-thumb {
-  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: inset 0 0 6px rgb(0 0 0 / 10%);
   border-radius: 10px;
   background-color: var(--MainTextColorLight);
   width: 10px;

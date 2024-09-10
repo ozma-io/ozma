@@ -136,8 +136,8 @@ export default class FormEntry extends Vue {
   width: max-content;
 }
 
-@media screen and (max-aspect-ratio: 13/9) {
-  @media screen and (max-device-width: 480px) {
+@media screen and (aspect-ratio <= 13/9) {
+  @media screen and (device-width <= 480px) {
     .delete-block {
       position: sticky;
       left: 0;
@@ -147,7 +147,7 @@ export default class FormEntry extends Vue {
 }
 
 @media screen and (orientation: portrait) {
-  @media screen and (max-device-width: 480px) {
+  @media screen and (device-width <= 480px) {
     .form-entry {
       width: 100%;
     }
