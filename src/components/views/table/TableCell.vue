@@ -343,12 +343,14 @@ export default class TableCell extends Vue {
 
   .option-link {
     @include material-button('reference');
-    display: flex;
 
-    flex-shrink: 0;
-    opacity: 0.5;
-    border: none;
-    overflow: visible;
+    & {
+      display: flex;
+      flex-shrink: 0;
+      opacity: 0.5;
+      border: none;
+      overflow: visible;
+    }
   }
 
   .option-link:hover {
@@ -496,14 +498,16 @@ export default class TableCell extends Vue {
 .reference-open-modal {
   @include material-button('option');
 
-  align-self: center;
-  margin: 0;
-  margin-right: 0.25rem;
-  margin-left: -0.25rem;
-  border: none;
-  background: none;
-  padding: 0;
-  pointer-events: auto !important;
+  & {
+    align-self: center;
+    margin: 0;
+    margin-right: 0.25rem;
+    margin-left: -0.25rem;
+    border: none;
+    background: none;
+    padding: 0;
+    pointer-events: auto !important;
+  }
 }
 
 span.reference-text {
