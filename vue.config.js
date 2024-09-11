@@ -35,7 +35,7 @@ export const pluginOptions = {
     fallbackLocale: 'en',
     localeDir: 'locales',
     enableInSFC: true,
-  }
+  },
 }
 export const configureWebpack = {
   plugins: [
