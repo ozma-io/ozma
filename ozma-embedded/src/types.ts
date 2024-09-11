@@ -1,6 +1,4 @@
-import {
-  IUserViewRef,
-} from '@ozma-io/ozmadb-js/types'
+import { IUserViewRef } from '@ozma-io/ozmadb-js/types'
 
 export const apiVersion = 1
 
