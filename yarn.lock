@@ -1780,10 +1780,10 @@ __metadata:
 
 "@ozma-io/ozma-embedded@file:./ozma-embedded::locator=%40ozma-io%2Fozma%40workspace%3A.":
   version: 0.0.1
-  resolution: "@ozma-io/ozma-embedded@file:./ozma-embedded#./ozma-embedded::hash=be72b0&locator=%40ozma-io%2Fozma%40workspace%3A."
+  resolution: "@ozma-io/ozma-embedded@file:./ozma-embedded#./ozma-embedded::hash=08d769&locator=%40ozma-io%2Fozma%40workspace%3A."
   dependencies:
     "@ozma-io/ozmadb-js": "npm:^0.0.4"
-  checksum: 10c0/7793d1f9e07ac2339f1eda8395c1d7503fd29be38b950ee8c9e91b1cf300265428f39271d63bfe84ea3a72ff1e24ae170478518d850a2190bcacd06f6f586754
+  checksum: 10c0/ef51536f3fa9db58c8fe45c1145c92eb8ab306ff64d7a5886d2bd7645e8d3dc1703a5fadd4490161aab17723cc8e31564344ce52d82f6e00f53b8c9d1a21e50a
   languageName: node
   linkType: hard
 
