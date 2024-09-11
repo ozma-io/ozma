@@ -22,7 +22,8 @@ jobs:
           cache: yarn
       - name: Install Dependencies
         run: |
-          yarn
+          yarn set version stable
+          yarn install --immutable
       - name: Check Formatting
         run: |
           yarn prettier -c
