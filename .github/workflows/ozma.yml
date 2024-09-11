@@ -23,9 +23,14 @@ jobs:
       - name: Install Dependencies
         run: |
           yarn set version stable
-          # Update the submodule checksum.
-          yarn upgrade ozma-embedded
+          # Install the submodule
+          cd ozma-embedded
+          yarn
+          yarn build
+          yarn link
+          cd ..
           yarn install --immutable
+          yarn link @ozma-io/ozma-embedded
       - name: Check Formatting
         run: |
           yarn prettier -c

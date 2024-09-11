@@ -66,7 +66,7 @@
   "devDependencies": {
     "@babel/core": "^7.19.1",
     "@intlify/vue-i18n-loader": "^1.1.0",
-    "@ozma-io/ozma-embedded": "file:./ozma-embedded",
+    "@ozma-io/ozma-embedded": "^0.0.4",
     "@types/bootstrap": "^4",
     "@types/papaparse": "^5.3.5",
     "@types/psl": "^1.1.3",

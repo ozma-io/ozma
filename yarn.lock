@@ -1778,12 +1778,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ozma-io/ozma-embedded@file:./ozma-embedded::locator=%40ozma-io%2Fozma%40workspace%3A.":
-  version: 0.0.1
-  resolution: "@ozma-io/ozma-embedded@file:./ozma-embedded#./ozma-embedded::hash=08d769&locator=%40ozma-io%2Fozma%40workspace%3A."
+"@ozma-io/ozma-embedded@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "@ozma-io/ozma-embedded@npm:0.0.4"
   dependencies:
     "@ozma-io/ozmadb-js": "npm:^0.0.4"
-  checksum: 10c0/ef51536f3fa9db58c8fe45c1145c92eb8ab306ff64d7a5886d2bd7645e8d3dc1703a5fadd4490161aab17723cc8e31564344ce52d82f6e00f53b8c9d1a21e50a
+  checksum: 10c0/3f2bf0edfabb2f58fdf71ef2d09082304114b56d6c0bdf11babd2d5685236bc270a7b407cb724dd0951c2710ee6eee2932ad5e62f331b96858d2870a19c9ef88
   languageName: node
   linkType: hard
 
@@ -1794,7 +1794,7 @@ __metadata:
     "@babel/core": "npm:^7.19.1"
     "@chenfengyuan/vue-qrcode": "npm:^1.0.2"
     "@intlify/vue-i18n-loader": "npm:^1.1.0"
-    "@ozma-io/ozma-embedded": "file:./ozma-embedded"
+    "@ozma-io/ozma-embedded": "npm:^0.0.4"
     "@ozma-io/ozmadb-js": "npm:^0.0.4"
     "@toast-ui/editor": "npm:^3.2.2"
     "@toast-ui/vue-editor": "npm:^3.2.3"
