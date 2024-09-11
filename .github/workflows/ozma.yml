@@ -20,17 +20,17 @@ jobs:
         with:
           node-version: 22.x
           cache: yarn
+      - name: Build ozma-embedded
+        working-directory: ./ozma-embedded
+        run: |
+          yarn set version stable
+          yarn install --immutable
+          yarn build
       - name: Install Dependencies
         run: |
           yarn set version stable
-          # Install the submodule
-          cd ozma-embedded
-          yarn
-          yarn build
-          yarn link
-          cd ..
           yarn install --immutable
-          yarn link @ozma-io/ozma-embedded
+          yarn link ./ozma-embedded
       - name: Check Formatting
         run: |
           yarn prettier -c
