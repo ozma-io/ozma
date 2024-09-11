@@ -1,0 +1,98 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "extends": [
+    "airbnb-base",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "prettier"
+  ],
+  "parserOptions": {
+    "parser": "@typescript-eslint/parser",
+    "project": "tsconfig.json",
+    "sourceType": "module"
+  },
+  "ignorePatterns": ["dist/", "*.config.js", "node_modules/"],
+  "plugins": ["@typescript-eslint", "unused-imports"],
+  "rules": {
+    "indent": "off",
+    "semi": "off",
+    "max-len": "off",
+    "no-restricted-globals": "off",
+    "default-case": "off",
+    "no-undef": "off",
+    "no-restricted-syntax": "off",
+    "no-nested-ternary": "off",
+    "no-use-before-define": "off",
+    "prefer-destructuring": "off",
+    "max-classes-per-file": "off",
+    "class-methods-use-this": "off",
+    "dot-notation": "off",
+    "no-else-return": "off",
+    "import/no-named-default": "off",
+    "prefer-template": "off",
+    "no-underscore-dangle": "off",
+    "no-confusing-arrow": "off",
+    "new-cap": "off",
+    "no-plusplus": "off",
+    "implicit-arrow-linebreak": "off",
+    "lines-between-class-members": "off",
+    "quote-props": "off",
+    "arrow-body-style": "off",
+    "no-constant-condition": "off",
+    "no-param-reassign": "off",
+    "nonblock-statement-body-position": "off",
+    "operator-linebreak": "off",
+    "spaced-comment": "warn",
+    "no-control-regex": "off",
+    "eqeqeq": "error",
+    "global-require": "off",
+    "import/first": "off",
+    "import/no-unresolved": "off",
+    "import/no-extraneous-dependencies": "off",
+    "import/prefer-default-export": "off",
+    "import/extensions": "off",
+    "unused-imports/no-unused-imports-ts": "warn",
+    "no-console": [
+      "warn",
+      {
+        "allow": ["warn", "error", "trace", "assert"]
+      }
+    ],
+    "no-void": "off",
+    "no-bitwise": "off",
+    "no-continue": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-unnecessary-condition": "off",
+    // Used for `require`-ing resources.
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    // Buggy.
+    "@typescript-eslint/restrict-plus-operands": "off",
+    // Also buggy.
+    "@typescript-eslint/no-unsafe-argument": "off",
+    // Buggy too.
+    "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    // Errors out on `$t` usage.
+    "@typescript-eslint/no-base-to-string": "off",
+    // Buggy.
+    "@typescript-eslint/no-redundant-type-constituents": "off"
+  }
+}
