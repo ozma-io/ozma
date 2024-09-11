@@ -3,3 +3,4 @@ dist
 *.yml
 .yarn
 .pnp.*
+ozma-embedded
