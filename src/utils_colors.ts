@@ -166,7 +166,7 @@ export const bootstrapVariantAttribute = (name: BootstrapVariantName) =>
 const loadColorThemeHeaders = async (): Promise<
   Record<SchemaName, Record<ThemeName, { id: RowId; theme: ITheme }>>
 > => {
-  const uvRef = { schema: 'funapp', name: 'color_themes' }
+  const uvRef = { schema: 'ozma', name: 'color_themes' }
   const res: IViewExprResult = await store.dispatch(
     'callApi',
     {
@@ -216,7 +216,7 @@ const loadColorThemeHeaders = async (): Promise<
 const loadColorVariants = async (): Promise<
   Record<RowId, Record<string, ColorVariant>>
 > => {
-  const ref = { schema: 'funapp', name: 'color_variants' }
+  const ref = { schema: 'ozma', name: 'color_variants' }
   const res: IViewExprResult = await store.dispatch(
     'callApi',
     {

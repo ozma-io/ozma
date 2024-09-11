@@ -7,7 +7,7 @@ import { z } from 'zod'
 import Vue from 'vue'
 
 import { IRef, waitTimeout } from '@/utils'
-import { funappSchema } from '@/api'
+import { ozmaSchema } from '@/api'
 import { CancelledError } from '@/modules'
 
 const userString = z.union([z.string(), z.record(z.string(), z.string())])
@@ -77,7 +77,7 @@ const translationsModule: Module<ITranslationsState, {}> = {
             {
               func: (api: FunDBAPI) =>
                 api.getNamedUserView(
-                  { schema: funappSchema, name: 'translations_by_language' },
+                  { schema: ozmaSchema, name: 'translations_by_language' },
                   { language },
                 ),
             },

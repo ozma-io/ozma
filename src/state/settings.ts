@@ -11,7 +11,7 @@ import FunDBAPI, {
 } from '@ozma-io/ozmadb-js/client'
 
 import { IRef, convertString, waitTimeout } from '@/utils'
-import { funappSchema } from '@/api'
+import { ozmaSchema } from '@/api'
 import { CancelledError } from '@/modules'
 import {
   ThemesMap,
@@ -49,7 +49,7 @@ const getEditViewQuery = (settings: CurrentSettings): IUserViewRef => {
     '',
   )
 
-  let schema = funappSchema
+  let schema = ozmaSchema
   let name = 'user_view_by_name'
 
   const namePartRegex = '[a-zA-Z0-9_]+'
@@ -182,7 +182,7 @@ const settingsModule: Module<ISettingsState, {}> = {
       if (state.userId === null) return // We can't write settings to the serever if user isn't signed in.
 
       const entity: IEntityRef = {
-        schema: funappSchema,
+        schema: ozmaSchema,
         name: 'user_settings',
       }
       const id: RowKey = { alt: 'name', keys: { user_id: state.userId, name } }
@@ -246,7 +246,7 @@ const settingsModule: Module<ISettingsState, {}> = {
               'callApi',
               {
                 func: (api: FunDBAPI) =>
-                  api.getNamedUserView({ schema: funappSchema, name }),
+                  api.getNamedUserView({ schema: ozmaSchema, name }),
               },
               { root: true },
             ),

@@ -61,7 +61,7 @@ export default class IframeControl extends Vue {
     if (this.iframeRef === undefined) return
     this.requestedHeight = null
 
-    const uvRef = { schema: 'funapp', name: 'iframe_markup_by_name' }
+    const uvRef = { schema: 'ozma', name: 'iframe_markup_by_name' }
     const res = (await this.callApi({
       func: (api) =>
         api.getNamedUserView(

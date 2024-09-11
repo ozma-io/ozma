@@ -37,7 +37,7 @@ if (
   throw new Error('Invalid auth configuration')
 }
 
-export const funappSchema = 'funapp'
+export const ozmaSchema = 'ozma'
 
 const findErrorInfoUserData = (e: ClientApiError): unknown => {
   if (e.error === 'exception') {

@@ -223,7 +223,7 @@ export default class App extends Vue {
         }
       }
 
-      const uvRef = { schema: 'funapp', name: 'embedded_page_by_name' }
+      const uvRef = { schema: 'ozma', name: 'embedded_page_by_name' }
       const res: IViewExprResult = await this.callApi({
         func: (api) => api.getNamedUserView(uvRef, args.ref as any),
       })
@@ -322,7 +322,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
    *    Color variant is set of colors: several shades of background color, several shades of foreground color, border color, etc.
    *    We need to define at least main background-color and others will be generated based on it.
    * 2. Color varaints can be static and custom.
-   *    Static ones are defined in system table funapp.color_variants, custom ones are defined right in attributes.
+   *    Static ones are defined in system table ozma.color_variants, custom ones are defined right in attributes.
    * 3. Variants are bound to specific color theme.
    *    We have two "magic" themes, "ligth" and "dark", and custom ones can be created.
    * 4. We have hard-coded variants with colors from Bootstrap-variants and some others not so hard-coded, like "interfaceButton".

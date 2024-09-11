@@ -2,7 +2,7 @@
   "__API_URL__": "`https://${instanceName}.api.${instancesHost}`",
   "__API_AUTH_URL__": "`https://account${SERVICES_SUFFIX}.${DOMAIN}`",
   "__API_AUTH_URL_BASE__": "'/auth/realms/default'",
-  "__AUTH_CLIENT_ID__": "'funapp'",
+  "__AUTH_CLIENT_ID__": "'ozma'",
   "__DOCUMENT_GENERATOR_URL__": "`https://report-generator${SERVICES_SUFFIX}.${DOMAIN}`",
   "__INVITES_SERVICE_URL__": "`https://invite${SERVICES_SUFFIX}.${DOMAIN}`",
   "__READ_ONLY_INSTANCE_NAME__": "'x'",
