@@ -28,10 +28,8 @@ jobs:
           cache-dependency-path: ./ozma-embedded/yarn.lock
       - name: Install Dependencies
         run: |
+          yarn set version stable
           yarn install --immutable
-          echo "Dirs:"
-          ls -lah
-          echo "All dirs"
       - name: Check Formatting
         run: |
           yarn prettier -c
