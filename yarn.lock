@@ -1841,6 +1841,7 @@ __metadata:
     postcss-html: "npm:^1.7.0"
     prettier: "npm:^3.3.3"
     prettier-plugin-css-order: "npm:^2.1.2"
+    prosemirror-transform: "npm:^1.10.0"
     psl: "npm:^1.9.0"
     ramda: "npm:^0.30.1"
     sanitize-html: "npm:^2.7.2"
@@ -9644,6 +9645,15 @@ __metadata:
   dependencies:
     prosemirror-model: "npm:^1.21.0"
   checksum: 10c0/8832d825a9d38fd116f5c3fbc9708f3aa627f88980efbc1923524da7673f5bd9d7ed0032762f5be223d990176a759b2ae0a5f3ba67bffd596c028ddbc0d53b93
+  languageName: node
+  linkType: hard
+
+"prosemirror-transform@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "prosemirror-transform@npm:1.10.0"
+  dependencies:
+    prosemirror-model: "npm:^1.21.0"
+  checksum: 10c0/72c10b7689e0e7a575e2df66ee58980ae612f7bbad78b6781828276b5872763e05cb8fb1a92920f77e30ce5dd061d67c3de081dc4c060f23db5cbb2083100928
   languageName: node
   linkType: hard
 

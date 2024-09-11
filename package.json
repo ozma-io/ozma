@@ -100,6 +100,7 @@
     "postcss-html": "^1.7.0",
     "prettier": "^3.3.3",
     "prettier-plugin-css-order": "^2.1.2",
+    "prosemirror-transform": "^1.10.0",
     "sass": "^1.54.9",
     "sass-loader": "^14.2.1",
     "stylelint": "^16.7.0",
