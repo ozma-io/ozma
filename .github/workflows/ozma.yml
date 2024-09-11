@@ -23,61 +23,23 @@ jobs:
       - name: Install Dependencies
         run: |
           yarn
+      - name: Check Formatting
+        run: |
+          yarn prettier -c
       - name: Lint
         run: |
           yarn lint --no-fix --max-warnings 0
       - name: Build
         run: |
           yarn build
-      - name: Pack
-        run: |
-          yarn pack
       - name: Upload Artifacts
         id: upload
         uses: actions/upload-artifact@v4
         with:
           name: ozma
-          path: ./*.tgz
+          path: ./dist
           if-no-files-found: error
       # - name: Attest
       #   uses: actions/attest-build-provenance@v1
       #   with:
       #     subject-path: out/ozmadb/**
-
-  publish-release:
-    name: Publish Release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          always-auth: true
-      - name: Download Release
-        uses: actions/download-artifact@v4
-        with:
-          name: ozma
-      - name: Check the version
-        env:
-          REF: ${{ github.ref }}
-        run: |
-          rel_version=${REF#refs/tags/v}
-          curr_version=$(jq -r .version package.json)
-          if [ "$rel_version" != "$curr_version" ]; then
-            echo "Tag doesn't correspond to the project version. Expected '$rel_version', got '$curr_version'." >&2
-            exit 1
-          fi
-          echo "Publishing version: $rel_version"
-      - name: Publish to NPM
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          yarn publish --access public *.tgz
