@@ -1,6 +1,4 @@
 import {
-  AttributesMap,
-  IActionRef,
   IUserViewRef,
 } from '@ozma-io/ozmadb-js/types'
 
