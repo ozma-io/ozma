@@ -29,6 +29,9 @@ jobs:
       - name: Install Dependencies
         run: |
           yarn install --immutable
+          echo "Dirs:"
+          ls -lah
+          echo "All dirs"
       - name: Check Formatting
         run: |
           yarn prettier -c
