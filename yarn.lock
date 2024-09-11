@@ -1780,10 +1780,10 @@ __metadata:
 
 "@ozma-io/ozma-embedded@file:./ozma-embedded::locator=%40ozma-io%2Fozma%40workspace%3A.":
   version: 0.0.1
-  resolution: "@ozma-io/ozma-embedded@file:./ozma-embedded#./ozma-embedded::hash=ee8524&locator=%40ozma-io%2Fozma%40workspace%3A."
+  resolution: "@ozma-io/ozma-embedded@file:./ozma-embedded#./ozma-embedded::hash=be72b0&locator=%40ozma-io%2Fozma%40workspace%3A."
   dependencies:
     "@ozma-io/ozmadb-js": "npm:^0.0.4"
-  checksum: 10c0/d3b31055d8662a5888b0f4c6a2b516e53f8898ab771028ad90f9664779a61460271248765afb07b1824f87de414bf6b5ca9728be93ad6218856f5bc16a3b4ee5
+  checksum: 10c0/7793d1f9e07ac2339f1eda8395c1d7503fd29be38b950ee8c9e91b1cf300265428f39271d63bfe84ea3a72ff1e24ae170478518d850a2190bcacd06f6f586754
   languageName: node
   linkType: hard
 
@@ -9635,15 +9635,6 @@ __metadata:
     prosemirror-transform: "npm:^1.0.0"
     prosemirror-view: "npm:^1.27.0"
   checksum: 10c0/e34dc9b1a6b23c23265569b2c246aaef4a61353a5fd33e933b62528917603382271d9f7d5212094e8928dee9bb4827e25a583104d43745e6ab3b8cbde12170f5
-  languageName: node
-  linkType: hard
-
-"prosemirror-transform@npm:*":
-  version: 1.10.0
-  resolution: "prosemirror-transform@npm:1.10.0"
-  dependencies:
-    prosemirror-model: "npm:^1.21.0"
-  checksum: 10c0/72c10b7689e0e7a575e2df66ee58980ae612f7bbad78b6781828276b5872763e05cb8fb1a92920f77e30ce5dd061d67c3de081dc4c060f23db5cbb2083100928
   languageName: node
   linkType: hard
 
