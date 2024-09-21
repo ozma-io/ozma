@@ -22,7 +22,8 @@
     "prettier": "prettier ./"
   },
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "embedded": "./bundle/embedded.min.js"
   },
   "types": {
     ".": "./dist/index.d.ts"

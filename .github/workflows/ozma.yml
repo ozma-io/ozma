@@ -51,3 +51,53 @@ jobs:
       #   uses: actions/attest-build-provenance@v1
       #   with:
       #     subject-path: out/ozmadb/**
+
+  publish-docker:
+    name: Publish Docker Image
+    if: github.repository == 'ozma-io/ozma' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ozmaio/ozma
+      - name: Download Release
+        uses: actions/download-artifact@v4
+        with:
+          name: ozma
+          path: ./dist
+      - name: Fix permissions
+        run:
+          chmod +x out/ozmadb/OzmaDB
+      - name: Build a Docker image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./docker/Dockerfile.ozma
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      # - name: Attest Docker Image
+      #   uses: actions/attest-build-provenance@v1
+      #   with:
+      #     subject-name: ozmaio/ozma
+      #     subject-digest: ${{ steps.push.outputs.digest }}
+      #     push-to-registry: true
+

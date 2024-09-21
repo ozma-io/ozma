@@ -3,6 +3,7 @@ import webpack from 'webpack'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import VueTemplateBabelCompiler from 'vue-template-babel-compiler'
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin'
+import CopyPlugin from 'copy-webpack-plugin'
 
 const defaultConfig = fs.readFileSync('./config/development.json')
 const configName = process.env['CONFIG'] || process.env['NODE_ENV']
@@ -49,6 +50,11 @@ export default {
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
       }),
+      new CopyPlugin({
+        patterns: [
+          { from: import.meta.resolve('@ozma-io/ozma-embedded/embedded'), to: "ozma-embedded.min.js" },
+        ],
+      })
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
     ],
   },
