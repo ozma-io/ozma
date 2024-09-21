@@ -1,6 +1,6 @@
 {
   "name": "@ozma-io/ozma-embedded",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "ozma.io embedded API client",
   "keywords": [
     "ozma-io",
