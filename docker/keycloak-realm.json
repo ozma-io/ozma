@@ -37,41 +37,37 @@
       "baseUrl": "",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": [
-        "http://localhost:8081/auth_response"
-      ],
-      "webOrigins": [
-        "http://localhost:8081"
-      ],
+      "redirectUris": ["http://localhost:8081/auth_response"],
+      "webOrigins": ["http://localhost:8081"],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "publicClient": true,
       "protocol": "openid-connect",
-      "defaultClientScopes": [
-        "roles",
-        "basic",
-        "email"
-      ],
+      "defaultClientScopes": ["roles", "basic", "email"],
       "optionalClientScopes": []
     }
   ],
-  "users" : [ {
-    "id" : "admin",
-    "username" : "admin@ozma.io",
-    "email" : "admin@ozma.io",
-    "emailVerified" : true,
-    "enabled" : true,  
-    "credentials" : [ {
-      "id" : "password",
-      "type" : "password",    
-      "userLabel" : "My password",
-      "createdDate" : 1726948946561,
-      "secretData" : "{\"value\":\"oRgPShutFloqamI75qmIrgwLErxpQQsBQTMzD0Rma8Q=\",\"salt\":\"1K/UNtNh0Ao7sO8iKZBpiQ==\",\"additionalParameters\":{}}",
-      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
-    } ],
-    "requiredActions" : [ "UPDATE_PASSWORD" ],
-    "realmRoles" : [ "ozmadb-admin", "default-roles-ozma" ]
-  } ]
+  "users": [
+    {
+      "id": "admin",
+      "username": "admin@ozma.io",
+      "email": "admin@ozma.io",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "id": "password",
+          "type": "password",
+          "userLabel": "My password",
+          "createdDate": 1726948946561,
+          "secretData": "{\"value\":\"oRgPShutFloqamI75qmIrgwLErxpQQsBQTMzD0Rma8Q=\",\"salt\":\"1K/UNtNh0Ao7sO8iKZBpiQ==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+        }
+      ],
+      "requiredActions": ["UPDATE_PASSWORD"],
+      "realmRoles": ["ozmadb-admin", "default-roles-ozma"]
+    }
+  ]
 }
