@@ -1,6 +1,6 @@
 {
   "name": "@ozma-io/ozma-embedded",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "ozma.io embedded API client",
   "keywords": [
     "ozma-io",
@@ -23,7 +23,7 @@
   },
   "exports": {
     ".": "./dist/index.js",
-    "embedded": "./bundle/embedded.min.js"
+    "./embedded": "./bundle/embedded.min.js"
   },
   "types": {
     ".": "./dist/index.d.ts"

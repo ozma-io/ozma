@@ -54,7 +54,7 @@ export default {
         patterns: [
           { from: import.meta.resolve('@ozma-io/ozma-embedded/embedded'), to: "ozma-embedded.min.js" },
         ],
-      })
+      }),
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
     ],
   },
