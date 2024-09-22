@@ -82,9 +82,6 @@ jobs:
         with:
           name: ozma
           path: ./dist
-      - name: Fix permissions
-        run:
-          chmod +x out/ozmadb/OzmaDB
       - name: Build a Docker image
         id: push
         uses: docker/build-push-action@v6
