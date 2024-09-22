@@ -1,6 +1,7 @@
 {
-  "__API_URL__": "`http://${location.hostname}:8080/api`",
-  "__API_AUTH_URL__": "`http://${location.hostname}:8080/auth/realms/default`",
+  "__API_URL__": "`http://${location.hostname}:9000/api`",
+  "__API_AUTH_URL__": "`http://${location.hostname}:9000/auth/realms/default`",
   "__AUTH_CLIENT_ID__": "'ozma'",
+  "__INSTANCE_NAME__": "'ozma'",
   "__DEVELOPMENT_MODE__": true
 }

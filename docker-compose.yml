@@ -58,7 +58,7 @@ services:
       - caddy_data:/data
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     ports:
-      - 8080:80
+      - 9000:80
 
 volumes:
   postgres_data:
