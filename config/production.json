@@ -1,5 +1,6 @@
 {
-  "__API_URL__": "`https://${location.hostname}/api`",
-  "__API_AUTH_URL__": "`https://${location.hostname}/auth/realms/default`",
-  "__AUTH_CLIENT_ID__": "'ozma'"
+  "__API_URL__": "`${location.origin}/api`",
+  "__API_AUTH_URL__": "`${location.origin}/auth/realms/default`",
+  "__AUTH_CLIENT_ID__": "'ozma'",
+  "__INSTANCE_NAME__": "'ozma'"
 }

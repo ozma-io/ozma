@@ -5,13 +5,7 @@ import { z } from 'zod'
 import FunDBAPI, { OzmaDBError } from '@ozma-io/ozmadb-js/client'
 
 import { IRef } from '@/utils'
-import {
-  disableAuth,
-  authClientId,
-  authUrl,
-  developmentMode,
-  apiUrl,
-} from '@/api'
+import { authClientId, authUrl, developmentMode, apiUrl } from '@/api'
 import * as Utils from '@/utils'
 import { router, getQueryValue } from '@/modules'
 
@@ -153,7 +147,7 @@ const requestToken = async (
   const headers: Record<string, string> = {
     'Content-Type': 'application/x-www-form-urlencoded',
   }
-  const newParams = { ...params, client_id: authClientId }
+  const newParams = { ...params, client_id: authClientId! }
   const paramsString = new URLSearchParams(newParams).toString()
 
   const ret = await Utils.fetchJson(`${authUrl}/token`, {
@@ -350,7 +344,7 @@ const requestLogin = (
     path: realPath,
   }
   const params = {
-    client_id: authClientId,
+    client_id: authClientId!,
     redirect_uri: redirectUri(),
     state: btoa(JSON.stringify(savedState)),
     scope: 'openid',
@@ -484,7 +478,7 @@ export const authModule: Module<IAuthState, {}> = {
         await Utils.waitTimeout() // Delay promise so that it gets saved to `pending` first.
 
         try {
-          if (disableAuth) {
+          if (authUrl === undefined) {
             return
           }
 
@@ -651,7 +645,7 @@ export const authModule: Module<IAuthState, {}> = {
         throw new Error('Cannot logout without an existing token')
       }
 
-      if (disableAuth) {
+      if (authUrl === undefined) {
         return
       }
 
@@ -661,7 +655,7 @@ export const authModule: Module<IAuthState, {}> = {
 
       const params: Record<string, string> = {
         post_logout_redirect_uri: redirectUri(),
-        client_id: authClientId,
+        client_id: authClientId!,
         id_token_hint: state.current.idToken,
       }
       const paramsString = new URLSearchParams(params).toString()

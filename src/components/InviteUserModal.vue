@@ -107,7 +107,7 @@
 import { Vue, Component } from 'vue-property-decorator'
 import { IEntityRef } from '@ozma-io/ozmadb-js/client'
 import { namespace } from 'vuex-class'
-import { invitesServiceUrl, instanceName, instancesHost } from '@/api'
+import { invitesServiceUrl, instanceName } from '@/api'
 
 import { randomId, waitTimeout } from '@/utils'
 import { CurrentAuth, INoAuth } from '@/state/auth'
@@ -164,10 +164,7 @@ export default class InviteUserModal extends Vue {
     const body = JSON.stringify({
       email: this.emailValue,
       role_id: this.roleValue,
-      /* instance_name: "dev", */
-      /* instance_domain: "ozma-dev.org", */
       instance_name: instanceName,
-      instance_domain: instancesHost,
     })
 
     try {

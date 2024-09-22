@@ -29,9 +29,7 @@ services:
       KC_METRICS_ENABLED: true
       KC_HEALTH_ENABLED: true
       KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-
-      KEYCLOAK_IMPORT: /opt/jboss/keycloak/imports/realm.json -Dkeycloak.profile.feature.upload_scripts=enabled
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
     volumes:
       - ./docker/keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
     command: ["start-dev", "--import-realm"]

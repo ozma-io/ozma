@@ -1,13 +1,21 @@
 declare const __API_URL__: string
+declare const __INSTANCE_NAME__: string
 declare const __API_AUTH_URL__: string | undefined
-declare const __API_AUTH_URL_BASE__: string | undefined
 declare const __AUTH_CLIENT_ID__: string | undefined
-declare const __DISABLE_AUTH__: boolean
-declare const __DEVELOPMENT_MODE__: boolean
+declare const __DISABLE_AUTH__: boolean | undefined
+declare const __DEVELOPMENT_MODE__: boolean | undefined
 declare const __DOCUMENT_GENERATOR_URL__: string | undefined
 declare const __INVITES_SERVICE_URL__: string | undefined
-declare const __READ_ONLY_INSTANCE_NAME__: string | undefined
-declare const __INSTANCE_NAME__: string | undefined
+
+interface Window {
+  INSTANCE_NAME?: string
+  API_URL?: string
+  DOCUMENT_GENERATOR_URL?: string
+  INVITES_SERVICE_URL?: string
+  DEVELOPMENT_MODE?: boolean
+  API_AUTH_URL?: string
+  AUTH_CLIENT_ID?: string
+}
 
 declare module 'v-click-outside' {
   const vClickOutside: any

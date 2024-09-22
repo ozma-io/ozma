@@ -206,7 +206,7 @@ export default class AppHeader extends Vue {
       buttons.push({
         caption: this.$t('account').toString(),
         type: 'link',
-        link: { href: Api.accountUrl, type: 'href', target: 'blank' },
+        link: { href: Api.accountUrl!, type: 'href', target: 'blank' },
         variant: defaultVariantAttribute,
       })
 

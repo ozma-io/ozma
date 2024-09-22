@@ -4,36 +4,23 @@ import {
   ClientApiError,
 } from '@ozma-io/ozmadb-js/client'
 
-const hostnameParts = location.hostname.split('.')
-export const instanceName =
-  typeof __INSTANCE_NAME__ === 'string'
-    ? String(__INSTANCE_NAME__)
-    : hostnameParts[0]
-export const instancesHost =
-  hostnameParts.length >= 2
-    ? hostnameParts[hostnameParts.length - 2] +
-      '.' +
-      hostnameParts[hostnameParts.length - 1]
-    : null
-export const apiUrl = window.__API_URL__ || __API_URL__!
+export const apiUrl = window.API_URL || __API_URL__
 export const documentGeneratorUrl =
-  window.__DOCUMENT_GENERATOR_URL__ || __DOCUMENT_GENERATOR_URL__
+  window.DOCUMENT_GENERATOR_URL || __DOCUMENT_GENERATOR_URL__
 export const invitesServiceUrl =
-  window.__INVITES_SERVICE_URL__ || __INVITES_SERVICE_URL__
+  window.INVITES_SERVICE_URL || __INVITES_SERVICE_URL__
 export const developmentMode = Boolean(
-  window.__DEVELOPMENT_MODE__ || __DEVELOPMENT_MODE__,
+  window.DEVELOPMENT_MODE || __DEVELOPMENT_MODE__,
 )
-export const disableAuth = Boolean(window.__DISABLE_AUTH__ || __DISABLE_AUTH__)
+export const instanceName = window.INSTANCE_NAME || __INSTANCE_NAME__
+const authUrlBase = window.API_AUTH_URL || __API_AUTH_URL__
+export const authUrl = authUrlBase
+  ? `${authUrlBase}/protocol/openid-connect`
+  : undefined
+export const accountUrl = authUrlBase ? `${authUrlBase}/account` : undefined
+export const authClientId = window.AUTH_CLIENT_ID || __AUTH_CLIENT_ID__
 
-export const authUrlBase = window.__API_AUTH_URL__ || __API_AUTH_URL__!
-export const authUrl = `${authUrlBase}/protocol/openid-connect`
-export const accountUrl = `${authUrlBase}/account`
-export const authClientId = window.__AUTH_CLIENT_ID__ || __AUTH_CLIENT_ID__!
-
-if (
-  !disableAuth &&
-  !(__API_AUTH_URL__ && __API_AUTH_URL_BASE__ && __AUTH_CLIENT_ID__)
-) {
+if (authUrlBase && !authClientId) {
   throw new Error('Invalid auth configuration')
 }
 
