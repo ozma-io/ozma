@@ -29,7 +29,7 @@
         ref="readonlyDemoInstanceModal"
       />
 
-      <InviteUserModal v-if="hasAuth" ref="inviteUserModal" />
+      <InviteUserModal v-if="hasInvites" ref="inviteUserModal" />
 
       <HelpModal
         v-if="helpPageInfo"
@@ -61,6 +61,7 @@ import moment from 'moment'
 import 'moment/locale/es'
 import 'moment/locale/ru'
 
+import * as Api from '@/api'
 import type { ICallApi } from '@/state/auth'
 import { CurrentAuth, INoAuth } from '@/state/auth'
 import { CurrentSettings } from '@/state/settings'
@@ -76,13 +77,12 @@ import {
   ITheme,
 } from '@/utils_colors'
 import { eventBus, IShowHelpModalArgs } from '@/main'
-import { IEmbeddedPageRef } from '@/api'
-import InviteUserModal from './components/InviteUserModal.vue'
-import { EntityRef } from './links'
-import { safeJsonParse } from './utils'
-import { equalEntityRef } from './values'
-import { IQuery, QueryKey } from './state/query'
-import { Language } from './state/translations'
+import InviteUserModal from '@/components/InviteUserModal.vue'
+import { EntityRef } from '@/links'
+import { safeJsonParse } from '@/utils'
+import { equalEntityRef } from '@/values'
+import { IQuery, QueryKey } from '@/state/query'
+import { Language } from '@/state/translations'
 
 const settings = namespace('settings')
 const auth = namespace('auth')
@@ -127,7 +127,7 @@ export default class App extends Vue {
 
   helpPageInfo: {
     key: string | null
-    ref: IEmbeddedPageRef
+    ref: Api.IEmbeddedPageRef
     markup: string
   } | null = null
 
@@ -184,6 +184,10 @@ export default class App extends Vue {
 
   get hasAuth() {
     return Boolean(this.currentAuth?.refreshToken)
+  }
+
+  get hasInvites() {
+    return this.hasAuth && Api.invitesServiceUrl !== undefined
   }
 
   get authErrors() {

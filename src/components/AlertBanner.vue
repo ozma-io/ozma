@@ -69,7 +69,7 @@ import { Button } from './buttons/buttons'
 import { CurrentSettings } from '@/state/settings'
 import { CurrentAuth, INoAuth } from '@/state/auth'
 
-import { instanceName } from '@/api'
+import * as Api from '@/api'
 
 const sanitizeSettings = {
   allowedTags: ['b', 'i', 'em', 'strong', 'a'],
@@ -131,7 +131,8 @@ export default class AlertBanner extends Vue {
   get showInviteButton() {
     return (
       this.settings.getEntry('show_invite_button_in_banner', Boolean, false) &&
-      this.hasAuth
+      this.hasAuth &&
+      Api.invitesServiceUrl !== undefined
     )
   }
 
@@ -161,7 +162,7 @@ export default class AlertBanner extends Vue {
 
   private get signUpButton() {
     const language = this.$i18n.locale
-    const url = `https://onboard.ozma.io/${instanceName}/${language}`
+    const url = `https://onboard.ozma.io/${Api.instanceName}/${language}`
     return {
       caption: this.$t('sign_up').toString(),
       variant: { type: 'existing', className: 'ctaButton' },

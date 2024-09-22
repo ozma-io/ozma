@@ -163,6 +163,10 @@ export default class AppHeader extends Vue {
     return this.currentSettings.getEntry('allow_business_mode', Boolean, false)
   }
 
+  private get hasInvites() {
+    return this.currentAuth?.refreshToken && Api.invitesServiceUrl !== undefined
+  }
+
   private toggleDeveloperMode() {
     if (this.allowBusinessMode && this.userIsRoot) {
       void this.setDisplayMode(
@@ -241,12 +245,14 @@ export default class AppHeader extends Vue {
     })
 
     if (this.currentAuth?.refreshToken) {
-      buttons.push({
-        caption: this.$t('invite_user').toString(),
-        variant: defaultVariantAttribute,
-        type: 'callback',
-        callback: () => eventBus.emit('show-invite-user-modal'),
-      })
+      if (this.hasInvites) {
+        buttons.push({
+          caption: this.$t('invite_user').toString(),
+          variant: defaultVariantAttribute,
+          type: 'callback',
+          callback: () => eventBus.emit('show-invite-user-modal'),
+        })
+      }
 
       if (this.allowBusinessMode && this.userIsRoot) {
         buttons.push({
