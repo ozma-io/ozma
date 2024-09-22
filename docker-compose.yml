@@ -17,13 +17,13 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
 
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HOSTNAME: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${POST:-9000}/auth
+      KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_PROXY_HEADERS: xforwarded
-      KC_HTTP_RELATIVE_PATH: /auth
+      # Comment these for production
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: true
 
       KC_LOG_LEVEL: info
       KC_METRICS_ENABLED: true
@@ -32,7 +32,7 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
     volumes:
       - ./docker/keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
-    command: ["start-dev", "--import-realm"]
+    command: ["start", "--import-realm"]
     depends_on:
       - postgres
 
@@ -45,7 +45,7 @@ services:
       DB_PASSWORD: ozmadb
       DB_NAME: ozmadb
       AUTH_AUTHORITY: http://keycloak:8080/auth/realms/ozma
-      AUTH_AUTHORITY_REQUIRE_HTTPS: false
+      AUTH_REQUIRE_HTTPS_METADATA: false
       PRELOAD: /etc/ozmadb/preload/preload.json
     volumes:
       - ./ozmadb:/etc/ozmadb/preload:ro
@@ -59,7 +59,7 @@ services:
       - caddy_data:/data
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     ports:
-      - 9000:80
+      - ${PORT:-9000}:80
 
 volumes:
   postgres_data:

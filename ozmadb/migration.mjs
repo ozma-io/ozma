@@ -111,18 +111,18 @@ const generateDefaultViews = (layout) => {
         if (entity.isHidden) {
           return []
         }
-        const sqlName = `${renderOzmaQLName(schemaName)}.${renderOzmaQLName(entityName)}`
+        const sqlName = `${formatOzmaQLName(schemaName)}.${formatOzmaQLName(entityName)}`
         const fields = []
         if (entity.children.length > 0) {
-          fields.push(renderOzmaQLName('sub_entity'))
+          fields.push(formatOzmaQLName('sub_entity'))
         }
         Object.keys(entity.columnFields).forEach((columnField) => {
-          fields.push(renderOzmaQLName(columnField))
+          fields.push(formatOzmaQLName(columnField))
         })
         Object.entries(entity.computedFields).forEach(
           ([computedField, comp]) => {
             if (!comp.isBroken) {
-              fields.push(renderOzmaQLName(computedField))
+              fields.push(formatOzmaQLName(computedField))
             }
           },
         )
