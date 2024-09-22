@@ -244,13 +244,6 @@ const updateAuth = (
   opts?: { noPersist?: boolean },
 ) => {
   context.commit('setAuth', auth)
-  // eslint-disable-next-line
-  Utils.debugLog(
-    'Setting new refresh token',
-    auth.refreshToken,
-    'no_persist',
-    opts?.noPersist,
-  )
   if (auth.refreshToken) {
     if (!opts?.noPersist) {
       persistCurrentAuth(auth)

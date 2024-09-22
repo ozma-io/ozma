@@ -1,10 +1,13 @@
 :80 {
-	root * /usr/share/caddy
-	file_server
-	try_files {path} /index.html
-
-	handle_path /api/* {
-		reverse_proxy ozmadb:5000
-	}
-	reverse_proxy /auth/* keycloak:8080
+  handle_path /api/* {
+    reverse_proxy ozmadb:5000
+  }
+  handle /auth/* {
+    reverse_proxy keycloak:8080
+  }
+  handle {
+    root /usr/share/caddy
+    file_server
+    try_files {path} /index.html
+  }
 }
