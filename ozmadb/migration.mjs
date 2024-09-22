@@ -6,7 +6,7 @@ WITH user_settings AS MATERIALIZED (
     name,
     value
   FROM
-    ozma.user_settings
+    funapp.user_settings
   WHERE
     user_id = $$user_id
 )
@@ -19,7 +19,7 @@ UNION ALL
 SELECT
   name, value
 FROM
-  ozma.settings
+  funapp.settings
 WHERE
   name NOT IN (SELECT name FROM user_settings)`,
 
@@ -32,7 +32,7 @@ SELECT
   name,
   localized_name
 FROM
-  ozma.color_themes`,
+  funapp.color_themes`,
   color_variants: `
   SELECT
     theme_id,
@@ -41,14 +41,14 @@ FROM
     border,
     background
   FROM
-    ozma.color_variants`,
+    funapp.color_variants`,
 
   iframe_markup_by_name: `
 { $schema string, $name string }:
 SELECT
   markup
 FROM
-  "ozma"."iframe_markups"
+  funapp.iframe_markups
 WHERE
   schema_id=>name = $schema
   AND name = $name`,
@@ -57,7 +57,7 @@ WHERE
 SELECT
   markup
 FROM
-  "ozma"."embedded_pages"
+  funapp.embedded_pages
 WHERE
   schema_id=>name = $schema
   AND name = $name`,
@@ -69,7 +69,7 @@ SELECT
   message,
   translation
 FROM
-  "ozma"."translations"
+  funapp.translations
 WHERE
   language = $language`,
 
@@ -78,7 +78,7 @@ WHERE
 SELECT
   @type = 'menu',
   schemas.name AS category_name,
-  entities.name AS name @{ link = { schema: 'ozma', name: 'table-' || schemas.name || '-' || entities.name } }
+  entities.name AS name @{ link = { schema: 'funapp', name: 'table-' || schemas.name || '-' || entities.name } }
 FROM
   public.entities
   LEFT JOIN public.schemas ON schemas.id = entities.schema_id
