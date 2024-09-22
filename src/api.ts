@@ -24,7 +24,8 @@ if (authUrlBase && !authClientId) {
   throw new Error('Invalid auth configuration')
 }
 
-export const ozmaSchema = 'ozma'
+// TODO: This stays as the old name to keep the existing installations running.
+export const ozmaSchema = 'funapp'
 
 const findErrorInfoUserData = (e: ClientApiError): unknown => {
   if (e.error === 'exception') {

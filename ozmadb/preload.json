@@ -1,6 +1,6 @@
 {
   "schemas": {
-    "ozma": {
+    "funapp": {
       "userViewGenerator": "./migration.mjs",
 
       "entities": {
@@ -106,7 +106,7 @@
         "color_variants": {
           "columnFields": {
             "name": { "type": "string" },
-            "theme_id": { "type": "reference(\"ozma\".\"color_themes\")" },
+            "theme_id": { "type": "reference(\"funapp\".\"color_themes\")" },
             "foreground": { "type": "string", "isNullable": true },
             "background": { "type": "string", "isNullable": true },
             "border": { "type": "string", "isNullable": true }
@@ -193,7 +193,7 @@
                 }
               },
 
-              "ozma": {
+              "funapp": {
                 "entities": {
                   "settings": {
                     "select": "true",
