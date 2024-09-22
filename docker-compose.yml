@@ -22,6 +22,8 @@ services:
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_PROXY: edge
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_RELATIVE_PATH: /auth
 
       KC_LOG_LEVEL: info
       KC_METRICS_ENABLED: true
@@ -35,8 +37,6 @@ services:
     command: ["start-dev", "--import-realm"]
     depends_on:
       - postgres
-    ports:
-      - 8080:8080
 
   ozmadb:
     image: ozmaio/ozmadb:master
@@ -52,8 +52,16 @@ services:
       - ./ozmadb:/etc/ozmadb/preload:ro
     depends_on:
       - postgres
+
+  ozma:
+    image: ozmaio/ozma:master
+    restart: unless-stopped
+    volumes:
+      - caddy_data:/data
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     ports:
-      - 5000:5000
+      - 8080:80
 
 volumes:
   postgres_data:
+  caddy_data:

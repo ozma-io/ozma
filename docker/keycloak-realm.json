@@ -52,8 +52,8 @@
   "users": [
     {
       "id": "admin",
-      "username": "admin@ozma.io",
-      "email": "admin@ozma.io",
+      "username": "admin@example.com",
+      "email": "admin@example.com",
       "emailVerified": true,
       "enabled": true,
       "credentials": [

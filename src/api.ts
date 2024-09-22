@@ -15,20 +15,20 @@ export const instancesHost =
       '.' +
       hostnameParts[hostnameParts.length - 1]
     : null
-export const apiUrl = String(__API_URL__)
-export const documentGeneratorUrl = String(__DOCUMENT_GENERATOR_URL__)
+export const apiUrl = window.__API_URL__ || __API_URL__!
+export const documentGeneratorUrl =
+  window.__DOCUMENT_GENERATOR_URL__ || __DOCUMENT_GENERATOR_URL__
 export const invitesServiceUrl =
-  typeof __INVITES_SERVICE_URL__ === 'string'
-    ? __INVITES_SERVICE_URL__
-    : undefined
-export const developmentMode = Boolean(__DEVELOPMENT_MODE__)
-export const disableAuth = Boolean(__DISABLE_AUTH__)
+  window.__INVITES_SERVICE_URL__ || __INVITES_SERVICE_URL__
+export const developmentMode = Boolean(
+  window.__DEVELOPMENT_MODE__ || __DEVELOPMENT_MODE__,
+)
+export const disableAuth = Boolean(window.__DISABLE_AUTH__ || __DISABLE_AUTH__)
 
-export const authOrigin = String(__API_AUTH_URL__)
-export const authUrlBase = `${authOrigin}${String(__API_AUTH_URL_BASE__)}`
+export const authUrlBase = window.__API_AUTH_URL__ || __API_AUTH_URL__!
 export const authUrl = `${authUrlBase}/protocol/openid-connect`
 export const accountUrl = `${authUrlBase}/account`
-export const authClientId = String(__AUTH_CLIENT_ID__)
+export const authClientId = window.__AUTH_CLIENT_ID__ || __AUTH_CLIENT_ID__!
 
 if (
   !disableAuth &&

@@ -1,0 +1,9 @@
+:80 {
+	root * /usr/share/caddy
+	file_server
+
+	handle_path /api/* {
+		reverse_proxy ozmadb:5000
+	}
+	reverse_proxy /auth/* keycloak:8080
+}

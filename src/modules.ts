@@ -65,6 +65,7 @@ const routes = [
 const globalMessages = {
   en: {
     confirm_reset: 'You have unsaved changes, do you want to discard them?',
+    no_generator: 'File generation is not available',
     generation_start_title: 'File generation is started',
     generation_start_description: 'It may take few seconds',
     generation_fail: 'Error occured while file generation. Try again.',
@@ -78,6 +79,7 @@ const globalMessages = {
   },
   ru: {
     confirm_reset: 'У вас есть несохранённые изменения, отбросить их?',
+    no_generator: 'Создание файлов недоступно',
     generation_start_title: 'Началось создание файла',
     generation_start_description: 'Это займёт несколько секунд',
     generation_fail: 'Произошла ошибка при создании файла. Попробуйте снова.',

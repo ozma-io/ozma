@@ -454,6 +454,12 @@ export const linkHandler = (
   } else if (link.type === 'document') {
     const { template, filename, args } = link
     handler = async () => {
+      if (documentGeneratorUrl === undefined) {
+        app.$bvToast.toast(i18n.tc('no_generator'), {
+          title: i18n.tc('generation_start_title'),
+          solid: true,
+        })
+      }
       await beforeGoto()
       await app.$store.dispatch('staging/submit', { errorOnIncomplete: true })
       const id = randomId()
