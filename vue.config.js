@@ -9,11 +9,12 @@ const configName =
   process.env['CONFIG'] || process.env['NODE_ENV'] || 'development'
 const buildConfig = JSON.parse(fs.readFileSync(`./config/${configName}.json`))
 const defaults = {
-  __DISABLE_AUTH__: false,
   __API_AUTH_URL__: undefined,
-  __API_AUTH_URL_BASE__: undefined,
   __AUTH_CLIENT_ID__: undefined,
+  __DISABLE_AUTH__: false,
   __DEVELOPMENT_MODE__: false,
+  __DOCUMENT_GENERATOR_URL__: undefined,
+  __INVITES_SERVICE_URL__: undefined,
 }
 
 const analyzeBundle = process.env['ANALYZE']
