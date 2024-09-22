@@ -148,10 +148,10 @@
         @update:buttons="uvCommonButtons = $event"
       />
 
-      <!-- We don't use FunOverlay anymore basically but we need it for `infinite-wrapper`,
+      <!-- We don't use OzmaOverlay anymore basically but we need it for `infinite-wrapper`,
         just <div> doesn't work somehow (in nested views).
-        TODO: Remove FunOverlay and do it another way -->
-      <FunOverlay
+        TODO: Remove OzmaOverlay and do it another way -->
+      <OzmaOverlay
         ref="overlayRef"
         :show="false"
         :infinite-wrapper="inContainer"
@@ -183,7 +183,7 @@
             @load-entries-with-remote-search="loadEntriesWithRemoteSearch"
           />
         </transition>
-      </FunOverlay>
+      </OzmaOverlay>
     </template>
 
     <Errorbox
@@ -263,7 +263,7 @@ import ArgumentEditor, {
   IArgumentEditorProps,
 } from '@/components/ArgumentEditor.vue'
 import ButtonItem from '@/components/buttons/ButtonItem.vue'
-import FunOverlay from '@/components/FunOverlay.vue'
+import OzmaOverlay from '@/components/OzmaOverlay.vue'
 import type { Button } from '@/components/buttons/buttons'
 import {
   addLinkDefaultArgs,
@@ -412,7 +412,7 @@ const loadingState: IUserViewLoading = { state: 'loading', args: null }
     ArgumentEditor,
     Errorbox,
     ButtonItem,
-    FunOverlay,
+    OzmaOverlay,
     ...components,
   },
 })

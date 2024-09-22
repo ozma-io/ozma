@@ -47,6 +47,9 @@ services:
       DB_PASSWORD: ozmadb
       DB_NAME: ozmadb
       AUTH_AUTHORITY: http://keycloak:8080/auth/realms/ozma
+      PRELOAD: /etc/ozmadb/preload/preload.json
+    volumes:
+      - ./ozmadb:/etc/ozmadb/preload:ro
     depends_on:
       - postgres
     ports:

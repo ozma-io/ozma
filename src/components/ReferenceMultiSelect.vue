@@ -56,7 +56,7 @@
     >
       <template #option="select">
         <div class="option-wrapper">
-          <FunLink
+          <OzmaLink
             v-if="select.option.value.link"
             class="option-link"
             :link="select.option.value.link"
@@ -65,7 +65,7 @@
             <i class="material-icons rounded-circle md-14 open-modal-button">
               {{ iconValue(select.option.value.link.target) }}
             </i>
-          </FunLink>
+          </OzmaLink>
 
           <!-- eslint-disable vue/no-v-html -->
           <span

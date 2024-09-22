@@ -21,14 +21,14 @@
         'last-fixed-cell': fixedColumnsLength === 0,
       }"
     >
-      <FunLink
+      <OzmaLink
         v-if="row.extra.link"
         :link="row.extra.link"
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
         <i class="material-icons edit-in-modal-icon">edit_note</i>
-      </FunLink>
+      </OzmaLink>
     </td>
     <TableCell
       v-for="(i, tableColI) in columnIndexes"

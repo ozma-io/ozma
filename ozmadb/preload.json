@@ -1,0 +1,383 @@
+{
+  "schemas": {
+    "ozma": {
+      "userViewGenerator": "./migration.mjs",
+
+      "entities": {
+        "settings": {
+          "columnFields": {
+            "name": { "type": "string" },
+            "value": { "type": "string" }
+          },
+          "uniqueConstraints": {
+            "name": { "columns": ["name"], "isAlternateKey": true }
+          },
+          "checkConstraints": {
+            "non_empty_name": { "expression": "name <> ''" }
+          },
+          "mainField": "name",
+          "saveRestoreKey": "name"
+        },
+
+        "user_settings": {
+          "columnFields": {
+            "user_id": { "type": "reference(\"public\".\"users\")" },
+            "name": { "type": "string" },
+            "value": { "type": "string" }
+          },
+          "computedFields": {
+            "full_name": { "expression": "user_id=>__main || ' ' || name" }
+          },
+          "uniqueConstraints": {
+            "name": { "columns": ["user_id", "name"], "isAlternateKey": true }
+          },
+          "checkConstraints": {
+            "non_empty_name": { "expression": "name <> ''" }
+          },
+          "mainField": "full_name"
+        },
+
+        "iframe_markups": {
+          "columnFields": {
+            "schema_id": { "type": "reference(\"public\".\"schemas\")" },
+            "name": { "type": "string" },
+            "markup": { "type": "string" }
+          },
+          "computedFields": {
+            "full_name": { "expression": "schema_id=>__main || '.' || name" }
+          },
+          "uniqueConstraints": {
+            "name": { "columns": ["schema_id", "name"], "isAlternateKey": true }
+          },
+          "checkConstraints": {
+            "non_empty_name": { "expression": "name <> ''" }
+          },
+          "mainField": "full_name",
+          "saveRestoreKey": "name"
+        },
+
+        "embedded_pages": {
+          "columnFields": {
+            "schema_id": { "type": "reference(\"public\".\"schemas\")" },
+            "name": {
+              "type": "string"
+            },
+            "markup": {
+              "type": "string"
+            }
+          },
+          "computedFields": {
+            "full_name": { "expression": "schema_id=>__main || '.' || name" }
+          },
+          "uniqueConstraints": {
+            "name": {
+              "columns": ["schema_id", "name"],
+              "isAlternateKey": true
+            }
+          },
+          "checkConstraints": {
+            "non_empty_name": {
+              "expression": "name <> ''"
+            }
+          },
+          "mainField": "full_name",
+          "saveRestoreKey": "name"
+        },
+
+        "color_themes": {
+          "columnFields": {
+            "schema_id": { "type": "reference(\"public\".\"schemas\")" },
+            "name": { "type": "string" },
+            "localized_name": { "type": "json", "defaultValue": "{}" }
+          },
+          "computedFields": {
+            "full_name": { "expression": "schema_id=>__main || '.' || name" }
+          },
+          "uniqueConstraints": {
+            "name": { "columns": ["schema_id", "name"], "isAlternateKey": true }
+          },
+          "checkConstraints": {
+            "non_empty_name": { "expression": "name <> ''" }
+          },
+          "mainField": "full_name",
+          "saveRestoreKey": "name"
+        },
+
+        "color_variants": {
+          "columnFields": {
+            "name": { "type": "string" },
+            "theme_id": { "type": "reference(\"ozma\".\"color_themes\")" },
+            "foreground": { "type": "string", "isNullable": true },
+            "background": { "type": "string", "isNullable": true },
+            "border": { "type": "string", "isNullable": true }
+          },
+          "computedFields": {
+            "full_name": { "expression": "theme_id=>__main || '.' || name" }
+          },
+          "uniqueConstraints": {
+            "name": { "columns": ["theme_id", "name"], "isAlternateKey": true }
+          },
+          "checkConstraints": {
+            "non_empty_name": { "expression": "name <> ''" }
+          },
+          "mainField": "full_name",
+          "saveRestoreKey": "name"
+        },
+
+        "translations": {
+          "columnFields": {
+            "schema_id": { "type": "reference(\"public\".\"schemas\")" },
+            "message": { "type": "string" },
+            "language": { "type": "string" },
+            "translation": { "type": "string" }
+          },
+          "computedFields": {
+            "full_name": {
+              "expression": "message || ' (' || schema_id=>__main || '.' || language || ')'"
+            }
+          },
+          "uniqueConstraints": {
+            "key": {
+              "columns": ["schema_id", "language", "message"],
+              "isAlternateKey": true
+            }
+          },
+          "checkConstraints": {
+            "non_empty_message": {
+              "expression": "message <> ''"
+            },
+            "non_empty_language": {
+              "expression": "language <> ''"
+            }
+          },
+          "mainField": "full_name",
+          "saveRestoreKey": "key"
+        }
+      },
+
+      "roles": {
+        "observer": {
+          "permissions": {
+            "schemas": {
+              "public": {
+                "entities": {
+                  "schemas": {
+                    "select": "true",
+                    "fields": {
+                      "name": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "user_views": {
+                    "select": "true",
+                    "fields": {
+                      "schema_id": {
+                        "select": "true"
+                      },
+                      "name": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "users": {
+                    "select": "id = $$user_id",
+                    "fields": {
+                      "name": {
+                        "select": "true"
+                      }
+                    }
+                  }
+                }
+              },
+
+              "ozma": {
+                "entities": {
+                  "settings": {
+                    "select": "true",
+                    "fields": {
+                      "name": {
+                        "select": "true"
+                      },
+                      "value": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "user_settings": {
+                    "select": "user_id = $$user_id",
+                    "update": "true",
+                    "delete": "true",
+                    "check": "true",
+                    "insert": true,
+                    "fields": {
+                      "user_id": {
+                        "select": "true",
+                        "update": "true",
+                        "check": "user_id IS NOT DISTINCT FROM $$user_id",
+                        "insert": true
+                      },
+                      "name": {
+                        "select": "true",
+                        "update": "true",
+                        "check": "true",
+                        "insert": true
+                      },
+                      "value": {
+                        "select": "true",
+                        "update": "true",
+                        "check": "true",
+                        "insert": true
+                      }
+                    }
+                  },
+
+                  "iframe_markups": {
+                    "select": "true",
+                    "fields": {
+                      "schema_id": {
+                        "select": "true"
+                      },
+                      "name": {
+                        "select": "true"
+                      },
+                      "markup": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "embedded_pages": {
+                    "select": "true",
+                    "fields": {
+                      "schema_id": {
+                        "select": "true"
+                      },
+                      "name": {
+                        "select": "true"
+                      },
+                      "markup": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "color_themes": {
+                    "select": "true",
+                    "fields": {
+                      "schema_id": {
+                        "select": "true"
+                      },
+                      "name": {
+                        "select": "true"
+                      },
+                      "localized_name": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "color_variants": {
+                    "select": "true",
+                    "fields": {
+                      "name": {
+                        "select": "true"
+                      },
+                      "theme_id": {
+                        "select": "true"
+                      },
+                      "foreground": {
+                        "select": "true"
+                      },
+                      "background": {
+                        "select": "true"
+                      },
+                      "border": {
+                        "select": "true"
+                      }
+                    }
+                  },
+
+                  "translations": {
+                    "select": "true",
+                    "fields": {
+                      "schema_id": {
+                        "select": "true"
+                      },
+                      "message": {
+                        "select": "true"
+                      },
+                      "language": {
+                        "select": "true"
+                      },
+                      "translation": {
+                        "select": "true"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "defaultAttributes": {
+        "public": {
+          "entities": {
+            "user_views": {
+              "fields": {
+                "query": {
+                  "attributes": "@{ text_type = 'codeeditor' }"
+                }
+              }
+            },
+
+            "fields_attributes": {
+              "fields": {
+                "attributes": {
+                  "attributes": "@{ text_type = 'codeeditor' }"
+                }
+              }
+            },
+
+            "triggers": {
+              "fields": {
+                "procedure": {
+                  "attributes": "@{ text_type = 'codeeditor', language = 'javascript' }"
+                }
+              }
+            },
+
+            "actions": {
+              "fields": {
+                "function": {
+                  "attributes": "@{ text_type = 'codeeditor', language = 'javascript' }"
+                }
+              }
+            },
+
+            "modules": {
+              "fields": {
+                "source": {
+                  "attributes": "@{ text_type = 'codeeditor', language = 'javascript' }"
+                }
+              }
+            },
+
+            "user_view_generators": {
+              "fields": {
+                "script": {
+                  "attributes": "@{ text_type = 'codeeditor', language = 'javascript' }"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

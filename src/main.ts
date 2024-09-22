@@ -11,7 +11,7 @@ import * as Modules from '@/modules'
 import { setHeadTitle, setHeadMeta } from '@/elements'
 
 import UserView from '@/components/UserView.vue'
-import FunLink from '@/components/FunLink'
+import OzmaLink from '@/components/OzmaLink'
 import ButtonsPanel from '@/components/panels/ButtonsPanel.vue'
 import ButtonGroup from '@/components/buttons/ButtonGroup.vue'
 import FormControl from '@/components/FormControl.vue'
@@ -73,7 +73,7 @@ Vue.component('UserView', UserView)
 Vue.component('ButtonsPanel', ButtonsPanel)
 Vue.component('ButtonGroup', ButtonGroup)
 Vue.component('FormControl', FormControl)
-Vue.component('FunLink', FunLink)
+Vue.component('OzmaLink', OzmaLink)
 
 Vue.directive('visible', (el, bind) => {
   el.style.visibility = bind.value ? 'visible' : 'hidden'

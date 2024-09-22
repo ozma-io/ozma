@@ -53,7 +53,7 @@
           :class="['option', optionVariantClassName, 'option-local-variant']"
           :style="optionVariantVariables"
         >
-          <FunLink
+          <OzmaLink
             class="option-link rounded-circle"
             :link="link"
             @goto="$emit('goto', $event)"
@@ -63,7 +63,7 @@
             >
               open_in_new
             </span>
-          </FunLink>
+          </OzmaLink>
           <!-- eslint-disable vue/no-v-html -->
           <span class="reference-text" v-html="valueHtml || '&nbsp;'" />
           <!-- eslint-enable -->

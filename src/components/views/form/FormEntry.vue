@@ -38,7 +38,7 @@
             />
             <b-row v-else-if="element.type === 'buttons'">
               <b-col>
-                <FunLink
+                <OzmaLink
                   v-for="(subBlock, subBlockI) in element.actions"
                   :key="subBlockI"
                   :link="subBlock.link"
@@ -47,7 +47,7 @@
                   <b-button :key="subBlockI" block :variant="subBlock.variant">
                     {{ subBlock.name }}
                   </b-button>
-                </FunLink>
+                </OzmaLink>
               </b-col>
             </b-row>
           </FormGrid>

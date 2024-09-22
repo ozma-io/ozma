@@ -1,7 +1,7 @@
 <template>
   <!-- <a> tags have special behaviour on Safari which breaks animation, hence no-href. -->
   <!-- Ternary in `:link` for fix Firefox issue, see: https://github.com/SortableJS/Sortable/issues/1184 -->
-  <FunLink
+  <OzmaLink
     class="card-link"
     no-href
     :link="card.link"
@@ -46,7 +46,7 @@
         </span>
       </b-col>
     </b-row>
-  </FunLink>
+  </OzmaLink>
 </template>
 
 <script lang="ts">

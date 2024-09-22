@@ -22,7 +22,7 @@
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
-export default class FunOverlay extends Vue {
+export default class OzmaOverlay extends Vue {
   @Prop({ type: Boolean, required: true }) show!: boolean
 
   private onOverlayScroll() {

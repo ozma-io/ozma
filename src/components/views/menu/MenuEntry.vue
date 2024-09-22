@@ -39,7 +39,7 @@
       </div>
     </template>
     <template v-else>
-      <FunLink
+      <OzmaLink
         class="menu-entry"
         :link="entry.link"
         @goto="$emit('goto', $event)"
@@ -72,7 +72,7 @@
         >
           {{ entry.badge.value }}
         </b-badge>
-      </FunLink>
+      </OzmaLink>
     </template>
   </b-col>
 </template>

@@ -5,14 +5,9 @@ import VueTemplateBabelCompiler from 'vue-template-babel-compiler'
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin'
 import CreateFileWebpack from 'create-file-webpack'
 
-const defaultConfig = fs.readFileSync('./config/development.json')
-const configName = process.env['CONFIG'] || process.env['NODE_ENV']
-let buildConfig
-try {
-  buildConfig = fs.readFileSync(`./config/${configName}.json`)
-} catch (e) {
-  buildConfig = defaultConfig
-}
+const configName =
+  process.env['CONFIG'] || process.env['NODE_ENV'] || 'development'
+const buildConfig = JSON.parse(fs.readFileSync(`./config/${configName}.json`))
 const defaults = {
   __DISABLE_AUTH__: false,
   __API_AUTH_URL__: undefined,

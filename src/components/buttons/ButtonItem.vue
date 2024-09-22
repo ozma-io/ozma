@@ -13,9 +13,9 @@
     />
   </router-link>
 
-  <FunLink
+  <OzmaLink
     v-else-if="button.type === 'link'"
-    class="funlink"
+    class="ozmalink"
     :link="button.link"
     @goto="$emit('goto', $event)"
     @click="onClickLink"
@@ -27,7 +27,7 @@
       :align-right="alignRight"
       :tabindex="-1"
     />
-  </FunLink>
+  </OzmaLink>
 
   <ButtonView
     v-else-if="button.type === 'callback'"
@@ -99,7 +99,7 @@ export default class ButtonItem extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.funlink:hover {
+.ozmalink:hover {
   text-decoration: none;
 }
 </style>

@@ -4,7 +4,7 @@ import { redirectClick } from '@ozma-io/ozma-embedded'
 import { vueEmit } from '@/utils'
 import { Link, linkHandler, ILinkHandlerParams } from '@/links'
 
-export default Vue.component('FunLink', {
+export default Vue.component('OzmaLink', {
   functional: true,
   props: {
     link: { type: Object, default: null },

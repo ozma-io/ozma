@@ -17,7 +17,7 @@
     "prettier": "prettier -w ./"
   },
   "lint-staged": {
-    "src/**/*.{js,ts,vue,html,scss}": "yarn exec prettier",
+    "src/**/*.{js,ts,vue,html,scss}": "yarn exec prettier -w",
     "*.scss": "yarn exec stylelint",
     "src/**/*.{js,ts,vue}": "yarn exec vue-cli-service lint"
   },
