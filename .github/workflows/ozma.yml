@@ -50,7 +50,7 @@ jobs:
       # - name: Attest
       #   uses: actions/attest-build-provenance@v1
       #   with:
-      #     subject-path: out/ozmadb/**
+      #     subject-path: dist/**
 
   publish-docker:
     name: Publish Docker Image

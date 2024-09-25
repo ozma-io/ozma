@@ -63,7 +63,7 @@ jobs:
       # - name: Attest
       #   uses: actions/attest-build-provenance@v1
       #   with:
-      #     subject-path: out/ozmadb/**
+      #     subject-path: ozma-embedded/bundle/embedded.min.js
 
   publish-release:
     name: Publish Release
