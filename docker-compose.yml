@@ -10,6 +10,7 @@ services:
 
   keycloak:
     image: keycloak/keycloak:25.0
+    entrypoint: /usr/local/bin/entrypoint.sh
     restart: unless-stopped
     environment:
       KC_DB: postgres
@@ -17,7 +18,7 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
 
-      KC_HOSTNAME: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${POST:-9000}/auth
+      KC_HOSTNAME: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_PROXY_HEADERS: xforwarded
@@ -30,8 +31,11 @@ services:
       KC_HEALTH_ENABLED: true
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
+
+      OZMA_REPORT_GENERATOR_CLIENT_SECRET: "${OZMA_REPORT_GENERATOR_CLIENT_SECRET}"
     volumes:
-      - ./docker/keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./docker/keycloak-realm.json:/etc/keycloak/realm.json:ro
+      - ./docker/keycloak-entrypoint.sh:/usr/local/bin/entrypoint.sh
     command: ["start", "--import-realm"]
     depends_on:
       - postgres
@@ -60,6 +64,26 @@ services:
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
     ports:
       - ${PORT:-9000}:80
+
+  ozma-report-generator:
+    image: ozmaio/ozma-report-generator:master
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_USER: ozma-report-generator
+      DB_PASSWORD: ozma-report-generator
+      DB_NAME: ozma-report-generator
+      AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
+      AUTH_REQUIRE_HTTPS_METADATA: false
+      AUTH_CLIENT_ID: ozma-report-generator
+      AUTH_CLIENT_SECRET: "${OZMA_REPORT_GENERATOR_CLIENT_SECRET}"
+      ORIGIN: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}
+      PATH_BASE: /report-generator
+      OZMA_DB_URL: http://ozmadb:5000
+      # Comment this for production
+      AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
+    depends_on:
+      - postgres
 
 volumes:
   postgres_data:
