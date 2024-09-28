@@ -17,17 +17,16 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
 
-      KC_HOSTNAME: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth
+      KC_HOSTNAME: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_PROXY_HEADERS: xforwarded
-      # Comment these for production
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: true
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
 
       KC_LOG_LEVEL: info
-      KC_METRICS_ENABLED: true
-      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
     volumes:
@@ -45,9 +44,9 @@ services:
       DB_PASSWORD: ozmadb
       DB_NAME: ozmadb
       PRELOAD: /etc/ozmadb/preload/preload.json
-      AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
+      AUTH_AUTHORITY: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth/realms/ozma
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
-      AUTH_REQUIRE_HTTPS_METADATA: false
+      AUTH_REQUIRE_HTTPS_METADATA: "false"
     volumes:
       - ./ozmadb:/etc/ozmadb/preload:ro
     depends_on:
@@ -58,9 +57,12 @@ services:
     restart: unless-stopped
     volumes:
       - caddy_data:/data
-      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./docker/Caddyfile.ozma:/etc/caddy/Caddyfile:ro
+    environment:
+      ADDRESS: ${CADDY_ADDRESS:-:80}
     ports:
-      - ${PORT:-9000}:80
+      - ${PORT:-9080}:80
+      - ${HTTPS_PORT:-9443}:443
 
   ozma-report-generator:
     image: ozmaio/ozma-report-generator:master
@@ -71,13 +73,13 @@ services:
       DB_PASSWORD: ozma-report-generator
       DB_NAME: ozma-report-generator
       AUTH_CLIENT_ID: ozma-report-generator
-      ORIGIN: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}
+      ORIGIN: ${EXTERNAL_ORIGIN:-http://localhost:9080}
       PATH_BASE: /report-generator
       OZMA_DB_URL: http://ozmadb:5000
       OZMA_DB_FORCE_INSTANCE: ozma
-      AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
+      AUTH_AUTHORITY: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth/realms/ozma
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
-      AUTH_REQUIRE_HTTPS_METADATA: false
+      AUTH_REQUIRE_HTTPS_METADATA: "false"
     depends_on:
       - postgres
 

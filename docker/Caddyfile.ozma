@@ -1,4 +1,4 @@
-:80 {
+{$ADDRESS} {
   handle_path /api/* {
     reverse_proxy ozmadb:5000
   }
