@@ -10,6 +10,7 @@ services:
 
   keycloak:
     image: keycloak/keycloak:25.0
+    entrypoint: /usr/local/bin/entrypoint.sh
     restart: unless-stopped
     environment:
       KC_DB: postgres
@@ -29,8 +30,11 @@ services:
       KC_HEALTH_ENABLED: "true"
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
+
+      EXTERNAL_ORIGIN: "${EXTERNAL_ORIGIN:-http://localhost:9080}"
     volumes:
-      - ./docker/keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
+      - ./docker/keycloak-realm.json:/etc/keycloak/realm.json:ro
+      - ./docker/keycloak-entrypoint.sh:/usr/local/bin/entrypoint.sh
     command: ["start", "--import-realm"]
     depends_on:
       - postgres
