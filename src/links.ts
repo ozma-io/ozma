@@ -213,7 +213,7 @@ export const attrToDocumentLink = (
   }
   const filename =
     filenameRaw === undefined
-      ? `${ref.name}.pdf`
+      ? `${ref.data.name}.pdf`
       : filenameRaw + (filenameHasExtension(filenameRaw) ? '' : '.pdf')
 
   return { type: 'document', template: ref.data, filename, args }
