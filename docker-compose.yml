@@ -10,7 +10,6 @@ services:
 
   keycloak:
     image: keycloak/keycloak:25.0
-    entrypoint: /usr/local/bin/entrypoint.sh
     restart: unless-stopped
     environment:
       KC_DB: postgres
@@ -32,8 +31,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
     volumes:
-      - ./docker/keycloak-realm.json:/etc/keycloak/realm.json:ro
-      - ./docker/keycloak-entrypoint.sh:/usr/local/bin/entrypoint.sh
+      - ./docker/keycloak-realm.json:/opt/keycloak/data/import/realm.json:ro
     command: ["start", "--import-realm"]
     depends_on:
       - postgres
@@ -76,6 +74,7 @@ services:
       ORIGIN: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}
       PATH_BASE: /report-generator
       OZMA_DB_URL: http://ozmadb:5000
+      OZMA_DB_FORCE_INSTANCE: ozma
       AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
       AUTH_REQUIRE_HTTPS_METADATA: false

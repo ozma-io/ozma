@@ -1,6 +1,7 @@
 {
   "__API_URL__": "`${location.origin}/api`",
   "__API_AUTH_URL__": "`${location.origin}/auth/realms/ozma`",
+  "__DOCUMENT_GENERATOR_URL__": "`${location.origin}/report-generator`",
   "__AUTH_CLIENT_ID__": "'ozma'",
   "__INSTANCE_NAME__": "'ozma'"
 }
