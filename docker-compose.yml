@@ -31,8 +31,6 @@ services:
       KC_HEALTH_ENABLED: true
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD:-admin}"
-
-      OZMA_REPORT_GENERATOR_CLIENT_SECRET: "${OZMA_REPORT_GENERATOR_CLIENT_SECRET}"
     volumes:
       - ./docker/keycloak-realm.json:/etc/keycloak/realm.json:ro
       - ./docker/keycloak-entrypoint.sh:/usr/local/bin/entrypoint.sh
@@ -48,9 +46,10 @@ services:
       DB_USER: ozmadb
       DB_PASSWORD: ozmadb
       DB_NAME: ozmadb
-      AUTH_AUTHORITY: http://keycloak:8080/auth/realms/ozma
-      AUTH_REQUIRE_HTTPS_METADATA: false
       PRELOAD: /etc/ozmadb/preload/preload.json
+      AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
+      AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
+      AUTH_REQUIRE_HTTPS_METADATA: false
     volumes:
       - ./ozmadb:/etc/ozmadb/preload:ro
     depends_on:
@@ -73,15 +72,13 @@ services:
       DB_USER: ozma-report-generator
       DB_PASSWORD: ozma-report-generator
       DB_NAME: ozma-report-generator
-      AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
-      AUTH_REQUIRE_HTTPS_METADATA: false
       AUTH_CLIENT_ID: ozma-report-generator
-      AUTH_CLIENT_SECRET: "${OZMA_REPORT_GENERATOR_CLIENT_SECRET}"
       ORIGIN: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}
       PATH_BASE: /report-generator
       OZMA_DB_URL: http://ozmadb:5000
-      # Comment this for production
+      AUTH_AUTHORITY: ${PROTOCOL:-http}://${HOSTNAME:-localhost}:${PORT:-9000}/auth/realms/ozma
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
+      AUTH_REQUIRE_HTTPS_METADATA: false
     depends_on:
       - postgres
 

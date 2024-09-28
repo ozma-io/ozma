@@ -2,9 +2,15 @@
   handle_path /api/* {
     reverse_proxy ozmadb:5000
   }
+
   handle /auth/* {
     reverse_proxy keycloak:8080
   }
+
+  handle /report-generator/* {
+    reverse_proxy ozma-report-generator:5000
+  }
+
   handle {
     root /usr/share/caddy
     file_server

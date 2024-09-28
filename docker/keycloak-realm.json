@@ -50,7 +50,7 @@
       "clientId": "ozma-report-generator",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": ["http://localhost:9000/report-generator/auth_response"],
+      "redirectUris": ["http://localhost:9000/report-generator/signin-oidc"],
       "webOrigins": ["http://localhost:9000"],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
