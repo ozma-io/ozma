@@ -79,8 +79,8 @@
   "users": [
     {
       "id": "admin",
-      "username": "admin@example.com",
-      "email": "admin@example.com",
+      "username": "{ADMIN_EMAIL}",
+      "email": "{ADMIN_EMAIL}",
       "emailVerified": true,
       "enabled": true,
       "credentials": [

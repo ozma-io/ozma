@@ -32,6 +32,7 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
 
       EXTERNAL_ORIGIN: "${EXTERNAL_ORIGIN:-http://localhost:9080}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@example.com}"
     volumes:
       - ./docker/keycloak-realm.json:/etc/keycloak/realm.json:ro
       - ./docker/keycloak-entrypoint.sh:/usr/local/bin/entrypoint.sh
