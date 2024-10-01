@@ -66,7 +66,7 @@ services:
     environment:
       ADDRESS: ${CADDY_ADDRESS:-:80}
     ports:
-      - ${PORT:-9080}:80
+      - ${HTTP_PORT:-9080}:80
       - ${HTTPS_PORT:-9443}:443
 
   ozma-report-generator:
