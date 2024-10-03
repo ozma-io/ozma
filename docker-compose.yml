@@ -40,6 +40,10 @@ services:
     depends_on:
       - postgres
 
+  redis:
+    image: redis:7.4
+    restart: unless-stopped
+
   ozmadb:
     image: ozmaio/ozmadb:master
     restart: unless-stopped
@@ -52,22 +56,13 @@ services:
       AUTH_AUTHORITY: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth/realms/ozma
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
       AUTH_REQUIRE_HTTPS_METADATA: "false"
+      REDIS: redis
     volumes:
       - ./ozmadb:/etc/ozmadb/preload:ro
     depends_on:
       - postgres
-
-  ozma:
-    image: ozmaio/ozma:master
-    restart: unless-stopped
-    volumes:
-      - caddy_data:/data
-      - ./docker/Caddyfile.ozma:/etc/caddy/Caddyfile:ro
-    environment:
-      ADDRESS: ${CADDY_ADDRESS:-:80}
-    ports:
-      - ${PORT:-9080}:80
-      - ${HTTPS_PORT:-9443}:443
+      - redis
+      - keycloak
 
   ozma-report-generator:
     image: ozmaio/ozma-report-generator:master
@@ -87,6 +82,23 @@ services:
       AUTH_REQUIRE_HTTPS_METADATA: "false"
     depends_on:
       - postgres
+      - keycloak
+
+  ozma:
+    image: ozmaio/ozma:master
+    restart: unless-stopped
+    volumes:
+      - caddy_data:/data
+      - ./docker/Caddyfile.ozma:/etc/caddy/Caddyfile:ro
+    environment:
+      ADDRESS: ${CADDY_ADDRESS:-:80}
+    ports:
+      - ${HTTP_PORT:-9080}:80
+      - ${HTTPS_PORT:-9443}:443
+    depends_on:
+      - keycloak
+      - ozmadb
+      - ozma-report-generator
 
 volumes:
   postgres_data:
