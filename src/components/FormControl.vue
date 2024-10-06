@@ -345,7 +345,7 @@ import { IIframeRef } from '@/api'
 import { ITime } from '@/components/Calendar.vue'
 import type { ConvertedBoundAttributesMap } from '@/user_views/combined'
 import { formatRawValue } from '@/user_views/format'
-import { UserString } from '@/state/translations'
+import { UserString, isOptionalUserString } from '@/state/translations'
 import { IArgumentEditorProps } from './ArgumentEditor.vue'
 
 interface ITextType {
@@ -608,7 +608,7 @@ export default class FormControl extends Vue {
   attributeMappings!: ConvertedBoundAttributesMap
   @Prop({ type: Boolean, default: false }) locked!: boolean
   @Prop({ type: String }) homeSchema!: string | undefined
-  @Prop() caption!: UserString | undefined
+  @Prop({ validator: isOptionalUserString }) caption!: UserString | undefined
   @Prop({ type: Boolean, default: false }) forceCaption!: boolean
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Boolean, default: false }) disableColor!: boolean

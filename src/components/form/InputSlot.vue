@@ -141,10 +141,11 @@ import {
   getColorVariantAttributeVariables,
 } from '@/utils_colors'
 import type { UserString } from '@/state/translations'
+import { isUserString } from '@/state/translations'
 
 @Component({ components: { TabbedModal, Input } })
 export default class InputSlot extends Vue {
-  @Prop({ required: true }) label!: UserString
+  @Prop({ validator: isUserString, required: true }) label!: UserString
   // FIXME: remove this and style parent nodes instead.
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
   @Prop({ type: String }) backgroundColor!: string

@@ -50,6 +50,7 @@ import { EntriesRef } from '@/state/entries'
 import { IQuery } from '@/state/query'
 import type { ScopeName } from '@/state/staging_changes'
 import type { ColorVariantAttribute } from '@/utils_colors'
+import { UserString, isOptionalUserString } from '@/state/translations'
 
 const query = namespace('query')
 
@@ -77,7 +78,7 @@ export default class ReferenceField extends Vue {
   @Prop({ type: String }) backgroundColor!: string
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean
   @Prop({ type: String }) scope!: ScopeName
-  @Prop({ type: String }) label!: string | undefined
+  @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 

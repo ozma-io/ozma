@@ -294,6 +294,7 @@ import {
   getColorVariantAttributeClassName,
   getColorVariantAttributeVariables,
 } from '@/utils_colors'
+import { UserString, isOptionalUserString } from '@/state/translations'
 
 export interface ISelectOption<T> {
   label: string
@@ -345,7 +346,7 @@ export default class MultiSelect extends Vue {
   @Prop({ type: Function }) processFilter!: (
     _: string,
   ) => Promise<boolean> | undefined
-  @Prop({ type: String }) label!: string | undefined
+  @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 

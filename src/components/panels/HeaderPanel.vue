@@ -113,7 +113,7 @@ import type { Button } from '@/components/buttons/buttons'
 import { buttonsToPanelButtons } from '@/components/buttons/buttons'
 import SearchPanel from '@/components/SearchPanel.vue'
 import { interfaceButtonVariant } from '@/utils_colors'
-import { UserString } from '@/state/translations'
+import { UserString, isOptionalUserString } from '@/state/translations'
 import ArgumentEditor, {
   IArgumentEditorProps,
 } from '@/components/ArgumentEditor.vue'
@@ -129,7 +129,7 @@ const isHelpButton = (button: Button) => button.icon === 'help_outline'
   },
 })
 export default class HeaderPanel extends Vue {
-  @Prop() title!: UserString | undefined
+  @Prop({ validator: isOptionalUserString }) title!: UserString | undefined
   @Prop({ type: Array, required: true }) buttons!: Button[]
   @Prop({ type: Boolean, required: true }) isEnableFilter!: boolean
   @Prop({ type: Object }) view!: IUserViewType | undefined

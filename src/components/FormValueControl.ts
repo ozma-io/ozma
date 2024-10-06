@@ -2,6 +2,7 @@ import Vue from 'vue'
 
 import { currentValue, ICombinedValue } from '@/user_views/combined'
 import { vueEmit } from '@/utils'
+import { isOptionalUserString } from '@/state/translations'
 
 export default Vue.extend({
   name: 'FormValueControl',
@@ -13,7 +14,7 @@ export default Vue.extend({
     attributes: { type: Object },
     attributeMappings: { type: Object },
     homeSchema: { type: String },
-    caption: { type: String },
+    caption: { validator: isOptionalUserString },
     forceCaption: { type: Boolean },
     compactMode: { type: Boolean },
     disableColor: { type: Boolean },

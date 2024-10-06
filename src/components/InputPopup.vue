@@ -7,7 +7,7 @@
             <div class="modal-slots">
               <div class="header">
                 <div class="label">
-                  {{ label }}
+                  {{ $ustOrEmpty(label) }}
                 </div>
               </div>
 
@@ -64,16 +64,17 @@
 <script lang="ts">
 import Popper from 'vue-popperjs'
 import { Portal } from 'portal-vue'
-
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
+
 import TabbedModal from '@/components/modal/TabbedModal.vue'
 import { nextRender } from '@/utils'
+import { UserString, isOptionalUserString } from '@/state/translations'
 
 type Mode = 'popup' | 'modal'
 
 @Component({ components: { Popper, TabbedModal, Portal } })
 export default class InputPopup extends Vue {
-  @Prop({ type: String }) label!: string | undefined
+  @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Boolean, default: false }) show!: boolean
   @Prop({ type: Object, default: () => {} }) popperOptions!: object
 

@@ -26,6 +26,30 @@ export interface IMessageString {
 
 export type UserString = string | ITranslatedString | IMessageString
 
+export const isUserString = (us: unknown): us is UserString => {
+  if (typeof us === 'string') {
+    return true
+  }
+  if (typeof us === 'object' && us !== null) {
+    if ('default' in us && 'strings' in us) {
+      return true
+    }
+    if ('schema' in us && 'message' in us) {
+      return true
+    }
+  }
+  return false
+}
+
+export const isOptionalUserString = (
+  us: unknown,
+): us is UserString | undefined => {
+  if (us === undefined) {
+    return true
+  }
+  return isUserString(us)
+}
+
 const errorKey = 'translations'
 
 export type TranslationsMap = Record<SchemaName, Record<string, string>>

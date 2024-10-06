@@ -48,7 +48,7 @@ import {
 
 import { valueIsNull } from '@/values'
 import type { ColorVariantAttribute } from '@/utils_colors'
-import { UserString } from '@/state/translations'
+import { UserString, isOptionalUserString } from '@/state/translations'
 
 @Component({
   components: {
@@ -65,7 +65,7 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Number }) optionsListHeight!: number | undefined
   @Prop({ type: Boolean, default: false }) autofocus!: boolean
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
-  @Prop() label!: UserString | undefined
+  @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 
   private getValueIndex(value: unknown) {

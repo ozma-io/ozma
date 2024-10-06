@@ -155,8 +155,9 @@ import { equalEntityRef, valueIsNull } from '@/values'
 import { CancelledError } from '@/modules'
 import type { EntriesRef } from '@/state/entries'
 import type { ScopeName } from '@/state/staging_changes'
-import QRCodeScannerModal from './qrcode/QRCodeScannerModal.vue'
+import QRCodeScannerModal from '@/components/qrcode/QRCodeScannerModal.vue'
 import type { ColorVariantAttribute } from '@/utils_colors'
+import { UserString, isOptionalUserString } from '@/state/translations'
 
 export interface ICombinedReferenceValue {
   id: RowId
@@ -211,7 +212,7 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
   @Prop({ type: Object }) linkAttr!: unknown | undefined
   @Prop({ type: Boolean, default: false }) qrcodeInput!: boolean
   @Prop({ type: String, default: 'no_scope' }) scope!: ScopeName
-  @Prop({ type: String }) label!: string | undefined
+  @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
 

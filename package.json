@@ -96,7 +96,7 @@
     "fast-async": "^7.0.6",
     "husky": ">=6",
     "lint-staged": ">=10",
-    "monaco-editor-webpack-plugin": "^7.0.1",
+    "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss": "^8.4.23",
     "postcss-html": "^1.7.0",
     "prettier": "^3.3.3",
