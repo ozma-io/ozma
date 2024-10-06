@@ -107,6 +107,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import Popper from 'vue-popperjs'
 
+import { debounceTillAnimationFrame } from '@/utils'
 import type { IUserViewType } from '@/components/FormControl.vue'
 import ButtonItem from '@/components/buttons/ButtonItem.vue'
 import type { Button } from '@/components/buttons/buttons'
@@ -181,7 +182,9 @@ export default class HeaderPanel extends Vue {
   private mounted() {
     if (this.$refs['headerPanel']) {
       /* eslint-disable-next-line @typescript-eslint/unbound-method */
-      this.panelResizeObserver = new ResizeObserver(this.onPanelResize)
+      this.panelResizeObserver = new ResizeObserver(
+        debounceTillAnimationFrame(() => this.onPanelResize()),
+      )
       this.panelResizeObserver.observe(this.$refs['headerPanel'] as HTMLElement)
     }
   }

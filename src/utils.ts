@@ -47,6 +47,19 @@ export const nextRender = (): Promise<void> =>
     )
   })
 
+export const debounceTillAnimationFrame = (f: () => void): (() => void) => {
+  let scheduled = false
+  return () => {
+    if (!scheduled) {
+      scheduled = true
+      requestAnimationFrame(() => {
+        scheduled = false
+        f()
+      })
+    }
+  }
+}
+
 /* eslint-disable import/no-mutable-exports */
 export declare let process: {
   env: Record<string, string>

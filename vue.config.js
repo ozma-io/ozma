@@ -45,7 +45,9 @@ export default {
   configureWebpack: {
     plugins: [
       new MonacoWebpackPlugin({
-        languages: ['sql', 'javascript', 'json', 'html'],
+        // `typescript` is needed when `javascript` is enabled.
+        // Otherwise we get runtime errors when trying to edit actions.
+        languages: ['sql', 'javascript', 'typescript', 'json', 'html'],
       }),
       new webpack.IgnorePlugin({
         resourceRegExp: /^\.\/locale$/,

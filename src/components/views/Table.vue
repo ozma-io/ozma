@@ -471,6 +471,7 @@ import {
   parseFromClipboard,
   waitTimeout,
   ClipboardParseValue,
+  debounceTillAnimationFrame,
 } from '@/utils'
 import { valueIsNull } from '@/values'
 import { UserView } from '@/components'
@@ -2658,7 +2659,9 @@ export default class UserViewTable extends mixins<
       },
     )
     if (this.$refs['tableWrapper']) {
-      this.tableResizeObserver = new ResizeObserver(this.onTableResize)
+      this.tableResizeObserver = new ResizeObserver(
+        debounceTillAnimationFrame(this.onTableResize),
+      )
       this.tableResizeObserver.observe(
         this.$refs['tableWrapper'] as HTMLElement,
       )
