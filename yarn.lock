@@ -1834,7 +1834,7 @@ __metadata:
     lint-staged: "npm:>=10"
     mitt: "npm:^3.0.0"
     moment: "npm:^2.29.4"
-    monaco-editor: "npm:^0.50.0"
+    monaco-editor: "npm:^0.52.0"
     monaco-editor-webpack-plugin: "npm:^7.1.0"
     papaparse: "npm:^5.3.2"
     portal-vue: "npm:^2.1.7"
@@ -8205,10 +8205,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"monaco-editor@npm:^0.50.0":
-  version: 0.50.0
-  resolution: "monaco-editor@npm:0.50.0"
-  checksum: 10c0/79189c926c2fc1e3a3b9118e80911599bf18108018fe176c7b47a27b4856b544129f9a59c9a5c321d154d6a30a8d9c231684246e9382f4f18329a548d11cb4d6
+"monaco-editor@npm:^0.52.0":
+  version: 0.52.0
+  resolution: "monaco-editor@npm:0.52.0"
+  checksum: 10c0/962c75272568eb1556835f0097da2c7768bffe1116b252bb8b3aefd34f31e2dc46baa27e3911c0a6617bf556e6d6802e6e9f0f5548edd832c33872a8a0c146d3
   languageName: node
   linkType: hard
 
