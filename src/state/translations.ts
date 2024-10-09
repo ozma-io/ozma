@@ -8,7 +8,6 @@ import Vue from 'vue'
 
 import { IRef, waitTimeout } from '@/utils'
 import { ozmaSchema } from '@/api'
-import { CancelledError } from '@/modules'
 
 const userString = z.union([z.string(), z.record(z.string(), z.string())])
 
@@ -109,7 +108,7 @@ const translationsModule: Module<ITranslationsState, {}> = {
           )) as IViewExprResult
 
           if (state.pending !== pending.ref) {
-            throw new CancelledError()
+            return state.pending!
           }
 
           const schemaColumnIndex = res.info.columns.findIndex(
