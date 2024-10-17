@@ -75,6 +75,7 @@ export interface IToastLink {
   variant: string
   title: UserString
   message: UserString
+  noAutoHide: boolean
   next: Link | null
 }
 
@@ -232,7 +233,8 @@ export const attrToToastLink = (
     i18n.tc('error')
   const variant = String(linkedAttr['variant'] ?? 'danger')
   const next = attrToLink(linkedAttr['next'], opts)
-  return { type: 'toast', message, title, variant, next }
+  const noAutoHide = Boolean(linkedAttr['noAutoHide'])
+  return { type: 'toast', message, title, variant, noAutoHide, next }
 }
 
 export const attrToLink = (
@@ -462,14 +464,6 @@ export const linkHandler = (
       }
       await beforeGoto()
       await app.$store.dispatch('staging/submit', { errorOnIncomplete: true })
-      const id = randomId()
-      app.$bvToast.toast(i18n.tc('generation_start_description'), {
-        title: i18n.tc('generation_start_title'),
-        noAutoHide: true,
-        solid: true,
-        id,
-      })
-
       const token = app.$store.state.auth.current.token
       const escapedFilename = encodeURIComponent(filename)
       const url = new URL(
@@ -478,6 +472,14 @@ export const linkHandler = (
       url.search = new URLSearchParams(
         args as Record<string, string>,
       ).toString()
+
+      const id = randomId()
+      app.$bvToast.toast(i18n.tc('generation_start_description'), {
+        title: i18n.tc('generation_start_title'),
+        noAutoHide: true,
+        solid: true,
+        id,
+      })
 
       try {
         const res = await fetch(url.toString(), {
@@ -500,6 +502,7 @@ export const linkHandler = (
             title: i18n.tc('generation_fail'),
             variant: 'danger',
             solid: true,
+            noAutoHide: true,
           })
         }
       } catch (e) {
@@ -507,6 +510,7 @@ export const linkHandler = (
           title: i18n.tc('generation_fail'),
           variant: 'danger',
           solid: true,
+          noAutoHide: true,
         })
       } finally {
         // Don't know why it's needed there, but without it toast won't close.
@@ -515,13 +519,14 @@ export const linkHandler = (
       }
     }
   } else if (link.type === 'toast') {
-    const { message, title, variant } = link
+    const { message, title, variant, noAutoHide } = link
     const nextHandler = link.next ? linkHandler(link.next, params) : null
     handler = async () => {
       app.$bvToast.toast(app.$ustOrEmpty(message), {
         title: app.$ustOrEmpty(title),
         variant,
         solid: true,
+        noAutoHide,
       })
       await nextHandler?.handler()
     }

@@ -58,6 +58,7 @@ export const saveAndRunAction = async (
                 title: i18n.tc('exception_in_action'),
                 variant: 'danger',
                 solid: true,
+                noAutoHide: true,
               })
             }
 
