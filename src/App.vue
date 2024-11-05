@@ -227,7 +227,7 @@ export default class App extends Vue {
         }
       }
 
-      const uvRef = { schema: 'ozma', name: 'embedded_page_by_name' }
+      const uvRef = { schema: 'funapp', name: 'embedded_page_by_name' }
       const res: IViewExprResult = await this.callApi({
         func: (api) => api.getNamedUserView(uvRef, args.ref as any),
       })
