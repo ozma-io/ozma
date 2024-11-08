@@ -7,6 +7,7 @@ services:
       - ./docker/postgres-init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     environment:
       POSTGRES_PASSWORD: postgres
+    shm_size: 4gb
 
   keycloak:
     image: keycloak/keycloak:25.0
