@@ -14,7 +14,7 @@ Ozma is an open-source CRM/ERP platform that allows for the rapid development of
 - [Prerequisites](#prerequisites)
 - [Setup Options](#setup-options)
   - [Running in Development Environment](#running-in-development-environment)
-  - [Running in Production Environment](#installation)
+  - [Running in Production Environment](#running-in-production-environment)
 - [Accessing the Application](#accessing-the-application)
 - [Logging In](#logging-in)
   - [Ozma Admin User](#ozma-admin-user)
@@ -289,7 +289,7 @@ docker compose down -v
 ```
 ***Warning**: Removing volumes will delete your databases and any persistent data.*
 
-## FAQ
+## FAQs
 ### Q1: I can't access the Keycloak admin interface.
 A: Ensure you are accessing the correct URL with a trailing slash: `https://your-domain.com/auth/`
 
