@@ -1,4 +1,7 @@
-# Ozma
+# Ozma — open-source CRM/ERP platform
+
+[![Discord](https://img.shields.io/discord/938075538961080350.svg?label=Chat&logo=discord&color=7289da)](https://discord.gg/Mc8YcF63yt)
+
 ## Introduction
 Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems. Build and tailor CRM/ERP solutions quickly and efficiently to meet your business needs.
 
