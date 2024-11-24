@@ -10,7 +10,6 @@
         nodejs
         tern
         yarn-berry
-        "@vue/cli"
         vue-language-server
       ];
     runScript = pkgs.writeScript "env-shell" ''
