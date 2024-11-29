@@ -24,7 +24,7 @@ Ozma is an open-source CRM/ERP platform that allows for the rapid development of
   <a href="https://github.com/ozma-io/ozma/issues">
     <img src="https://img.shields.io/github/commit-activity/m/ozma-io/ozma" alt="git commit activity" />
   </a>
-  <a href="https://github.com/ozma-io/ozma/edit/master/README.md#contributing">
+  <a href="https://github.com/ozma-io/ozma?tab=readme-ov-file#contributing">
     <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen" alt="PRs welcome!" />
   </a>
 </div>
