@@ -22,10 +22,8 @@ Ozma is an open-source CRM/ERP platform that allows for the rapid development of
 - [Logging In](#logging-in)
   - [Ozma Admin User](#ozma-admin-user)
   - [Keycloak Admin User](#keycloak-admin-user)
-- [Importing Database Dumps](#importing-database-dumps)
 - [Managing Users](#managing-users)
   - [Keycloak Integration](#keycloak-integration)
-  - [Restoring Users](#restoring-users)
 - [Updating the Application](#updating-the-application)
 - [Stopping the Application](#stopping-the-application)
 - [FAQs](#faqs)
@@ -37,9 +35,9 @@ Before you begin, ensure you have the following:
 
 - **Operating System**: Ubuntu or any Linux distribution
 - **Root Access**: Administrative privileges on your server
-- **Domain Name**: A registered domain (e.g., `your-domain.com`) pointing to your server's IP address
 - **Docker Engine**: Installed [Docker CE](https://docs.docker.com/engine/install/ubuntu/) (Community Edition)
 - **Git**: Installed Git for cloning the repository
+- **Domain Name (Optional)**: A registered domain (e.g., `your-address.com`) pointing to your server's IP address.
 
 ### Installing Docker and Git
 **Install Git:**
@@ -54,7 +52,7 @@ sudo apt install git
 You can set up Ozma in either a development environment or a production environment, depending on your needs.
 
 ### Running in Development Environment
-Follow these steps to set up Ozma in a development environment.
+Follow these steps to set up Ozma locally in a development environment.
 
 #### 1. Cloning the Repository
 If you haven't already cloned the repository, do so now:
@@ -77,8 +75,8 @@ This will start the development environment with all the required services.
 
 #### 4. Accessing the Development Server
 Once the server is running, you can access the application and administrative interfaces:
-- **Ozma Application**: `https://localhost:9080/`
-- **Keycloak Admin Interface**: `https://localhost:9080/auth/`
+- **Ozma Application**: `http://localhost:9080/`
+- **Keycloak Admin Interface**: `http://localhost:9080/auth/`
 - **Report Generator Admin Interface**: `http://localhost:9080/report-generator/admin/ozma/`
 
 #### 5. Default Credentials
@@ -92,7 +90,7 @@ Use the following default credentials to log in:
 - **Username**: `admin`
 - **Password**: `admin`
 
-***Note**: The development server runs on `https://localhost:9080`. Ensure that port `9080` is open and not used by other applications on your local machine.*
+***Note**: The development server runs on `http://localhost:9080`. Ensure that port `9080` is open and not used by other applications on your local machine.*
 
 ### Running in Production Environment
 Follow these steps to install Ozma in a production environment.
@@ -100,7 +98,7 @@ Follow these steps to install Ozma in a production environment.
 #### 1. Setting Up the Server
 Set up a machine with Linux (Ubuntu is recommended). You can use any cloud provider such as AWS, Google Cloud, Yandex.Cloud etc.
 
-#### 2. Domain Configuration
+#### 2. Domain Configuration (Optional)
 - Register a domain name or use an existing one (e.g., your-domain.com).
 - Create an A record in your DNS settings pointing `your-domain.com` to your server's IP address.
 - If using a subdomain, ensure it also points to your server.
@@ -114,7 +112,7 @@ Install Git and other dependencies:
 ```bash
 sudo apt install git ca-certificates curl
 ```
-Install Docker:
+Install Docker (if you haven't already done it): 
 ```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
@@ -143,12 +141,12 @@ Edit the .env file:
 ```bash
 nano .env
 ```
-In the .env file, you need to:
-- **Set a password for the Keycloak admin user** by replacing `KEYCLOAK_ADMIN_PASSWORD` with your desired password.
-- **Replace** `example.com` **with your domain** in `CADDY_ADDRESS` and `EXTERNAL_ORIGIN`.
-- **Set** `ADMIN_EMAIL` to your admin email address.
+In the `.env` file, you need to:
+- **Set Keycloak Admin Password**: Assign a strong password to `KEYCLOAK_ADMIN_PASSWORD`.
+- **Update Domain/IP Address**: Replace `example.com` with your domain or server IP in `CADDY_ADDRESS` and `EXTERNAL_ORIGIN`.
+- **Define Admin Email:** Set `ADMIN_EMAIL` to your administrator's email address.
 
-***Note**: Ensure that the `EXTERNAL_ORIGIN` matches the domain you will use to access the application. This setting is applied only during the initial setup. If you change it later, you will need to recreate the containers (see below).*
+***Note**: Ensure that the `EXTERNAL_ORIGIN` matches the address you will use to access the application. This setting is applied only during the initial setup. If you change it later, you will need to recreate the containers (see below).*
 
 #### 6. Running the Application
 Start the application in production mode:
@@ -159,11 +157,13 @@ Wait for Docker to pull images and start the containers. This may take some time
 
 #### 7. Accessing the Application
 Once the containers are up and running, you can access the application at your domain:
-- **Ozma Application**: `https://your-domain.com/`
-- **Keycloak Admin Interface**: `https://your-domain.com/auth/`
-- **Report Generator Admin Interface**: `https://your-domain.com/report-generator/admin/ozma/`
+- **Ozma Application**: `https://your-address.com/` *(or `http://your-address.com/` if SSL is configured)*
+- **Keycloak Admin Interface**: `https://your-address.com/auth/`  *(or `https://your-address.com/auth/` if SSL is not configured)*
+- **Report Generator Admin Interface**: `https://your-address.com/report-generator/admin/ozma/` *(or `https://your-address.com/report-generator/admin/ozma/` if SSL is not configured)*
 
-***Note**: Replace `your-domain.com` with your actual domain name.*
+***Note**: Replace `your-address.com` with your actual domain name or IP address.*
+
+***Note**: If you wish to secure your application with HTTPS without a registered domain, you can use a self-signed certificate or services like [Let's Encrypt](https://letsencrypt.org/), although the latter typically requires domain verification.*
 
 ## Accessing the Application
 After setting up either the development or production environment, you can access the application using the URLs provided.
@@ -183,89 +183,19 @@ After setting up either the development or production environment, you can acces
   - For production: The password you set in `KEYCLOAK_ADMIN_PASSWORD` in your `.env` file.
   - For development: `admin`
 
-## Importing Database Dumps
-If you have a database dump to import (e.g., for testing or restoring data), follow these steps:
-
-### 1. Copy the Database Dump to the Server
-You can copy the dump file to your server using `scp` or download it directly on the server using `curl`:
-```bash
-curl -LO 'https://your-dump-url/ozmadb.pg_dump'
-```
-### 2. Ensure Containers are Running
-If the containers are not already running, start them:
-```bash
-docker compose up -d
-```
-
-### 3. Recreate the Databases
-Run the following command to drop and recreate the databases:
-```bash
-docker compose exec -T postgres psql -U postgres <<< '
-SELECT pg_terminate_backend(pg_stat_activity.pid)
-FROM pg_stat_activity
-WHERE pid <> pg_backend_pid() AND datname IS NOT NULL;
-
-DROP DATABASE "ozmadb";
-CREATE DATABASE "ozmadb" OWNER "ozmadb";
-\c ozmadb
-ALTER SCHEMA public OWNER TO "ozmadb";
-
-DROP DATABASE "ozma-report-generator";
-CREATE DATABASE "ozma-report-generator" OWNER "ozma-report-generator";
-\c ozma-report-generator
-ALTER SCHEMA public OWNER TO "ozma-report-generator";
-'
-```
-
-***Note**: If you modify the `.env` file after the initial setup, you need to remove existing containers and volumes to apply the changes:*
-```bash
-docker compose down -v
-docker compose up -d
-```
-
-### 4. Restore the Databases from the Dumps
-Restore the Ozma database:
-```bash
-docker compose exec -T postgres pg_restore -U ozmadb -d ozmadb -xO < path/to/ozmadb.pg_dump
-```
-If you are using the Report Generator, restore its database as well:
-```bash
-docker compose exec -T postgres pg_restore -U ozma-report-generator -d ozma-report-generator -xO < path/to/report-generator.pg_dump
-```
-
-### 5. Access the Application
-After restoring the databases, you should be able to access the Ozma application at your domain and see your data.
-
 ## Managing Users
 ### Keycloak Integration
 Ozma uses Keycloak for user authentication and management. To manage users:
-1. Access the Keycloak Admin Interface at `https://your-domain.com/auth/`
+1. Access the Keycloak Admin Interface at `https://your-address.com/auth/`
 2. Log in with:
 - **Username**: `admin`
 - **Password**: The password you set in `KEYCLOAK_ADMIN_PASSWORD` in your `.env` file
 
-### Restoring Users
-**If Users Authenticate via Google**
-If your users authenticate via Google, you need to configure Google integration in Keycloak:
+#### Google Integration in Keycloak
+You can configure Google integration in Keycloak to allow users to log in with their Google accounts:
 - Follow this guide: [Signing in with Google with Keycloak](https://medium.com/@stefannovak96/signing-in-with-google-with-keycloak-bf5166e93d1e)
   
-After setting up, users can log in with Google, and if their email matches an email in the `public.users` table in the database, they will have the same permissions as before.
-
-**If Users Do Not Use Google**
-If users do not use Google authentication, you need to create user accounts in Keycloak manually:
-
-Log in to Keycloak via command line:
-```bash
-docker compose exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin
-```
-Create users from the list of users in Ozma:
-```bash
-docker compose exec -T postgres psql -U postgres ozmadb -tA -c "SELECT email FROM users WHERE email LIKE '%@%';" | \
-xargs -I{} docker compose exec keycloak /opt/keycloak/bin/kcadm.sh create users -r ozma -s username={} -s email={} -s enabled=true
-```
-Instruct your users to use the "Forgot Password" feature on the login page to set their passwords via email.
-
-***Note**: Replace `email` with the appropriate column name from your users table if different.*
+After setting up Google integration users can log in with their Google accounts. Ensure that their emails are added to the `public.users` table in the database to grant them access to the system.
 
 ## Updating the Application
 To update the application to the latest version:
@@ -294,28 +224,31 @@ docker compose down -v
 
 ## FAQs
 ### Q1: I can't access the Keycloak admin interface.
-A: Ensure you are accessing the correct URL with a trailing slash: `https://your-domain.com/auth/`
+A: Ensure you are accessing the correct URL with a trailing slash: `https://your-address.com/auth/`
 
 ### Q2: I'm getting an error about a missing user view user.main.
 A: This indicates that the database is empty. You may need to import your database dump or check that the migrations have run correctly.
 
-### Q3: How do I configure Google authentication in Keycloak?
+### Q3: How do I import a database dump into Ozma?
+A: To import a database dump (for testing or restoring data), please follow our detailed [Database Import Guide](https://wiki.ozma.io/en/installation/database-import). This guide provides step-by-step instructions to ensure a smooth and successful import process.
+
+### Q4: How do I configure Google authentication in Keycloak?
 A: Follow the guide here: [Signing in with Google with Keycloak](https://medium.com/@stefannovak96/signing-in-with-google-with-keycloak-bf5166e93d1e)
 
-### Q4: I updated the repository and now the application is not working.
+### Q5: I updated the repository and now the application is not working.
 A: Ensure you have rebuilt the Docker images and restarted the containers using:
 ```bash
 docker compose up --build --pull always --remove-orphans -d
 ```
 Check for any breaking changes in the update notes or contact the maintainers for support.
 
-### Q5: How do I completely remove the application and all its data?
+### Q6: How do I completely remove the application and all its data?
 A: Run the following command to stop the containers and remove all associated volumes:
 ```bash
 docker compose down -v
 ```
 
-### Q6: How can I contribute to the project?
+### Q7: How can I contribute to the project?
 A: Please refer to the [Contributing](#contributing) section below.
 
 ## Contributing
