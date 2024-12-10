@@ -103,6 +103,8 @@ Once the server is running, you can access the application and administrative in
 - **Ozma Application**: `http://localhost:9080/`
 - **Keycloak Admin Interface**: `http://localhost:9080/auth/`
 - **Report Generator Admin Interface**: `http://localhost:9080/report-generator/admin/ozma/`
+> [!NOTE]
+> The development server runs on `http://localhost:9080`. Ensure that port `9080` is open and not used by other applications on your local machine.
 
 #### 5. Default Credentials
 Use the following default credentials to log in:
@@ -114,8 +116,6 @@ Use the following default credentials to log in:
 **Keycloak Admin User**
 - **Username**: `admin`
 - **Password**: `admin`
-
-***Note**: The development server runs on `http://localhost:9080`. Ensure that port `9080` is open and not used by other applications on your local machine.*
 
 ### Running in Production Environment
 Follow these steps to install Ozma in a production environment.
@@ -170,8 +170,8 @@ In the `.env` file, you need to:
 - **Set Keycloak Admin Password**: Assign a strong password to `KEYCLOAK_ADMIN_PASSWORD`.
 - **Update Domain/IP Address**: Replace `example.com` with your domain or server IP in `CADDY_ADDRESS` and `EXTERNAL_ORIGIN`.
 - **Define Admin Email:** Set `ADMIN_EMAIL` to your administrator's email address.
-
-***Note**: Ensure that the `EXTERNAL_ORIGIN` matches the address you will use to access the application. This setting is applied only during the initial setup. If you change it later, you will need to recreate the containers (see below).*
+> [!NOTE]
+> Ensure that the `EXTERNAL_ORIGIN` matches the address you will use to access the application. This setting is applied only during the initial setup. If you change it later, you will need to recreate the containers (see below).
 
 #### 6. Running the Application
 Start the application in production mode:
@@ -186,14 +186,15 @@ Once the containers are up and running, you can access the application at your d
 - **Keycloak Admin Interface**: `https://your-address.com/auth/`  *(or `https://your-address.com/auth/` if SSL is not configured)*
 - **Report Generator Admin Interface**: `https://your-address.com/report-generator/admin/ozma/` *(or `https://your-address.com/report-generator/admin/ozma/` if SSL is not configured)*
 
-***Note**: Replace `your-address.com` with your actual domain name or IP address.*
-
-***Note**: If you wish to secure your application with HTTPS without a registered domain, you can use a self-signed certificate or services like [Let's Encrypt](https://letsencrypt.org/), although the latter typically requires domain verification.*
+> [!NOTE]
+> Replace `your-address.com` with your actual domain name or IP address.
+>
+> If you wish to secure your application with HTTPS without a registered domain, you can use a self-signed certificate or services like [Let's Encrypt](https://letsencrypt.org/), although the latter typically requires domain verification.
 
 ## Accessing the Application
 After setting up either the development or production environment, you can access the application using the URLs provided.
-
-***Important**: Some URLs require a trailing slash (`/`) at the end. Always use the URLs as specified to avoid any issues.*
+> [!IMPORTANT]
+> Some URLs require a trailing slash (`/`) at the end. Always use the URLs as specified to avoid any issues.
 
 ## Logging In
 ###  Ozma Admin User
@@ -219,8 +220,8 @@ Ozma uses Keycloak for user authentication and management. To manage users:
 #### Google Integration in Keycloak
 You can configure Google integration in Keycloak to allow users to log in with their Google accounts:
 - Follow this guide: [Signing in with Google with Keycloak](https://medium.com/@stefannovak96/signing-in-with-google-with-keycloak-bf5166e93d1e)
-  
-After setting up Google integration users can log in with their Google accounts. Ensure that their emails are added to the `public.users` table in the database to grant them access to the system.
+> [!NOTE]
+> After setting up Google integration, users can log in with their Google accounts. Ensure that their emails are added to the `public.users` table in the database to grant them access to the system.
 
 ## Updating the Application
 To update the application to the latest version:
@@ -233,8 +234,8 @@ Rebuild and restart the containers:
 ```bash
 docker compose up --build --pull always --remove-orphans -d
 ```
-
-***Warning**: Be cautious when pulling the latest changes. Major updates might include breaking changes such as database upgrades. **Always back up your data before updating**.*
+> [!WARNING]
+> Be cautious when pulling the latest changes. Major updates might include breaking changes such as database upgrades. **Always back up your data before updating**.
 
 ## Stopping the Application
 To stop the application:
@@ -245,7 +246,8 @@ If you want to remove all data and volumes (this will delete your databases and 
 ```bash
 docker compose down -v
 ```
-***Warning**: Removing volumes will delete your databases and any persistent data.*
+> [!WARNING]
+> Removing volumes will delete your databases and any persistent data.
 
 ## FAQs
 ### Q1: I can't access the Keycloak admin interface.
