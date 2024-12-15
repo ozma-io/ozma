@@ -1,9 +1,9 @@
 # Ozma — open-source CRM/ERP platform
 
+Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems. Build and tailor CRM/ERP solutions quickly and efficiently to meet your business needs.
+
 <div align="left">
-  <a href="https://ozma.io/ai-business-app-builder/"><strong>Get started »</strong></a>
-  <br />
-  <br />
+  <a href="https://ozma.io/ai-business-app-builder/">Get started</a> |
   <a href="https://discord.gg/Mc8YcF63yt">Discord</a> |
   <a href="https://wiki.ozma.io/en/home">Docs</a> |
   <a href="https://ozma.io">Website</a>
@@ -13,10 +13,7 @@
 
 [![Discord](https://img.shields.io/discord/938075538961080350.svg?label=Chat&logo=discord&color=7289da)](https://discord.gg/Mc8YcF63yt)
 
-## Introduction
-
-Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems. Build and tailor CRM/ERP solutions quickly and efficiently to meet your business needs.
-
+<!-- 
 <div>
   <a href="https://github.com/ozma-io/ozma/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-Apache 2.0-blue.svg" alt="ozma.io is released under the Apache-2.0 License">
@@ -28,6 +25,10 @@ Ozma is an open-source CRM/ERP platform that allows for the rapid development of
     <img src="https://img.shields.io/badge/PRs-Welcome-brightgreen" alt="PRs welcome!" />
   </a>
 </div>
+
+<br>
+ -->
+![](https://ozma.io/assets/images/main/preview.png)
 
 ## Features
 
