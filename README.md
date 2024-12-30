@@ -288,3 +288,32 @@ We welcome contributions from the community. Please follow these steps:
 
 ## License
 This project is licensed under the **Apache License 2.0**. You may obtain a copy of the License at [LICENSE](/LICENSE).
+
+## Quick Deploy
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ozma-io/ozma)
+
+### Heroku Deployment Steps
+
+1. Click the "Deploy to Heroku" button above
+2. Fill in the required environment variables:
+   - `ADMIN_EMAIL`: Your administrator email
+   - `EXTERNAL_ORIGIN`: Will be automatically set to your Heroku app URL
+   - `CADDY_ADDRESS`: Will be automatically set to your Heroku app domain
+3. Click "Deploy"
+4. Once deployed, you can access:
+   - Ozma Application: `https://your-app-name.herokuapp.com/`
+   - Keycloak Admin: `https://your-app-name.herokuapp.com/auth/`
+   - Report Generator: `https://your-app-name.herokuapp.com/report-generator/admin/ozma/`
+
+> [!NOTE]
+> The free tier of Heroku has limited resources. For production use, consider upgrading to a paid plan.
+
+5. Default Credentials:
+   - Ozma Admin: Use the email you provided with initial password `admin`
+   - Keycloak Admin: Username `admin`, password is auto-generated (check your Heroku app config vars)
+
+6. Important Notes:
+   - The PostgreSQL hobby-dev plan has a 10,000 row limit
+   - Heroku's container stack has a startup timeout of 60 seconds
+   - File storage is ephemeral - use external storage for production

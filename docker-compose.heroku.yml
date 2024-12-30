@@ -1,0 +1,30 @@
+services:
+  web:
+    build: .
+    environment:
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - EXTERNAL_ORIGIN=https://${HEROKU_APP_NAME}.herokuapp.com
+      - CADDY_ADDRESS=${HEROKU_APP_NAME}.herokuapp.com
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - keycloak
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KC_DB=postgres
+      - KC_DB_URL=${DATABASE_URL}
+    command: ["start", "--optimized"]
+    deploy:
+      resources:
+        limits:
+          memory: 512M 
