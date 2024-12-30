@@ -20,9 +20,15 @@
     }
   },
   "addons": [
-    "heroku-postgresql",
-    "heroku-redis"
+    "heroku-postgresql:mini",
+    "heroku-redis:mini"
   ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
   "buildpacks": [
     {
       "url": "heroku/docker"

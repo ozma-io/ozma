@@ -1,5 +1,7 @@
+# Start with the Ozma base image
 FROM ozmaio/ozma:master as ozma
 
+# Use Caddy as the final base image
 FROM caddy:2-alpine
 
 # Copy the Ozma frontend files from the ozma image
@@ -8,8 +10,8 @@ COPY --from=ozma /usr/share/caddy /usr/share/caddy
 # Create directory for Caddy configuration
 WORKDIR /etc/caddy
 
-# Create a basic Caddyfile for Heroku
-COPY docker/Caddyfile.ozma /etc/caddy/Caddyfile
+# Copy Caddyfile
+COPY docker/Caddyfile.heroku /etc/caddy/Caddyfile
 
 # Make port configurable via environment variable
 ENV PORT=8080
