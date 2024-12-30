@@ -9,20 +9,20 @@ COPY --from=ozma /usr/share/caddy /usr/share/caddy
 
 # Create Caddyfile with proper configuration for Heroku
 RUN echo ":{$PORT} {\n\
-    route /api/* {\n\
+    handle /api/* {\n\
         uri strip_prefix /api\n\
         reverse_proxy ozmadb:5000\n\
     }\n\
     \n\
-    route /auth/* {\n\
+    handle /auth/* {\n\
         reverse_proxy keycloak:8080\n\
     }\n\
     \n\
-    route /report-generator/* {\n\
+    handle /report-generator/* {\n\
         reverse_proxy ozma-report-generator:5000\n\
     }\n\
     \n\
-    route /* {\n\
+    handle /* {\n\
         root * /usr/share/caddy\n\
         file_server\n\
         try_files {path} /index.html\n\
