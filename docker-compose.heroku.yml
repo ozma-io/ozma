@@ -4,25 +4,20 @@ services:
       context: .
       dockerfile: docker/Dockerfile.heroku
     environment:
+      - PORT=${PORT}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - EXTERNAL_ORIGIN=https://${HEROKU_APP_NAME}.herokuapp.com
-      - CADDY_ADDRESS=${HEROKU_APP_NAME}.herokuapp.com
       - DATABASE_URL=${DATABASE_URL}
-      - PORT=${PORT}
     ports:
       - "${PORT}:${PORT}"
     depends_on:
       - keycloak
       - ozmadb
       - ozma-report-generator
-    deploy:
-      resources:
-        limits:
-          memory: 512M
 
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: keycloak/keycloak:25.0
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
@@ -30,11 +25,8 @@ services:
       - KC_DB_URL=${DATABASE_URL}
       - KC_HOSTNAME_STRICT=false
       - KC_PROXY=edge
+      - KC_HTTP_RELATIVE_PATH=/auth
     command: ["start", "--optimized"]
-    deploy:
-      resources:
-        limits:
-          memory: 512M
 
   ozmadb:
     image: ozmaio/ozmadb:master
@@ -43,10 +35,6 @@ services:
       - AUTH_AUTHORITY=https://${HEROKU_APP_NAME}.herokuapp.com/auth/realms/ozma
       - AUTH_METADATA_ADDRESS=http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
       - AUTH_REQUIRE_HTTPS_METADATA=false
-    deploy:
-      resources:
-        limits:
-          memory: 256M
 
   ozma-report-generator:
     image: ozmaio/ozma-report-generator:master
@@ -58,8 +46,4 @@ services:
       - OZMA_DB_URL=http://ozmadb:5000
       - AUTH_AUTHORITY=https://${HEROKU_APP_NAME}.herokuapp.com/auth/realms/ozma
       - AUTH_METADATA_ADDRESS=http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
-      - AUTH_REQUIRE_HTTPS_METADATA=false
-    deploy:
-      resources:
-        limits:
-          memory: 512M 
+      - AUTH_REQUIRE_HTTPS_METADATA=false 

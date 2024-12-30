@@ -1,8 +1,12 @@
 setup:
   addons:
     - plan: heroku-postgresql
+    - plan: heroku-redis
 build:
   docker:
     web: docker/Dockerfile.heroku
+release:
+  command:
+    - echo "Running release phase"
 run:
-  web: docker compose -f docker-compose.heroku.yml up 
+  web: /usr/sbin/caddy run --config /etc/caddy/Caddyfile 
