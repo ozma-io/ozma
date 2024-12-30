@@ -10,10 +10,12 @@ RUN pwd && \
     ls -la / && \
     echo "=== Current directory contents ===" && \
     ls -la && \
-    echo "=== Docker directory contents ===" && \
-    ls -la /docker || echo "Docker directory not found" && \
-    echo "=== Parent directory contents ===" && \
-    ls -la ../ || echo "Parent directory not accessible"
+    echo "=== Full directory tree ===" && \
+    find / -name "Caddyfile*" 2>/dev/null && \
+    echo "=== Build context contents ===" && \
+    ls -la . && \
+    echo "=== Parent of current directory ===" && \
+    ls -la .. || echo "Cannot access parent directory"
 
 # Copy the Ozma frontend files from the ozma image
 COPY --from=ozma /usr/share/caddy /usr/share/caddy
@@ -22,8 +24,11 @@ COPY --from=ozma /usr/share/caddy /usr/share/caddy
 RUN echo "=== /usr/share/caddy contents ===" && \
     ls -la /usr/share/caddy
 
+# Create directory for Caddy config
+RUN mkdir -p /etc/caddy
+
 # Try to copy Caddyfile with verbose error
-COPY ./docker/Caddyfile.heroku /etc/caddy/Caddyfile
+COPY Caddyfile.heroku /etc/caddy/Caddyfile || (echo "=== Failed to copy Caddyfile. Current directory contents: ===" && ls -R .)
 
 # Debug: Check if Caddyfile was copied
 RUN echo "=== /etc/caddy contents ===" && \
