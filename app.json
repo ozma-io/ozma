@@ -20,7 +20,7 @@
     }
   },
   "addons": [
-    "heroku-postgresql:hobby-dev"
+    "heroku-postgresql"
   ],
   "formation": {
     "web": {
