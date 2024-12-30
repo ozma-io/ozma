@@ -4,11 +4,30 @@ FROM ozmaio/ozma:master as ozma
 # Use Caddy as the final base image
 FROM caddy:2-alpine
 
+# Debug: Print working directory and list files
+RUN pwd && \
+    echo "=== Root directory contents ===" && \
+    ls -la / && \
+    echo "=== Current directory contents ===" && \
+    ls -la && \
+    echo "=== Docker directory contents ===" && \
+    ls -la /docker || echo "Docker directory not found" && \
+    echo "=== Parent directory contents ===" && \
+    ls -la ../ || echo "Parent directory not accessible"
+
 # Copy the Ozma frontend files from the ozma image
 COPY --from=ozma /usr/share/caddy /usr/share/caddy
 
-# Copy Caddyfile
+# Debug: Check if files were copied
+RUN echo "=== /usr/share/caddy contents ===" && \
+    ls -la /usr/share/caddy
+
+# Try to copy Caddyfile with verbose error
 COPY ./docker/Caddyfile.heroku /etc/caddy/Caddyfile
+
+# Debug: Check if Caddyfile was copied
+RUN echo "=== /etc/caddy contents ===" && \
+    ls -la /etc/caddy || echo "Caddy directory not found"
 
 # Set default port
 ENV PORT=8080
