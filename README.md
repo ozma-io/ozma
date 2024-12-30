@@ -322,6 +322,5 @@ This project is licensed under the **Apache License 2.0**. You may obtain a copy
    - Keycloak Admin: Username `admin`, password is auto-generated (check your Heroku app config vars)
 
 6. Important Notes:
-   - The PostgreSQL hobby-dev plan has a 10,000 row limit
    - Heroku's container stack has a startup timeout of 60 seconds
    - File storage is ephemeral - use external storage for production
