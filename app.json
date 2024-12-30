@@ -20,8 +20,8 @@
     }
   },
   "addons": [
-    "heroku-postgresql:mini",
-    "heroku-redis:mini"
+    "heroku-postgresql",
+    "heroku-redis"
   ],
   "formation": {
     "web": {
