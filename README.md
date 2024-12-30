@@ -298,9 +298,17 @@ This project is licensed under the **Apache License 2.0**. You may obtain a copy
 1. Click the "Deploy to Heroku" button above
 2. Fill in the required environment variables:
    - `ADMIN_EMAIL`: Your administrator email
-   - `EXTERNAL_ORIGIN`: Will be automatically set to your Heroku app URL
-   - `CADDY_ADDRESS`: Will be automatically set to your Heroku app domain
+   - `KEYCLOAK_ADMIN_PASSWORD`: Will be auto-generated
+   - `POSTGRES_PASSWORD`: Will be auto-generated
+   - `PORT`: Default is 8080
 3. Click "Deploy"
+
+> [!NOTE]
+> If deploying manually via Git or Heroku CLI instead of the "Deploy to Heroku" button, you'll need to set HEROKU_APP_NAME manually:
+> ```bash
+> heroku config:set HEROKU_APP_NAME=$(heroku info --json | jq -r .app.name)
+> ```
+
 4. Once deployed, you can access:
    - Ozma Application: `https://your-app-name.herokuapp.com/`
    - Keycloak Admin: `https://your-app-name.herokuapp.com/auth/`

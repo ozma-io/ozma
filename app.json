@@ -21,10 +21,6 @@
     "PORT": {
       "description": "Port for the application",
       "value": "8080"
-    },
-    "HEROKU_APP_NAME": {
-      "required": true,
-      "description": "Name of your Heroku application"
     }
   },
   "addons": [
