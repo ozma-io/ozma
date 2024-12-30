@@ -7,11 +7,26 @@ FROM caddy:2-alpine
 # Copy the Ozma frontend files from the ozma image
 COPY --from=ozma /usr/share/caddy /usr/share/caddy
 
-# Create directory for Caddy configuration
-WORKDIR /etc/caddy
-
-# Copy Caddyfile
-COPY docker/Caddyfile.heroku /etc/caddy/Caddyfile
+# Create and set Caddyfile content directly
+RUN echo ':{$PORT} { \n\
+    handle_path /api/* { \n\
+        reverse_proxy ozmadb:5000 \n\
+    } \n\
+    \n\
+    handle /auth/* { \n\
+        reverse_proxy keycloak:8080 \n\
+    } \n\
+    \n\
+    handle /report-generator/* { \n\
+        reverse_proxy ozma-report-generator:5000 \n\
+    } \n\
+    \n\
+    handle { \n\
+        root * /usr/share/caddy \n\
+        file_server \n\
+        try_files {path} /index.html \n\
+    } \n\
+}' > /etc/caddy/Caddyfile
 
 # Make port configurable via environment variable
 ENV PORT=8080
