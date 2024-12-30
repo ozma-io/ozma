@@ -17,15 +17,29 @@
     "POSTGRES_PASSWORD": {
       "description": "PostgreSQL database password",
       "generator": "secret"
+    },
+    "PORT": {
+      "description": "Port for the application",
+      "value": "8080"
+    },
+    "HEROKU_APP_NAME": {
+      "required": true,
+      "description": "Name of your Heroku application"
     }
   },
   "addons": [
-    "heroku-postgresql"
+    "heroku-postgresql:hobby-dev",
+    "heroku-redis:hobby-dev"
   ],
   "formation": {
     "web": {
       "quantity": 1,
       "size": "basic"
     }
-  }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/docker"
+    }
+  ]
 } 

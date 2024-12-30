@@ -3,14 +3,11 @@ FROM caddy:2-alpine
 # Install required system dependencies
 RUN apk add --no-cache postgresql-client
 
-# Create directory for Caddy configuration and static files
-WORKDIR /usr/share/caddy
-
-# Copy the dist directory (static files)
-COPY ./dist ./
+# Create directory for Caddy configuration
+WORKDIR /etc/caddy
 
 # Copy Caddyfile configuration
-COPY Caddyfile /etc/caddy/Caddyfile
+COPY docker/Caddyfile.ozma /etc/caddy/Caddyfile
 
 # Expose the port that will be set by Heroku
 EXPOSE $PORT
