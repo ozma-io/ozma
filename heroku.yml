@@ -3,6 +3,6 @@ setup:
     - plan: heroku-postgresql:hobby-dev
 build:
   docker:
-    web: Dockerfile
+    web: docker/Dockerfile.heroku
 run:
   web: docker compose -f docker-compose.heroku.yml up 
