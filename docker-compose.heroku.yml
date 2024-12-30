@@ -9,12 +9,10 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
       - EXTERNAL_ORIGIN=https://${HEROKU_APP_NAME}.herokuapp.com
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
     ports:
       - "${PORT}:${PORT}"
-    depends_on:
-      - keycloak
-      - ozmadb
-      - ozma-report-generator
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
 
   keycloak:
     image: keycloak/keycloak:25.0
@@ -26,12 +24,14 @@ services:
       - KC_HOSTNAME_STRICT=false
       - KC_PROXY=edge
       - KC_HTTP_RELATIVE_PATH=/auth
+      - KC_HOSTNAME_STRICT_HTTPS=false
     command: ["start", "--optimized"]
 
   ozmadb:
     image: ozmaio/ozmadb:master
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
       - AUTH_AUTHORITY=https://${HEROKU_APP_NAME}.herokuapp.com/auth/realms/ozma
       - AUTH_METADATA_ADDRESS=http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
       - AUTH_REQUIRE_HTTPS_METADATA=false

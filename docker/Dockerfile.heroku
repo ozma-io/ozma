@@ -1,34 +1,21 @@
+FROM ozmaio/ozma:master as ozma
+
 FROM caddy:2-alpine
 
-# Install required system dependencies
-RUN apk add --no-cache postgresql-client
+# Copy the Ozma frontend files from the ozma image
+COPY --from=ozma /usr/share/caddy /usr/share/caddy
 
 # Create directory for Caddy configuration
 WORKDIR /etc/caddy
 
 # Create a basic Caddyfile for Heroku
-RUN echo "{$PORT} {
-    handle_path /api/* {
-        reverse_proxy ozmadb:5000
-    }
+COPY docker/Caddyfile.ozma /etc/caddy/Caddyfile
 
-    handle /auth/* {
-        reverse_proxy keycloak:8080
-    }
+# Make port configurable via environment variable
+ENV PORT=8080
 
-    handle /report-generator/* {
-        reverse_proxy ozma-report-generator:5000
-    }
-
-    handle {
-        root /usr/share/caddy
-        file_server
-        try_files {path} /index.html
-    }
-}" > /etc/caddy/Caddyfile
-
-# Expose the port that will be set by Heroku
-EXPOSE $PORT
+# Expose the port
+EXPOSE ${PORT}
 
 # Start Caddy
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"] 
