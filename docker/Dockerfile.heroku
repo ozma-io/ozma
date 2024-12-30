@@ -7,8 +7,11 @@ FROM caddy:2-alpine
 # Copy the Ozma frontend files from the ozma image
 COPY --from=ozma /usr/share/caddy /usr/share/caddy
 
-# Create and set Caddyfile content directly
+# Create Caddyfile with proper configuration for Heroku
 RUN echo ':{$PORT} { \n\
+    # Enable automatic HTTPS with Heroku SSL \n\
+    tls internal \n\
+    \n\
     handle_path /api/* { \n\
         reverse_proxy ozmadb:5000 \n\
     } \n\
@@ -28,7 +31,7 @@ RUN echo ':{$PORT} { \n\
     } \n\
 }' > /etc/caddy/Caddyfile
 
-# Make port configurable via environment variable
+# Set default port
 ENV PORT=8080
 
 # Expose the port

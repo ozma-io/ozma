@@ -12,7 +12,10 @@ services:
       - REDIS_URL=${REDIS_URL}
     ports:
       - "${PORT}:${PORT}"
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+    depends_on:
+      - keycloak
+      - ozmadb
+      - ozma-report-generator
 
   keycloak:
     image: keycloak/keycloak:25.0
