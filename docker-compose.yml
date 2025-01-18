@@ -84,9 +84,7 @@ services:
       - keycloak
 
   ozma:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.ozma
+    image: ozmaio/ozma:master
     restart: unless-stopped
     volumes:
       - caddy_data:/data
