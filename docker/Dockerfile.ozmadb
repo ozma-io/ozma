@@ -1,0 +1,3 @@
+FROM ozmaio/ozmadb:master
+
+COPY ./ozmadb /etc/ozmadb/preload

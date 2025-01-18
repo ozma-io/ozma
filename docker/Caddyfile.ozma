@@ -1,14 +1,14 @@
 {$ADDRESS} {
 	handle_path /api/* {
-		reverse_proxy ozmadb:5000
+		reverse_proxy {$OZMA_DB_HOSTPORT}
 	}
 
 	handle /auth/* {
-		reverse_proxy keycloak:8080
+		reverse_proxy {$KEYCLOAK_HOSTPORT}
 	}
 
 	handle /report-generator/* {
-		reverse_proxy ozma-report-generator:5000
+		reverse_proxy {$OZMA_REPORT_GENERATOR_HOSTPORT}
 	}
 
 	handle {
