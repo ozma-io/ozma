@@ -109,11 +109,16 @@ services:
         value: https
       - key: EXTERNAL_HOSTPORT
         sync: false
-      - key: REDIS
+      - key: REDIS_HOST
         fromService:
           name: redis
           type: redis
-          property: hostport
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          name: redis
+          type: redis
+          property: port
 
   - name: ozma-report-generator
     type: pserv
