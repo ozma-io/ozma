@@ -17,9 +17,9 @@ services:
           name: ozmadb
           type: pserv
           property: hostport
-      - key: OZMA_DOCUMENT_GENERATOR_HOSTPORT
+      - key: OZMA_REPORT_GENERATOR_HOSTPORT
         fromService:
-          name: ozma-document-generator
+          name: ozma-report-generator
           type: pserv
           property: hostport
 
