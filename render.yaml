@@ -26,68 +26,64 @@ services:
   - name: keycloak
     type: pserv
     runtime: docker
-    docker:
-      dockerContext: .
-      dockerfile: docker/Dockerfile.keycloak
+    dockerContext: .
+    dockerfilePath: docker/Dockerfile.keycloak
     envVars:
-      - name: KC_DB
+      - key: KC_DB
         value: postgres
-      - name: KC_DB_URL_HOST
+      - key: KC_DB_URL_HOST
         fromDatabase:
           name: postgres-keycloak
           property: host
-      - name: KC_DB_URL_PORT
+      - key: KC_DB_URL_PORT
         fromDatabase:
           name: postgres-keycloak
           property: port
-      - name: KC_DB_URL_DATABASE
+      - key: KC_DB_URL_DATABASE
         fromDatabase:
           name: postgres-keycloak
           property: database
-      - name: KC_DB_USERNAME
+      - key: KC_DB_USERNAME
         fromDatabase:
           name: postgres-keycloak
           property: user
-      - name: KC_DB_PASSWORD
+      - key: KC_DB_PASSWORD
         fromDatabase:
           name: postgres-keycloak
           property: password
-      - name: KC_HTTP_RELATIVE_PATH
+      - key: KC_HTTP_RELATIVE_PATH
         value: /auth
-      - name: KC_PROXY
+      - key: KC_PROXY
         value: edge
-      - name: KC_PROXY_HEADERS
+      - key: KC_PROXY_HEADERS
         value: xforwarded
-      - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+      - key: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
         value: "true"
-      - name: KC_LOG_LEVEL
+      - key: KC_LOG_LEVEL
         value: info
-      - name: KC_METRICS_ENABLED
+      - key: KC_METRICS_ENABLED
         value: "true"
-      - name: KC_HEALTH_ENABLED
+      - key: KC_HEALTH_ENABLED
         value: "true"
-      - name: KEYCLOAK_ADMIN
+      - key: KEYCLOAK_ADMIN
         value: admin
-      - name: KEYCLOAK_ADMIN_PASSWORD
+      - key: KEYCLOAK_ADMIN_PASSWORD
         sync: false
-      - name: EXTERNAL_PROTOCOL
+      - key: EXTERNAL_PROTOCOL
         value: https
-      - name: EXTERNAL_HOSTPORT
+      - key: EXTERNAL_HOSTPORT
         fromService:
           name: ozmadb
           type: pserv
           envVarKey: DOMAIN
-      - name: ADMIN_EMAIL
+      - key: ADMIN_EMAIL
         sync: false
 
   - name: ozmadb
     type: pserv
     runtime: docker
-    docker:
-      dockerContext: .
-      dockerfile: docker/Dockerfile.ozmadb
-    envVars:
-      url: docker.io/ozmaio/ozmadb:master
+    dockerContext: .
+    dockerfilePath: docker/Dockerfile.ozmadb
     envVars:
       - key: DB_HOST
         fromDatabase:
@@ -123,7 +119,7 @@ services:
     type: pserv
     runtime: image
     image:
-      image: ozmaio/ozma-report-generator:master
+      url: docker.io/ozmaio/ozma-report-generator:master
     envVars:
       - key: DB_HOST
         fromDatabase:
