@@ -15,5 +15,4 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
   CREATE DATABASE "ozma-report-generator" OWNER "ozma-report-generator";
   \c ozma-report-generator
   ALTER SCHEMA public OWNER TO "ozma-report-generator";
-
 EOSQL

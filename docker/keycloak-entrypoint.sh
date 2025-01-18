@@ -9,7 +9,7 @@ fi
 
 if [ -z "$KC_HOSTNAME" ]; then
   if [ -n "$EXTERNAL_ORIGIN" ]; then
-    KC_HOSTNAME="${EXTERNAL_ORIGIN}/auth"
+    export KC_HOSTNAME="${EXTERNAL_ORIGIN}/auth"
   fi
 fi
 
@@ -18,6 +18,5 @@ sed /etc/keycloak/realm.json \
   -e 's,{EXTERNAL_ORIGIN},'"$EXTERNAL_ORIGIN"',g' \
   -e 's,{ADMIN_EMAIL},'"$ADMIN_EMAIL"',g' \
   > /opt/keycloak/data/import/realm.json
-
 
 exec /opt/keycloak/bin/kc.sh "$@"
