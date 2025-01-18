@@ -7,11 +7,15 @@ services:
       - ./docker/postgres-init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     environment:
       POSTGRES_PASSWORD: postgres
+      KEYCLOAK_HOSTPORT: keycloak:8080
+      OZMA_DB_HOSTPORT: ozmadb:5000
+      OZMA_REPORT_GENERATOR_HOSTPORT: ozma-report-generator:5000
     shm_size: 4gb
 
   keycloak:
-    image: keycloak/keycloak:25.0
-    entrypoint: /usr/local/bin/entrypoint.sh
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.keycloak
     restart: unless-stopped
     environment:
       KC_DB: postgres
@@ -19,7 +23,6 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
 
-      KC_HOSTNAME: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_PROXY_HEADERS: xforwarded
@@ -34,10 +37,6 @@ services:
 
       EXTERNAL_ORIGIN: "${EXTERNAL_ORIGIN:-http://localhost:9080}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@example.com}"
-    volumes:
-      - ./docker/keycloak-realm.json:/etc/keycloak/realm.json:ro
-      - ./docker/keycloak-entrypoint.sh:/usr/local/bin/entrypoint.sh
-    command: ["start", "--import-realm"]
     depends_on:
       - postgres
 
@@ -46,7 +45,9 @@ services:
     restart: unless-stopped
 
   ozmadb:
-    image: ozmaio/ozmadb:master
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ozmadb
     restart: unless-stopped
     environment:
       DB_HOST: postgres
@@ -54,12 +55,10 @@ services:
       DB_PASSWORD: ozmadb
       DB_NAME: ozmadb
       PRELOAD: /etc/ozmadb/preload/preload.json
-      AUTH_AUTHORITY: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth/realms/ozma
+      EXTERNAL_ORIGIN: ${EXTERNAL_ORIGIN:-http://localhost:9080}
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
       AUTH_REQUIRE_HTTPS_METADATA: "false"
       REDIS: redis
-    volumes:
-      - ./ozmadb:/etc/ozmadb/preload:ro
     depends_on:
       - postgres
       - redis
@@ -74,11 +73,10 @@ services:
       DB_PASSWORD: ozma-report-generator
       DB_NAME: ozma-report-generator
       AUTH_CLIENT_ID: ozma-report-generator
-      ORIGIN: ${EXTERNAL_ORIGIN:-http://localhost:9080}
+      EXTERNAL_ORIGIN: ${EXTERNAL_ORIGIN:-http://localhost:9080}
       PATH_BASE: /report-generator
       OZMA_DB_URL: http://ozmadb:5000
       OZMA_DB_FORCE_INSTANCE: ozma
-      AUTH_AUTHORITY: ${EXTERNAL_ORIGIN:-http://localhost:9080}/auth/realms/ozma
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
       AUTH_REQUIRE_HTTPS_METADATA: "false"
     depends_on:
@@ -93,6 +91,9 @@ services:
       - ./docker/Caddyfile.ozma:/etc/caddy/Caddyfile:ro
     environment:
       ADDRESS: ${CADDY_ADDRESS:-:80}
+      OZMA_DB_HOSTPORT: ozmadb:5000
+      OZMA_REPORT_GENERATOR_HOSTPORT: ozma-report-generator:5000
+      KEYCLOAK_HOSTPORT: keycloak:8080
     ports:
       - ${HTTP_PORT:-9080}:80
       - ${HTTPS_PORT:-9443}:443

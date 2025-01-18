@@ -1,0 +1,179 @@
+services:
+  - name: ozma
+    type: web
+    runtime: image
+    image:
+      url: docker.io/ozmaio/ozma:master
+    envVars:
+      - key: ADDRESS
+        value: 0.0.0.0:10000
+      - key: KEYCLOAK_HOSTPORT
+        fromService:
+          name: keycloak
+          type: pserv
+          property: hostport
+      - key: OZMA_DB_HOSTPORT
+        fromService:
+          name: ozmadb
+          type: pserv
+          property: hostport
+      - key: OZMA_DOCUMENT_GENERATOR_HOSTPORT
+        fromService:
+          name: ozma-document-generator
+          type: pserv
+          property: hostport
+
+  - name: keycloak
+    type: pserv
+    runtime: docker
+    docker:
+      dockerContext: .
+      dockerfile: docker/Dockerfile.keycloak
+    envVars:
+      - name: KC_DB
+        value: postgres
+      - name: KC_DB_URL_HOST
+        fromDatabase:
+          name: postgres-keycloak
+          property: host
+      - name: KC_DB_URL_PORT
+        fromDatabase:
+          name: postgres-keycloak
+          property: port
+      - name: KC_DB_URL_DATABASE
+        fromDatabase:
+          name: postgres-keycloak
+          property: database
+      - name: KC_DB_USERNAME
+        fromDatabase:
+          name: postgres-keycloak
+          property: user
+      - name: KC_DB_PASSWORD
+        fromDatabase:
+          name: postgres-keycloak
+          property: password
+      - name: KC_HTTP_RELATIVE_PATH
+        value: /auth
+      - name: KC_PROXY
+        value: edge
+      - name: KC_PROXY_HEADERS
+        value: xforwarded
+      - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+        value: "true"
+      - name: KC_LOG_LEVEL
+        value: info
+      - name: KC_METRICS_ENABLED
+        value: "true"
+      - name: KC_HEALTH_ENABLED
+        value: "true"
+      - name: KEYCLOAK_ADMIN
+        value: admin
+      - name: KEYCLOAK_ADMIN_PASSWORD
+        sync: false
+      - name: EXTERNAL_PROTOCOL
+        value: https
+      - name: EXTERNAL_HOSTPORT
+        fromService:
+          name: ozmadb
+          type: pserv
+          envVarKey: DOMAIN
+      - name: ADMIN_EMAIL
+        sync: false
+
+  - name: ozmadb
+    type: pserv
+    runtime: docker
+    docker:
+      dockerContext: .
+      dockerfile: docker/Dockerfile.ozmadb
+    envVars:
+      url: docker.io/ozmaio/ozmadb:master
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: postgres-ozma
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: postgres-ozma
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: postgres-ozma
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: postgres-ozma
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: postgres-ozma
+          property: database
+      - key: EXTERNAL_PROTOCOL
+        value: https
+      - key: EXTERNAL_HOSTPORT
+        sync: false
+      - key: REDIS
+        fromService:
+          name: redis
+          type: redis
+          property: hostport
+
+  - name: ozma-report-generator
+    type: pserv
+    runtime: image
+    image:
+      image: ozmaio/ozma-report-generator:master
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: postgres-ozma-report-generator
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: postgres-ozma-report-generator
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: postgres-ozma-report-generator
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: postgres-ozma-report-generator
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: postgres-ozma-report-generator
+          property: database
+      - key: AUTH_CLIENT_ID
+        value: ozma-report-generator
+      - key: PATH_BASE
+        value: /report-generator
+      - key: OZMA_DB_HOSTPORT
+        fromService:
+          name: ozmadb
+          type: pserv
+          property: hostport
+      - key: OZMA_DB_FORCE_INSTANCE
+        value: ozma
+      - key: EXTERNAL_PROTOCOL
+        value: https
+      - key: EXTERNAL_HOSTPORT
+        fromService:
+          name: ozmadb
+          type: pserv
+          property: hostport
+
+  - name: redis
+    type: redis
+    ipAllowList: []
+databases:
+  - name: postgres-ozma
+    databaseName: private
+    ipAllowList: []
+  - name: postgres-keycloak
+    databaseName: private
+    ipAllowList: []
+  - name: postgres-ozma-report-generator
+    databaseName: private
+    ipAllowList: []
