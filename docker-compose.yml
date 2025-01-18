@@ -84,11 +84,12 @@ services:
       - keycloak
 
   ozma:
-    image: ozmaio/ozma:master
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ozma
     restart: unless-stopped
     volumes:
       - caddy_data:/data
-      - ./docker/Caddyfile.ozma:/etc/caddy/Caddyfile:ro
     environment:
       ADDRESS: ${CADDY_ADDRESS:-:80}
       OZMA_DB_HOSTPORT: ozmadb:5000

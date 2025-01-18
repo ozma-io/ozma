@@ -1,4 +1,6 @@
 FROM caddy
+
 # https://kofi.sexy/blog/zero-downtime-render-disk
 RUN setcap -r /usr/bin/caddy
 COPY ./dist /usr/share/caddy
+COPY ./docker/Caddyfile.ozma /etc/caddy/Caddyfile
