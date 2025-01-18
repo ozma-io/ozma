@@ -76,7 +76,7 @@ services:
       - key: EXTERNAL_HOSTPORT
         fromService:
           name: ozma
-          type: pserv
+          type: web
           envVarKey: DOMAIN
       - key: ADMIN_EMAIL
         sync: false
@@ -112,7 +112,7 @@ services:
       - key: EXTERNAL_HOSTPORT
         fromService:
           name: ozma
-          type: pserv
+          type: web
           envVarKey: DOMAIN
       - key: REDIS_HOST
         fromService:
@@ -167,7 +167,7 @@ services:
       - key: EXTERNAL_HOSTPORT
         fromService:
           name: ozma
-          type: pserv
+          type: web
           envVarKey: DOMAIN
 
   - name: redis
