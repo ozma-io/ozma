@@ -22,6 +22,8 @@ services:
           name: ozma-report-generator
           type: pserv
           property: hostport
+      - key: DOMAIN
+        sync: false
 
   - name: keycloak
     type: pserv
@@ -73,7 +75,7 @@ services:
         value: https
       - key: EXTERNAL_HOSTPORT
         fromService:
-          name: ozmadb
+          name: ozma
           type: pserv
           envVarKey: DOMAIN
       - key: ADMIN_EMAIL
@@ -108,7 +110,10 @@ services:
       - key: EXTERNAL_PROTOCOL
         value: https
       - key: EXTERNAL_HOSTPORT
-        sync: false
+        fromService:
+          name: ozma
+          type: pserv
+          envVarKey: DOMAIN
       - key: REDIS_HOST
         fromService:
           name: redis
@@ -161,9 +166,9 @@ services:
         value: https
       - key: EXTERNAL_HOSTPORT
         fromService:
-          name: ozmadb
+          name: ozma
           type: pserv
-          property: hostport
+          envVarKey: DOMAIN
 
   - name: redis
     type: redis
