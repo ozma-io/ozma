@@ -7,7 +7,7 @@ services:
       url: docker.io/ozmaio/ozma:master
     envVars:
       - key: ADDRESS
-        value: 0.0.0.0:10000
+        value: http://0.0.0.0:10000
       - key: KEYCLOAK_HOSTPORT
         fromService:
           name: keycloak
