@@ -72,7 +72,7 @@ services:
       - key: KEYCLOAK_ADMIN
         value: admin
       - key: KEYCLOAK_ADMIN_PASSWORD
-        sync: false
+        generateValue: true
       - key: EXTERNAL_PROTOCOL
         value: https
       - key: EXTERNAL_HOSTPORT
