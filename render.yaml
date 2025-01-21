@@ -25,6 +25,9 @@ services:
           property: host
       - key: DOMAIN
         sync: false
+      # Trust the Render ingress proxy
+      - key: TRUSTED_RANGES
+        value: 0.0.0.0/0
 
   - name: keycloak
     type: pserv
