@@ -86,7 +86,7 @@ services:
   - name: ozmadb
     type: pserv
     runtime: docker
-    plan: free
+    plan: starter
     dockerContext: .
     dockerfilePath: docker/Dockerfile.ozmadb
     envVars:
@@ -131,7 +131,7 @@ services:
   - name: ozma-report-generator
     type: pserv
     runtime: image
-    plan: free
+    plan: starter
     image:
       url: docker.io/ozmaio/ozma-report-generator:master
     envVars:
