@@ -2,6 +2,7 @@ services:
   - name: ozma
     type: web
     runtime: image
+    plan: free
     image:
       url: docker.io/ozmaio/ozma:master
     envVars:
@@ -28,6 +29,7 @@ services:
   - name: keycloak
     type: pserv
     runtime: docker
+    plan: standard
     dockerContext: .
     dockerfilePath: docker/Dockerfile.keycloak
     envVars:
@@ -84,6 +86,7 @@ services:
   - name: ozmadb
     type: pserv
     runtime: docker
+    plan: free
     dockerContext: .
     dockerfilePath: docker/Dockerfile.ozmadb
     envVars:
@@ -128,6 +131,7 @@ services:
   - name: ozma-report-generator
     type: pserv
     runtime: image
+    plan: free
     image:
       url: docker.io/ozmaio/ozma-report-generator:master
     envVars:
@@ -172,14 +176,15 @@ services:
 
   - name: redis
     type: redis
+    plan: free
     ipAllowList: []
 databases:
   - name: postgres-ozma
-    databaseName: private
+    plan: basic-256mb
     ipAllowList: []
   - name: postgres-keycloak
-    databaseName: private
+    plan: basic-256mb
     ipAllowList: []
   - name: postgres-ozma-report-generator
-    databaseName: private
+    plan: basic-256mb
     ipAllowList: []
