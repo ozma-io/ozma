@@ -8,21 +8,21 @@ services:
     envVars:
       - key: ADDRESS
         value: http://0.0.0.0:10000
-      - key: KEYCLOAK_HOSTPORT
+      - key: KEYCLOAK_HOST
         fromService:
           name: keycloak
           type: pserv
-          property: hostport
-      - key: OZMA_DB_HOSTPORT
+          property: host
+      - key: OZMA_DB_HOST
         fromService:
           name: ozmadb
           type: pserv
-          property: hostport
-      - key: OZMA_REPORT_GENERATOR_HOSTPORT
+          property: host
+      - key: OZMA_REPORT_GENERATOR_HOST
         fromService:
           name: ozma-report-generator
           type: pserv
-          property: hostport
+          property: host
       - key: DOMAIN
         sync: false
 
@@ -159,11 +159,11 @@ services:
         value: ozma-report-generator
       - key: PATH_BASE
         value: /report-generator
-      - key: OZMA_DB_HOSTPORT
+      - key: OZMA_DB_HOST
         fromService:
           name: ozmadb
           type: pserv
-          property: hostport
+          property: host
       - key: OZMA_DB_FORCE_INSTANCE
         value: ozma
       - key: EXTERNAL_PROTOCOL
