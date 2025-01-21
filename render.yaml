@@ -26,7 +26,7 @@ services:
       - key: DOMAIN
         sync: false
       # Trust the Render ingress proxy
-      - key: TRUSTED_RANGES
+      - key: TRUSTED_PROXIES
         value: 0.0.0.0/0
 
   - name: keycloak

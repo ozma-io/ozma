@@ -1,7 +1,7 @@
 {
-        servers {
-                trusted_proxies static {$TRUSTED_PROXIES}
-        }
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES}
+	}
 }
 
 {$ADDRESS} {
