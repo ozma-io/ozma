@@ -2,7 +2,7 @@ services:
   - name: ozma
     type: web
     runtime: image
-    plan: free
+    plan: starter
     image:
       url: docker.io/ozmaio/ozma:master
     envVars:
