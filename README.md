@@ -2,6 +2,10 @@
 
 Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems. Build and tailor CRM/ERP solutions quickly and efficiently to meet your business needs.
 
+## Quick Deploy
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https%3A%2F%2Fgithub.com%2Fozma-io%2Fozma)
+
 <div align="left">
   <a href="https://ozma.io/ai-business-app-builder/">Get started</a> |
   <a href="https://discord.gg/Mc8YcF63yt">Discord</a> |
@@ -290,3 +294,36 @@ We welcome contributions from the community. Please follow these steps:
 
 ## License
 This project is licensed under the **Apache License 2.0**. You may obtain a copy of the License at [LICENSE](/LICENSE).
+
+## Heroku Deployment Steps
+
+1. Click the "Deploy to Heroku" button above
+2. Fill in the required environment variables:
+   - `ADMIN_EMAIL`: Your administrator email
+   - `KEYCLOAK_ADMIN_PASSWORD`: Will be auto-generated
+   - `POSTGRES_PASSWORD`: Will be auto-generated
+   - `PORT`: Default is 8080
+3. Click "Deploy"
+
+> [!NOTE]
+> If deploying manually via Git or Heroku CLI instead of the "Deploy to Heroku" button, you'll need to set HEROKU_APP_NAME manually:
+>
+> ```bash
+> heroku config:set HEROKU_APP_NAME=$(heroku info --json | jq -r .app.name)
+> ```
+
+4. Once deployed, you can access:
+   - Ozma Application: `https://<your-app-name>.herokuapp.com/`
+   - Keycloak Admin: `https://<your-app-name>.herokuapp.com/auth/`
+   - Report Generator: `https://<your-app-name>.herokuapp.com/report-generator/admin/ozma/`
+
+> [!NOTE]
+> The free tier of Heroku has limited resources. For production use, consider upgrading to a paid plan.
+
+5. Default Credentials:
+   - Ozma Admin: Use the email you provided with initial password `admin`
+   - Keycloak Admin: Username `admin`, password is auto-generated (check your Heroku app config vars)
+
+6. Important Notes:
+   - Heroku's container stack has a startup timeout of 60 seconds
+   - File storage is ephemeral - use external storage for production

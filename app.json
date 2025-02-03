@@ -1,0 +1,38 @@
+{
+  "name": "Ozma",
+  "description": "Open-source CRM/ERP platform",
+  "repository": "https://github.com/ozma-io/ozma",
+  "logo": "https://ozma.io/assets/images/main/preview.png",
+  "keywords": ["crm", "erp", "ozma"],
+  "stack": "container",
+  "env": {
+    "ADMIN_EMAIL": {
+      "description": "Admin email address",
+      "required": true
+    },
+    "KEYCLOAK_ADMIN_PASSWORD": {
+      "description": "Keycloak admin password",
+      "generator": "secret"
+    },
+    "PORT": {
+      "description": "Port for the application",
+      "value": "8080"
+    }
+  },
+  "addons": [
+    "heroku-postgresql",
+    "heroku-redis"
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/docker"
+    }
+  ],
+  "success_url": "/"
+} 
