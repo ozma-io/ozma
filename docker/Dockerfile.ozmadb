@@ -1,4 +1,4 @@
-FROM ozmaio/ozmadb:render
+FROM ozmaio/ozmadb:master
 
 COPY ./ozmadb /etc/ozmadb/preload
 ENV PRELOAD=/etc/ozmadb/preload/preload.json
