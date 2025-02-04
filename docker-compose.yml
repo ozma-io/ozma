@@ -7,9 +7,6 @@ services:
       - ./docker/postgres-init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     environment:
       POSTGRES_PASSWORD: postgres
-      KEYCLOAK_HOST: keycloak
-      OZMA_DB_HOST: ozmadb
-      OZMA_REPORT_GENERATOR_HOST: ozma-report-generator
     shm_size: 4gb
 
   keycloak:
@@ -90,9 +87,9 @@ services:
       - caddy_data:/data
     environment:
       ADDRESS: ${CADDY_ADDRESS:-:80}
-      OZMA_DB_HOSTPORT: ozmadb:5000
-      OZMA_REPORT_GENERATOR_HOSTPORT: ozma-report-generator:5000
-      KEYCLOAK_HOSTPORT: keycloak:8080
+      KEYCLOAK_HOST: keycloak
+      OZMA_DB_HOST: ozmadb
+      OZMA_REPORT_GENERATOR_HOST: ozma-report-generator
     ports:
       - ${HTTP_PORT:-9080}:80
       - ${HTTPS_PORT:-9443}:443
