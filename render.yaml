@@ -122,12 +122,12 @@ services:
           envVarKey: DOMAIN
       - key: REDIS_HOST
         fromService:
-          name: redis
+          name: redis-ozma
           type: redis
           property: host
       - key: REDIS_PORT
         fromService:
-          name: redis
+          name: redis-ozma
           type: redis
           property: port
 
@@ -177,7 +177,7 @@ services:
           type: web
           envVarKey: DOMAIN
 
-  - name: redis
+  - name: redis-ozma
     type: redis
     plan: free
     ipAllowList: []
