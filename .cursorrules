@@ -1,0 +1,29 @@
+# Ozma - Open-source CRM/ERP Platform
+
+## Project Overview
+- Open-source CRM/ERP platform for rapid development of customizable enterprise systems
+- Built with low-code development approach and full customization capabilities
+- Uses Keycloak for authentication and user management
+- Includes report generator functionality
+- For detailed deployment instructions and full documentation, refer to @README.md
+
+## Key Components
+- Frontend: Web application (port 9080 in dev)
+- Backend: API services
+- Auth: Keycloak integration
+- Database: PostgreSQL
+- Infrastructure: Docker-based deployment
+
+## Development Setup
+- Uses Docker Compose for local development
+- Environment configs: env.dev.example (dev) and env.production.example (prod)
+- Default ports: 9080 (dev), 80/443 (prod)
+- Admin credentials in respective .env files
+
+## Project Structure
+/docker/        # Docker configuration files
+/docs/          # Documentation
+/frontend/      # Web application frontend
+/backend/       # API and services
+/scripts/       # Utility scripts
+/migrations/    # Database migrations 
