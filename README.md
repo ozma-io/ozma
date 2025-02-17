@@ -2,16 +2,14 @@
 
 Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems. Build and tailor CRM/ERP solutions quickly and efficiently to meet your business needs.
 
-<div align="left">
-  <a href="https://ozma.io/ai-business-app-builder/">Get started</a> |
-  <a href="https://discord.gg/Mc8YcF63yt">Discord</a> |
-  <a href="https://wiki.ozma.io/en/home">Docs</a> |
-  <a href="https://ozma.io">Website</a>
-  <br />
-  <br />
-</div>
+## Quick Start
+1. Click "Deploy on Railway" button below
+2. Open Railway block "ozma" after deployment
+3. Access your app at the generated URL (e.g., `ozma-production-xxxx.up.railway.app`)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.com/template/xgJwGP)
+
+## Resources
 
 [![Discord](https://img.shields.io/discord/938075538961080350.svg?label=Chat&logo=discord&color=7289da)](https://discord.gg/Mc8YcF63yt)
 
@@ -30,13 +28,17 @@ Ozma is an open-source CRM/ERP platform that allows for the rapid development of
 
 <br>
  -->
+ 
 ![](https://ozma.io/assets/images/main/preview.png)
 
-## Features
-
-- **Low-Code Development**: Accelerate your system development.
-- **Fully Customizable**: Adaptable to any business process.
-- **Developer-Friendly**: No expensive training required.
+<div align="center">
+  <a href="https://ozma.io/ai-business-app-builder/">Get started</a> |
+  <a href="https://discord.gg/Mc8YcF63yt">Discord</a> |
+  <a href="https://wiki.ozma.io/en/home">Docs</a> |
+  <a href="https://ozma.io">Website</a>
+  <br />
+  <br />
+</div>
 
 ## Table of Contents
 
