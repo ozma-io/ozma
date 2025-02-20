@@ -1,6 +1,6 @@
 # Ozma — open-source CRM/ERP platform
 
-Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems. Build and tailor CRM/ERP solutions quickly and efficiently to meet your business needs.
+Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems.
 
 ## Quick Start
 1. Click "Deploy on Railway" button below
