@@ -1,11 +1,11 @@
 {
-  buildFHSUserEnv,
+  buildFHSEnv,
   nodejs_18,
   writers,
 }: let
   nodejs = nodejs_18;
 in
-  buildFHSUserEnv {
+  buildFHSEnv {
     name = "ozma";
     targetPkgs = pkgs:
       with pkgs;

@@ -65,13 +65,13 @@ services:
       - key: KC_PROXY_HEADERS
         value: xforwarded
       - key: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
-        value: "true"
+        value: 'true'
       - key: KC_LOG_LEVEL
         value: info
       - key: KC_METRICS_ENABLED
-        value: "true"
+        value: 'true'
       - key: KC_HEALTH_ENABLED
-        value: "true"
+        value: 'true'
       - key: KEYCLOAK_ADMIN
         value: admin
       - key: KEYCLOAK_ADMIN_PASSWORD

@@ -186,34 +186,15 @@
       </OzmaOverlay>
     </template>
 
+    <ImportInitialInstance v-else-if="showImportInitialInstance" />
+
     <Errorbox
       v-else-if="state.state === 'error' && !silentErrors"
       :class="isRoot ? 'm-2' : ''"
       :message="state.message"
     />
-    <div
-      v-if="
-        state.state === 'loading' || (state.state === 'error' && silentErrors)
-      "
-      :class="[
-        'loading-container',
-        {
-          nested: !isRoot,
-        },
-      ]"
-    >
-      <div class="loading-background">
-        <div
-          v-for="index in isRoot && !$isMobile ? 9 : 3"
-          :key="index"
-          class="loading-box"
-        >
-          <div class="loading-line" style="width: 30%" />
-          <div class="loading-line" />
-          <div class="loading-line" />
-        </div>
-      </div>
-    </div>
+
+    <LoadingIndicator v-else :nested="!isRoot" :wide="isRoot" />
   </div>
 </template>
 
@@ -283,6 +264,7 @@ import { baseUserViewHandler } from '@/components/BaseUserView'
 import Errorbox from '@/components/Errorbox.vue'
 import { CurrentSettings, DisplayMode } from '@/state/settings'
 import { rawToUserString, UserString } from '@/state/translations'
+import LoadingIndicator from '@/components/LoadingIndicator.vue'
 
 const types: RecordSet<string> = {
   form: null,
@@ -362,6 +344,7 @@ interface IUserViewLoading {
 interface IUserViewError {
   state: 'error'
   args: IUserViewArguments
+  error: string
   message: string
 }
 
@@ -413,6 +396,9 @@ const loadingState: IUserViewLoading = { state: 'loading', args: null }
     Errorbox,
     ButtonItem,
     OzmaOverlay,
+    LoadingIndicator,
+    ImportInitialInstance: () =>
+      import('@/components/ImportInitialInstance.vue'),
     ...components,
   },
 })
@@ -492,6 +478,20 @@ export default class UserView extends Vue {
     return this.state.state === 'show'
       ? JSON.stringify(this.state.uv.args.source)
       : 'none'
+  }
+
+  get showImportInitialInstance() {
+    return (
+      this.isTopLevel &&
+      this.isRoot &&
+      // The error is "not found"
+      this.state.state === 'error' &&
+      this.state.error === 'notFound' &&
+      // This is the main view.
+      this.args.source.type === 'named' &&
+      this.args.source.ref.schema === 'user' &&
+      this.args.source.ref.name === 'main'
+    )
   }
 
   get title(): UserString {
@@ -836,6 +836,7 @@ export default class UserView extends Vue {
       this.setState({
         state: 'error',
         args,
+        error: 'stackOverflow',
         message: 'Too many levels of nested user views',
       })
       return Promise.resolve()
@@ -890,6 +891,7 @@ export default class UserView extends Vue {
             this.setState({
               state: 'error',
               args,
+              error: 'creationNotAvailable',
               message: this.$t('creation_not_available').toString(),
             })
             this.nextUv = null
@@ -972,6 +974,7 @@ export default class UserView extends Vue {
             this.setState({
               state: 'error',
               args,
+              error: 'userViewLoop',
               message: this.$t('user_view_loop').toString(),
             })
             this.nextUv = null
@@ -988,6 +991,7 @@ export default class UserView extends Vue {
           this.setState({
             state: 'error',
             args,
+            error: 'invalidUserView',
             message: this.$t(newType.message).toString(),
           })
           this.nextUv = null
@@ -999,6 +1003,7 @@ export default class UserView extends Vue {
           this.setState({
             state: 'error',
             args,
+            error: e instanceof UserViewError ? e.body.error : 'exception',
             message:
               e instanceof UserViewError ? this.uvErrorMessage(e) : String(e),
           })
@@ -1182,70 +1187,6 @@ export default class UserView extends Vue {
   background-color: var(--userview-background-color);
   height: 100%;
   overflow-y: auto;
-}
-
-.loading-container {
-  width: 100%;
-  height: 100%;
-  min-height: 100px;
-
-  .loading-background {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.625rem;
-    cursor: wait;
-    background-color: var(--userview-background-color);
-    padding: 2.5rem 1.7rem;
-    width: 100%;
-    height: 100%;
-
-    @include mobile {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-      padding: 1rem;
-    }
-  }
-  &.nested .loading-background {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    padding: 0;
-  }
-
-  .loading-box {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-    border-radius: 0.625rem;
-    background: #fff;
-    padding: 2.5rem 1.7rem;
-
-    @include mobile {
-      // height: 30%;
-    }
-  }
-
-  .loading-line {
-    border-radius: 1.8125rem;
-    background: #efefef;
-    width: 100%;
-    height: 0.6875rem;
-  }
-
-  &.fade-2-leave-active {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    width: 100%;
-    min-height: 0;
-
-    &.nested {
-      padding: 0 15px !important; /* Mimic `.col` paddings */
-    }
-
-    .spinner-border {
-      opacity: 0;
-      transition: opacity 0.05s;
-    }
-  }
 }
 
 .overlay-content {
