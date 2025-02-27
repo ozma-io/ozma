@@ -1,6 +1,21 @@
+# Be sure to check https://github.com/keycloak/keycloak/blob/main/quarkus/container/Dockerfile
+# and bump the used UBI when bumping the image.
+# This is an ugly way to add jq and python3.
+
+FROM registry.access.redhat.com/ubi9 AS ubi
+
+RUN dnf install -y python3
+
 FROM keycloak/keycloak:25.0
 
+USER 0
+COPY --from=ubi /usr /tmp/usr
+RUN cp -arn /tmp/usr /
+RUN rm -rf /tmp/usr
+USER 1000
+
 COPY ./docker/keycloak-realm.json /etc/keycloak/realm.json
+COPY ./docker/keycloak-prepare-realm.py /usr/local/bin/keycloak-prepare-realm.py
 COPY ./docker/keycloak-entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

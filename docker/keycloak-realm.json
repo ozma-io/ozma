@@ -88,12 +88,10 @@
           "id": "password",
           "type": "password",
           "userLabel": "My password",
-          "createdDate": 1726948946561,
           "secretData": "{\"value\":\"oRgPShutFloqamI75qmIrgwLErxpQQsBQTMzD0Rma8Q=\",\"salt\":\"1K/UNtNh0Ao7sO8iKZBpiQ==\",\"additionalParameters\":{}}",
           "credentialData": "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
         }
       ],
-      "requiredActions": ["UPDATE_PASSWORD"],
       "realmRoles": ["ozmadb-admin", "default-roles-ozma"]
     }
   ]

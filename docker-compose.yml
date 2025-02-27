@@ -29,11 +29,10 @@ services:
       KC_LOG_LEVEL: info
       KC_METRICS_ENABLED: "true"
       KC_HEALTH_ENABLED: "true"
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
 
       EXTERNAL_ORIGIN: "${EXTERNAL_ORIGIN:-http://localhost:9080}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@example.com}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
     depends_on:
       - postgres
 
