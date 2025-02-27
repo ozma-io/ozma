@@ -1795,7 +1795,7 @@ __metadata:
     "@chenfengyuan/vue-qrcode": "npm:^1.0.2"
     "@intlify/vue-i18n-loader": "npm:^1.1.0"
     "@ozma-io/ozma-embedded": "npm:^0.0.7"
-    "@ozma-io/ozmadb-js": "npm:^0.0.4"
+    "@ozma-io/ozmadb-js": "npm:^0.0.9"
     "@toast-ui/editor": "npm:^3.2.2"
     "@toast-ui/vue-editor": "npm:^3.2.3"
     "@types/bootstrap": "npm:^4"
@@ -1890,6 +1890,13 @@ __metadata:
   version: 0.0.4
   resolution: "@ozma-io/ozmadb-js@npm:0.0.4"
   checksum: 10c0/cee879feb6358be22749275c5fda1f54432e4027c83a7602270439de8c78eb9d25b3a644cbb16e8873f0c87cf0c580fd6ba87439f8844ac77482d3fd66877ac9
+  languageName: node
+  linkType: hard
+
+"@ozma-io/ozmadb-js@npm:^0.0.9":
+  version: 0.0.9
+  resolution: "@ozma-io/ozmadb-js@npm:0.0.9"
+  checksum: 10c0/b2b7aff418c0d5947a79c85fe137d50d30ac48951ffc00b54502c40769384f65217ec66445c74b804e9763c7f6ebfebd9a8a39a1d97ac4047da56bb963b290e4
   languageName: node
   linkType: hard
 

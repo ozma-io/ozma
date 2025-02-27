@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@chenfengyuan/vue-qrcode": "^1.0.2",
-    "@ozma-io/ozmadb-js": "^0.0.4",
+    "@ozma-io/ozmadb-js": "^0.0.9",
     "@toast-ui/editor": "^3.2.2",
     "@toast-ui/vue-editor": "^3.2.3",
     "bootstrap": "^4.6.1",
