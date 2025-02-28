@@ -1,14 +1,14 @@
 # Ozma — open-source CRM/ERP platform
 
-Ozma is an open-source CRM/ERP platform that allows for the rapid development of customizable enterprise systems.
+Ozma is an open-source CRM/ERP platform that allows for rapidly developing customizable enterprise systems.
 
 ## Quick Start
-1. Click "Deploy on Railway" button below
-2. Click "Deploy ozma" button on the opened Railway page
+1. Click the "Deploy on Railway" button below
+2. Click the "Deploy ozma" button on the opened Railway page
 3. Sign in to your Railway account or create one
-4. In "keycloak" block, fill two fields with your email and any password
-5. Click "Deploy" button below
-6. Wait for deployment to complete
+4. In the "Keycloak" block, fill two fields with your email and any password
+5. Click the "Deploy" button below
+6. Wait for deployment to complete — all blocks will have green check mark
 7. Open Railway block "ozma" after deployment
 8. Open your app at the generated URL on the screen (e.g., `ozma-production-xxxx.up.railway.app`)
 
