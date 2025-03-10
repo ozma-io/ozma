@@ -8,7 +8,7 @@ Ozma is an open-source CRM/ERP platform that allows for rapidly developing custo
 3. Sign in to your Railway account or create one
 4. In the "Keycloak" block, fill two fields with your email and any password
 5. Click the "Deploy" button below
-6. Wait for deployment to complete — all blocks will have green check mark
+6. Wait for deployment to complete — all blocks will have a green check mark, and at least 5 minutes pass
 7. Open Railway block "ozma" after deployment
 8. Open your app at the generated URL on the screen (e.g., `ozma-production-xxxx.up.railway.app`)
 
