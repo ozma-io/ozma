@@ -293,6 +293,9 @@ export default class UserViewForm extends mixins<
   private deletedOne = false
   private toBeDeletedRef: RowRef | null = null
 
+  private autoscrollTimer: number | null = null
+  private autoscrollForward = true
+
   private get showPagination() {
     return (
       this.uv.extra.lazyLoad.type === 'pagination' &&
@@ -401,6 +404,62 @@ export default class UserViewForm extends mixins<
         })
       })
     }
+  }
+
+  private handleAutoscroll() {
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const pagination = this.uv.extra.lazyLoad.pagination
+    const pages = this.pagesCount
+    switch (pagination.autoscrollDirection) {
+      case 'backward':
+        if (pagination.currentPage > 0) {
+          this.goToPrevPage()
+        } else {
+          if (pagination.autoscrollRefresh) window.location.reload()
+          if (pages && pages > 0) this.goToPage(pages - 1)
+        }
+        break
+      case 'alternate':
+        if (this.autoscrollForward) {
+          if (pages !== null && pagination.currentPage >= pages - 1) {
+            if (pagination.autoscrollRefresh) window.location.reload()
+            this.autoscrollForward = false
+            if (pages > 1) this.goToPrevPage()
+          } else {
+            this.goToNextPage()
+          }
+        } else if (pagination.currentPage <= 0) {
+            if (pagination.autoscrollRefresh) window.location.reload()
+            this.autoscrollForward = true
+            if (pages > 1) this.goToNextPage()
+          } else {
+            this.goToPrevPage()
+          }
+        break
+      default:
+        if (pages !== null && pagination.currentPage >= pages - 1) {
+          if (pagination.autoscrollRefresh) window.location.reload()
+          this.goToPage(0)
+        } else {
+          this.goToNextPage()
+        }
+    }
+  }
+
+  private setupAutoscroll() {
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
+      this.autoscrollTimer = null
+    }
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const seconds = this.uv.extra.lazyLoad.pagination.autoscrollSeconds
+    if (!seconds || seconds <= 0) return
+    this.autoscrollForward =
+      this.uv.extra.lazyLoad.pagination.autoscrollDirection !== 'backward'
+    this.autoscrollTimer = window.setInterval(
+      () => this.handleAutoscroll(),
+      seconds * 1000,
+    )
   }
 
   private get currentVisualPage() {
@@ -823,6 +882,16 @@ export default class UserViewForm extends mixins<
     ) {
       this.deletedOne = false // In case we end up in the same uv.
       this.$emit('goto-previous')
+    }
+  }
+
+  protected mounted() {
+    this.setupAutoscroll()
+  }
+
+  protected beforeDestroy() {
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
     }
   }
 

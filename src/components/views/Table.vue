@@ -1426,6 +1426,11 @@ export const TableLazyLoad = z
       .object({
         pagination: z.object({
           per_page: z.number(),
+          autoscroll_seconds: z.number().optional(),
+          autoscroll_refresh: z.boolean().optional(),
+          autoscroll_direction: z
+            .enum(['forward', 'backward', 'alternate'])
+            .optional(),
         }),
       })
       .transform((obj) => ({
@@ -1434,6 +1439,10 @@ export const TableLazyLoad = z
           perPage: R.clamp(0, maxPerFetch, obj.pagination['per_page']),
           currentPage: 0,
           loading: false,
+          autoscrollSeconds: obj.pagination['autoscroll_seconds'] ?? null,
+          autoscrollRefresh: obj.pagination['autoscroll_refresh'] ?? false,
+          autoscrollDirection:
+            obj.pagination['autoscroll_direction'] ?? 'forward',
         },
       })),
     z
@@ -1570,6 +1579,9 @@ export default class UserViewTable extends mixins<
   showAddRowButtons = false
 
   cellContextMenu: CellContextMenuData | null = null
+
+  autoscrollTimer: number | null = null
+  autoscrollForward = true
 
   get columns() {
     const viewAttrs = this.uv.attributes
@@ -1853,6 +1865,62 @@ export default class UserViewTable extends mixins<
         })
       })
     }
+  }
+
+  private handleAutoscroll() {
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const pagination = this.uv.extra.lazyLoad.pagination
+    const pages = this.pagesCount
+    switch (pagination.autoscrollDirection) {
+      case 'backward':
+        if (pagination.currentPage > 0) {
+          this.goToPrevPage()
+        } else {
+          if (pagination.autoscrollRefresh) window.location.reload()
+          if (pages && pages > 0) this.goToPage(pages - 1)
+        }
+        break
+      case 'alternate':
+        if (this.autoscrollForward) {
+          if (pages !== null && pagination.currentPage >= pages - 1) {
+            if (pagination.autoscrollRefresh) window.location.reload()
+            this.autoscrollForward = false
+            if (pages > 1) this.goToPrevPage()
+          } else {
+            this.goToNextPage()
+          }
+        } else if (pagination.currentPage <= 0) {
+            if (pagination.autoscrollRefresh) window.location.reload()
+            this.autoscrollForward = true
+            if (pages > 1) this.goToNextPage()
+          } else {
+            this.goToPrevPage()
+          }
+        break
+      default:
+        if (pages !== null && pagination.currentPage >= pages - 1) {
+          if (pagination.autoscrollRefresh) window.location.reload()
+          this.goToPage(0)
+        } else {
+          this.goToNextPage()
+        }
+    }
+  }
+
+  private setupAutoscroll() {
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
+      this.autoscrollTimer = null
+    }
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const seconds = this.uv.extra.lazyLoad.pagination.autoscrollSeconds
+    if (!seconds || seconds <= 0) return
+    this.autoscrollForward =
+      this.uv.extra.lazyLoad.pagination.autoscrollDirection !== 'backward'
+    this.autoscrollTimer = window.setInterval(
+      () => this.handleAutoscroll(),
+      seconds * 1000,
+    )
   }
 
   private get currentRows() {
@@ -2669,6 +2737,7 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$on(name, callback),
     )
+    this.setupAutoscroll()
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -2687,6 +2756,9 @@ export default class UserViewTable extends mixins<
     )
     document.removeEventListener('mousemove', this.handleColumnResizeMouseMove)
     document.removeEventListener('mouseup', this.handleColumnResizeMouseUp)
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
+    }
     /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
