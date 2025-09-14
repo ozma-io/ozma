@@ -406,6 +406,13 @@ export default class UserViewForm extends mixins<
     }
   }
 
+  private navigateToPage(page: number) {
+    const params = new URLSearchParams(window.location.search)
+    params.set('__p', String(page + 1))
+    const url = `${window.location.pathname}?${params.toString()}`
+    window.location.replace(url)
+  }
+
   private handleAutoscroll() {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return
     const pagination = this.uv.extra.lazyLoad.pagination
@@ -415,25 +422,25 @@ export default class UserViewForm extends mixins<
       case 'backward':
         if (pagination.currentPage > 0) {
           this.goToPrevPage()
-        } else {
-          if (pagination.autoscrollRefresh) window.location.reload()
-          if (pages > 0) this.goToPage(pages - 1)
+        } else if (pages > 0) {
+          if (pagination.autoscrollRefresh) this.navigateToPage(pages - 1)
+          else this.goToPage(pages - 1)
         }
         break
 
       case 'alternate':
         if (this.autoscrollForward) {
           if (pagination.currentPage >= pages - 1 && pages > 0) {
-            if (pagination.autoscrollRefresh) window.location.reload()
             this.autoscrollForward = false
-            if (pages > 1) this.goToPrevPage()
+            if (pagination.autoscrollRefresh) this.navigateToPage(0)
+            else if (pages > 1) this.goToPrevPage()
           } else {
             this.goToNextPage()
           }
         } else if (pagination.currentPage <= 0) {
-          if (pagination.autoscrollRefresh) window.location.reload()
           this.autoscrollForward = true
-          if (pages > 1) this.goToNextPage()
+          if (pagination.autoscrollRefresh && pages > 0) this.navigateToPage(pages - 1)
+          else if (pages > 1) this.goToNextPage()
         } else {
           this.goToPrevPage()
         }
@@ -441,8 +448,8 @@ export default class UserViewForm extends mixins<
 
       default:
         if (pagination.currentPage >= pages - 1 && pages > 0) {
-          if (pagination.autoscrollRefresh) window.location.reload()
-          this.goToPage(0)
+          if (pagination.autoscrollRefresh) this.navigateToPage(0)
+          else this.goToPage(0)
         } else {
           this.goToNextPage()
         }
