@@ -1870,19 +1870,21 @@ export default class UserViewTable extends mixins<
   private handleAutoscroll() {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return
     const pagination = this.uv.extra.lazyLoad.pagination
-    const pages = this.pagesCount
+    const pages = this.pagesCount ?? 0  // null → 0
+
     switch (pagination.autoscrollDirection) {
       case 'backward':
         if (pagination.currentPage > 0) {
           this.goToPrevPage()
         } else {
           if (pagination.autoscrollRefresh) window.location.reload()
-          if (pages && pages > 0) this.goToPage(pages - 1)
+          if (pages > 0) this.goToPage(pages - 1)
         }
         break
+
       case 'alternate':
         if (this.autoscrollForward) {
-          if (pages !== null && pagination.currentPage >= pages - 1) {
+          if (pagination.currentPage >= pages - 1 && pages > 0) {
             if (pagination.autoscrollRefresh) window.location.reload()
             this.autoscrollForward = false
             if (pages > 1) this.goToPrevPage()
@@ -1890,15 +1892,16 @@ export default class UserViewTable extends mixins<
             this.goToNextPage()
           }
         } else if (pagination.currentPage <= 0) {
-            if (pagination.autoscrollRefresh) window.location.reload()
-            this.autoscrollForward = true
-            if (pages > 1) this.goToNextPage()
-          } else {
-            this.goToPrevPage()
-          }
+          if (pagination.autoscrollRefresh) window.location.reload()
+          this.autoscrollForward = true
+          if (pages > 1) this.goToNextPage()
+        } else {
+          this.goToPrevPage()
+        }
         break
+
       default:
-        if (pages !== null && pagination.currentPage >= pages - 1) {
+        if (pagination.currentPage >= pages - 1 && pages > 0) {
           if (pagination.autoscrollRefresh) window.location.reload()
           this.goToPage(0)
         } else {
@@ -1906,6 +1909,7 @@ export default class UserViewTable extends mixins<
         }
     }
   }
+
 
   private setupAutoscroll() {
     if (this.autoscrollTimer !== null) {
