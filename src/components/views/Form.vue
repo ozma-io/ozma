@@ -416,38 +416,46 @@ export default class UserViewForm extends mixins<
   private handleAutoscroll() {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return
     const pagination = this.uv.extra.lazyLoad.pagination
-    const pages = this.pagesCount ?? 0  // null → 0
+    const currentPageIndex = Number.isFinite(pagination.currentPage)
+      ? Math.max(0, pagination.currentPage)
+      : 0
+    const totalPages =
+      this.pagesCount && this.pagesCount > 0
+        ? this.pagesCount
+        : currentPageIndex + 1 // keep at least the visible page
+    const lastPageIndex = totalPages > 0 ? totalPages - 1 : 0
 
     switch (pagination.autoscrollDirection) {
       case 'backward':
         if (pagination.currentPage > 0) {
           this.goToPrevPage()
-        } else if (pages > 0) {
-          if (pagination.autoscrollRefresh) this.navigateToPage(pages - 1)
-          else this.goToPage(pages - 1)
+        } else if (totalPages > 0) {
+          if (pagination.autoscrollRefresh) this.navigateToPage(lastPageIndex)
+          else this.goToPage(lastPageIndex)
         }
         break
 
       case 'alternate':
         if (this.autoscrollForward) {
-          if (pagination.currentPage >= pages - 1 && pages > 0) {
+          if (pagination.currentPage >= lastPageIndex && totalPages > 0) {
             this.autoscrollForward = false
             if (pagination.autoscrollRefresh) this.navigateToPage(0)
-            else if (pages > 1) this.goToPrevPage()
+            else if (totalPages > 1) this.goToPrevPage()
           } else {
             this.goToNextPage()
           }
         } else if (pagination.currentPage <= 0) {
           this.autoscrollForward = true
-          if (pagination.autoscrollRefresh && pages > 0) this.navigateToPage(pages - 1)
-          else if (pages > 1) this.goToNextPage()
+          if (pagination.autoscrollRefresh && totalPages > 0)
+            this.navigateToPage(lastPageIndex)
+          else if (totalPages > 1) this.goToNextPage()
         } else {
           this.goToPrevPage()
         }
         break
 
       default:
-        if (pagination.currentPage >= pages - 1 && pages > 0) {
+        if (pagination.currentPage >= lastPageIndex && totalPages > 0) {
           if (pagination.autoscrollRefresh) this.navigateToPage(0)
           else this.goToPage(0)
         } else {
