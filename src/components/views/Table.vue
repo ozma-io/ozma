@@ -1964,16 +1964,23 @@ export default class UserViewTable extends mixins<
   private get currentRows() {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return ''
 
-    const fromRow =
-      this.uv.extra.lazyLoad.pagination.currentPage *
-        this.uv.extra.lazyLoad.pagination.perPage +
-      1
-    const toRow =
-      (this.uv.extra.lazyLoad.pagination.currentPage + 1) *
-      this.uv.extra.lazyLoad.pagination.perPage
-    const rowCount = this.uv.rowLoadState.complete
-      ? ` ${this.$t('of').toString()} ${this.uv.rowLoadState.fetchedRowCount}`
-      : ''
+    const { perPage, currentPage } = this.uv.extra.lazyLoad.pagination
+    let fromRow = currentPage * perPage + 1
+    let toRow = (currentPage + 1) * perPage
+    let rowCount = ''
+
+    if (this.uv.rowLoadState.complete) {
+      const total = this.uv.rowLoadState.fetchedRowCount
+      if (total === 0) {
+        fromRow = 0
+        toRow = 0
+      } else {
+        toRow = Math.min(toRow, total)
+        if (fromRow > toRow) fromRow = Math.max(1, toRow)
+      }
+      rowCount = ` ${this.$t('of').toString()} ${total}`
+    }
+
     return `${fromRow}-${toRow}${rowCount}`
   }
 
