@@ -293,6 +293,9 @@ export default class UserViewForm extends mixins<
   private deletedOne = false
   private toBeDeletedRef: RowRef | null = null
 
+  private autoscrollTimer: number | null = null
+  private autoscrollForward = true
+
   private get showPagination() {
     return (
       this.uv.extra.lazyLoad.type === 'pagination' &&
@@ -401,6 +404,100 @@ export default class UserViewForm extends mixins<
         })
       })
     }
+  }
+
+  private navigateToPage(page: number) {
+    const params = new URLSearchParams(window.location.search)
+    params.set('__p', String(page + 1))
+    const url = `${window.location.pathname}?${params.toString()}`
+    window.location.replace(url)
+  }
+
+  private handleAutoscroll() {
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const pagination = this.uv.extra.lazyLoad.pagination
+    const isComplete = this.uv.rowLoadState.complete
+    const fetchedRowCount = this.uv.rowLoadState.fetchedRowCount
+    const knownPages = this.pagesCount
+    const effectivePages =
+      knownPages !== null
+        ? knownPages
+        : isComplete
+          ? Math.max(
+              Math.ceil(fetchedRowCount / pagination.perPage),
+              0,
+            )
+          : null
+    const hasKnownPages = effectivePages !== null
+    const lastPageIndex =
+      hasKnownPages && effectivePages! > 0 ? effectivePages! - 1 : 0
+    const canStepForward =
+      !isComplete ||
+      !hasKnownPages ||
+      pagination.currentPage < lastPageIndex
+    const hasMultiplePages =
+      hasKnownPages && effectivePages! > 1
+    const hasLastPage = hasKnownPages && effectivePages! > 0
+
+    switch (pagination.autoscrollDirection) {
+      case 'backward':
+        if (pagination.currentPage > 0) {
+          this.goToPrevPage()
+        } else if (hasLastPage) {
+          if (pagination.autoscrollRefresh) this.navigateToPage(lastPageIndex)
+          else this.goToPage(lastPageIndex)
+        } else if (pagination.autoscrollRefresh) {
+          this.navigateToPage(0)
+        }
+        break
+
+      case 'alternate':
+        if (this.autoscrollForward) {
+          if (!canStepForward) {
+            this.autoscrollForward = false
+            if (pagination.autoscrollRefresh) this.navigateToPage(0)
+            else if (hasMultiplePages) this.goToPrevPage()
+          } else {
+            this.goToNextPage()
+          }
+        } else if (pagination.currentPage <= 0) {
+          this.autoscrollForward = true
+          if (pagination.autoscrollRefresh) {
+            if (hasLastPage) this.navigateToPage(lastPageIndex)
+            else this.navigateToPage(0)
+          } else if (hasMultiplePages) {
+            this.goToNextPage()
+          }
+        } else {
+          this.goToPrevPage()
+        }
+        break
+
+      default:
+        if (!canStepForward) {
+          if (pagination.autoscrollRefresh) this.navigateToPage(0)
+          else this.goToPage(0)
+        } else {
+          this.goToNextPage()
+        }
+    }
+  }
+
+
+  private setupAutoscroll() {
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
+      this.autoscrollTimer = null
+    }
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const seconds = this.uv.extra.lazyLoad.pagination.autoscrollSeconds
+    if (!seconds || seconds <= 0) return
+    this.autoscrollForward =
+      this.uv.extra.lazyLoad.pagination.autoscrollDirection !== 'backward'
+    this.autoscrollTimer = window.setInterval(
+      () => this.handleAutoscroll(),
+      seconds * 1000,
+    )
   }
 
   private get currentVisualPage() {
@@ -823,6 +920,16 @@ export default class UserViewForm extends mixins<
     ) {
       this.deletedOne = false // In case we end up in the same uv.
       this.$emit('goto-previous')
+    }
+  }
+
+  protected mounted() {
+    this.setupAutoscroll()
+  }
+
+  protected beforeDestroy() {
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
     }
   }
 

@@ -1426,6 +1426,11 @@ export const TableLazyLoad = z
       .object({
         pagination: z.object({
           per_page: z.number(),
+          autoscroll_seconds: z.number().optional(),
+          autoscroll_refresh: z.boolean().optional(),
+          autoscroll_direction: z
+            .enum(['forward', 'backward', 'alternate'])
+            .optional(),
         }),
       })
       .transform((obj) => ({
@@ -1434,6 +1439,10 @@ export const TableLazyLoad = z
           perPage: R.clamp(0, maxPerFetch, obj.pagination['per_page']),
           currentPage: 0,
           loading: false,
+          autoscrollSeconds: obj.pagination['autoscroll_seconds'] ?? null,
+          autoscrollRefresh: obj.pagination['autoscroll_refresh'] ?? false,
+          autoscrollDirection:
+            obj.pagination['autoscroll_direction'] ?? 'forward',
         },
       })),
     z
@@ -1570,6 +1579,9 @@ export default class UserViewTable extends mixins<
   showAddRowButtons = false
 
   cellContextMenu: CellContextMenuData | null = null
+
+  autoscrollTimer: number | null = null
+  autoscrollForward = true
 
   get columns() {
     const viewAttrs = this.uv.attributes
@@ -1855,19 +1867,120 @@ export default class UserViewTable extends mixins<
     }
   }
 
+  private navigateToPage(page: number) {
+    const params = new URLSearchParams(window.location.search)
+    params.set('__p', String(page + 1))
+    const url = `${window.location.pathname}?${params.toString()}`
+    window.location.replace(url)
+  }
+
+  private handleAutoscroll() {
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const pagination = this.uv.extra.lazyLoad.pagination
+    const isComplete = this.uv.rowLoadState.complete
+    const fetchedRowCount = this.uv.rowLoadState.fetchedRowCount
+    const knownPages = this.pagesCount
+    const effectivePages =
+      knownPages !== null
+        ? knownPages
+        : isComplete
+          ? Math.max(
+              Math.ceil(fetchedRowCount / pagination.perPage),
+              0,
+            )
+          : null
+    const hasKnownPages = effectivePages !== null
+    const lastPageIndex =
+      hasKnownPages && effectivePages! > 0 ? effectivePages! - 1 : 0
+    const canStepForward =
+      !isComplete ||
+      !hasKnownPages ||
+      pagination.currentPage < lastPageIndex
+    const hasMultiplePages =
+      hasKnownPages && effectivePages! > 1
+    const hasLastPage = hasKnownPages && effectivePages! > 0
+
+    switch (pagination.autoscrollDirection) {
+      case 'backward':
+        if (pagination.currentPage > 0) {
+          this.goToPrevPage()
+        } else if (hasLastPage) {
+          if (pagination.autoscrollRefresh) this.navigateToPage(lastPageIndex)
+          else this.goToPage(lastPageIndex)
+        } else if (pagination.autoscrollRefresh) {
+          this.navigateToPage(0)
+        }
+        break
+
+      case 'alternate':
+        if (this.autoscrollForward) {
+          if (!canStepForward) {
+            this.autoscrollForward = false
+            if (pagination.autoscrollRefresh) this.navigateToPage(0)
+            else if (hasMultiplePages) this.goToPrevPage()
+          } else {
+            this.goToNextPage()
+          }
+        } else if (pagination.currentPage <= 0) {
+          this.autoscrollForward = true
+          if (pagination.autoscrollRefresh) {
+            if (hasLastPage) this.navigateToPage(lastPageIndex)
+            else this.navigateToPage(0)
+          } else if (hasMultiplePages) {
+            this.goToNextPage()
+          }
+        } else {
+          this.goToPrevPage()
+        }
+        break
+
+      default:
+        if (!canStepForward) {
+          if (pagination.autoscrollRefresh) this.navigateToPage(0)
+          else this.goToPage(0)
+        } else {
+          this.goToNextPage()
+        }
+    }
+  }
+
+
+  private setupAutoscroll() {
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
+      this.autoscrollTimer = null
+    }
+    if (this.uv.extra.lazyLoad.type !== 'pagination') return
+    const seconds = this.uv.extra.lazyLoad.pagination.autoscrollSeconds
+    if (!seconds || seconds <= 0) return
+    this.autoscrollForward =
+      this.uv.extra.lazyLoad.pagination.autoscrollDirection !== 'backward'
+    this.autoscrollTimer = window.setInterval(
+      () => this.handleAutoscroll(),
+      seconds * 1000,
+    )
+  }
+
   private get currentRows() {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return ''
 
-    const fromRow =
-      this.uv.extra.lazyLoad.pagination.currentPage *
-        this.uv.extra.lazyLoad.pagination.perPage +
-      1
-    const toRow =
-      (this.uv.extra.lazyLoad.pagination.currentPage + 1) *
-      this.uv.extra.lazyLoad.pagination.perPage
-    const rowCount = this.uv.rowLoadState.complete
-      ? ` ${this.$t('of').toString()} ${this.uv.rowLoadState.fetchedRowCount}`
-      : ''
+    const { perPage, currentPage } = this.uv.extra.lazyLoad.pagination
+    let fromRow = currentPage * perPage + 1
+    let toRow = (currentPage + 1) * perPage
+    let rowCount = ''
+
+    if (this.uv.rowLoadState.complete) {
+      const total = this.uv.rowLoadState.fetchedRowCount
+      if (total === 0) {
+        fromRow = 0
+        toRow = 0
+      } else {
+        toRow = Math.min(toRow, total)
+        if (fromRow > toRow) fromRow = Math.max(1, toRow)
+      }
+      rowCount = ` ${this.$t('of').toString()} ${total}`
+    }
+
     return `${fromRow}-${toRow}${rowCount}`
   }
 
@@ -2669,6 +2782,7 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$on(name, callback),
     )
+    this.setupAutoscroll()
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -2687,6 +2801,9 @@ export default class UserViewTable extends mixins<
     )
     document.removeEventListener('mousemove', this.handleColumnResizeMouseMove)
     document.removeEventListener('mouseup', this.handleColumnResizeMouseUp)
+    if (this.autoscrollTimer !== null) {
+      clearInterval(this.autoscrollTimer)
+    }
     /* window.removeEventListener("scroll", this.removeCellEditing); */
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
