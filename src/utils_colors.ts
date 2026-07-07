@@ -15,6 +15,15 @@ const ThemeRef = z.object({
 
 export type IThemeRef = z.infer<typeof ThemeRef>
 
+// Reads the last theme chosen by the user, without validating it against
+// loaded themes — usable before any server data arrives.
+export const getStoredThemeRef = (): IThemeRef | null => {
+  const storedTheme = ThemeRef.safeParse(
+    safeJsonParse(localStorage.getItem('preferredTheme')),
+  )
+  return storedTheme.success ? storedTheme.data : null
+}
+
 const orNull =
   <T, F>(func: (arg: T) => F) =>
   (arg: any) => {
@@ -426,16 +435,14 @@ export const getPreferredTheme = (
   themes: ThemesMap,
   defaultSchema?: SchemaName,
 ): IThemeRef | null => {
-  const storedTheme = ThemeRef.safeParse(
-    safeJsonParse(localStorage.getItem('preferredTheme')),
-  )
+  const storedTheme = getStoredThemeRef()
 
-  if (storedTheme.success) {
-    const themesSchema = themes[storedTheme.data.schema]
-    if (themesSchema !== undefined && storedTheme.data.name in themesSchema) {
-      return storedTheme.data
+  if (storedTheme !== null) {
+    const themesSchema = themes[storedTheme.schema]
+    if (themesSchema !== undefined && storedTheme.name in themesSchema) {
+      return storedTheme
     }
-    console.error(`User theme ${storedTheme.data.schema}.${storedTheme.data.name} is not defined`)
+    console.error(`User theme ${storedTheme.schema}.${storedTheme.name} is not defined`)
   }
 
   const myDefaultSchema = defaultSchema ?? 'user'

@@ -401,8 +401,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   get themeStyleSettings() {
     let currentTheme: ITheme | undefined
     if (this.currentThemeRef !== null) {
+      // Themes may not be loaded yet — `currentThemeRef` is restored from
+      // localStorage before settings arrive.
       currentTheme =
-        this.settings.themes[this.currentThemeRef.schema][
+        this.settings.themes[this.currentThemeRef.schema]?.[
           this.currentThemeRef.name
         ]
     }
@@ -465,6 +467,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   @Watch('themeStyleSettings', { immediate: true })
   private loadColors() {
+    // While the chosen theme is still loading, keep the cached styles injected
+    // by index.html instead of overwriting them with default-built rules.
+    const themeIsPending =
+      this.currentThemeRef !== null &&
+      this.settings.themes[this.currentThemeRef.schema]?.[
+        this.currentThemeRef.name
+      ] === undefined
+    if (themeIsPending) return
+
     const sheet = (document.getElementById('theme-styles') as any)?.sheet as
       | CSSStyleSheet
       | undefined
@@ -475,6 +486,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       for (const rule of this.themeStyleSettings) {
         sheet.insertRule(rule)
+      }
+    }
+
+    // Cache the generated rules so the inline script in index.html can apply
+    // them before the app boots, avoiding a light-theme flash. Only cache once
+    // the actual theme is loaded — earlier the rules are built from defaults.
+    if (
+      this.currentThemeRef !== null &&
+      this.settings.themes[this.currentThemeRef.schema]?.[
+        this.currentThemeRef.name
+      ] !== undefined
+    ) {
+      try {
+        localStorage.setItem(
+          'themeStylesCache',
+          JSON.stringify({
+            theme: `${this.currentThemeRef.schema}.${this.currentThemeRef.name}`,
+            rules: this.themeStyleSettings,
+          }),
+        )
+      } catch (e) {
+        // Quota errors are not critical here.
       }
     }
   }
