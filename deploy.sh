@@ -480,3 +480,66 @@ print(json.dumps({
 }
 
 stage_provision_users
+
+stage_seed_field_attributes() {
+  info "\n==> Stage 7: Seed field attributes"
+
+  run_script_on_server << 'REMOTE_SCRIPT'
+    set -euo pipefail
+    docker exec ozma-postgres-1 psql -U postgres -d ozmadb << 'SQL'
+      INSERT INTO public.fields_attributes (schema_id, field_entity_id, field_name, attributes, priority, allow_broken)
+      SELECT
+        (SELECT id FROM public.schemas WHERE name = 'admin'),
+        (SELECT id FROM public.entities WHERE name = 'color_variants' AND schema_id = (SELECT id FROM public.schemas WHERE name = 'funapp')),
+        field_name,
+        attributes,
+        0,
+        false
+      FROM (VALUES
+        ('background', '@{
+    caption = { schema: ''admin'', message: ''Background'' },
+    cell_color = case when current_theme() in (''admin.light_old'') then { background: background } end,
+    option_variant = case when current_theme() not in (''admin.light_old'') then { background: background } end
+}'),
+        ('foreground', '@{
+    caption = { schema: ''admin'', message: ''Foreground'' },
+    cell_color = case when current_theme() in (''admin.light_old'') then { background: foreground } end,
+    option_variant = case when current_theme() not in (''admin.light_old'') then { background: foreground } end
+}'),
+        ('border', '@{
+    caption = { schema: ''admin'', message: ''Border'' },
+    cell_color = case when current_theme() in (''admin.light_old'') then { background: border } end,
+    option_variant = case when current_theme() not in (''admin.light_old'') then { background: border } end
+}'),
+        ('name', '@{
+    caption = { schema: ''admin'', message: ''Name'' },
+    cell_color = case when current_theme() in (''admin.light_old'') then { background: background, border: border } end,
+    option_variant = case when current_theme() not in (''admin.light_old'') then { background: background, border: border } end
+}'),
+        ('theme_id', '@{
+    caption = { schema: ''admin'', message: ''Theme'' }
+}')
+      ) AS t(field_name, attributes)
+      ON CONFLICT ON CONSTRAINT "__unique__fields_attributes__name" DO NOTHING;
+SQL
+REMOTE_SCRIPT
+
+  ok "Field attributes seeded"
+}
+
+stage_seed_field_attributes
+
+stage_clear_settings() {
+  info "\n==> Stage 8: Clear default settings"
+
+  run_script_on_server << 'REMOTE_SCRIPT'
+    set -euo pipefail
+    docker exec ozma-postgres-1 psql -U postgres -d ozmadb -c "
+      DELETE FROM funapp.settings WHERE name IN ('banner_message', 'banner_important', 'show_sign_up_button_in_banner', 'show_invite_button_in_banner');
+    "
+REMOTE_SCRIPT
+
+  ok "Default settings cleared"
+}
+
+stage_clear_settings
