@@ -2,6 +2,7 @@ import { rgba, toRgba, parseToRgba, readableColor, mix } from 'color2k'
 import { z } from 'zod'
 import FunDBAPI, {
   IViewExprResult,
+  ITransactionResult,
   SchemaName,
   RowId,
 } from '@ozma-io/ozmadb-js/client'
@@ -290,6 +291,189 @@ const loadColorVariants = async (): Promise<
     return [id, colors]
   })
   return themes
+}
+
+// ---- Preserving custom color themes across an admin-panel import ----
+//
+// Importing the admin panel (ImportInitialInstance) restores the `funapp`
+// schema, which drops and recreates funapp.color_themes / color_variants and
+// wipes any themes seeded on top of a fresh instance (the glass themes). We
+// snapshot the themes before the restore, then re-insert the ones the restore
+// didn't bring back, keyed by name. Both steps are best-effort: any failure
+// leaves the import itself untouched.
+
+interface ISnapshotVariant {
+  name: string
+  foreground: unknown
+  border: unknown
+  background: unknown
+  font_weight: unknown
+  font_style: unknown
+  text_decoration: unknown
+}
+
+interface ISnapshotTheme {
+  name: string
+  localizedName: unknown
+  variants: ISnapshotVariant[]
+}
+
+export interface IColorThemesSnapshot {
+  themes: ISnapshotTheme[]
+}
+
+const anonView = (query: string): Promise<IViewExprResult> =>
+  store.dispatch(
+    'callApi',
+    { func: (api: FunDBAPI) => api.getAnonymousUserView(query) },
+    { root: true },
+  )
+
+const colIndex = (res: IViewExprResult, name: string): number =>
+  res.info.columns.findIndex((column) => column.name === name)
+
+const variantColumns = [
+  'name',
+  'foreground',
+  'border',
+  'background',
+  'font_weight',
+  'font_style',
+  'text_decoration',
+] as const
+
+export const snapshotColorThemes = async (): Promise<IColorThemesSnapshot> => {
+  try {
+    const themesRes = await anonView(
+      'SELECT id, name, localized_name FROM funapp.color_themes',
+    )
+    const variantsRes = await anonView(
+      `SELECT theme_id, ${variantColumns.join(', ')} FROM funapp.color_variants`,
+    )
+
+    const vThemeId = colIndex(variantsRes, 'theme_id')
+    const vCols = variantColumns.map(
+      (name) => [name, colIndex(variantsRes, name)] as const,
+    )
+    const variantsByTheme = new Map<RowId, ISnapshotVariant[]>()
+    variantsRes.result.rows.forEach((row) => {
+      const themeId = row.values[vThemeId].value as RowId
+      const variant = Object.fromEntries(
+        vCols.map(([name, index]) => [name, row.values[index].value]),
+      ) as unknown as ISnapshotVariant
+      const list = variantsByTheme.get(themeId)
+      if (list) list.push(variant)
+      else variantsByTheme.set(themeId, [variant])
+    })
+
+    const tId = colIndex(themesRes, 'id')
+    const tName = colIndex(themesRes, 'name')
+    const tLocalized = colIndex(themesRes, 'localized_name')
+    const themes = themesRes.result.rows.map((row): ISnapshotTheme => {
+      const id = row.values[tId].value as RowId
+      return {
+        name: row.values[tName].value as string,
+        localizedName: row.values[tLocalized].value,
+        variants: variantsByTheme.get(id) ?? [],
+      }
+    })
+    return { themes }
+  } catch {
+    // Nothing to preserve (empty/fresh DB, missing funapp, no access).
+    return { themes: [] }
+  }
+}
+
+// funapp schema id, needed for the color_themes FK. Prefer the system table;
+// fall back to an existing theme's binding when public.schemas is unreadable.
+const funappSchemaId = async (): Promise<RowId | null> => {
+  const first = async (query: string): Promise<RowId | null> => {
+    try {
+      const res = await anonView(query)
+      const row = res.result.rows[0]
+      return row ? (row.values[0].value as RowId) : null
+    } catch {
+      return null
+    }
+  }
+  const bySchemas = await first(
+    "SELECT id FROM public.schemas WHERE name = 'funapp'",
+  )
+  if (bySchemas !== null) return bySchemas
+  return first('SELECT schema_id FROM funapp.color_themes')
+}
+
+export const reinjectMissingColorThemes = async (
+  snapshot: IColorThemesSnapshot,
+): Promise<void> => {
+  if (snapshot.themes.length === 0) return
+
+  const schemaId = await funappSchemaId()
+  if (schemaId === null) return
+
+  let present: Set<string>
+  try {
+    const res = await anonView('SELECT name FROM funapp.color_themes')
+    const nameCol = colIndex(res, 'name')
+    present = new Set(
+      res.result.rows.map((row) => row.values[nameCol].value as string),
+    )
+  } catch {
+    return
+  }
+
+  const themeEntity = { schema: 'funapp', name: 'color_themes' }
+  const variantEntity = { schema: 'funapp', name: 'color_variants' }
+
+  // Sequential on purpose: each theme insert yields the id its variants
+  // reference, and re-injection is a rare one-off, so throughput is moot.
+  /* eslint-disable no-await-in-loop */
+  for (const theme of snapshot.themes) {
+    if (present.has(theme.name)) continue
+    try {
+      const insertRes: ITransactionResult = await store.dispatch(
+        'callApi',
+        {
+          func: (api: FunDBAPI) =>
+            api.runTransaction({
+              operations: [
+                {
+                  type: 'insert',
+                  entity: themeEntity,
+                  fields: {
+                    schema_id: schemaId,
+                    name: theme.name,
+                    localized_name: theme.localizedName,
+                  },
+                },
+              ],
+            }),
+        },
+        { root: true },
+      )
+      const result = insertRes.results[0]
+      const themeId = result?.type === 'insert' ? result.id : null
+      if (themeId === null || theme.variants.length === 0) continue
+
+      await store.dispatch(
+        'callApi',
+        {
+          func: (api: FunDBAPI) =>
+            api.runTransaction({
+              operations: theme.variants.map((variant) => ({
+                type: 'insert',
+                entity: variantEntity,
+                fields: { theme_id: themeId, ...variant },
+              })),
+            }),
+        },
+        { root: true },
+      )
+    } catch {
+      // Skip a theme that fails to re-insert; the rest still get preserved.
+    }
+  }
+  /* eslint-enable no-await-in-loop */
 }
 
 export const loadThemes = async (): Promise<ThemesMap> => {

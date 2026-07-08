@@ -543,3 +543,21 @@ REMOTE_SCRIPT
 }
 
 stage_clear_settings
+
+stage_seed_base_settings() {
+  info "\n==> Stage 8a: Seed base settings (default font size)"
+
+  # Set-if-absent so a redeploy never clobbers an instance's own font size.
+  run_script_on_server << 'REMOTE_SCRIPT'
+    set -euo pipefail
+    docker exec ozma-postgres-1 psql -U postgres -d ozmadb -c "
+      INSERT INTO funapp.settings (name, value)
+      SELECT 'font_size', '14'
+      WHERE NOT EXISTS (SELECT 1 FROM funapp.settings WHERE name = 'font_size');
+    "
+REMOTE_SCRIPT
+
+  ok "Base settings seeded (font_size=14)"
+}
+
+stage_seed_base_settings
