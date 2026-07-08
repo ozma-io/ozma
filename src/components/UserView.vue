@@ -98,7 +98,7 @@
     >
       <div>
         {{ businessModeEditViewText }}
-        <a v-if="userIsRoot" href="https://wiki.ozma.io" target="_blank">
+        <a v-if="userIsRoot" href="https://ozma.vientooscuro.ru" target="_blank">
           wiki
         </a>
         <br />

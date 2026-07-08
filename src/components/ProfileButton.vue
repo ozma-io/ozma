@@ -416,7 +416,7 @@ export default class AppHeader extends Vue {
           caption: this.$t('documentation').toString(),
           variant: defaultVariantAttribute,
           type: 'link',
-          link: { type: 'href', href: 'https://wiki.ozma.io', target: 'blank' },
+          link: { type: 'href', href: 'https://ozma.vientooscuro.ru', target: 'blank' },
         })
 
         buttons.push({
