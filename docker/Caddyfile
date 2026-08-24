@@ -49,3 +49,7 @@
 		try_files {path} /index.html
 	}
 }
+
+# Whole extra sites (n8n and friends) are dropped in per host. `caddy.d` is imported
+# inside the site block above and so can only hold handlers, not site definitions.
+import /etc/caddy/sites.d/*.caddy

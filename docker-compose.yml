@@ -104,6 +104,7 @@ services:
       - caddy_data:/data
       - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./docker/caddy.d:/etc/caddy/caddy.d:ro
+      - ./docker/sites.d:/etc/caddy/sites.d:ro
     environment:
       ADDRESS: ${CADDY_ADDRESS:-:80}
       KEYCLOAK_HOST: keycloak
