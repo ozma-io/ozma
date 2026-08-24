@@ -121,8 +121,18 @@ export const router = new VueRouter({
   routes,
 })
 
+/* Starting on 'en' regardless of the browser meant the app fetched the English
+   translation set, then immediately fetched the real one once settings arrived —
+   a wasted request and a wasted round trip on every load. Start where the settings
+   getter would land by default. */
+const browserLocale = navigator.languages?.[0]?.split('-')[0]
+const initialLocale =
+  browserLocale !== undefined && browserLocale in globalMessages
+    ? browserLocale
+    : 'en'
+
 export const i18n = new VueI18n({
-  locale: 'en',
+  locale: initialLocale,
   messages: globalMessages,
 })
 
