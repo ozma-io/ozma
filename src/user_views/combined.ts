@@ -588,6 +588,8 @@ export interface IUserViewHandler<ValueT, RowT, ViewT> {
 
 export interface ICombinedUserViewDataParams extends ICommonUserViewData {
   complete: boolean
+  // Server skipped `request_lines_number()`; the count has to be fetched separately.
+  deferredRequestLinesNumber?: boolean
 }
 
 export interface ICombinedUserViewParams<T>

@@ -267,7 +267,11 @@ import type {
   IUserViewArguments,
 } from '@/user_views/combined'
 import { CombinedUserView } from '@/user_views/combined'
-import { fetchUserViewData, UserViewError } from '@/user_views/fetch'
+import {
+  fetchRequestLinesNumberAttributes,
+  fetchUserViewData,
+  UserViewError,
+} from '@/user_views/fetch'
 import { baseUserViewHandler } from '@/components/BaseUserView'
 import Errorbox from '@/components/Errorbox.vue'
 import { CurrentSettings, DisplayMode } from '@/state/settings'
@@ -459,6 +463,7 @@ export default class UserView extends Vue {
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState
   private nextUv: Promise<void> | null = null
+  private pendingAbort: AbortController | null = null
   private userViewRedirects = 0
 
   protected created() {
@@ -480,6 +485,8 @@ export default class UserView extends Vue {
     this.removeReloadHandler(this.uid)
     // Stop pending operations.
     this.nextUv = null
+    this.pendingAbort?.abort()
+    this.pendingAbort = null
   }
 
   private get transitionKey() {
@@ -844,6 +851,34 @@ export default class UserView extends Vue {
     await this.reload({ search, differentComponent: true })
   }
 
+  // `request_lines_number()` requires counting the whole filtered set, which roughly doubles the
+  // query cost. We show the rows first and let the counter arrive a moment later.
+  private async loadDeferredRequestLinesNumber(
+    args: IUserViewArguments,
+    opts: IEntriesRequestOpts,
+    uv: ICombinedUserViewAny,
+  ) {
+    let attributes
+    try {
+      attributes = await fetchRequestLinesNumberAttributes(
+        this.$store,
+        args,
+        opts,
+      )
+    } catch (e) {
+      // The counter is cosmetic; a failure here must not break the already displayed view.
+      if (!opts.signal?.aborted) {
+        console.error('Failed to fetch request_lines_number', e)
+      }
+      return
+    }
+
+    // Drop the result if the view has been reloaded in the meantime.
+    if (this.state.state !== 'show' || this.state.uv !== uv) return
+
+    uv.attributes = { ...uv.attributes, ...attributes }
+  }
+
   private reload(
     options: {
       differentComponent?: boolean
@@ -881,6 +916,12 @@ export default class UserView extends Vue {
       this.setState({ state: 'loading', args })
     }
 
+    // A new reload supersedes the pending one, so stop the server from finishing a request whose
+    // result we are going to throw away anyway — this matters for search-as-you-type.
+    this.pendingAbort?.abort()
+    const abortController = new AbortController()
+    this.pendingAbort = abortController
+
     let allFetched = false
     const pending: IRef<Promise<void>> = {}
     pending.ref = (async () => {
@@ -906,7 +947,10 @@ export default class UserView extends Vue {
         } else {
           limit = maxPerFetch
         }
-        const opts: IEntriesRequestOpts = { chunk: { limit, search } }
+        const opts: IEntriesRequestOpts = {
+          chunk: { limit, search },
+          signal: abortController.signal,
+        }
         let uvData = await fetchUserViewData(this.$store, args, opts)
 
         if (pending.ref !== this.nextUv) return
@@ -923,6 +967,7 @@ export default class UserView extends Vue {
           if (perPage !== undefined && perPage > limit) {
             const opts2: IEntriesRequestOpts = {
               chunk: { limit: perPage, search },
+              signal: abortController.signal,
             }
             uvData = await fetchUserViewData(this.$store, args, opts2)
             if (pending.ref !== this.nextUv) return
@@ -1023,6 +1068,9 @@ export default class UserView extends Vue {
             this.scrollToTop()
           }
           this.nextUv = null
+          if (uvData.deferredRequestLinesNumber) {
+            void this.loadDeferredRequestLinesNumber(args, opts, uv)
+          }
         } else if (newType.type === 'link') {
           if (this.userViewRedirects >= maxUserViewRedirects) {
             this.setState({
@@ -1053,6 +1101,9 @@ export default class UserView extends Vue {
           throw new NeverError(newType)
         }
       } catch (e) {
+        // We aborted this request ourselves because a newer one superseded it.
+        if (abortController.signal.aborted) return
+
         if (pending.ref === this.nextUv) {
           this.setState({
             state: 'error',
