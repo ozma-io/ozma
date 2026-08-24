@@ -3295,6 +3295,11 @@ export default class UserViewTable extends mixins<
       // const searchInColumns = R.intersection(columns, rawSearchInColumns);
 
       if (!deepEquals(this.currentFilter, this.filter)) {
+        // A new search yields a different result set, so the page we are on may not exist in it.
+        // Pagination state survives a reload, hence the explicit reset.
+        if (this.uv.extra.lazyLoad.type === 'pagination') {
+          this.uv.extra.lazyLoad.pagination.currentPage = 0
+        }
         const search =
           this.filter.length === 0 ? undefined : this.filter.join(' ')
         this.$emit('load-entries-with-remote-search', search)
