@@ -107,6 +107,13 @@ export default {
         { ...definitions, ...defaults, ...buildConfig },
         ...rest,
       ])
+    /* Vue CLI inlines assets below 4 KB, which caught 79 font faces — the small
+       per-script subsets — as base64 in the render-blocking vendor stylesheet. That
+       cost ~600 KB and, worse, defeated `unicode-range`: the browser cannot skip the
+       Greek or Vietnamese cuts it will never draw. Always emit fonts as files. */
+    config.module
+      .rule('fonts')
+      .set('parser', { dataUrlCondition: { maxSize: 0 } })
     config.module
       .rule('i18n')
       .resourceQuery(/blockType=i18n/)
