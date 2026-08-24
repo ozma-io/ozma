@@ -327,7 +327,6 @@ import type {
   AttributesMap,
   FieldType,
   IFieldRef,
-  IViewExprResult,
   RowId,
   ValueType,
 } from '@ozma-io/ozmadb-js/client'
@@ -335,6 +334,7 @@ import { z } from 'zod'
 import { namespace } from 'vuex-class'
 
 import { IEntityRef } from '@ozma-io/ozmadb-js/client'
+import { getFieldAttributes } from '@/field_attributes'
 import { valueIsNull, valueToText } from '@/values'
 import { IQuery, attrToQuerySelf, attrObjectToQuery } from '@/state/query'
 import { ISelectOption } from '@/components/multiselect/MultiSelect.vue'
@@ -701,31 +701,8 @@ export default class FormControl extends Vue {
     }
 
     try {
-      const query = `
-{ $schema string, $entity string, $field string }:
-SELECT attributes
-FROM public.fields_attributes
-WHERE schema_id=>name = $schema
-  AND field_entity_id=>name = $entity
-  AND field_name = $field
-ORDER BY priority DESC
-`
-      const res = (await this.$store.dispatch(
-        'callApi',
-        {
-          func: (api: any) =>
-            api.getAnonymousUserView(query, {
-              schema: this.fieldRef!.entity.schema,
-              entity: this.fieldRef!.entity.name,
-              field: this.fieldRef!.name,
-            }),
-        },
-        { root: true },
-      )) as IViewExprResult
-
-      const firstRow = res.result.rows[0]
-      const attributesText = firstRow?.values?.[0]?.value
-      if (typeof attributesText === 'string') {
+      const attributesText = await getFieldAttributes(this.fieldRef)
+      if (attributesText !== null) {
         this.parseEnumOptionVariants(attributesText)
       } else {
         this.enumFallbackVariantByValue = {}

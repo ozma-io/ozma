@@ -3,6 +3,7 @@ import FunDBAPI, { IEntityRef, IEntity } from '@ozma-io/ozmadb-js/client'
 
 import { IRef, ObjectMap, waitTimeout } from '@/utils'
 import { CancelledError } from '@/modules'
+import { clearFieldAttributesCache } from '@/field_attributes'
 
 // For each entity contains array of all accessible entries (main fields) identified by id
 export type EntityResult = IEntity | Promise<IEntity> | Error
@@ -59,6 +60,7 @@ const entitiesModule: Module<IEntitiesState, {}> = {
       root: true,
       handler: ({ commit }) => {
         commit('clear')
+        clearFieldAttributesCache()
       },
     },
 

@@ -164,6 +164,10 @@ import {
   colorVariantFromAttribute,
   extractOptionVariantCase,
 } from '@/utils_colors'
+import {
+  getEntityFieldAttributes,
+  getFieldAttributes,
+} from '@/field_attributes'
 import type { IConvertedBoundMapping } from '@/user_views/combined'
 import { UserString, isOptionalUserString } from '@/state/translations'
 
@@ -356,31 +360,8 @@ export default class ReferenceMultiSelect extends mixins(BaseEntriesView) {
     }
 
     try {
-      const query = `
-{ $schema string, $entity string, $field string }:
-SELECT attributes
-FROM public.fields_attributes
-WHERE schema_id=>name = $schema
-  AND field_entity_id=>name = $entity
-  AND field_name = $field
-ORDER BY priority DESC
-`
-      const res = (await this.$store.dispatch(
-        'callApi',
-        {
-          func: (api: any) =>
-            api.getAnonymousUserView(query, {
-              schema: this.referencingField!.entity.schema,
-              entity: this.referencingField!.entity.name,
-              field: this.referencingField!.name,
-            }),
-        },
-        { root: true },
-      )) as IViewExprResult
-
-      const firstRow = res.result.rows[0]
-      const attributesText = firstRow?.values?.[0]?.value
-      if (typeof attributesText === 'string') {
+      const attributesText = await getFieldAttributes(this.referencingField)
+      if (attributesText !== null) {
         this.parseCaseOptionVariants(attributesText)
       }
     } catch (e) {
@@ -416,35 +397,16 @@ ORDER BY priority DESC
       return this.entityVariantCandidates
     }
 
-    const query = `
-{ $schema string, $entity string }:
-SELECT field_name, attributes
-FROM public.fields_attributes
-WHERE schema_id=>name = $schema
-  AND field_entity_id=>name = $entity
-  AND attributes ILIKE '%option_variant%'
-ORDER BY priority DESC
-`
-    const res = (await this.$store.dispatch(
-      'callApi',
-      {
-        func: (api: any) =>
-          api.getAnonymousUserView(query, {
-            schema: this.referenceEntity.schema,
-            entity: this.referenceEntity.name,
-          }),
-      },
-      { root: true },
-    )) as IViewExprResult
+    const { rows } = await getEntityFieldAttributes(this.referenceEntity)
 
     const candidates: Array<{ fieldName: string; expression: string }> = []
-    for (const row of res.result.rows) {
-      const fieldName = row.values[0]?.value
-      const attributesText = row.values[1]?.value
-      if (typeof fieldName !== 'string' || typeof attributesText !== 'string') {
+    for (const { fieldName, attributes } of rows) {
+      // The shared loader fetches every attribute row for the entity; narrow it down
+      // here instead of with an ILIKE in the query.
+      if (!/option_variant/i.test(attributes)) {
         continue
       }
-      const expression = this.extractOptionVariantExpression(attributesText)
+      const expression = this.extractOptionVariantExpression(attributes)
       if (expression) {
         candidates.push({ fieldName, expression })
       }
