@@ -1,9 +1,11 @@
 import * as fs from 'fs'
+import * as zlib from 'zlib'
 import webpack from 'webpack'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import VueTemplateBabelCompiler from 'vue-template-babel-compiler'
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin'
 import CreateFileWebpack from 'create-file-webpack'
+import CompressionPlugin from 'compression-webpack-plugin'
 
 const configName =
   process.env['CONFIG'] || process.env['NODE_ENV'] || 'development'
@@ -19,6 +21,33 @@ const defaults = {
 
 const analyzeBundle = process.env['ANALYZE']
 const enableLint = process.env['NODE_ENV'] !== 'production'
+const isProduction = process.env['NODE_ENV'] === 'production'
+
+/* Caddy serves these next to the originals via `file_server { precompressed br gzip }`,
+   so the ratio is paid once at build time instead of on every request. Caddy ships no
+   brotli encoder at all, which is the main reason to pre-compress rather than rely on
+   on-the-fly `encode`. */
+const compressibleAssets = /\.(?:js|mjs|css|html|svg|json|txt|map|wasm)$/
+const compressionPlugins = [
+  new CompressionPlugin({
+    filename: '[path][base].br',
+    algorithm: 'brotliCompress',
+    test: compressibleAssets,
+    compressionOptions: {
+      params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+    },
+    threshold: 1024,
+    minRatio: 0.9,
+  }),
+  new CompressionPlugin({
+    filename: '[path][base].gz',
+    algorithm: 'gzip',
+    test: compressibleAssets,
+    compressionOptions: { level: 9 },
+    threshold: 1024,
+    minRatio: 0.9,
+  }),
+]
 const embeddedJs = fs.readFileSync(
   import.meta
     .resolve('@ozma-io/ozma-embedded/embedded')
@@ -59,6 +88,7 @@ export default {
         content: embeddedJs,
       }),
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
+      ...(isProduction ? compressionPlugins : []),
     ],
   },
   chainWebpack: (config) => {
