@@ -464,6 +464,7 @@ export default class UserView extends Vue {
   private state: UserViewLoadingState = loadingState
   private nextUv: Promise<void> | null = null
   private pendingAbort: AbortController | null = null
+  private usesRemoteSearch = false
   private userViewRedirects = 0
 
   protected created() {
@@ -848,7 +849,16 @@ export default class UserView extends Vue {
   private async loadEntriesWithRemoteSearch(search: string | undefined) {
     if (this.state.state !== 'show') return
 
+    this.usesRemoteSearch = true
     await this.reload({ search, differentComponent: true })
+  }
+
+  // Every reload after a remote search — pagination, chunk loading, refresh — must keep the search
+  // applied, otherwise the server returns unrelated rows which the view then filters out locally.
+  private get remoteSearch(): string | undefined {
+    if (!this.usesRemoteSearch || this.filter.length === 0) return undefined
+
+    return this.filter.join(' ')
   }
 
   // `request_lines_number()` requires counting the whole filtered set, which roughly doubles the
@@ -895,8 +905,8 @@ export default class UserView extends Vue {
       loadNextChunk,
       loadAllChunks,
       loadAllChunksLimitless,
-      search,
     } = options
+    const search = 'search' in options ? options.search : this.remoteSearch
     const clonedArgs = deepClone(this.args)
     const args = {
       source: clonedArgs.source,
