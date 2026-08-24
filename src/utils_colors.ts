@@ -8,6 +8,7 @@ import FunDBAPI, {
 } from '@ozma-io/ozmadb-js/client'
 import { store } from '@/main'
 import { mapMaybe, objectMap, safeJsonParse } from '@/utils'
+import { cachedInSession } from '@/session_cache'
 
 const ThemeRef = z.object({
   schema: z.string(),
@@ -476,9 +477,12 @@ export const reinjectMissingColorThemes = async (
   /* eslint-enable no-await-in-loop */
 }
 
-export const loadThemes = async (): Promise<ThemesMap> => {
-  const themes = await loadColorThemeHeaders()
-  const colorVariantRows = await loadColorVariants()
+const loadThemesUncached = async (): Promise<ThemesMap> => {
+  // Independent queries — awaiting them in sequence cost a whole round trip.
+  const [themes, colorVariantRows] = await Promise.all([
+    loadColorThemeHeaders(),
+    loadColorVariants(),
+  ])
   return Object.fromEntries(
     Object.entries(themes).map(([schemaName, schemaHeaders]) => {
       const schema = Object.fromEntries(
@@ -494,6 +498,12 @@ export const loadThemes = async (): Promise<ThemesMap> => {
     }),
   )
 }
+
+/* `funapp.color_variants` alone is ~800 rows and half a megabyte of JSON, refetched on
+   every cold load. Themes change about never, so serve them from the session cache;
+   `reload` drops it when someone actually edits one. */
+export const loadThemes = (): Promise<ThemesMap> =>
+  cachedInSession('themes', loadThemesUncached)
 
 const colorVariantPropToCssVariableEntry = (
   variantKey: VariantKey,

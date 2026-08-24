@@ -168,6 +168,7 @@ import {
   getEntityFieldAttributes,
   getFieldAttributes,
 } from '@/field_attributes'
+import { dedupedInPage } from '@/session_cache'
 import type { IConvertedBoundMapping } from '@/user_views/combined'
 import { UserString, isOptionalUserString } from '@/state/translations'
 
@@ -474,12 +475,18 @@ WHERE id = ANY($ids)
 `
 
           try {
-            const res = (await this.$store.dispatch(
-              'callApi',
-              {
-                func: (api: any) => api.getAnonymousUserView(query, { ids }),
-              },
-              { root: true },
+            // Every reference select on the form evaluates the same candidates over the
+            // same ids, so share one request between them instead of firing ten.
+            const res = (await dedupedInPage(
+              `option_variants:${query}:${idsKey}`,
+              () =>
+                this.$store.dispatch(
+                  'callApi',
+                  {
+                    func: (api: any) => api.getAnonymousUserView(query, { ids }),
+                  },
+                  { root: true },
+                ),
             )) as IViewExprResult
 
             const variantsById: Record<number, unknown> = {}
