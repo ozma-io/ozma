@@ -480,3 +480,36 @@ export type ColorVariantCssVariables = Record<
   ColorVariantCssVariableName,
   string
 >
+
+// `option_variant` attributes often nest one CASE inside another (a theme check
+// wrapping the value check), so the first END does not close the outer CASE.
+// Walk case/end tokens by depth and return the whole balanced expression.
+export const extractOptionVariantCase = (
+  attributesText: string,
+): string | null => {
+  const start = attributesText.match(/option_variant\s*=\s*(?=case\b)/i)
+  if (start?.index === undefined) {
+    return null
+  }
+
+  const exprStart = start.index + start[0].length
+  const tokens = /\b(case|end)\b/gi
+  tokens.lastIndex = exprStart
+  let depth = 0
+  let token = tokens.exec(attributesText)
+  while (token !== null) {
+    if (token[1].toLowerCase() === 'case') {
+      depth += 1
+    } else {
+      depth -= 1
+      if (depth === 0) {
+        return attributesText
+          .slice(exprStart, token.index + token[0].length)
+          .trim()
+      }
+    }
+    token = tokens.exec(attributesText)
+  }
+
+  return null
+}

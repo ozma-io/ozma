@@ -340,7 +340,11 @@ import { IQuery, attrToQuerySelf, attrObjectToQuery } from '@/state/query'
 import { ISelectOption } from '@/components/multiselect/MultiSelect.vue'
 import { AutoSaveLock } from '@/state/staging_changes'
 
-import { colorVariantFromAttribute, colorVariantFromCellColor } from '@/utils_colors'
+import {
+  colorVariantFromAttribute,
+  colorVariantFromCellColor,
+  extractOptionVariantCase,
+} from '@/utils_colors'
 import type { ColorVariantAttribute } from '@/utils_colors'
 import type { Button } from '@/components/buttons/buttons'
 import { attrToButtons } from '@/components/buttons/buttons'
@@ -651,10 +655,8 @@ export default class FormControl extends Vue {
     this.enumFallbackVariantByValue = {}
     this.enumFallbackVariantDefault = undefined
 
-    const caseMatch = attributesText.match(
-      /option_variant\s*=\s*CASE([\s\S]*?)END/im,
-    )
-    if (!caseMatch) {
+    const caseBody = extractOptionVariantCase(attributesText)
+    if (caseBody === null) {
       const staticMatch = attributesText.match(
         /option_variant\s*=\s*'([^']+)'/im,
       )
@@ -664,7 +666,6 @@ export default class FormControl extends Vue {
       return
     }
 
-    const caseBody = caseMatch[1]
     const equalsMatches = caseBody.matchAll(
       /WHEN[\s\S]*?=\s*'([^']+)'\s*THEN\s*'([^']+)'/gim,
     )
