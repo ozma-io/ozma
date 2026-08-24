@@ -1,6 +1,17 @@
 services:
   postgres:
     image: postgres:16
+    # Without query statistics every "what is slow?" question is guesswork.
+    # The library has to be preloaded at startup; the extension itself is created
+    # per database.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.max=5000
+      - -c
+      - pg_stat_statements.track=top
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
