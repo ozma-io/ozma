@@ -47,11 +47,15 @@ export const saveAndRunAction = async (
             if (finishInfo) {
               const { status, message } = finishInfo
               const toastBody = message ?? i18n.tc(`action_finish_${status}`)
+              /* Only errors are worth pinning: a warning that never hides
+                 outlives the screen it was raised on and later reads as a
+                 problem of whatever screen the user has moved to. */
               app.$bvToast.toast(toastBody, {
                 title: i18n.tc(`action_finish_${status}`),
                 toastClass: `finish-toast finish-toast--${status}`,
                 solid: true,
-                noAutoHide: status !== 'success',
+                noAutoHide: status === 'error',
+                autoHideDelay: status === 'warning' ? 15000 : undefined,
               })
             }
           } catch (e) {

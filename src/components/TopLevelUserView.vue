@@ -477,8 +477,20 @@ export default class TopLevelUserView extends Vue {
     return this.errors.length !== 0 && !this.changes.isEmpty
   }
 
+  private lastRoutePath: string | null = null
+
   @Watch('$route', { deep: true, immediate: true })
   private onRouteChanged() {
+    /* Toasts are mounted in a global toaster outside `router-view`, so one
+       raised on this screen would otherwise follow the user to every next
+       one. Query changes (filters, paging, modal windows) stay on the same
+       screen, so only an actual path change clears them. */
+    const { path } = this.$route
+    if (this.lastRoutePath !== null && this.lastRoutePath !== path) {
+      this.$bvToast.hide()
+    }
+    this.lastRoutePath = path
+
     this.resetRoute(this.$route)
   }
 
