@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 MODE="all"
 UI_BUILD_MODE="docker" # docker | local
-FORCE_UI_LOCAL_BUILD=false
+FORCE_UI_BUILD=false
 SKIP_GIT_PULL=false
 PRE_PULL_SHA=""
 POST_PULL_SHA=""
@@ -17,15 +17,20 @@ log() {
 
 usage() {
   cat <<'EOF'
-Usage: ./server_update_after_pull.sh [--only_ui | --only_db] [--ui-local] [--force-ui-local-build] [--skip-git-pull]
+Usage: ./server_update_after_pull.sh [--only_ui | --only_db] [--ui-local] [--force-ui-build] [--skip-git-pull]
 
 Options:
   --only_ui              Update only ozma (UI) container.
   --only_db              Update only ozmadb container.
   --ui-local             Build UI locally with yarn and copy dist into running ozma container.
-  --force-ui-local-build Force local yarn UI build even if UI files were not changed by git pull.
+  --force-ui-build       Rebuild the UI even if the pull changed no UI files.
+  --force-ui-local-build Deprecated alias for --force-ui-build.
   --skip-git-pull        Skip git pull step.
   -h, --help             Show this help.
+
+Git runs as the owner of the repository, docker as the current user, so the
+script works when it is started by root but the checkout belongs to somebody
+else (remotes may rely on that user's SSH config and keys).
 EOF
 }
 
@@ -34,6 +39,31 @@ require_cmd() {
     echo "Error: required command not found: $1" >&2
     exit 1
   fi
+}
+
+repo_owner() {
+  stat -c '%U' "$ROOT_DIR/.git" 2>/dev/null ||
+    stat -f '%Su' "$ROOT_DIR/.git" 2>/dev/null ||
+    true
+}
+
+# Docker usually needs root while the checkout belongs to a regular user, so
+# the two halves of this script run under different accounts. Git must use the
+# owner's account: remotes may point at SSH host aliases defined only in that
+# user's ~/.ssh/config, and git refuses to touch a repo owned by somebody else.
+run_git() {
+  if [[ -z "$REPO_OWNER" || "$CURRENT_USER" == "$REPO_OWNER" ]]; then
+    git -C "$ROOT_DIR" "$@"
+    return
+  fi
+
+  require_cmd sudo
+  if ! sudo -n -u "$REPO_OWNER" true 2>/dev/null; then
+    echo "Error: $ROOT_DIR is owned by '$REPO_OWNER', and '$CURRENT_USER' cannot sudo to that user without a password." >&2
+    echo "Run the script as '$REPO_OWNER', or pull manually and pass --skip-git-pull." >&2
+    exit 1
+  fi
+  sudo -n -u "$REPO_OWNER" -H git -C "$ROOT_DIR" "$@"
 }
 
 try_pull_image() {
@@ -59,7 +89,7 @@ ui_changed_in_pull() {
     return 1
   fi
 
-  git diff --name-only "$PRE_PULL_SHA" "$POST_PULL_SHA" | grep -Eq \
+  run_git diff --name-only "$PRE_PULL_SHA" "$POST_PULL_SHA" | grep -Eq \
     '^(src/|public/|package\.json|yarn\.lock|\.yarnrc\.yml|\.yarn/|docker/Dockerfile\.ozma|docker/Caddyfile|vue\.config\.js|tsconfig\.json)'
 }
 
@@ -68,7 +98,7 @@ deps_changed_in_pull() {
     return 1
   fi
 
-  git diff --name-only "$PRE_PULL_SHA" "$POST_PULL_SHA" | grep -Eq \
+  run_git diff --name-only "$PRE_PULL_SHA" "$POST_PULL_SHA" | grep -Eq \
     '^(package\.json|yarn\.lock|\.yarnrc\.yml|\.yarn/)'
 }
 
@@ -91,8 +121,8 @@ for arg in "$@"; do
     --ui-local)
       UI_BUILD_MODE="local"
       ;;
-    --force-ui-local-build)
-      FORCE_UI_LOCAL_BUILD=true
+    --force-ui-build|--force-ui-local-build)
+      FORCE_UI_BUILD=true
       ;;
     --skip-git-pull)
       SKIP_GIT_PULL=true
@@ -110,17 +140,24 @@ for arg in "$@"; do
 done
 
 require_cmd docker
+require_cmd git
 if [[ "$UI_BUILD_MODE" == "local" ]]; then
   require_cmd yarn
 fi
 
+REPO_OWNER="$(repo_owner)"
+CURRENT_USER="$(id -un)"
+if [[ -n "$REPO_OWNER" && "$CURRENT_USER" != "$REPO_OWNER" ]]; then
+  log "running git as '$REPO_OWNER' (owner of $ROOT_DIR), docker as '$CURRENT_USER'"
+fi
+
 if [[ "$SKIP_GIT_PULL" != true && "$MODE" != "db" ]]; then
-  PRE_PULL_SHA="$(git rev-parse HEAD)"
+  PRE_PULL_SHA="$(run_git rev-parse HEAD)"
   log "git pull"
-  git pull --ff-only
-  POST_PULL_SHA="$(git rev-parse HEAD)"
+  run_git pull --ff-only
+  POST_PULL_SHA="$(run_git rev-parse HEAD)"
 else
-  PRE_PULL_SHA="$(git rev-parse HEAD)"
+  PRE_PULL_SHA="$(run_git rev-parse HEAD)"
   POST_PULL_SHA="$PRE_PULL_SHA"
 fi
 
@@ -160,8 +197,8 @@ esac
 
 if [[ "$DO_UI" == true ]]; then
   if [[ "$UI_BUILD_MODE" == "local" ]]; then
-    if [[ "$FORCE_UI_LOCAL_BUILD" == true ]] || ui_changed_in_pull; then
-      if [[ "$FORCE_UI_LOCAL_BUILD" == true ]] || deps_changed_in_pull; then
+    if [[ "$FORCE_UI_BUILD" == true ]] || ui_changed_in_pull; then
+      if [[ "$FORCE_UI_BUILD" == true ]] || deps_changed_in_pull; then
         log "yarn install (deps changed)"
         YARN_NODE_LINKER=node-modules yarn install --immutable --inline-builds
       else
@@ -187,12 +224,15 @@ if [[ "$DO_UI" == true ]]; then
     docker exec "$OZMA_CONTAINER_ID" sh -lc 'rm -rf /usr/share/caddy/*'
     docker cp "$ROOT_DIR/dist/." "$OZMA_CONTAINER_ID:/usr/share/caddy"
   else
-    if [[ "$UI_IMAGE_CHANGED" == true ]]; then
-      log "new ozma image available, rebuild + recreate"
+    # The ozma image is built from this checkout, so a pull that touches UI
+    # sources must trigger a rebuild on its own: the ghcr image is only a hint
+    # about the base layers and may not even be published.
+    if [[ "$FORCE_UI_BUILD" == true ]] || [[ "$UI_IMAGE_CHANGED" == true ]] || ui_changed_in_pull; then
+      log "rebuild + recreate ozma"
       docker compose build --pull ozma
       docker compose up -d --force-recreate ozma
     else
-      log "ozma image unchanged, skip rebuild"
+      log "ozma image and UI sources unchanged, skip rebuild"
     fi
   fi
 fi
