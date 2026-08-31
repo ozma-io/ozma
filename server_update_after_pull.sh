@@ -151,14 +151,32 @@ if [[ -n "$REPO_OWNER" && "$CURRENT_USER" != "$REPO_OWNER" ]]; then
   log "running git as '$REPO_OWNER' (owner of $ROOT_DIR), docker as '$CURRENT_USER'"
 fi
 
+SELF_NAME="$(basename "${BASH_SOURCE[0]}")"
+
 if [[ "$SKIP_GIT_PULL" != true && "$MODE" != "db" ]]; then
   PRE_PULL_SHA="$(run_git rev-parse HEAD)"
   log "git pull"
   run_git pull --ff-only
   POST_PULL_SHA="$(run_git rev-parse HEAD)"
+elif [[ -n "${UPDATE_PRE_PULL_SHA:-}" ]]; then
+  # Handed over by the pre-pull instance of this script, see below.
+  PRE_PULL_SHA="$UPDATE_PRE_PULL_SHA"
+  POST_PULL_SHA="${UPDATE_POST_PULL_SHA:-$PRE_PULL_SHA}"
 else
   PRE_PULL_SHA="$(run_git rev-parse HEAD)"
   POST_PULL_SHA="$PRE_PULL_SHA"
+fi
+
+# bash reads a script lazily, so the pull above can rewrite this file while the
+# shell is still executing it and make it resume from a meaningless offset.
+# Hand over to the new version instead of running a half-old, half-new script.
+# `UPDATE_PRE_PULL_SHA` marks the instance that was handed over to, so that it
+# does not hand over again in an endless loop.
+if [[ -z "${UPDATE_PRE_PULL_SHA:-}" && "$PRE_PULL_SHA" != "$POST_PULL_SHA" ]] &&
+  run_git diff --name-only "$PRE_PULL_SHA" "$POST_PULL_SHA" | grep -qFx "$SELF_NAME"; then
+  log "$SELF_NAME changed in the pull, restarting with the new version"
+  UPDATE_PRE_PULL_SHA="$PRE_PULL_SHA" UPDATE_POST_PULL_SHA="$POST_PULL_SHA" \
+    exec bash "$ROOT_DIR/$SELF_NAME" "$@" --skip-git-pull
 fi
 
 # The UI image has no ghcr counterpart to watch: docker/Dockerfile.ozma builds
