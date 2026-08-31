@@ -36,6 +36,7 @@
       'view-form',
       { 'contains-only-one-iframe': containsOnlyOneIframe },
       { 'animations-disabled': !uiAnimationsEnabled },
+      { 'has-full-width-nested-userview': hasFullWidthNestedUserView },
     ]"
   >
     <Errorbox
@@ -671,6 +672,29 @@ export default class UserViewForm extends mixins<
       : null
   }
 
+  // Whether some nested user view is stretched across the whole form width.
+  // Such views get a sticky header, which only works when no ancestor between
+  // them and the page scroll container is a scroll container itself.
+  get hasFullWidthNestedUserView(): boolean {
+    const blockSizes = this.blockSizes
+    // Without `block_sizes` the form is two-column, so nothing is full-width.
+    if (blockSizes === null) return false
+
+    const viewAttrs = this.uv.attributes
+    return this.uv.info.columns.some((_column, i) => {
+      const columnAttrs = this.uv.columnAttributes[i]
+      const getColumnAttr = (name: string) =>
+        tryDicts(name, columnAttrs, viewAttrs)
+      if (getColumnAttr('control') !== 'user_view') return false
+      if (!(getColumnAttr('visible') ?? true)) return false
+
+      const blockAttr = Number(getColumnAttr('form_block'))
+      const blockNumber = Number.isNaN(blockAttr) ? 0 : blockAttr
+      const block = Math.max(0, Math.min(blockNumber, blockSizes.length - 1))
+      return blockSizes[block] === 12
+    })
+  }
+
   get gridBlocks(): FormGridElement[] {
     const viewAttrs = this.uv.attributes
 
@@ -1105,6 +1129,14 @@ export default class UserViewForm extends mixins<
 
   @include mobile {
     padding: 1rem !important;
+  }
+
+  /* `overflow-y: auto` here never actually scrolls (the height follows the
+     content), but it still makes a scroll container, and sticky headers of
+     nested user views would resolve against it and never move. Glass themes
+     already drop the overflow globally; do it for the rest when needed. */
+  &.has-full-width-nested-userview:not(.contains-only-one-iframe) {
+    overflow: visible;
   }
 
   &.contains-only-one-iframe {

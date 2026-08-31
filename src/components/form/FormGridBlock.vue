@@ -4,7 +4,10 @@
     :lg="blockContent.size"
     :class="[
       'form_grid_block__column',
-      { 'element-block': blockContent.type === 'element' },
+      {
+        'element-block': blockContent.type === 'element',
+        'full-width-element': isFullWidth && blockContent.type === 'element',
+      },
     ]"
   >
     <div
@@ -27,6 +30,7 @@
           :key="subBlockI"
           v-slot="slotProps"
           :block-content="subBlock"
+          :parent-full-width="isFullWidth"
         >
           <slot :element="slotProps.element" />
         </FormGridBlock>
@@ -49,6 +53,7 @@
                 :key="itemI"
                 v-slot="slotProps"
                 :block-content="item"
+                :parent-full-width="isFullWidth"
               >
                 <slot :element="slotProps.element" />
               </FormGridBlock>
@@ -62,6 +67,7 @@
                 :key="itemI"
                 v-slot="slotProps"
                 :block-content="item"
+                :parent-full-width="isFullWidth"
               >
                 <slot :element="slotProps.element" />
               </FormGridBlock>
@@ -86,6 +92,14 @@ export default class FormGridBlock extends Vue {
   @Prop({ type: Boolean, default: false }) firstLevel!: boolean
   @Prop({ type: Boolean, default: false }) hasNoContent!: boolean
   @Prop({ type: Boolean, default: false }) singleUserViewSection!: boolean
+  // The form itself always spans the whole width, so first-level blocks start from `true`.
+  @Prop({ type: Boolean, default: true }) parentFullWidth!: boolean
+
+  // True when this block spans the whole form width, i.e. every block on the
+  // way down from the form root takes all 12 columns.
+  get isFullWidth(): boolean {
+    return this.parentFullWidth && this.blockContent.size === 12
+  }
 
   get formSubBlocksEnabled(): boolean {
     return this.$store.state.settings.current.getEntry(
@@ -209,5 +223,25 @@ export default class FormGridBlock extends Vue {
 
 .row {
   margin: 0;
+}
+
+/* A nested user view stretched across the whole form width keeps its header
+   (title, search, buttons) pinned while its content scrolls away. */
+.form_grid_block__column.full-width-element {
+  ::v-deep .nested-userview {
+    /* `clip` instead of `hidden`: it still cuts the rounded corners, but
+       doesn't become a scroll container, which would kill the sticky header.
+       `hidden` stays as a fallback for browsers without `clip`. */
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  ::v-deep .nested-userview > .header-panel {
+    position: sticky;
+    top: 0;
+    /* Above the table's own sticky cells and dropdowns (up to 31). */
+    z-index: 32;
+    background: var(--backgroundColor);
+  }
 }
 </style>
