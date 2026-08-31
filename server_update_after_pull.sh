@@ -161,14 +161,12 @@ else
   POST_PULL_SHA="$PRE_PULL_SHA"
 fi
 
+# The UI image has no ghcr counterpart to watch: docker/Dockerfile.ozma builds
+# from node + caddy and takes the sources from this checkout, so the only thing
+# that can make it stale is a change in the repository.
 log "docker pull ghcr images"
-UI_IMAGE_CHANGED=false
 DB_IMAGE_CHANGED=false
 REPORT_IMAGE_CHANGED=false
-if [[ "$MODE" != "db" ]]; then
-  result="$(try_pull_image ghcr.io/vientooscuro/ozma:master)"
-  [[ "$result" == "updated" ]] && UI_IMAGE_CHANGED=true
-fi
 if [[ "$MODE" != "ui" ]]; then
   result="$(try_pull_image ghcr.io/vientooscuro/ozmadb:master)"
   [[ "$result" == "updated" ]] && DB_IMAGE_CHANGED=true
@@ -224,15 +222,12 @@ if [[ "$DO_UI" == true ]]; then
     docker exec "$OZMA_CONTAINER_ID" sh -lc 'rm -rf /usr/share/caddy/*'
     docker cp "$ROOT_DIR/dist/." "$OZMA_CONTAINER_ID:/usr/share/caddy"
   else
-    # The ozma image is built from this checkout, so a pull that touches UI
-    # sources must trigger a rebuild on its own: the ghcr image is only a hint
-    # about the base layers and may not even be published.
-    if [[ "$FORCE_UI_BUILD" == true ]] || [[ "$UI_IMAGE_CHANGED" == true ]] || ui_changed_in_pull; then
+    if [[ "$FORCE_UI_BUILD" == true ]] || ui_changed_in_pull; then
       log "rebuild + recreate ozma"
       docker compose build --pull ozma
       docker compose up -d --force-recreate ozma
     else
-      log "ozma image and UI sources unchanged, skip rebuild"
+      log "UI sources unchanged by pull, skip rebuild"
     fi
   fi
 fi
@@ -265,7 +260,10 @@ elif [[ "$DO_DB" == true ]]; then
   docker compose ps ozmadb
 fi
 
+# Not `-a`: the ozmadb and report-generator reference images are pulled only to
+# compare digests and no container runs them, so `-a` would delete them and make
+# the next run see every image as updated.
 log "pruning unused Docker data..."
-docker system prune -af
+docker system prune -f
 
 log "done"
