@@ -243,5 +243,22 @@ export default class FormGridBlock extends Vue {
     z-index: 32;
     background: var(--backgroundColor);
   }
+
+  /* The table's column headers are sticky too, but they resolve against the
+     nearest scroll container, so nothing between them and the page may be one.
+     A table wider than the form keeps its own horizontal scroll instead, and
+     then only the header panel is pinned. Views with `control_height` scroll
+     inside their box and are left alone. */
+  ::v-deep .nested-userview:not(.fixed-height) {
+    .userview-wrapper,
+    .userview-overlay,
+    .table-wrapper:not(.horizontal-overflow) {
+      overflow: visible;
+    }
+
+    .table-wrapper:not(.horizontal-overflow) th {
+      top: calc(var(--nested-header-height, 0px) - 1px);
+    }
+  }
 }
 </style>

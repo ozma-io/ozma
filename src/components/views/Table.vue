@@ -119,6 +119,7 @@
           'stick-fixed-columns': stickFixedColumns,
           'selection-column-enabled': showSelectionColumn,
           'show-vertical-borders': showVerticalBorders,
+          'horizontal-overflow': tableOverflowsWrapper,
         },
       ]"
       :infinite-wrapper="isRoot"
@@ -3189,12 +3190,21 @@ export default class UserViewTable extends mixins<
   private showFixedColumnBorder = false
 
   private stickFixedColumns = true
+  // Whether the table is wider than its wrapper. Lets the wrapper keep its own
+  // horizontal scroll where an ancestor would otherwise drop it (nested views in
+  // forms pin their headers to the page, which needs the wrapper not to scroll).
+  private tableOverflowsWrapper = false
   private tableResizeObserver: ResizeObserver | null = null
   private onTableResize() {
     const breakpoint = 1000
     const ref = this.$refs['tableWrapper'] as HTMLElement | undefined
     const tableWidth = ref?.offsetWidth ?? breakpoint
     this.stickFixedColumns = tableWidth > breakpoint
+    const table = this.$refs['table'] as HTMLElement | undefined
+    this.tableOverflowsWrapper =
+      ref !== undefined &&
+      table !== undefined &&
+      table.offsetWidth > ref.clientWidth
   }
 
   protected mounted() {
@@ -3221,6 +3231,8 @@ export default class UserViewTable extends mixins<
         this.tableResizeObserver.observe(
           this.$refs['tableWrapper'] as HTMLElement,
         )
+        const table = this.$refs['table'] as HTMLElement | undefined
+        if (table) this.tableResizeObserver.observe(table)
       } else {
         this.onTableResize()
       }
@@ -3258,11 +3270,7 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
     )
-    if (this.$refs['tableWrapper']) {
-      this.tableResizeObserver?.unobserve(
-        this.$refs['tableWrapper'] as HTMLElement,
-      )
-    }
+    this.tableResizeObserver?.disconnect()
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.uv.extra.lazyLoad.type === 'pagination' && this.isTopLevel) {
