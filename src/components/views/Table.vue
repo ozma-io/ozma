@@ -707,6 +707,11 @@ export interface IVisualPosition {
 const showStep = 15
 const doubleClickTime = 700
 
+// Whether pinned headers can follow the page scroll on the compositor (see
+// `--pinned-table` in FormGridBlock.vue); otherwise a scroll listener does it.
+const hasScrollDrivenAnimations =
+  typeof CSS !== 'undefined' && CSS.supports('animation-timeline: view()')
+
 // Nearest ancestor that `position: sticky` descendants resolve against.
 const findScrollContainer = (start: HTMLElement | null): HTMLElement | null => {
   for (let el = start; el !== null; el = el.parentElement) {
@@ -3235,6 +3240,8 @@ export default class UserViewTable extends mixins<
       this.stopPinningHeaders()
       return
     }
+    this.updatePinnedHeaderRange()
+    if (hasScrollDrivenAnimations) return
     if (this.pinnedHeaderScroller === null) {
       const scroller = findScrollContainer(wrapper.parentElement)
       if (scroller === null) return
@@ -3247,6 +3254,19 @@ export default class UserViewTable extends mixins<
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
+  // Where inside the wrapper the headers start following the page scroll and
+  // how far they may go: from the table's top to its end minus their height.
+  private updatePinnedHeaderRange() {
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    const table = this.$refs['table'] as HTMLTableElement | undefined
+    if (!wrapper || !table) return
+    const start = table.getBoundingClientRect().top - wrapper.getBoundingClientRect().top
+    const max = Math.max(0, table.offsetHeight - (table.tHead?.offsetHeight ?? 0))
+    wrapper.style.setProperty('--pinned-header-start', `${start}px`)
+    wrapper.style.setProperty('--pinned-header-end', `${start + max}px`)
+    wrapper.style.setProperty('--pinned-header-max', `${max}px`)
+  }
+
   private stopPinningHeaders() {
     /* eslint-disable @typescript-eslint/unbound-method */
     if (this.pinnedHeaderScroller !== null) {
@@ -3257,7 +3277,9 @@ export default class UserViewTable extends mixins<
       this.pinnedHeaderScroller = null
     }
     const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
-    wrapper?.style.removeProperty('--pinned-header-offset')
+    for (const name of ['offset', 'start', 'end', 'max']) {
+      wrapper?.style.removeProperty(`--pinned-header-${name}`)
+    }
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
