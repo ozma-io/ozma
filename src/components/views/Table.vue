@@ -3195,6 +3195,7 @@ export default class UserViewTable extends mixins<
   // forms pin their headers to the page, which needs the wrapper not to scroll).
   private tableOverflowsWrapper = false
   private tableResizeObserver: ResizeObserver | null = null
+  private observedTable: HTMLElement | null = null
   private onTableResize() {
     const breakpoint = 1000
     const ref = this.$refs['tableWrapper'] as HTMLElement | undefined
@@ -3205,6 +3206,25 @@ export default class UserViewTable extends mixins<
       ref !== undefined &&
       table !== undefined &&
       table.offsetWidth > ref.clientWidth
+  }
+
+  // The table element comes and goes with the data, and its width follows the
+  // columns, so the observer is (re)attached whenever the component re-renders.
+  private observeTable() {
+    const table = this.$refs['table'] as HTMLElement | undefined
+    const target = table ?? null
+    if (target === this.observedTable || this.tableResizeObserver === null) {
+      return
+    }
+    if (this.observedTable !== null) {
+      this.tableResizeObserver.unobserve(this.observedTable)
+    }
+    this.observedTable = target
+    if (target !== null) this.tableResizeObserver.observe(target)
+  }
+
+  protected updated() {
+    this.observeTable()
   }
 
   protected mounted() {
@@ -3231,8 +3251,7 @@ export default class UserViewTable extends mixins<
         this.tableResizeObserver.observe(
           this.$refs['tableWrapper'] as HTMLElement,
         )
-        const table = this.$refs['table'] as HTMLElement | undefined
-        if (table) this.tableResizeObserver.observe(table)
+        this.observeTable()
       } else {
         this.onTableResize()
       }

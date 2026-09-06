@@ -651,6 +651,7 @@ export default class FormControl extends Vue {
   // table's sticky column headers can pin right below it.
   private nestedHeaderHeight: number | null = null
   private headerPanelResizeObserver: ResizeObserver | null = null
+  private observedHeaderPanel: HTMLElement | null = null
 
   get nestedUserViewStyle(): Record<string, string> {
     return this.nestedHeaderHeight === null
@@ -1255,17 +1256,32 @@ export default class FormControl extends Vue {
     this.observeHeaderPanelHeight()
   }
 
+  // The header panel renders only once the nested view is resolved, which may
+  // happen after mount, so the observer is (re)attached on every update.
+  protected updated() {
+    this.observeHeaderPanelHeight()
+  }
+
   private observeHeaderPanelHeight() {
     const panel = (this.$refs['headerPanel'] as Vue | undefined)?.$el
-    if (!(panel instanceof HTMLElement)) return
+    const target = panel instanceof HTMLElement ? panel : null
+    if (target === this.observedHeaderPanel) return
+
+    this.headerPanelResizeObserver?.disconnect()
+    this.headerPanelResizeObserver = null
+    this.observedHeaderPanel = target
+    if (target === null) {
+      this.nestedHeaderHeight = null
+      return
+    }
     if (typeof ResizeObserver === 'undefined') {
-      this.nestedHeaderHeight = panel.offsetHeight
+      this.nestedHeaderHeight = target.offsetHeight
       return
     }
     this.headerPanelResizeObserver = new ResizeObserver(() => {
-      this.nestedHeaderHeight = panel.offsetHeight
+      this.nestedHeaderHeight = target.offsetHeight
     })
-    this.headerPanelResizeObserver.observe(panel)
+    this.headerPanelResizeObserver.observe(target)
   }
 
   private updateValue(newValue: unknown) {
