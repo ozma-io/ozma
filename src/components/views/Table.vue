@@ -3207,7 +3207,7 @@ export default class UserViewTable extends mixins<
   private observedTable: HTMLElement | null = null
   // Page scroll container the column headers follow while the wrapper keeps
   // its own horizontal scroll (`--pinned-headers` in FormGridBlock.vue). Sticky
-  // headers can't reach past a scroll container, so the offset is set by hand.
+  // headers can't reach past a scroll container, so their `top` is set by hand.
   private pinnedHeaderScroller: HTMLElement | null = null
   private onTableResize() {
     const breakpoint = 1000
@@ -3219,7 +3219,8 @@ export default class UserViewTable extends mixins<
       ref !== undefined &&
       table !== undefined &&
       table.offsetWidth > ref.clientWidth
-    this.updatePinnedHeaders()
+    // After the render that puts `horizontal-overflow` on the wrapper.
+    void this.$nextTick(() => this.updatePinnedHeaders())
   }
 
   private updatePinnedHeaders() {
@@ -3269,14 +3270,18 @@ export default class UserViewTable extends mixins<
       parseFloat(
         getComputedStyle(wrapper).getPropertyValue('--nested-header-height'),
       ) || 0
+    const wrapperTop = wrapper.getBoundingClientRect().top
     const tableRect = table.getBoundingClientRect()
     const scrollerTop = scroller.getBoundingClientRect().top
     const headRowHeight = table.tHead?.offsetHeight ?? 0
-    const maxOffset = Math.max(0, tableRect.height - headRowHeight)
-    // `- 1` matches the `top: -1px` of sticky headers.
-    const offset = scrollerTop + headerHeight - 1 - tableRect.top
-    const clamped = Math.min(maxOffset, Math.max(0, offset))
-    wrapper.style.setProperty('--pinned-header-offset', `${clamped}px`)
+    // The headers stay sticky against the wrapper, so the offset is a sticky
+    // `top` inside it: where the page's sticky line is, clamped to the table.
+    // `- 1` matches the usual `top: -1px` of the headers.
+    const wanted = scrollerTop + headerHeight - 1 - wrapperTop
+    const min = tableRect.top - wrapperTop
+    const max = Math.max(min, min + tableRect.height - headRowHeight)
+    const offset = Math.min(max, Math.max(min, wanted))
+    wrapper.style.setProperty('--pinned-header-offset', `${offset}px`)
   }
 
   // The table element comes and goes with the data, and its width follows the

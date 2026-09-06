@@ -248,7 +248,8 @@ export default class FormGridBlock extends Vue {
      nearest scroll container, so nothing between them and the page may be one.
      A table wider than the form has to keep its own horizontal scroll, which
      makes the wrapper a scroll container again; Table.vue then follows the
-     page scroll by hand and moves the headers with a transform. Views with
+     page scroll by hand and moves the sticky `top` of the headers (a
+     transform would cut their backdrop blur off from the rows). Views with
      `control_height` scroll inside their box and are left alone. */
   ::v-deep .nested-userview:not(.fixed-height) {
     .userview-wrapper,
@@ -265,7 +266,7 @@ export default class FormGridBlock extends Vue {
       --pinned-headers: 1;
 
       th {
-        transform: translateY(var(--pinned-header-offset, 0px));
+        top: var(--pinned-header-offset, -1px);
       }
     }
   }
