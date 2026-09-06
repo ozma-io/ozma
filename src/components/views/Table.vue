@@ -707,6 +707,15 @@ export interface IVisualPosition {
 const showStep = 15
 const doubleClickTime = 700
 
+// Nearest ancestor that `position: sticky` descendants resolve against.
+const findScrollContainer = (start: HTMLElement | null): HTMLElement | null => {
+  for (let el = start; el !== null; el = el.parentElement) {
+    const { overflowY } = getComputedStyle(el)
+    if (overflowY === 'auto' || overflowY === 'scroll') return el
+  }
+  return null
+}
+
 export type ITableCombinedUserView = ICombinedUserView<
   ITableValueExtra,
   ITableRowExtra,
@@ -3196,6 +3205,10 @@ export default class UserViewTable extends mixins<
   private tableOverflowsWrapper = false
   private tableResizeObserver: ResizeObserver | null = null
   private observedTable: HTMLElement | null = null
+  // Page scroll container the column headers follow while the wrapper keeps
+  // its own horizontal scroll (`--pinned-headers` in FormGridBlock.vue). Sticky
+  // headers can't reach past a scroll container, so the offset is set by hand.
+  private pinnedHeaderScroller: HTMLElement | null = null
   private onTableResize() {
     const breakpoint = 1000
     const ref = this.$refs['tableWrapper'] as HTMLElement | undefined
@@ -3206,6 +3219,64 @@ export default class UserViewTable extends mixins<
       ref !== undefined &&
       table !== undefined &&
       table.offsetWidth > ref.clientWidth
+    this.updatePinnedHeaders()
+  }
+
+  private updatePinnedHeaders() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    const wanted =
+      wrapper !== undefined &&
+      this.tableOverflowsWrapper &&
+      getComputedStyle(wrapper).getPropertyValue('--pinned-headers').trim() ===
+        '1'
+    if (!wanted) {
+      this.stopPinningHeaders()
+      return
+    }
+    if (this.pinnedHeaderScroller === null) {
+      const scroller = findScrollContainer(wrapper.parentElement)
+      if (scroller === null) return
+      this.pinnedHeaderScroller = scroller
+      scroller.addEventListener('scroll', this.updatePinnedHeaderOffset, {
+        passive: true,
+      })
+    }
+    this.updatePinnedHeaderOffset()
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private stopPinningHeaders() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    if (this.pinnedHeaderScroller !== null) {
+      this.pinnedHeaderScroller.removeEventListener(
+        'scroll',
+        this.updatePinnedHeaderOffset,
+      )
+      this.pinnedHeaderScroller = null
+    }
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    wrapper?.style.removeProperty('--pinned-header-offset')
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private updatePinnedHeaderOffset() {
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    const table = this.$refs['table'] as HTMLTableElement | undefined
+    const scroller = this.pinnedHeaderScroller
+    if (!wrapper || !table || scroller === null) return
+    const headerHeight =
+      parseFloat(
+        getComputedStyle(wrapper).getPropertyValue('--nested-header-height'),
+      ) || 0
+    const tableRect = table.getBoundingClientRect()
+    const scrollerTop = scroller.getBoundingClientRect().top
+    const headRowHeight = table.tHead?.offsetHeight ?? 0
+    const maxOffset = Math.max(0, tableRect.height - headRowHeight)
+    // `- 1` matches the `top: -1px` of sticky headers.
+    const offset = scrollerTop + headerHeight - 1 - tableRect.top
+    const clamped = Math.min(maxOffset, Math.max(0, offset))
+    wrapper.style.setProperty('--pinned-header-offset', `${clamped}px`)
   }
 
   // The table element comes and goes with the data, and its width follows the
@@ -3290,6 +3361,7 @@ export default class UserViewTable extends mixins<
       this.$root.$off(name, callback),
     )
     this.tableResizeObserver?.disconnect()
+    this.stopPinningHeaders()
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.uv.extra.lazyLoad.type === 'pagination' && this.isTopLevel) {
