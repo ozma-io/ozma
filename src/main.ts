@@ -100,6 +100,22 @@ const getThemeHeaderValue = (): string => {
     // Ignore malformed localStorage value.
   }
 
+  // Тема из настроек инстанса приезжает уже после первых запросов, и в
+  // localStorage её нет, пока пользователь не выбрал тему руками. Её слепок
+  // лежит в кэше стилей — берём тему оттуда, иначе первый запрос уходит с
+  // 'default' и current_theme() в user view врёт.
+  try {
+    const rawCache = localStorage.getItem('themeStylesCache')
+    if (rawCache !== null) {
+      const cached = JSON.parse(rawCache) as { theme?: unknown }
+      if (typeof cached.theme === 'string' && cached.theme !== '') {
+        return cached.theme
+      }
+    }
+  } catch {
+    // Ignore malformed localStorage value.
+  }
+
   return 'default'
 }
 
