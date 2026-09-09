@@ -286,9 +286,11 @@
                   'fixed-cell': columns[i].fixed,
                   'last-fixed-cell': index === fixedColumnsLength - 1,
                   'column-drop-target': draggedOverColumnIndex === i,
+                  'wrapped-caption': columns[i].captionLines !== 1,
                 }"
                 :style="{
                   ...columns[i].style,
+                  ...captionLinesStyle(columns[i]),
                   left:
                     stickFixedColumns && fixedColumnPositions[i]
                       ? `${fixedColumnPositions[i]}px`
@@ -303,8 +305,16 @@
                 @drop.prevent="(event) => handleColumnDrop(i, event)"
                 @dragend="handleColumnDragEnd"
               >
-                <div class="table-th">
-                  <span class="column-capture">
+                <div
+                  class="table-th"
+                  :class="{ 'table-th--wrapped': columns[i].captionLines !== 1 }"
+                >
+                  <span
+                    class="column-capture"
+                    :class="{
+                      'column-capture--wrapped': columns[i].captionLines !== 1,
+                    }"
+                  >
                     {{ $ustOrEmpty(columns[i].caption) }}
                   </span>
                   <div v-if="uv.extra.sortColumn === i" class="sorting-wrapper">
@@ -642,6 +652,7 @@ export interface IColumn {
   columnInfo: IResultColumnInfo
   width: number // in px
   treeUnfoldColumn: boolean
+  captionLines: number
   type: string
 }
 
@@ -1880,6 +1891,17 @@ export default class UserViewTable extends mixins<
         .default(true)
         .parse(this.getColumnAttr(i, 'visible'))
 
+      // Сколько строк отводится под заголовок колонки: 1 (по умолчанию) – как раньше,
+      // 0 – сколько угодно, N – не больше N строк. Читается через getColumnAttr,
+      // поэтому работает и как атрибут всей таблицы, и как атрибут отдельной колонки.
+      const captionLines = z.coerce
+        .number()
+        .int()
+        .min(0)
+        .default(1)
+        .catch(1)
+        .parse(this.getColumnAttr(i, 'caption_lines'))
+
       const treeUnfoldColumn = z.coerce
         .boolean()
         .parse(this.getColumnAttr(i, 'tree_unfold_column'))
@@ -1901,6 +1923,7 @@ export default class UserViewTable extends mixins<
         columnInfo,
         width: columnWidth,
         treeUnfoldColumn,
+        captionLines,
         type,
       }
     })
@@ -3132,6 +3155,15 @@ export default class UserViewTable extends mixins<
     window.setTimeout(() => {
       this.suppressColumnDrag = false
     }, 0)
+  }
+
+  // Предел строк заголовка отдаём в CSS переменной: 0 читается как "сколько угодно".
+  private captionLinesStyle(column: IColumn): Record<string, string> {
+    if (column.captionLines === 1) return {}
+    return {
+      '--caption-lines':
+        column.captionLines === 0 ? 'none' : String(column.captionLines),
+    }
   }
 
   private handleColumnHeaderClick(columnIndex: number, event: MouseEvent) {
@@ -4716,6 +4748,32 @@ th {
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* caption_lines: заголовок переносится по строкам, а не обрезается в одну.
+   Высота шапки перестаёт быть жёсткой, чтобы вместить все разрешённые строки,
+   но не становится меньше обычной. --caption-lines задаёт предел: число или none. */
+th.wrapped-caption {
+  height: auto;
+  min-height: 3.35rem;
+}
+
+.table-th--wrapped {
+  align-items: center;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  padding-block: 0.35rem;
+}
+
+.column-capture--wrapped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--caption-lines, none);
+  line-clamp: var(--caption-lines, none);
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.2;
 }
 
 .sorting-wrapper {
