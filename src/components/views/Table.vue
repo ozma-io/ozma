@@ -1854,6 +1854,16 @@ export default class UserViewTable extends mixins<
   get columns() {
     let isTreeUnfoldColumnSet = false
 
+    // Общий предел строк заголовка на всю таблицу; каждая колонка может его
+    // переопределить своим caption_lines.
+    const defaultCaptionLines = z.coerce
+      .number()
+      .int()
+      .min(0)
+      .default(1)
+      .catch(1)
+      .parse(this.uv.attributes['caption_lines_number'])
+
     const columns = this.uv.info.columns.map((columnInfo, i): IColumn => {
       const captionAttr = rawToUserString(this.getColumnAttr(i, 'caption'))
       const caption = captionAttr ?? columnInfo.name
@@ -1892,14 +1902,14 @@ export default class UserViewTable extends mixins<
         .parse(this.getColumnAttr(i, 'visible'))
 
       // Сколько строк отводится под заголовок колонки: 1 (по умолчанию) – как раньше,
-      // 0 – сколько угодно, N – не больше N строк. Читается через getColumnAttr,
-      // поэтому работает и как атрибут всей таблицы, и как атрибут отдельной колонки.
+      // 0 – сколько угодно, N – не больше N строк. Без своего значения колонка
+      // берёт общий caption_lines_number таблицы.
       const captionLines = z.coerce
         .number()
         .int()
         .min(0)
-        .default(1)
-        .catch(1)
+        .default(defaultCaptionLines)
+        .catch(defaultCaptionLines)
         .parse(this.getColumnAttr(i, 'caption_lines'))
 
       const treeUnfoldColumn = z.coerce
@@ -4756,6 +4766,12 @@ th {
 th.wrapped-caption {
   height: auto;
   min-height: 3.35rem;
+
+  /* Перебиваем общий `padding: 0 0.5rem` шапки: многострочному заголовку нужны
+     вертикальные отступы, иначе он прилипает к границам ячейки. */
+  &:not(.select-row-cell):not(.add-entry-cell) .table-th {
+    padding: 0.55rem 0.5rem;
+  }
 }
 
 .table-th--wrapped {
@@ -4763,7 +4779,6 @@ th.wrapped-caption {
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
-  padding-block: 0.35rem;
 }
 
 .column-capture--wrapped {
