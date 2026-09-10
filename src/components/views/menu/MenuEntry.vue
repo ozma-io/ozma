@@ -236,6 +236,16 @@ export default class MenuEntry extends Vue {
     max-width: 100%;
     color: var(--menuEntry-foregroundColor);
     text-decoration: none;
+    box-shadow: none;
+    transform: none;
+  }
+
+  &:hover:not(.disabled),
+  &:focus:not(.disabled),
+  &:focus-visible:not(.disabled),
+  &:active:not(.disabled) {
+    box-shadow: none;
+    transform: none;
   }
 
   .icon {

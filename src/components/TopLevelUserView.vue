@@ -83,6 +83,7 @@
         :is-enable-filter="enableFilter"
         :filter-string="query.root.search"
         :argumentEditorProps="argumentEditorProps"
+        :sort-editor-props="sortEditorProps"
         :is-loading="uvLoading"
         @update:filter-string="replaceSearch({ key: null, search: $event })"
         @goto="push({ ...$event, key: null })"
@@ -103,7 +104,7 @@
 
       <AlertBanner />
 
-      <div class="userview-div">
+      <div :class="['userview-div', { 'userview-div--iframe-only': iframeOnly }]">
         <UserView
           ref="userViewRef"
           is-root
@@ -122,8 +123,10 @@
           @update:description="description = $event"
           @update:url="url = $event"
           @update:is-loading="uvLoading = $event"
+          @update:iframe-only="iframeOnly = $event"
           @update:current-page="replacePage({ key: null, page: $event })"
           @update:argument-editor-props="argumentEditorProps = $event"
+          @update:sort-editor-props="sortEditorProps = $event"
         />
       </div>
     </div>
@@ -235,6 +238,7 @@ import { CurrentSettings, DisplayMode } from '@/state/settings'
 import QRCodeScannerModal from './qrcode/QRCodeScannerModal.vue'
 import { UserString } from '@/state/translations'
 import { IArgumentEditorProps } from './ArgumentEditor.vue'
+import type { ISortEditorProps } from './SortEditor.vue'
 import ProfileButton from './ProfileButton.vue'
 import AlertBanner from './AlertBanner.vue'
 
@@ -339,6 +343,7 @@ export default class TopLevelUserView extends Vue {
   private enableFilter = false
   private styleNode!: HTMLStyleElement
   private userViewStyle: string | null = null
+  private iframeOnly = false
   private finalSettingsStyle: string | null = null
   private title: UserString | null = null
   private description: UserString | null = null
@@ -347,6 +352,7 @@ export default class TopLevelUserView extends Vue {
 
   private buttons: Button[] = []
   private argumentEditorProps: IArgumentEditorProps | null = null
+  private sortEditorProps: ISortEditorProps | null = null
 
   private currentQRCodeLink: Link | null = null
 
@@ -471,8 +477,20 @@ export default class TopLevelUserView extends Vue {
     return this.errors.length !== 0 && !this.changes.isEmpty
   }
 
+  private lastRoutePath: string | null = null
+
   @Watch('$route', { deep: true, immediate: true })
   private onRouteChanged() {
+    /* Toasts are mounted in a global toaster outside `router-view`, so one
+       raised on this screen would otherwise follow the user to every next
+       one. Query changes (filters, paging, modal windows) stay on the same
+       screen, so only an actual path change clears them. */
+    const { path } = this.$route
+    if (this.lastRoutePath !== null && this.lastRoutePath !== path) {
+      this.$bvToast.hide()
+    }
+    this.lastRoutePath = path
+
     this.resetRoute(this.$route)
   }
 
@@ -519,6 +537,11 @@ export default class TopLevelUserView extends Vue {
           cancelTitle: this.$t('cancel').toString(),
           okVariant: 'danger',
           cancelVariant: 'outline-secondary',
+          modalClass: 'glass-confirm-modal',
+          dialogClass: 'glass-confirm-dialog',
+          contentClass: 'glass-confirm-content',
+          bodyClass: 'glass-confirm-body',
+          footerClass: 'glass-confirm-footer',
           centered: true,
         },
       )
@@ -576,6 +599,10 @@ export default class TopLevelUserView extends Vue {
     return this.currentSettings.getEntry('custom_css', String, '')
   }
 
+  private get uiAnimationsEnabled(): boolean {
+    return this.currentSettings.getEntry('ui_animations_enabled', Boolean, true)
+  }
+
   // async to import additional sanitizeCSS module
   @Watch('settingsStyle', { deep: true, immediate: true })
   private async customStyle(styleString: string): Promise<void> {
@@ -595,6 +622,14 @@ export default class TopLevelUserView extends Vue {
     if (this.styleNode) {
       this.styleNode.innerHTML = this.finalStyle
     }
+  }
+
+  @Watch('uiAnimationsEnabled', { immediate: true })
+  private onUiAnimationsEnabledChanged(enabled: boolean) {
+    document.documentElement.setAttribute(
+      'data-ui-animations',
+      enabled ? 'on' : 'off',
+    )
   }
 
   private get finalStyle() {
@@ -635,8 +670,13 @@ export default class TopLevelUserView extends Vue {
 
 .userview-div {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+  &--iframe-only {
+    overflow: hidden;
+    height: 100%;
+  }
 }
 
 .userview-upper-div {
@@ -674,14 +714,14 @@ export default class TopLevelUserView extends Vue {
 
 .reset-changes-button {
   margin-bottom: 0.5rem;
-  background-color: #f2f4f7;
-  color: #777c87;
+  background-color: var(--default-backgroundDarker1Color);
+  color: var(--default-foregroundDarkerColor);
 }
 
 .show-errors-button {
   margin-bottom: 0.5rem;
-  background-color: #f2f4f7;
-  color: #777c87;
+  background-color: var(--default-backgroundDarker1Color);
+  color: var(--default-foregroundDarkerColor);
 }
 
 .save-button {

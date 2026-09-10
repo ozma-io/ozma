@@ -3,8 +3,8 @@
     ref="cellEdit"
     :class="['cell-variant', 'cell-local-variant', 'table-cell-edit', 'border']"
     :style="{
-      top: `${cellCoords.y}px`,
-      left: `${cellCoords.x}px`,
+      top: `${renderedCellCoords.y}px`,
+      left: `${renderedCellCoords.x}px`,
       '--table-cell-edit-height': height ? `${height}px` : 'auto',
       minHeight: minHeight ? `${minHeight}px` : 'auto',
       maxHeight: `${maxHeight}px`,
@@ -41,11 +41,51 @@ export default class TableCellEdit extends Vue {
    * and to keep it's position updated we need to observe it by ResizeObserver */
   private resizeObserver: ResizeObserver | null = null
 
+  private getFixedContainingBlock(): HTMLElement | null {
+    let current = (this.$el as HTMLElement | undefined)?.parentElement ?? null
+
+    while (current) {
+      const style = window.getComputedStyle(current)
+      const backdropFilter =
+        style.backdropFilter || style.getPropertyValue('backdrop-filter')
+      const webkitBackdropFilter = style.getPropertyValue(
+        '-webkit-backdrop-filter',
+      )
+      const willChange = style.willChange || ''
+      const contain = style.contain || ''
+      const hasContainingBlock =
+        style.transform !== 'none' ||
+        style.perspective !== 'none' ||
+        style.filter !== 'none' ||
+        (backdropFilter !== '' && backdropFilter !== 'none') ||
+        (webkitBackdropFilter !== '' && webkitBackdropFilter !== 'none') ||
+        contain.includes('paint') ||
+        willChange.includes('transform') ||
+        willChange.includes('filter')
+
+      if (hasContainingBlock) {
+        return current
+      }
+
+      current = current.parentElement
+    }
+
+    return null
+  }
+
+  private getViewportRect(): DOMRect {
+    const ownRoot = this.$el as HTMLElement | undefined
+    const viewport = ownRoot?.closest('.userview-div')
+
+    if (viewport instanceof HTMLElement) {
+      return viewport.getBoundingClientRect()
+    }
+
+    return new DOMRect(0, 0, window.innerWidth, window.innerHeight)
+  }
+
   private updateMaxHeight() {
-    const viewportRect = document
-      .querySelector('.userview-div')
-      ?.getBoundingClientRect()
-    this.maxHeight = viewportRect?.height ?? this.height
+    this.maxHeight = this.getViewportRect().height || this.height || 0
   }
 
   private updateMovedCoords() {
@@ -56,13 +96,7 @@ export default class TableCellEdit extends Vue {
       this.movedCellCoords = null
       return
     }
-    const viewportRect = document
-      .querySelector('.userview-div')
-      ?.getBoundingClientRect()
-    if (!viewportRect) {
-      this.movedCellCoords = null
-      throw Error("Can't find `.userview-div` selector")
-    }
+    const viewportRect = this.getViewportRect()
 
     const cellRight = this.sourceCoords.x + cellRect.width
     const cellBottom = this.sourceCoords.y + cellRect.height
@@ -82,8 +116,10 @@ export default class TableCellEdit extends Vue {
     if (!cellRef) {
       throw Error("Can't find `cellEdit` ref")
     }
-    this.resizeObserver = new ResizeObserver(() => this.updateMovedCoords())
-    this.resizeObserver.observe(cellRef)
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.updateMovedCoords())
+      this.resizeObserver.observe(cellRef)
+    }
     this.updateMovedCoords()
     this.updateMaxHeight()
 
@@ -110,6 +146,21 @@ export default class TableCellEdit extends Vue {
 
   private get cellCoords(): ICellCoords {
     return this.movedCellCoords ?? this.sourceCoords
+  }
+
+  private get renderedCellCoords(): ICellCoords {
+    const coords = this.cellCoords
+    const containingBlock = this.getFixedContainingBlock()
+
+    if (!containingBlock) {
+      return coords
+    }
+    const containingBlockRect = containingBlock.getBoundingClientRect()
+
+    return {
+      x: coords.x - containingBlockRect.left + containingBlock.scrollLeft,
+      y: coords.y - containingBlockRect.top + containingBlock.scrollTop,
+    }
   }
 }
 </script>

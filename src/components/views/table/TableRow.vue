@@ -27,7 +27,7 @@
         class="icon-link"
         @goto="$emit('goto', $event)"
       >
-        <i class="material-icons edit-in-modal-icon">edit_note</i>
+        <i class="material-icons edit-in-modal-icon">edit</i>
       </OzmaLink>
     </td>
     <TableCell
@@ -45,6 +45,9 @@
       :fixed-left="fixedColumnPositions[i]"
       :show-tree="showTree"
       :height="height"
+      :vertical-padding="verticalPadding"
+      :min-height="minHeight"
+      :vertical-alignment="verticalAlignment"
       :show-add-child="Boolean(uv.emptyRow)"
       @cell-click="$emit('cell-click', tableColI, arguments[0], arguments[1])"
       @cell-mousedown="
@@ -112,12 +115,47 @@ export default class TableRow extends Vue {
       style['--max-height'] = `${this.height}px`
     }
 
+    if (this.verticalPadding !== null) {
+      style['--td-vertical-padding'] = `${this.verticalPadding}px`
+    }
+
+    if (this.verticalAlignment !== null) {
+      style['--td-vertical-align'] = this.verticalAlignment === 'center' ? 'middle' : this.verticalAlignment
+    }
+
     return style
   }
 
   get height() {
     const raw = this.getRowAttr('row_height')
     if (typeof raw === 'number') {
+      return raw
+    } else {
+      return null
+    }
+  }
+
+  get minHeight() {
+    const raw = this.getRowAttr('min_row_height')
+    if (typeof raw === 'number') {
+      return raw
+    } else {
+      return null
+    }
+  }
+
+  get verticalPadding() {
+    const raw = this.getRowAttr('vertical_padding')
+    if (typeof raw === 'number') {
+      return raw
+    } else {
+      return null
+    }
+  }
+
+  get verticalAlignment(): string | null {
+    const raw = this.getRowAttr('vertical_alignment')
+    if (raw === 'top' || raw === 'center' || raw === 'bottom') {
       return raw
     } else {
       return null
@@ -138,9 +176,8 @@ export default class TableRow extends Vue {
 .icon-link {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
-  padding-top: 1.25rem;
   width: 100%;
   height: 100%;
   color: var(--icon-color);
@@ -156,7 +193,7 @@ export default class TableRow extends Vue {
 }
 
 td {
-  vertical-align: top;
+  vertical-align: var(--td-vertical-align, middle);
   background-color: var(--cell-backgroundColor, var(--table-backgroundColor));
   overflow: hidden;
   color: var(--cell-foregroundColor, var(--table-foregroundColor));
@@ -168,6 +205,14 @@ td {
   height: 100%;
   .cell-wrapper {
     height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  ::v-deep .checkbox {
+    height: auto;
+    padding-top: 0;
+    justify-content: center;
   }
 }
 

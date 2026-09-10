@@ -68,24 +68,6 @@
       @select="selectFromScanner(barCodeColumnIndex, $event)"
     />
 
-    <transition name="fade-transform">
-      <div
-        v-if="selectedSome && selectionButtons.length !== 0"
-        class="selection-buttons-wrapper"
-      >
-        <div class="selection-buttons-label">
-          {{
-            $t('selected_n_entries', {
-              n: selectedLength,
-              loaded: loadedRowsCount,
-            })
-          }}
-        </div>
-        <div class="selection-buttons-panel">
-          <ButtonsPanel :buttons="selectionButtons" />
-        </div>
-      </div>
-    </transition>
   </span>
 </template>
 
@@ -142,7 +124,7 @@ import { EntityRef, IAttrToLinkOpts } from '@/links'
 import { deserializeParsedRows, serializeValue, valueFromRaw } from '@/values'
 
 import { fetchUserViewData } from '@/user_views/fetch'
-import { eventBus, IShowHelpModalArgs } from '@/main'
+import { eventBus, IShowHelpModalArgs, ISelectionPanelContent } from '@/main'
 import { formatValue } from '@/user_views/format'
 import QRCodeScannerModal from '@/components/qrcode/QRCodeScannerModal.vue'
 import type { ICallApi } from '@/state/auth'
@@ -190,6 +172,7 @@ export default class UserViewCommon extends mixins<
   modalView: IQuery | null = null
   private showDeleteEntiesButton = false
   private autoSaveLock: AutoSaveLock | null = null
+  private readonly selectionPanelSourceId: symbol = Symbol('selectionPanelSourceId')
 
   get helpPageReference() {
     const helpRef = EntityRef.safeParse(this.uv.attributes['help_page'])
@@ -246,6 +229,9 @@ export default class UserViewCommon extends mixins<
 
   protected beforeDestroy() {
     this.removeMyAutoSaveLock()
+    if (this.selectedSome) {
+      eventBus.emit('hide-selection-panel', { sourceId: this.selectionPanelSourceId })
+    }
   }
 
   @Watch('uv', { immediate: true })
@@ -913,45 +899,27 @@ export default class UserViewCommon extends mixins<
       solid: true,
     })
   }
+
+  private get selectionPanelState(): ISelectionPanelContent | null {
+    if (!this.selectedSome || this.selectionButtons.length === 0) return null
+    return {
+      label: this.$t('selected_n_entries', {
+        n: this.selectedLength,
+        loaded: this.loadedRowsCount,
+      }).toString(),
+      buttons: this.selectionButtons,
+    }
+  }
+
+  @Watch('selectionPanelState', { deep: true })
+  private onSelectionPanelState(state: ISelectionPanelContent | null) {
+    if (state) {
+      eventBus.emit('show-selection-panel', { ...state, sourceId: this.selectionPanelSourceId })
+    } else {
+      eventBus.emit('hide-selection-panel', { sourceId: this.selectionPanelSourceId })
+    }
+  }
+
 }
 </script>
 
-<style lang="scss" scoped>
-.selection-buttons-wrapper {
-  position: fixed;
-  bottom: 3rem;
-  left: 50%;
-  transform: translate(-50%, 0);
-  z-index: 1000;
-  border-radius: 0.5rem;
-  background-color: #000a;
-  padding: 0.5rem;
-
-  .selection-buttons-label {
-    padding: 0.5rem;
-    padding-top: 0;
-    color: white;
-    text-align: center;
-  }
-
-  ::v-deep {
-    .buttons-panel {
-      gap: 0.5rem;
-    }
-  }
-}
-
-.fade-transform-enter-active,
-.fade-transform-leave-active {
-  transition:
-    opacity 0.4s,
-    transform 0.4s,
-    $color-transition;
-}
-
-.fade-transform-enter,
-.fade-transform-leave-to {
-  transform: translate(-50%, 1rem);
-  opacity: 0;
-}
-</style>

@@ -23,6 +23,8 @@
       :scope="scope"
       :compact-mode="compactMode"
       :option-color-variant-attribute="optionColorVariantAttribute"
+      :option-variant-mapping="optionVariantMapping"
+      :referencing-field="referencingField"
       @update:value="$emit('update:value', $event)"
       @popup-opened="$emit('popup-opened')"
       @popup-closed="$emit('popup-closed')"
@@ -50,6 +52,7 @@ import { EntriesRef } from '@/state/entries'
 import { IQuery } from '@/state/query'
 import type { ScopeName } from '@/state/staging_changes'
 import type { ColorVariantAttribute } from '@/utils_colors'
+import type { IConvertedBoundMapping } from '@/user_views/combined'
 import { UserString, isOptionalUserString } from '@/state/translations'
 
 const query = namespace('query')
@@ -81,6 +84,7 @@ export default class ReferenceField extends Vue {
   @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
+  @Prop({ type: Object }) optionVariantMapping!: IConvertedBoundMapping | undefined
 
   get referenceValue(): IReferenceValue {
     return {

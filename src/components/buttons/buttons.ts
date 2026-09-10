@@ -20,6 +20,35 @@ import {
 } from '@/utils_colors'
 import { rawToUserString, UserString } from '@/state/translations'
 
+export interface IButtonConfirm {
+  title?: UserString
+  message?: UserString
+  okTitle?: UserString
+  okVariant?: ColorVariantAttribute
+  cancelTitle?: UserString
+  cancelVariant?: ColorVariantAttribute
+}
+
+export const attrToConfirm = (attr: unknown): IButtonConfirm | undefined => {
+  if (attr === true) return {}
+  if (typeof attr !== 'object' || attr === null) return undefined
+  const obj = attr as Record<string, unknown>
+  return {
+    title: rawToUserString(obj.title) ?? undefined,
+    message: rawToUserString(obj.message) ?? undefined,
+    okTitle: rawToUserString(obj.okTitle) ?? undefined,
+    okVariant:
+      obj.okVariant !== undefined
+        ? colorVariantFromAttribute(obj.okVariant)
+        : undefined,
+    cancelTitle: rawToUserString(obj.cancelTitle) ?? undefined,
+    cancelVariant:
+      obj.cancelVariant !== undefined
+        ? colorVariantFromAttribute(obj.cancelVariant)
+        : undefined,
+  }
+}
+
 export interface IButton {
   icon?: string
   caption?: UserString
@@ -28,6 +57,7 @@ export interface IButton {
   disabled?: boolean
   variant: ColorVariantAttribute
   keepButtonGroupOpened?: boolean
+  confirm?: IButtonConfirm
 }
 
 export interface ILocationButton extends IButton {
@@ -101,6 +131,7 @@ export const attrToButton = (
     ? buttonObj.display
     : undefined
   const variant = colorVariantFromAttribute(buttonObj.variant)
+  const confirm = attrToConfirm(buttonObj.confirm)
 
   if (buttonObj.visible === false) {
     return undefined
@@ -115,6 +146,7 @@ export const attrToButton = (
       variant,
       link,
       display,
+      confirm,
       type: 'link',
     }
   }
@@ -128,6 +160,7 @@ export const attrToButton = (
       variant,
       buttons,
       display,
+      confirm,
       type: 'button-group',
     }
   }
@@ -139,6 +172,7 @@ export const attrToButton = (
       tooltip,
       variant,
       display,
+      confirm,
       type: 'other',
     }
   }
@@ -149,6 +183,7 @@ export const attrToButton = (
     tooltip: `${i18n.tc('computed_attributes')}: ${JSON.stringify(buttonObj)}`,
     variant: { type: 'existing', className: 'outline-danger' },
     display,
+    confirm,
     type: 'error',
   }
 }
@@ -195,6 +230,7 @@ export const attrToButtonsOld = (
       ? buttonObj.display
       : 'desktop'
     const variant = colorVariantFromAttribute(buttonObj.variant)
+    const confirm = attrToConfirm(buttonObj.confirm)
 
     if (buttonObj.visible === false || caption === undefined) {
       return undefined
@@ -209,6 +245,7 @@ export const attrToButtonsOld = (
         variant,
         link,
         display,
+        confirm,
         type: 'link',
       }
     }
@@ -222,6 +259,7 @@ export const attrToButtonsOld = (
         variant,
         buttons,
         display,
+        confirm,
         type: 'button-group',
       }
     }

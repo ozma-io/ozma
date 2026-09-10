@@ -133,8 +133,8 @@ export default class TimePicker extends Vue {
   cursor: pointer;
   margin: 3px;
   border-radius: 3px;
-  background-color: white;
-  color: black;
+  background-color: var(--default-backgroundColor);
+  color: var(--default-foregroundColor);
 }
 
 .select-cell {

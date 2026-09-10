@@ -116,7 +116,20 @@ export const fetchJson = async (
   init?: RequestInit,
 ): Promise<any> => {
   const response = await fetchSuccess(input, init)
-  return response.json()
+  return parseResponseJson(response)
+}
+
+export const parseResponseJson = async (response: Response): Promise<any> => {
+  if (response.status === 204 || response.status === 205) {
+    return null
+  }
+
+  const rawBody = await response.text()
+  if (rawBody.trim() === '') {
+    return null
+  }
+
+  return JSON.parse(rawBody)
 }
 
 export const randomId = () => {

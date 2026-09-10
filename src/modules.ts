@@ -71,6 +71,9 @@ const globalMessages = {
     generation_fail: 'Error occured while file generation. Try again.',
     ellipsis: '... (Open cell to view full)',
     exception_in_action: 'Exception in action',
+    action_finish_success: 'Done',
+    action_finish_warning: 'Warning',
+    action_finish_error: 'Error',
     not_all_values_found_in_options:
       'Not all references were found in `options_view` or `referenced_entity`',
     not_found: 'Not found',
@@ -85,6 +88,9 @@ const globalMessages = {
     generation_fail: 'Произошла ошибка при создании файла. Попробуйте снова.',
     ellipsis: '... (Откройте ячейку, чтобы читать дальше)',
     exception_in_action: 'Исключение в действии',
+    action_finish_success: 'Готово',
+    action_finish_warning: 'Предупреждение',
+    action_finish_error: 'Ошибка',
     error: 'Ошибка',
     not_all_values_found_in_options:
       'Не все значения-отношения были найдены в `options_view` или `referenced_entity`',
@@ -99,6 +105,9 @@ const globalMessages = {
       'Se produjo un error al generar el archivo. Intentarlo de nuevo.',
     ellipsis: '... (Abra la celda para verla completa)',
     exception_in_action: 'La excepción está en acción',
+    action_finish_success: 'Listo',
+    action_finish_warning: 'Advertencia',
+    action_finish_error: 'Error',
     error: 'El error',
     not_all_values_found_in_options:
       'No se encontraron todas las referencias en `options_view` o `referenced_entity`',
@@ -112,8 +121,18 @@ export const router = new VueRouter({
   routes,
 })
 
+/* Starting on 'en' regardless of the browser meant the app fetched the English
+   translation set, then immediately fetched the real one once settings arrived —
+   a wasted request and a wasted round trip on every load. Start where the settings
+   getter would land by default. */
+const browserLocale = navigator.languages?.[0]?.split('-')[0]
+const initialLocale =
+  browserLocale !== undefined && browserLocale in globalMessages
+    ? browserLocale
+    : 'en'
+
 export const i18n = new VueI18n({
-  locale: 'en',
+  locale: initialLocale,
   messages: globalMessages,
 })
 

@@ -13,7 +13,7 @@ import {
   selfIdArgs,
   refIdArgs,
 } from '@/state/query'
-import { randomId, waitTimeout } from '@/utils'
+import { randomId, waitTimeout, parseResponseJson } from '@/utils'
 import { saveAndRunAction } from '@/state/actions'
 import { router, i18n } from '@/modules'
 import { IValueInfo } from '@/user_views/combined'
@@ -497,8 +497,12 @@ export const linkHandler = (
           a.setAttribute('download', filename)
           a.click()
         } else {
-          const body = await res.json()
-          app.$bvToast.toast(String(body.message), {
+          const body = await parseResponseJson(res)
+          const message =
+            body && typeof body === 'object' && 'message' in body
+              ? String(body.message)
+              : res.statusText || 'Request failed'
+          app.$bvToast.toast(message, {
             title: i18n.tc('generation_fail'),
             variant: 'danger',
             solid: true,

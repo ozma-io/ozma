@@ -283,6 +283,7 @@ export default class BaseUserView<
   }) => void
   @errors.Mutation('resetErrors') resetErrors!: (key: ErrorKey) => void
   @settings.State('current') settings!: CurrentSettings
+  @settings.State('pending') settingsPending!: Promise<CurrentSettings> | null
   @auth.State('current') auth!: CurrentAuth | INoAuth | null
 
   @Prop({ type: CombinedUserView, required: true }) uv!: ICombinedUserView<

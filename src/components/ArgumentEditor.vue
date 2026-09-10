@@ -29,6 +29,9 @@
       v-if="button"
       ref="popup"
       trigger="clickToOpen"
+      transition="ozma-popover"
+      enter-active-class="ozma-popover-enter-active"
+      leave-active-class="ozma-popover-leave-active"
       :visible-arrow="false"
       :options="{
         placement: 'bottom-end',
@@ -45,7 +48,7 @@
       }"
       :disabled="!visible"
       :force-show="visible"
-      @documentClick="visible = false"
+      @document-click="onPopupDocumentClick"
     >
       <div class="popper shadow">
         <div
@@ -73,8 +76,18 @@
             </b-row>
           </b-container>
 
-          <div v-if="!autoApply" class="footer">
+          <div v-if="!autoApply || canReset" class="footer">
             <b-button
+              v-if="canReset"
+              block
+              variant="outline-secondary"
+              class="apply-button"
+              @click="resetToInitial"
+            >
+              {{ $t('reset') }}
+            </b-button>
+            <b-button
+              v-if="!autoApply"
               block
               variant="primary"
               class="apply-button"
@@ -93,7 +106,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-import Popper from 'vue-popperjs'
 import { Debounce } from 'vue-debounce-decorator'
 import { namespace } from 'vuex-class'
 
@@ -103,7 +115,12 @@ import {
   FieldType,
   ValueType,
 } from '@ozma-io/ozmadb-js/client'
-import { deserializeValueFunction, fieldToValueType } from '@/values'
+import Popper from '@/components/common/OzmaPopper.vue'
+import {
+  deserializeValueFunction,
+  fieldToValueType,
+  valueEquals,
+} from '@/values'
 import FormControl from '@/components/FormControl.vue'
 import type {
   ConvertedBoundAttributesMap,
@@ -133,6 +150,9 @@ export interface IApplyArgumentsParams {
 export interface IArgumentEditorProps {
   userView: ICombinedUserViewAny
   applyArguments: (params: IApplyArgumentsParams) => void
+  // Serialised args from the moment this user view was first opened.
+  // `null` disables the Reset button.
+  initialArgumentsSnapshot?: Record<ArgumentName, unknown> | null
 }
 
 const settings = namespace('settings')
@@ -143,11 +163,34 @@ export default class ArgumentEditor extends Vue {
   @Prop({ type: Function, required: true }) applyArguments!: (
     params: IApplyArgumentsParams,
   ) => void
+  @Prop({ default: null }) initialArgumentsSnapshot!: Record<
+    ArgumentName,
+    unknown
+  > | null
 
   @settings.Getter('developmentModeEnabled') developmentModeEnabled!: boolean
 
   private visible = false
   private updatedArguments: Record<ArgumentName, unknown> = {}
+
+  private onPopupDocumentClick(_popup: unknown, event?: MouseEvent) {
+    if (this.isClickInsideCalendar(event)) {
+      return
+    }
+
+    this.visible = false
+  }
+
+  private isClickInsideCalendar(event?: MouseEvent): boolean {
+    const target = event?.target
+    if (!(target instanceof Node)) {
+      return false
+    }
+
+    return Array.from(document.querySelectorAll('.calendar-popper')).some(
+      (el) => el.contains(target),
+    )
+  }
 
   @Watch('userView')
   propsChanged() {
@@ -207,17 +250,20 @@ export default class ArgumentEditor extends Vue {
   }
 
   private get button(): Button | null {
+    const visibleArgsCount = this.args.length
+    if (visibleArgsCount === 0) {
+      return null
+    }
     if (
       this.userView.attributes['show_argument_editor'] ||
       this.userView.attributes['show_argument_button'] ||
-      (this.developmentModeEnabled &&
-        Object.keys(this.userView.argumentsMap).length > 0)
+      this.developmentModeEnabled
     ) {
       return {
         // TODO: Add 'expand' icon on the right to match design from Figma.
         type: 'callback',
         variant: outlinedInterfaceButtonVariant,
-        icon: 'filter_list',
+        icon: 'tune',
         caption: this.$t('filters').toString(),
         tooltip: '',
         callback: () => {
@@ -236,6 +282,61 @@ export default class ArgumentEditor extends Vue {
       defaultArguments: this.defaultArguments,
       currentArguments: this.currentArguments,
     })
+  }
+
+  // Args from `initialArguments` snapshot, deserialised the same way as
+  // `defaultArguments` and `initialArguments` getters above.
+  get initialSnapshotArguments() {
+    if (
+      this.initialArgumentsSnapshot === null ||
+      this.defaultArguments === null
+    ) {
+      return null
+    }
+    const snapshot: Record<string, unknown> = { ...this.defaultArguments }
+    for (const argInfo of this.userView.info.arguments) {
+      const rawValue = this.initialArgumentsSnapshot[argInfo.name]
+      if (rawValue === undefined) continue
+      const convertFunc = deserializeValueFunction(
+        fieldToValueType(argInfo.argType),
+      )
+      snapshot[argInfo.name] =
+        rawValue && convertFunc ? convertFunc(rawValue) : rawValue
+    }
+    return snapshot
+  }
+
+  get canReset() {
+    if (
+      this.initialSnapshotArguments === null ||
+      this.currentArguments === null
+    ) {
+      return false
+    }
+    return !this.argsEqual(this.currentArguments, this.initialSnapshotArguments)
+  }
+
+  private argsEqual(
+    a: Record<string, unknown>,
+    b: Record<string, unknown>,
+  ): boolean {
+    for (const argInfo of this.userView.info.arguments) {
+      const valueType = fieldToValueType(argInfo.argType)
+      if (!valueEquals(valueType, a[argInfo.name], b[argInfo.name])) {
+        return false
+      }
+    }
+    return true
+  }
+
+  resetToInitial() {
+    if (this.initialSnapshotArguments === null) return
+    // Override every visible argument explicitly so currentArguments
+    // recomputes to the snapshot.
+    this.updatedArguments = { ...this.initialSnapshotArguments }
+    if (this.autoApply) {
+      this.debouncedApply()
+    }
   }
 
   @Debounce(500)
@@ -259,8 +360,11 @@ export default class ArgumentEditor extends Vue {
   }
 
   private get args(): IArgumentInfo[] {
-    return this.userView.info.arguments.map((parameter) => {
+    return mapMaybe((parameter) => {
       const attributes = this.userView.argumentAttributes[parameter.name] ?? {}
+      if (attributes['visible'] === false) {
+        return undefined
+      }
       const attributeMappings =
         this.userView.argumentAttributeMappings[parameter.name] ?? {}
       const caption = rawToUserString(attributes['caption']) ?? parameter.name
@@ -278,7 +382,7 @@ export default class ArgumentEditor extends Vue {
         attributes,
         attributeMappings,
       }
-    })
+    }, this.userView.info.arguments)
   }
 }
 </script>

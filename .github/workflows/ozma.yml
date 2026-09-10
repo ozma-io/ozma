@@ -19,16 +19,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
-          cache: yarn
+      - name: Enable Corepack Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.9.2 --activate
       - name: Build ozma-embedded
         working-directory: ./ozma-embedded
         run: |
-          yarn set version stable
           yarn install --immutable
           yarn build
       - name: Install Dependencies
         run: |
-          yarn set version stable
           yarn install --immutable
           yarn link ./ozma-embedded
       - name: Check Formatting
@@ -97,4 +98,3 @@ jobs:
       #     subject-name: ozmaio/ozma
       #     subject-digest: ${{ steps.push.outputs.digest }}
       #     push-to-registry: true
-

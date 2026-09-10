@@ -22,7 +22,13 @@
       "contextmenu_cut_tooltip": "Use Ctrl+X to cut selected cell",
       "contextmenu_copy_tooltip": "Use Ctrl+C to copy selected cell",
       "contextmenu_paste_tooltip": "Use Ctrl+V to paste to selected cell",
-      "no_columns": "This query lacks visible columns"
+      "no_columns": "This query lacks visible columns",
+      "pin_column": "Pin column",
+      "unpin_column": "Unpin column",
+      "count": "Count",
+      "sum": "Sum",
+      "selected_cells_sum": "Sum",
+      "close_sum_popup": "Hide sum"
     },
     "ru": {
       "pagination_select": "Строк на странице",
@@ -46,9 +52,18 @@
       "contextmenu_cut_tooltip": "Нажмите Ctrl+X, чтобы вырезать выделенную ячейку",
       "contextmenu_copy_tooltip": "Нажмите Ctrl+C, чтобы скопировать выделенную ячейку",
       "contextmenu_paste_tooltip": "Нажмите Ctrl+V, чтобы вставить в выделенную ячейку",
-      "no_columns": "В запросе отсутствуют видимые колонки"
+      "no_columns": "В запросе отсутствуют видимые колонки",
+      "pin_column": "Закрепить столбец",
+      "unpin_column": "Открепить столбец",
+      "count": "Кол-во",
+      "sum": "Сумма",
+      "selected_cells_sum": "Сумма",
+      "close_sum_popup": "Скрыть сумму"
     },
     "es": {
+      "pagination_select": "Filas por página",
+      "total_rows": "Filas totales",
+      "of": "de",
       "cut": "Cortar",
       "copy": "Copiar",
       "paste": "Pegar",
@@ -67,7 +82,13 @@
       "contextmenu_cut_tooltip": "Usar Ctrl + X para cortar la celda seleccionada",
       "contextmenu_copy_tooltip": "Usar Ctrl + C para copiar la celda seleccionada",
       "contextmenu_paste_tooltip": "Usar Ctrl + V para pegar en la celda seleccionada",
-      "no_columns": "Esta consulta carece de columnas visibles"
+      "no_columns": "Esta consulta carece de columnas visibles",
+      "pin_column": "Fijar columna",
+      "unpin_column": "Desfijar columna",
+      "count": "Cantidad",
+      "sum": "Suma",
+      "selected_cells_sum": "Suma",
+      "close_sum_popup": "Ocultar suma"
     }
   }
 </i18n>
@@ -84,6 +105,7 @@
       :class="[
         'table-wrapper',
         'default-variant',
+        'table-variant',
         'table-local-variant',
         {
           root: isRoot,
@@ -91,9 +113,13 @@
           mobile: $isMobile,
           'multiple-cells-selected': selectedCells.length > 1,
           'show-fixed-column-border':
-            showFixedColumnBorder && stickFixedColumns,
+            showFixedColumnBorder &&
+            stickFixedColumns &&
+            !showVerticalBorders,
           'stick-fixed-columns': stickFixedColumns,
           'selection-column-enabled': showSelectionColumn,
+          'show-vertical-borders': showVerticalBorders,
+          'horizontal-overflow': tableOverflowsWrapper,
         },
       ]"
       :infinite-wrapper="isRoot"
@@ -143,9 +169,9 @@
           force-show
           :trigger="null"
           :reference="cellContextMenu.reference"
-          transition="fade"
-          enter-active-class="fade-enter fade-enter-active"
-          leave-active-class="fade-leave fade-leave-active"
+          transition="ozma-popover"
+          enter-active-class="ozma-popover-enter-active"
+          leave-active-class="ozma-popover-leave-active"
           :visible-arrow="false"
           :options="{
             placement: 'bottom-start',
@@ -158,6 +184,33 @@
               <ButtonList
                 :buttons="cellContextMenu.buttons"
                 @button-click="closeCellContextMenu"
+                @goto="$emit('goto', $event)"
+              />
+            </div>
+          </div>
+        </popper>
+
+        <popper
+          v-if="columnContextMenu"
+          v-click-outside="closeColumnContextMenu"
+          force-show
+          :trigger="null"
+          :reference="columnContextMenu.reference"
+          transition="ozma-popover"
+          enter-active-class="ozma-popover-enter-active"
+          leave-active-class="ozma-popover-leave-active"
+          :visible-arrow="false"
+          :options="{
+            placement: 'bottom-start',
+            positionFixed: true,
+            modifiers: { offset: { offset: 0 } },
+          }"
+        >
+          <div class="popper border rounded overflow-hidden shadow">
+            <div class="context-menu-wrapper">
+              <ButtonList
+                :buttons="columnContextMenu.buttons"
+                @button-click="closeColumnContextMenu"
                 @goto="$emit('goto', $event)"
               />
             </div>
@@ -232,19 +285,36 @@
                 :class="{
                   'fixed-cell': columns[i].fixed,
                   'last-fixed-cell': index === fixedColumnsLength - 1,
+                  'column-drop-target': draggedOverColumnIndex === i,
+                  'wrapped-caption': columns[i].captionLines !== 1,
                 }"
                 :style="{
                   ...columns[i].style,
+                  ...captionLinesStyle(columns[i]),
                   left:
                     stickFixedColumns && fixedColumnPositions[i]
                       ? `${fixedColumnPositions[i]}px`
                       : undefined,
                 }"
                 :title="$ustOrEmpty(columns[i].caption)"
-                @click="loadAllRowsAndUpdateSort(i)"
+                draggable="true"
+                @click="(event) => handleColumnHeaderClick(i, event)"
+                @contextmenu.prevent="(event) => openColumnContextMenu(i, event)"
+                @dragstart="(event) => handleColumnDragStart(i, event)"
+                @dragover.prevent="(event) => handleColumnDragOver(i, event)"
+                @drop.prevent="(event) => handleColumnDrop(i, event)"
+                @dragend="handleColumnDragEnd"
               >
-                <div class="table-th">
-                  <span class="column-capture">
+                <div
+                  class="table-th"
+                  :class="{ 'table-th--wrapped': columns[i].captionLines !== 1 }"
+                >
+                  <span
+                    class="column-capture"
+                    :class="{
+                      'column-capture--wrapped': columns[i].captionLines !== 1,
+                    }"
+                  >
                     {{ $ustOrEmpty(columns[i].caption) }}
                   </span>
                   <div v-if="uv.extra.sortColumn === i" class="sorting-wrapper">
@@ -254,9 +324,10 @@
                   </div>
                   <div
                     class="resize-column-thumb"
-                    @mousedown="
+                    @mousedown.stop.prevent="
                       (event) => handleColumnResizeMouseDown(i, event)
                     "
+                    @dragstart.stop.prevent
                     @click.stop
                   >
                     <i class="material-icons">drag_indicator</i>
@@ -334,6 +405,34 @@
               @goto="$emit('goto', $event)"
             />
           </tbody>
+          <tfoot v-if="showAggregatesFooter">
+            <tr class="table-footer-row">
+              <th v-if="showSelectionColumn" class="table-footer-cell" />
+              <th v-if="showLinkColumn" class="table-footer-cell" />
+              <th
+                v-for="(i, index) in columnIndexes"
+                :key="`footer-${i}`"
+                class="table-footer-cell"
+                :class="{
+                  'fixed-cell': columns[i].fixed,
+                  'last-fixed-cell': index === fixedColumnsLength - 1,
+                }"
+                :style="{
+                  ...columns[i].style,
+                  left:
+                    stickFixedColumns && fixedColumnPositions[i]
+                      ? `${fixedColumnPositions[i]}px`
+                      : undefined,
+                }"
+              >
+                <div class="table-th">
+                  <span class="column-capture">
+                    {{ footerByColumn[i] ?? '' }}
+                  </span>
+                </div>
+              </th>
+            </tr>
+          </tfoot>
         </table>
 
         <div
@@ -371,16 +470,12 @@
         </InfiniteLoading>
 
         <div
-          v-if="
-            uv.extra.lazyLoad.type === 'pagination' ||
-            statusLine ||
-            showBottomAddButton
-          "
+          v-if="isFooterVisible"
           class="footer"
-          :style="{
-            justifyContent: showBottomAddButton ? 'space-between' : 'flex-end',
-          }"
         >
+          <div v-if="selectedCellsSumLabel" class="selected-cells-sum">
+            {{ selectedCellsSumLabel }}
+          </div>
           <ButtonItem
             v-if="showBottomAddButton"
             class="add-row-button"
@@ -436,6 +531,29 @@
             {{ statusLine }}
           </div>
         </div>
+        <transition name="sum-popup-fade">
+          <div
+            v-if="
+              selectedCellsSumLabel &&
+              !isFooterVisible &&
+              !sumPopupDismissed
+            "
+            class="selected-cells-sum-popup"
+            role="status"
+          >
+            <span class="selected-cells-sum-popup__text">
+              {{ selectedCellsSumLabel }}
+            </span>
+            <button
+              type="button"
+              class="selected-cells-sum-popup__close"
+              :aria-label="$t('close_sum_popup').toString()"
+              @click="dismissSumPopup"
+            >
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+        </transition>
       </template>
     </div>
   </wrapped-component>
@@ -458,7 +576,7 @@ import {
   IEntityRef,
   AttributeName,
 } from '@ozma-io/ozmadb-js/client'
-import Popper from 'vue-popperjs'
+import Popper from '@/components/common/OzmaPopper.vue'
 
 import {
   deepEquals,
@@ -472,10 +590,10 @@ import {
   waitTimeout,
   ClipboardParseValue,
   debounceTillAnimationFrame,
+  safeJsonParse,
 } from '@/utils'
 import { valueIsNull } from '@/values'
 import { UserView } from '@/components'
-import { maxPerFetch } from '@/components/UserView.vue'
 import { AddedRowId } from '@/state/staging_changes'
 import { IAttrToQueryOpts, ICurrentQueryHistory } from '@/state/query'
 import BaseUserView, {
@@ -524,6 +642,7 @@ import type TableCell from './table/TableCell.vue'
 import { elementWindow, WindowKey } from '@/state/windows'
 import { formatValue } from '@/user_views/format'
 import { rawToUserString, UserString } from '@/state/translations'
+import type { ISortEditorProps } from '@/components/SortEditor.vue'
 
 export interface IColumn {
   caption: UserString
@@ -533,6 +652,7 @@ export interface IColumn {
   columnInfo: IResultColumnInfo
   width: number // in px
   treeUnfoldColumn: boolean
+  captionLines: number
   type: string
 }
 
@@ -597,6 +717,20 @@ export interface IVisualPosition {
 
 const showStep = 15
 const doubleClickTime = 700
+
+// Whether pinned headers can follow the page scroll on the compositor (see
+// `--pinned-table` in FormGridBlock.vue); otherwise a scroll listener does it.
+const hasScrollDrivenAnimations =
+  typeof CSS !== 'undefined' && CSS.supports('animation-timeline: view()')
+
+// Nearest ancestor that `position: sticky` descendants resolve against.
+const findScrollContainer = (start: HTMLElement | null): HTMLElement | null => {
+  for (let el = start; el !== null; el = el.parentElement) {
+    const { overflowY } = getComputedStyle(el)
+    if (overflowY === 'auto' || overflowY === 'scroll') return el
+  }
+  return null
+}
 
 export type ITableCombinedUserView = ICombinedUserView<
   ITableValueExtra,
@@ -1286,6 +1420,9 @@ export const tableUserViewHandler: IUserViewHandler<
 
     let lazyLoad =
       oldView?.lazyLoad ?? TableLazyLoad.parse(uv.attributes['lazy_load'])
+    if (!oldView && lazyLoad.type === 'pagination') {
+      uv.rowLoadState.perFetch = lazyLoad.pagination.perPage
+    }
     if (hasTree) {
       lazyLoad = {
         type: 'infinite_scroll',
@@ -1419,6 +1556,7 @@ interface IShownRow {
 }
 
 const defaultPageSize = 5
+const maxPaginationPerPage = 500
 // Just look at `ITableLazyLoad` to see which type this mess makes.
 export const TableLazyLoad = z
   .union([
@@ -1436,7 +1574,7 @@ export const TableLazyLoad = z
       .transform((obj) => ({
         type: 'pagination' as const,
         pagination: {
-          perPage: R.clamp(0, maxPerFetch, obj.pagination['per_page']),
+          perPage: R.clamp(0, maxPaginationPerPage, obj.pagination['per_page']),
           currentPage: 0,
           loading: false,
           autoscrollSeconds: obj.pagination['autoscroll_seconds'] ?? null,
@@ -1461,6 +1599,15 @@ export const TableLazyLoad = z
 export type ITableLazyLoad = z.infer<typeof TableLazyLoad>
 
 const stringArraySchema = z.array(z.string())
+const tableLayoutSchema = z.object({
+  widths: z.record(z.coerce.number()).default({}),
+  order: z.array(z.coerce.number()).default([]),
+})
+
+interface ITableFooterOptions {
+  count: boolean
+  sum: boolean
+}
 
 type MoveDirection = 'up' | 'right' | 'down' | 'left'
 
@@ -1528,6 +1675,7 @@ const entities = namespace('entities')
 const entries = namespace('entries')
 const query = namespace('query')
 const windows = namespace('windows')
+const settingsStore = namespace('settings')
 
 @UserView({
   handler: tableUserViewHandler,
@@ -1561,6 +1709,10 @@ export default class UserViewTable extends mixins<
     ref: IEntityRef,
   ) => Promise<IEntity>
   @windows.Getter('active') activeWindow!: WindowKey | null
+  @settingsStore.Action('writeUserSettings') writeUserSettings!: (setting: {
+    name: string
+    value: string
+  }) => Promise<void>
 
   // These two aren't computed properties for performance. They are computed during `init()` and mutated when other values change.
   // If `init()` is called again, their values after recomputation should be equal to those before it.
@@ -1579,30 +1731,147 @@ export default class UserViewTable extends mixins<
   showAddRowButtons = false
 
   cellContextMenu: CellContextMenuData | null = null
+  columnContextMenu: CellContextMenuData | null = null
+  pinnedColumns: Record<number, boolean> = {}
 
   autoscrollTimer: number | null = null
   autoscrollForward = true
+  customColumnOrder: number[] = []
+  draggedColumnIndex: number | null = null
+  draggedOverColumnIndex: number | null = null
+  suppressNextColumnHeaderClick = false
+  suppressColumnDrag = false
+  persistColumnLayoutTimeoutId: ReturnType<typeof setTimeout> | null = null
+
+  private getColumnAttr(columnIndex: number, name: string): unknown {
+    return tryDicts(
+      name,
+      this.uv.columnAttributes[columnIndex],
+      this.uv.attributes,
+    )
+  }
+
+  private getInitialColumnWidth(columnIndex: number): number {
+    return z.coerce
+      .number()
+      .default(200)
+      .catch(200)
+      .parse(this.getColumnAttr(columnIndex, 'column_width'))
+  }
+
+  private normalizeColumnOrder(order: number[]): number[] {
+    const columnsLength = this.uv.info.columns.length
+    const valid = new Set<number>()
+    const normalized: number[] = []
+    for (const rawIndex of order) {
+      const index = Math.trunc(rawIndex)
+      if (index < 0 || index >= columnsLength || valid.has(index)) {
+        continue
+      }
+      normalized.push(index)
+      valid.add(index)
+    }
+
+    for (let index = 0; index < columnsLength; index++) {
+      if (!valid.has(index)) {
+        normalized.push(index)
+      }
+    }
+    return normalized
+  }
+
+  private get tableLayoutSettingName(): string {
+    const source = this.uv.args.source
+    if (source.type === 'named') {
+      return `table_layout_${source.ref.schema}.${source.ref.name}`
+    }
+    const serialized = JSON.stringify(source)
+    let hash = 0
+    for (let i = 0; i < serialized.length; i++) {
+      hash = (hash * 31 + serialized.charCodeAt(i)) | 0
+    }
+    return `table_layout_anonymous_${Math.abs(hash).toString(36)}`
+  }
+
+  private applyStoredColumnLayout() {
+    // Don't reset layout while settings are still loading — we'd lose saved widths.
+    if (this.settingsPending !== null) return
+
+    const raw = this.settings.settings[this.tableLayoutSettingName]
+    const parsed = tableLayoutSchema.safeParse(safeJsonParse(raw))
+    if (!parsed.success) {
+      this.customColumnOrder = this.normalizeColumnOrder([])
+      this.resizedColumnDeltaXs = {}
+      return
+    }
+
+    this.customColumnOrder = this.normalizeColumnOrder(parsed.data.order)
+    this.resizedColumnDeltaXs = {}
+    Object.entries(parsed.data.widths).forEach(([columnIndex, width]) => {
+      const index = Number(columnIndex)
+      if (!Number.isInteger(index)) return
+      if (index < 0 || index >= this.uv.info.columns.length) return
+      const initialWidth = this.getInitialColumnWidth(index)
+      const delta = width - initialWidth
+      if (Number.isFinite(delta)) {
+        Vue.set(this.resizedColumnDeltaXs, index, delta)
+      }
+    })
+  }
+
+  private schedulePersistColumnLayout() {
+    if (this.persistColumnLayoutTimeoutId !== null) {
+      clearTimeout(this.persistColumnLayoutTimeoutId)
+    }
+    this.persistColumnLayoutTimeoutId = setTimeout(() => {
+      this.persistColumnLayoutTimeoutId = null
+      const widths = Object.fromEntries(
+        Object.keys(this.resizedColumnDeltaXs).map((rawColumnIndex) => {
+          const columnIndex = Number(rawColumnIndex)
+          const width = Math.max(
+            50,
+            this.getInitialColumnWidth(columnIndex) +
+              (this.resizedColumnDeltaXs[columnIndex] ?? 0),
+          )
+          return [rawColumnIndex, width]
+        }),
+      )
+      const value = JSON.stringify({
+        widths,
+        order: this.normalizeColumnOrder(this.customColumnOrder),
+      })
+      void this.writeUserSettings({
+        name: this.tableLayoutSettingName,
+        value,
+      })
+    }, 300)
+  }
+
+  private get orderedColumnIndexes(): number[] {
+    return this.normalizeColumnOrder(this.customColumnOrder)
+  }
 
   get columns() {
-    const viewAttrs = this.uv.attributes
     let isTreeUnfoldColumnSet = false
 
-    const columns = this.uv.info.columns.map((columnInfo, i): IColumn => {
-      const columnAttrs = this.uv.columnAttributes[i]
-      const getColumnAttr = (name: string) =>
-        tryDicts(name, columnAttrs, viewAttrs)
+    // Общий предел строк заголовка на всю таблицу; каждая колонка может его
+    // переопределить своим caption_lines.
+    const defaultCaptionLines = z.coerce
+      .number()
+      .int()
+      .min(0)
+      .default(1)
+      .catch(1)
+      .parse(this.uv.attributes['caption_lines_number'])
 
-      const captionAttr = rawToUserString(getColumnAttr('caption'))
+    const columns = this.uv.info.columns.map((columnInfo, i): IColumn => {
+      const captionAttr = rawToUserString(this.getColumnAttr(i, 'caption'))
       const caption = captionAttr ?? columnInfo.name
 
       const style: Record<string, unknown> = {}
 
       const minColumnWidth = 50
-      const initialColumnWidth = z.coerce
-        .number()
-        .default(200)
-        .catch(200)
-        .parse(getColumnAttr('column_width'))
+      const initialColumnWidth = this.getInitialColumnWidth(i)
       const resizedColumnWidth =
         initialColumnWidth + (this.resizedColumnDeltaXs[i] ?? 0)
       const columnWidth = Math.max(minColumnWidth, resizedColumnWidth)
@@ -1610,7 +1879,7 @@ export default class UserViewTable extends mixins<
 
       const textAlignResult = z
         .enum(['left', 'center', 'right'])
-        .safeParse(getColumnAttr('text_align'))
+        .safeParse(this.getColumnAttr(i, 'text_align'))
       if (textAlignResult.success) {
         style['text-align'] = textAlignResult.data
       } else {
@@ -1621,23 +1890,39 @@ export default class UserViewTable extends mixins<
         }
       }
 
-      const fixedColumn = z.coerce.boolean().parse(getColumnAttr('fixed'))
+      const fixedFromAttr = z.coerce
+        .boolean()
+        .parse(this.getColumnAttr(i, 'fixed'))
+      const fixedColumn =
+        i in this.pinnedColumns ? this.pinnedColumns[i] : fixedFromAttr
 
       const visibleColumn = z.coerce
         .boolean()
         .default(true)
-        .parse(getColumnAttr('visible'))
+        .parse(this.getColumnAttr(i, 'visible'))
+
+      // Сколько строк отводится под заголовок колонки: 1 (по умолчанию) – как раньше,
+      // 0 – сколько угодно, N – не больше N строк. Без своего значения колонка
+      // берёт общий caption_lines_number таблицы.
+      const captionLines = z.coerce
+        .number()
+        .int()
+        .min(0)
+        .default(defaultCaptionLines)
+        .catch(defaultCaptionLines)
+        .parse(this.getColumnAttr(i, 'caption_lines'))
 
       const treeUnfoldColumn = z.coerce
         .boolean()
-        .parse(getColumnAttr('tree_unfold_column'))
+        .parse(this.getColumnAttr(i, 'tree_unfold_column'))
       if (treeUnfoldColumn) {
         isTreeUnfoldColumnSet = true
       }
 
       // "column_type" is old version, but "control" is consistent with forms.
       const type = String(
-        getColumnAttr('control') ?? getColumnAttr('column_type'),
+        this.getColumnAttr(i, 'control') ??
+          this.getColumnAttr(i, 'column_type'),
       )
 
       return {
@@ -1648,6 +1933,7 @@ export default class UserViewTable extends mixins<
         columnInfo,
         width: columnWidth,
         treeUnfoldColumn,
+        captionLines,
         type,
       }
     })
@@ -1676,6 +1962,10 @@ export default class UserViewTable extends mixins<
 
   get fixedColumnsLength(): number {
     return this.columns.filter((item) => item.fixed).length
+  }
+
+  private get showVerticalBorders(): boolean {
+    return this.settings.getEntry('table_vertical_borders', Boolean, true)
   }
 
   get fixedColumnPositions() {
@@ -1711,7 +2001,7 @@ export default class UserViewTable extends mixins<
   get pageSizes() {
     if (this.uv.extra.lazyLoad.type !== 'pagination') return []
 
-    const defaultSizes = [5, 10, 25, 50]
+    const defaultSizes = [5, 10, 25, 50, 100, 500]
     if (!defaultSizes.includes(this.uv.extra.lazyLoad.pagination.perPage)) {
       return [this.uv.extra.lazyLoad.pagination.perPage, ...defaultSizes].map(
         (num) => ({ value: num, text: String(num) }),
@@ -2269,16 +2559,134 @@ export default class UserViewTable extends mixins<
   }
 
   get columnIndexes() {
-    const columns = this.columns
-      .map((column, index) => ({
+    const columns = this.orderedColumnIndexes
+      .map((index) => ({
         index,
-        fixed: column.fixed,
-        visible: column.visible,
+        fixed: this.columns[index].fixed,
+        visible: this.columns[index].visible,
       }))
       .filter((c) => c.visible)
     const fixed = columns.filter((c) => c.fixed)
     const nonFixed = columns.filter((c) => !c.fixed)
     return [...fixed, ...nonFixed].map((c) => c.index)
+  }
+
+  private getColumnFooterOptions(columnIndex: number): ITableFooterOptions {
+    const count = z.coerce
+      .boolean()
+      .default(false)
+      .catch(false)
+      .parse(this.getColumnAttr(columnIndex, 'footer_count'))
+    const sum = z.coerce
+      .boolean()
+      .default(false)
+      .catch(false)
+      .parse(this.getColumnAttr(columnIndex, 'footer_sum'))
+    return { count, sum }
+  }
+
+  private formatFooterNumber(value: number): string {
+    return Number(value.toFixed(6)).toLocaleString()
+  }
+
+  private formatSelectedCellsGroupedSum(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      useGrouping: true,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+      .format(value)
+      .replaceAll(',', ' ')
+  }
+
+  private normalizeSelectionSum(value: number): number {
+    return Number(value.toFixed(12))
+  }
+
+  private sumPopupDismissed = false
+
+  @Watch('selectedCellsSumLabel')
+  private onSelectedCellsSumLabelChange() {
+    this.sumPopupDismissed = false
+  }
+
+  private dismissSumPopup() {
+    this.sumPopupDismissed = true
+  }
+
+  private get isFooterVisible(): boolean {
+    return (
+      this.uv.extra.lazyLoad.type === 'pagination' ||
+      Boolean(this.statusLine) ||
+      this.showBottomAddButton
+    )
+  }
+
+  private get selectedCellsSumLabel(): string | null {
+    if (this.selectedCells.length === 0) return null
+
+    let sum = 0
+    for (const ref of this.selectedCells) {
+      const cell = this.uv.getValueByRef(ref)
+      if (!cell) continue
+
+      const rawValue = currentValue(cell.value)
+      const parsed =
+        typeof rawValue === 'number'
+          ? rawValue
+          : typeof rawValue === 'string' && rawValue.trim() !== ''
+            ? Number(rawValue)
+            : Number.NaN
+
+      if (Number.isFinite(parsed)) {
+        sum += parsed
+      }
+    }
+
+    const normalizedSum = this.normalizeSelectionSum(sum)
+    return `${this.$t('selected_cells_sum')}: ${this.formatSelectedCellsGroupedSum(
+      normalizedSum,
+    )} (${normalizedSum.toString()})`
+  }
+
+  get footerByColumn(): Record<number, string> {
+    const result: Record<number, string> = {}
+    for (const columnIndex of this.columnIndexes) {
+      const opts = this.getColumnFooterOptions(columnIndex)
+      if (!opts.count && !opts.sum) continue
+
+      let count = 0
+      let sum = 0
+      for (const row of this.shownRows) {
+        const rawValue = currentValue(row.row.values[columnIndex])
+        const hasValue =
+          rawValue !== null && rawValue !== undefined && rawValue !== ''
+        if (opts.count && hasValue) {
+          count++
+        }
+        if (opts.sum) {
+          const num =
+            typeof rawValue === 'number' ? rawValue : Number(rawValue)
+          if (Number.isFinite(num)) {
+            sum += num
+          }
+        }
+      }
+
+      const parts: string[] = []
+      if (opts.count) {
+        parts.push(`${this.$t('count')}: ${count}`)
+      }
+      if (opts.sum) {
+        parts.push(`${this.$t('sum')}: ${this.formatFooterNumber(sum)}`)
+      }
+      result[columnIndex] = parts.join(' | ')
+    }
+    return result
+  }
+
+  get showAggregatesFooter() {
+    return Object.keys(this.footerByColumn).length > 0
   }
 
   get fixedColumnIndexes() {
@@ -2356,6 +2764,7 @@ export default class UserViewTable extends mixins<
 
   protected created() {
     this.currentFilter = this.filter
+    this.applyStoredColumnLayout()
     this.init()
 
     if (
@@ -2383,6 +2792,7 @@ export default class UserViewTable extends mixins<
 
   @Watch('uv')
   protected uvChanged() {
+    this.applyStoredColumnLayout()
     this.init()
     this.updateRows()
 
@@ -2390,6 +2800,11 @@ export default class UserViewTable extends mixins<
     ;(
       this.$refs['infiniteLoading'] as InfiniteLoading | undefined
     )?.stateChanger.reset()
+  }
+
+  @Watch('settings.settings', { deep: true })
+  protected settingsChanged() {
+    this.applyStoredColumnLayout()
   }
 
   private get initialPage() {
@@ -2717,6 +3132,8 @@ export default class UserViewTable extends mixins<
       } = { type: 'idle' }
   private handleColumnResizeMouseDown(columnIndex: number, event: MouseEvent) {
     const oldDeltaX = this.resizedColumnDeltaXs[columnIndex] ?? 0
+    this.suppressNextColumnHeaderClick = true
+    this.suppressColumnDrag = true
     this.columnResizeState = {
       type: 'resizing',
       columnIndex,
@@ -2742,17 +3159,212 @@ export default class UserViewTable extends mixins<
     if (this.columnResizeState.type === 'idle') return
 
     this.columnResizeState = { type: 'idle' }
+    this.schedulePersistColumnLayout()
+    // Keep DnD disabled for this event loop tick to avoid late dragstart
+    // after a resize gesture in some browsers.
+    window.setTimeout(() => {
+      this.suppressColumnDrag = false
+    }, 0)
+  }
+
+  // Предел строк заголовка отдаём в CSS переменной: 0 читается как "сколько угодно".
+  private captionLinesStyle(column: IColumn): Record<string, string> {
+    if (column.captionLines === 1) return {}
+    return {
+      '--caption-lines':
+        column.captionLines === 0 ? 'none' : String(column.captionLines),
+    }
+  }
+
+  private handleColumnHeaderClick(columnIndex: number, event: MouseEvent) {
+    if (this.suppressNextColumnHeaderClick) {
+      this.suppressNextColumnHeaderClick = false
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    this.loadAllRowsAndUpdateSort(columnIndex)
+  }
+
+  private handleColumnDragStart(columnIndex: number, event: DragEvent) {
+    const target = event.target as Element | null
+    if (
+      this.columnResizeState.type !== 'idle' ||
+      this.suppressColumnDrag ||
+      target?.closest('.resize-column-thumb')
+    ) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
+    this.draggedColumnIndex = columnIndex
+    this.draggedOverColumnIndex = null
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.setData('text/plain', String(columnIndex))
+    }
+  }
+
+  private handleColumnDragOver(columnIndex: number, event: DragEvent) {
+    if (this.draggedColumnIndex === null) return
+    if (this.draggedColumnIndex === columnIndex) return
+    this.draggedOverColumnIndex = columnIndex
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move'
+    }
+  }
+
+  private handleColumnDrop(columnIndex: number, event: DragEvent) {
+    const draggedColumnIndex =
+      this.draggedColumnIndex ??
+      Number(event.dataTransfer?.getData('text/plain') ?? '')
+    if (!Number.isInteger(draggedColumnIndex)) {
+      this.handleColumnDragEnd()
+      return
+    }
+
+    const order = [...this.orderedColumnIndexes]
+    const fromIndex = order.indexOf(draggedColumnIndex)
+    const toIndex = order.indexOf(columnIndex)
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+      this.handleColumnDragEnd()
+      return
+    }
+
+    order.splice(fromIndex, 1)
+    order.splice(toIndex, 0, draggedColumnIndex)
+    this.customColumnOrder = this.normalizeColumnOrder(order)
+    this.schedulePersistColumnLayout()
+    this.handleColumnDragEnd()
+  }
+
+  private handleColumnDragEnd() {
+    this.draggedColumnIndex = null
+    this.draggedOverColumnIndex = null
   }
 
   private showFixedColumnBorder = false
 
   private stickFixedColumns = true
+  // Whether the table is wider than its wrapper. Lets the wrapper keep its own
+  // horizontal scroll where an ancestor would otherwise drop it (nested views in
+  // forms pin their headers to the page, which needs the wrapper not to scroll).
+  private tableOverflowsWrapper = false
   private tableResizeObserver: ResizeObserver | null = null
+  private observedTable: HTMLElement | null = null
+  // Page scroll container the column headers follow while the wrapper keeps
+  // its own horizontal scroll (`--pinned-headers` in FormGridBlock.vue). Sticky
+  // headers can't reach past a scroll container, so their `top` is set by hand.
+  private pinnedHeaderScroller: HTMLElement | null = null
   private onTableResize() {
     const breakpoint = 1000
     const ref = this.$refs['tableWrapper'] as HTMLElement | undefined
     const tableWidth = ref?.offsetWidth ?? breakpoint
     this.stickFixedColumns = tableWidth > breakpoint
+    const table = this.$refs['table'] as HTMLElement | undefined
+    this.tableOverflowsWrapper =
+      ref !== undefined &&
+      table !== undefined &&
+      table.offsetWidth > ref.clientWidth
+    // After the render that puts `horizontal-overflow` on the wrapper.
+    void this.$nextTick(() => this.updatePinnedHeaders())
+  }
+
+  private updatePinnedHeaders() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    const wanted =
+      wrapper !== undefined &&
+      this.tableOverflowsWrapper &&
+      getComputedStyle(wrapper).getPropertyValue('--pinned-headers').trim() ===
+        '1'
+    if (!wanted) {
+      this.stopPinningHeaders()
+      return
+    }
+    this.updatePinnedHeaderRange()
+    if (hasScrollDrivenAnimations) return
+    if (this.pinnedHeaderScroller === null) {
+      const scroller = findScrollContainer(wrapper.parentElement)
+      if (scroller === null) return
+      this.pinnedHeaderScroller = scroller
+      scroller.addEventListener('scroll', this.updatePinnedHeaderOffset, {
+        passive: true,
+      })
+    }
+    this.updatePinnedHeaderOffset()
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  // Where inside the wrapper the headers start following the page scroll and
+  // how far they may go: from the table's top to its end minus their height.
+  private updatePinnedHeaderRange() {
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    const table = this.$refs['table'] as HTMLTableElement | undefined
+    if (!wrapper || !table) return
+    const start = table.getBoundingClientRect().top - wrapper.getBoundingClientRect().top
+    const max = Math.max(0, table.offsetHeight - (table.tHead?.offsetHeight ?? 0))
+    wrapper.style.setProperty('--pinned-header-start', `${start}px`)
+    wrapper.style.setProperty('--pinned-header-end', `${start + max}px`)
+    wrapper.style.setProperty('--pinned-header-max', `${max}px`)
+  }
+
+  private stopPinningHeaders() {
+    /* eslint-disable @typescript-eslint/unbound-method */
+    if (this.pinnedHeaderScroller !== null) {
+      this.pinnedHeaderScroller.removeEventListener(
+        'scroll',
+        this.updatePinnedHeaderOffset,
+      )
+      this.pinnedHeaderScroller = null
+    }
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    for (const name of ['offset', 'start', 'end', 'max']) {
+      wrapper?.style.removeProperty(`--pinned-header-${name}`)
+    }
+    /* eslint-enable @typescript-eslint/unbound-method */
+  }
+
+  private updatePinnedHeaderOffset() {
+    const wrapper = this.$refs['tableWrapper'] as HTMLElement | undefined
+    const table = this.$refs['table'] as HTMLTableElement | undefined
+    const scroller = this.pinnedHeaderScroller
+    if (!wrapper || !table || scroller === null) return
+    const headerHeight =
+      parseFloat(
+        getComputedStyle(wrapper).getPropertyValue('--nested-header-height'),
+      ) || 0
+    const wrapperTop = wrapper.getBoundingClientRect().top
+    const tableRect = table.getBoundingClientRect()
+    const scrollerTop = scroller.getBoundingClientRect().top
+    const headRowHeight = table.tHead?.offsetHeight ?? 0
+    // The headers stay sticky against the wrapper, so the offset is a sticky
+    // `top` inside it: where the page's sticky line is, clamped to the table.
+    // `- 1` matches the usual `top: -1px` of the headers.
+    const wanted = scrollerTop + headerHeight - 1 - wrapperTop
+    const min = tableRect.top - wrapperTop
+    const max = Math.max(min, min + tableRect.height - headRowHeight)
+    const offset = Math.min(max, Math.max(min, wanted))
+    wrapper.style.setProperty('--pinned-header-offset', `${offset}px`)
+  }
+
+  // The table element comes and goes with the data, and its width follows the
+  // columns, so the observer is (re)attached whenever the component re-renders.
+  private observeTable() {
+    const table = this.$refs['table'] as HTMLElement | undefined
+    const target = table ?? null
+    if (target === this.observedTable || this.tableResizeObserver === null) {
+      return
+    }
+    if (this.observedTable !== null) {
+      this.tableResizeObserver.unobserve(this.observedTable)
+    }
+    this.observedTable = target
+    if (target !== null) this.tableResizeObserver.observe(target)
+  }
+
+  protected updated() {
+    this.observeTable()
   }
 
   protected mounted() {
@@ -2772,12 +3384,17 @@ export default class UserViewTable extends mixins<
       },
     )
     if (this.$refs['tableWrapper']) {
-      this.tableResizeObserver = new ResizeObserver(
-        debounceTillAnimationFrame(this.onTableResize),
-      )
-      this.tableResizeObserver.observe(
-        this.$refs['tableWrapper'] as HTMLElement,
-      )
+      if (typeof ResizeObserver !== 'undefined') {
+        this.tableResizeObserver = new ResizeObserver(
+          debounceTillAnimationFrame(this.onTableResize),
+        )
+        this.tableResizeObserver.observe(
+          this.$refs['tableWrapper'] as HTMLElement,
+        )
+        this.observeTable()
+      } else {
+        this.onTableResize()
+      }
     }
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$on(name, callback),
@@ -2801,6 +3418,10 @@ export default class UserViewTable extends mixins<
     )
     document.removeEventListener('mousemove', this.handleColumnResizeMouseMove)
     document.removeEventListener('mouseup', this.handleColumnResizeMouseUp)
+    if (this.persistColumnLayoutTimeoutId !== null) {
+      clearTimeout(this.persistColumnLayoutTimeoutId)
+      this.persistColumnLayoutTimeoutId = null
+    }
     if (this.autoscrollTimer !== null) {
       clearInterval(this.autoscrollTimer)
     }
@@ -2808,11 +3429,8 @@ export default class UserViewTable extends mixins<
     this.rootEvents.forEach(([name, callback]) =>
       this.$root.$off(name, callback),
     )
-    if (this.$refs['tableWrapper']) {
-      this.tableResizeObserver?.unobserve(
-        this.$refs['tableWrapper'] as HTMLElement,
-      )
-    }
+    this.tableResizeObserver?.disconnect()
+    this.stopPinningHeaders()
     /* eslint-enable @typescript-eslint/unbound-method */
 
     if (this.uv.extra.lazyLoad.type === 'pagination' && this.isTopLevel) {
@@ -2845,6 +3463,11 @@ export default class UserViewTable extends mixins<
       // const searchInColumns = R.intersection(columns, rawSearchInColumns);
 
       if (!deepEquals(this.currentFilter, this.filter)) {
+        // A new search yields a different result set, so the page we are on may not exist in it.
+        // Pagination state survives a reload, hence the explicit reset.
+        if (this.uv.extra.lazyLoad.type === 'pagination') {
+          this.uv.extra.lazyLoad.pagination.currentPage = 0
+        }
         const search =
           this.filter.length === 0 ? undefined : this.filter.join(' ')
         this.$emit('load-entries-with-remote-search', search)
@@ -3142,12 +3765,55 @@ export default class UserViewTable extends mixins<
     return elementWindow(this.$el as HTMLElement)
   }
 
-  private checkWindow() {
-    return this.activeWindow === this.parentWindow
+  private checkWindow(event?: Event) {
+    if (this.activeWindow !== this.parentWindow) {
+      return false
+    }
+
+    const target = event?.target
+    if (!(target instanceof Node)) {
+      return true
+    }
+
+    const isCalendarClick = Array.from(
+      document.querySelectorAll('.calendar-popper'),
+    ).some((el) => el.contains(target))
+
+    return !isCalendarClick
   }
 
   private closeCellContextMenu() {
     this.cellContextMenu = null
+  }
+
+  private closeColumnContextMenu() {
+    this.columnContextMenu = null
+  }
+
+  private openColumnContextMenu(columnIndex: number, event: MouseEvent) {
+    const isPinned = this.columns[columnIndex]?.fixed ?? false
+    this.columnContextMenu = {
+      reference: {
+        clientWidth: 1,
+        clientHeight: 1,
+        getBoundingClientRect: () =>
+          new DOMRect(event.clientX, event.clientY, 1, 1),
+        removeEventListener: () => {},
+      },
+      buttons: [
+        {
+          type: 'callback',
+          icon: isPinned ? 'push_pin' : 'push_pin',
+          caption: isPinned
+            ? this.$t('unpin_column').toString()
+            : this.$t('pin_column').toString(),
+          variant: defaultVariantAttribute,
+          callback: () => {
+            this.$set(this.pinnedColumns, columnIndex, !isPinned)
+          },
+        },
+      ],
+    }
   }
 
   private openCellContextMenu(
@@ -3245,7 +3911,7 @@ export default class UserViewTable extends mixins<
     element: HTMLElement,
     event: MouseEvent,
   ) {
-    if (event.shiftKey || event.ctrlKey) return
+    if (event.shiftKey || event.ctrlKey || event.metaKey) return
 
     const ref = this.getValueRefByVisualPosition(pos)
     this.deselectAllCells()
@@ -3316,13 +3982,27 @@ export default class UserViewTable extends mixins<
     element: HTMLElement,
     event: MouseEvent,
   ) {
-    if (event.ctrlKey) {
+    if (event.ctrlKey || event.metaKey) {
       this.removeCellEditing()
-      if (this.uv.extra.cursorValue) {
-        this.selectValue(this.uv.extra.cursorValue, true)
-      }
       const ref = this.getValueRefByVisualPosition(pos)
-      this.setCursorCell(ref)
+      const cell = this.uv.getValueByRef(ref)
+      const isExplicitlySelected = cell?.value.extra.selected === true
+      const isCursor =
+        this.uv.extra.cursorValue !== null &&
+        deepEquals(this.uv.extra.cursorValue, ref)
+
+      if (isExplicitlySelected) {
+        this.selectValue(ref, false)
+      } else if (isCursor) {
+        this.clearCursorCell()
+        this.uv.extra.cursorValue = null
+        this.uv.extra.oldCursorValue = null
+      } else {
+        if (this.uv.extra.cursorValue) {
+          this.selectValue(this.uv.extra.cursorValue, true)
+        }
+        this.setCursorCell(ref)
+      }
     } else if (event.shiftKey) {
       this.removeCellEditing()
       this.shiftSelectCells(pos)
@@ -3476,12 +4156,43 @@ export default class UserViewTable extends mixins<
     }
 
     this.$emit('update:enable-filter', this.uv.rows !== null)
+    this.emitSortEditorProps()
 
     this.updateRows()
   }
 
   private updateRows() {
     this.buildRowPositions()
+  }
+
+  private emitSortEditorProps() {
+    const props: ISortEditorProps = {
+      columns: this.columns
+        .map((col, i) => ({ index: i, caption: col.caption }))
+        .filter((_, i) => this.columns[i].visible),
+      sortColumn: this.uv.extra.sortColumn,
+      sortAsc: this.uv.extra.sortAsc,
+      onSort: (column, asc) => {
+        if (column === null) {
+          this.uv.extra.sortColumn = null
+          this.sortRows()
+        } else {
+          this.uv.extra.sortColumn = column
+          this.uv.extra.sortAsc = asc
+          const type = this.columns[column].columnInfo.valueType.type
+          if (type === 'int' || type === 'decimal') {
+            this.uv.extra.sortOptions = { numeric: true }
+          } else if (type === 'string') {
+            this.uv.extra.sortOptions = { sensitivity: 'accent' }
+          } else {
+            this.uv.extra.sortOptions = {}
+          }
+          this.loadAllRowsAndUpdateSort(column)
+        }
+        this.emitSortEditorProps()
+      },
+    }
+    this.$emit('update:sort-editor-props', props)
   }
 
   private loadAllRowsAndUpdateSort(sortColumn: number) {
@@ -3718,7 +4429,37 @@ export default class UserViewTable extends mixins<
 
 th,
 ::v-deep td {
-  border-bottom: 1px solid #efefef;
+  border-bottom: 1px solid
+    var(--table-horizontal-borderColor, var(--table-borderColor));
+}
+
+.show-vertical-borders {
+  th,
+  ::v-deep td {
+    border-right: 0.5px solid var(--table-borderColor);
+  }
+
+  th:last-child,
+  ::v-deep td:last-child {
+    border-right: none;
+  }
+}
+
+th[draggable='true'] {
+  cursor: grab;
+}
+
+th.column-drop-target {
+  outline: 2px solid var(--table-foregroundDarkerColor);
+  outline-offset: -2px;
+}
+
+.table-footer-row .table-footer-cell {
+  border-top: 1px solid
+    var(--table-horizontal-borderColor, var(--table-borderColor));
+  border-bottom: 0;
+  background-color: var(--table-backgroundDarker1Color);
+  font-size: 0.75rem;
 }
 
 .button-container {
@@ -3740,6 +4481,77 @@ th,
   font-size: 0.875rem;
 }
 
+.selected-cells-sum {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.selected-cells-sum-popup {
+  position: sticky;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  z-index: 31;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+  margin-top: auto;
+  margin-right: auto;
+  width: fit-content;
+  max-width: calc(100% - 1.5rem);
+  border: 1px solid var(--table-borderColor, rgba(0, 0, 0, 0.12));
+  border-radius: 0.75rem;
+  background-color: var(--default-backgroundColor, #fff);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.selected-cells-sum-popup__text {
+  line-height: 1.2;
+}
+
+.selected-cells-sum-popup__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.125rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: inherit;
+  opacity: 0.6;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgba(0, 0, 0, 0.08);
+    opacity: 1;
+    outline: none;
+  }
+
+  .material-icons {
+    font-size: 1rem;
+    line-height: 1;
+  }
+}
+
+.sum-popup-fade-enter-active,
+.sum-popup-fade-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sum-popup-fade-enter,
+.sum-popup-fade-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
 .context-menu-wrapper {
   z-index: 25;
   background-color: var(--default-backgroundColor);
@@ -3758,7 +4570,8 @@ th,
   z-index: 30;
   margin-top: revert; // Fix for Safari, huge margin otherwise. Caused by `reset.css`.
   margin-top: auto;
-  border-top: 1px solid #efefef;
+  border-top: 1px solid
+    var(--table-horizontal-borderColor, var(--table-borderColor));
   background-color: var(--table-backgroundColor);
   padding: 0.75rem;
 
@@ -3789,6 +4602,7 @@ th,
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 0.375rem;
 
   .current-rows {
     margin-right: 1.25rem;
@@ -3805,10 +4619,11 @@ th,
   }
 
   .pagination-arrow-button {
-    border: none;
     padding: 0;
-    width: 1.5rem;
-    height: 1.25rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1.5px solid var(--table-borderColor) !important;
+    border-radius: 8px !important;
   }
 
   .select-wrapper {
@@ -3831,14 +4646,14 @@ th,
 
 .no-results {
   padding: 1rem;
-  color: #bfbfbf;
+  color: var(--table-foregroundDarkerColor);
   text-align: left;
 }
 
 .table-wrapper {
   --technical-column-width: 4rem;
-  --icon-color: #777c87;
-  --button-hover-background: #efefef;
+  --icon-color: var(--table-foregroundDarkerColor);
+  --button-hover-background: var(--table-backgroundDarker1Color);
 
   display: flex;
   position: relative;
@@ -3876,8 +4691,9 @@ th {
   top: -1px; /* Instead of `0` to fix Safari's gap bug, not needed in normal browsers, but easier to set same for all. */
   vertical-align: middle;
   z-index: 20;
-  border-top: 1px solid #efefef;
-  height: 4rem;
+  border-top: 1px solid
+    var(--table-horizontal-borderColor, var(--table-borderColor));
+  height: 3.35rem;
   user-select: none;
 
   @include mobile-landscape {
@@ -3919,15 +4735,17 @@ th {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.3rem;
   cursor: pointer;
   background-color: var(--table-backgroundColor);
   width: 100%;
   height: 100%;
   overflow: hidden;
-  color: #1f1f1f;
-  font-weight: 500;
-  font-size: 0.875rem;
+  color: var(--table-foregroundColor);
+  font-weight: 520;
+  font-size: 0.8125rem;
+  text-transform: none;
+  letter-spacing: normal;
   text-overflow: ellipsis;
   white-space: nowrap;
 
@@ -3940,6 +4758,37 @@ th {
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* caption_lines: заголовок переносится по строкам, а не обрезается в одну.
+   Высота шапки перестаёт быть жёсткой, чтобы вместить все разрешённые строки,
+   но не становится меньше обычной. --caption-lines задаёт предел: число или none. */
+th.wrapped-caption {
+  height: auto;
+  min-height: 3.35rem;
+
+  /* Перебиваем общий `padding: 0 0.5rem` шапки: многострочному заголовку нужны
+     вертикальные отступы, иначе он прилипает к границам ячейки. */
+  &:not(.select-row-cell):not(.add-entry-cell) .table-th {
+    padding: 0.55rem 0.5rem;
+  }
+}
+
+.table-th--wrapped {
+  align-items: center;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.column-capture--wrapped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--caption-lines, none);
+  line-clamp: var(--caption-lines, none);
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.2;
 }
 
 .sorting-wrapper {
@@ -3959,12 +4808,12 @@ th {
   opacity: 0;
   transition: all 0.2s;
   cursor: col-resize;
-  background-color: #efefef;
+  background-color: var(--table-backgroundDarker1Color);
   width: 1rem;
   height: 100%;
 
   .material-icons {
-    color: #444;
+    color: var(--table-foregroundColor);
     font-size: 0.75rem;
   }
 
@@ -3974,7 +4823,7 @@ th {
 }
 
 .show-fixed-column-border ::v-deep .last-fixed-cell {
-  border-right: 1px solid #efefef;
+  border-right: 1px solid var(--table-borderColor);
 }
 
 ::v-deep td > p {

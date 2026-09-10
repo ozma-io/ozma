@@ -1,8 +1,18 @@
 $enable-rounded: true;
 $enable-shadows: false;
 $enable-gradients: false;
-$font-family-sans-serif: inter;
-$font-family-serif: inter;
+$font-family-sans-serif:
+  -apple-system,
+  BlinkMacSystemFont,
+  'SF Pro Text',
+  'SF Pro Display',
+  Inter,
+  'Segoe UI',
+  Roboto,
+  'Helvetica Neue',
+  Arial,
+  sans-serif;
+$font-family-serif: $font-family-sans-serif;
 $input-color: var(--cell-foregroundColor);
 $input-placeholder-color: var(--cell-foregroundDarkerColor);
 $border-color: var(--MainBorderColor);
@@ -11,6 +21,25 @@ $input-border-color: var(--cell-borderColor, $border-color);
 @import 'reset.css';
 @import '~bootstrap/scss/bootstrap';
 @import '~vue-popperjs/dist/vue-popper.css';
+
+// Local fonts (bundled, no CDN dependency)
+@import '@fontsource/material-icons/index.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/manrope/500.css';
+@import '@fontsource/manrope/600.css';
+@import '@fontsource/manrope/700.css';
+@import '@fontsource/manrope/800.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+@import '@fontsource/space-grotesk/500.css';
+@import '@fontsource/space-grotesk/600.css';
+@import '@fontsource/space-grotesk/700.css';
+
+@include variant-to-local('default');
 
 html {
   overflow: hidden;
@@ -35,12 +64,21 @@ body {
 
   --FocusBorderColor: #{$input-focus-border-color};
   --userview-background-color: #f2f4f7;
-
   div#app {
     display: flex;
     flex-direction: column;
     height: 100%;
-    font-family: Inter;
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      'SF Pro Text',
+      'SF Pro Display',
+      Inter,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
   }
 }
 
@@ -106,6 +144,106 @@ button:not(.btn) {
   }
 }
 
+/* Popper transitions */
+@keyframes ozma-popover-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ozma-popover-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ozma-popover-content-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ozma-popover-content-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.ozma-popover-enter-active,
+.ozma-popover-leave-active {
+  animation-duration: 0.34s;
+  animation-fill-mode: both;
+  animation-timing-function: linear;
+  will-change: opacity;
+}
+
+.ozma-popover-enter-active {
+  animation-name: ozma-popover-fade-in;
+}
+
+.ozma-popover-leave-active {
+  animation-name: ozma-popover-fade-out;
+}
+
+.ozma-popover-enter-active > .popper,
+.ozma-popover-leave-active > .popper {
+  animation-duration: 0.34s;
+  animation-fill-mode: both;
+  will-change: opacity;
+}
+
+.ozma-popover-enter-active > .popper {
+  animation-name: ozma-popover-content-in;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ozma-popover-leave-active > .popper {
+  animation-name: ozma-popover-content-out;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.ozma-popover-enter,
+.ozma-popover-leave-to {
+  opacity: 0;
+}
+
+/* Bootstrap modal transitions */
+.modal.fade .modal-dialog {
+  transform: translateY(1.25rem) scale(0.985);
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.22s ease;
+  opacity: 0;
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.fade .modal-dialog {
+    transition: none;
+    animation: none;
+  }
+}
+
 /* Source: https://google.github.io/material-design-icons/ */
 .material-icons,
 .md-24 {
@@ -129,6 +267,19 @@ button:not(.btn) {
 }
 
 .material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
@@ -207,7 +358,27 @@ input.with-clear-content-button {
 }
 
 .btn {
-  border-radius: 0.625rem;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+  border-radius: 0.75rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  box-shadow: 0 2px 8px -6px rgb(15 23 42 / 35%);
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px -18px rgb(15 23 42 / 45%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 8px -6px rgb(15 23 42 / 35%);
+  }
 }
 
 .btn.clear-content-button {
@@ -290,6 +461,101 @@ $input-focus-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
   }
 }
 
+/* On mobile, VueModal (InputPopup modal mode) must appear above OzmaPopper popups.
+   Scoped to mobile only — on desktop, popups open inside modals and need higher z-index than the modal. */
+@include mobile {
+  .vm--container {
+    z-index: 100300 !important;
+  }
+}
+
+.tooltip {
+  z-index: 200000 !important;
+  opacity: 1 !important;
+
+  .tooltip-inner {
+    position: relative;
+    border-radius: 12px;
+    padding: 6px 12px;
+    font-size: inherit;
+    max-width: 320px;
+    background: transparent;
+    color: var(--ink, var(--MainTextColor, #1f1f1f));
+    text-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+    box-shadow: 0 6px 6px rgb(0 0 0 / 20%), 0 0 20px rgb(0 0 0 / 10%);
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    // Blur + background layer
+    &::before {
+      background: rgb(255 255 255 / 20%);
+      backdrop-filter: blur(13px) saturate(180%);
+      -webkit-backdrop-filter: blur(13px) saturate(180%);
+      z-index: -1;
+    }
+
+    // Outline shine
+    &::after {
+      box-shadow:
+        inset 2px 2px 1px 0 rgb(255 255 255 / 50%),
+        inset -1px -1px 1px 1px rgb(255 255 255 / 30%);
+      z-index: -1;
+    }
+  }
+
+  .arrow::before {
+    border-color: transparent !important;
+  }
+}
+
+.table-th,
+.table-th .column-capture {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.b-skeleton-animate-wave::after,
+.b-skeleton-animate-fade,
+.b-skeleton-animate-throb {
+  background-color: var(--default-backgroundDarker1Color);
+}
+
+.b-skeleton-text,
+.b-skeleton-button,
+.b-skeleton-input,
+.b-skeleton-icon,
+.b-skeleton-img {
+  background-color: var(--default-backgroundDarker1Color) !important;
+
+  &::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--default-backgroundDarker2Color),
+      transparent
+    ) !important;
+  }
+}
+
+.list-group-item {
+  background-color: var(--default-backgroundColor) !important;
+  color: var(--default-foregroundColor) !important;
+  border-color: var(--default-borderColor) !important;
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+  // TEMP: убрали фон-подсветку у пунктов меню (обе темы) для проверки
+  background-color: transparent !important;
+}
+
 .lh-0-5 {
   line-height: 0.5rem;
 }
@@ -323,5 +589,1765 @@ $input-focus-shadow: 0 0 0 0.2rem rgb(0 123 255 / 25%);
 
   100% {
     background-position: 0% 50%;
+  }
+}
+
+/* Default ink for non-glass ozma themes (tooltips render outside #app). */
+html {
+  --ink: var(--foregroundColor, #1f1f1f);
+}
+
+/* Full gelfand.dev visual language applied to ozma glass themes. */
+html[data-theme-style='light-glass'],
+html[data-theme-style='dark-glass'] {
+  --bg: #f6f4ef;
+  --card: #fffdf8;
+  --ink: #1f1f1f;
+  --muted: #6f6a62;
+  --accent: #0f766e;
+  --accent-2: #f6b941;
+  --line: rgb(196 182 163 / 28%);
+  --control-line: rgb(196 182 163 / 20%);
+  --surface: rgb(255 255 255 / 50%);
+  --surface-strong: rgb(255 255 255 / 58%);
+  --panel-bg: rgb(255 255 255 / 0%);
+  --panel-border: rgb(255 255 255 / 72%);
+  --text-soft: #3f3b35;
+  --glow-1: #fff8e6;
+  --glow-2: #e2f8f4;
+  --glow-3: transparent;
+  --shape-1: #fde68a;
+  --shape-2: #a7f3d0;
+  --contact-hover-bg: var(--card);
+  --contact-hover-border: rgb(196 182 163 / 50%);
+  --contact-hover-shadow: 0 22px 54px rgb(28 23 15 / 14%);
+  --shadow: 0 14px 40px rgb(28 23 15 / 8%);
+  --overlay-bg: rgb(10 14 20 / 35%);
+  --table-horizontal-borderColor: rgb(196 182 163 / 16%);
+
+  /* Sub-block tokens (light) */
+  --sub-block-bg: rgb(255 255 255 / 45%);
+  --sub-block-border: rgb(196 182 163 / 25%);
+}
+
+html[data-theme-style='dark-glass'] {
+  --bg: #070e17;
+  --card: #0b1623;
+  --ink: #e7ecef;
+  --muted: #95a7b6;
+  --accent: #4fd6be;
+  --accent-2: #f6b941;
+  --line: rgb(140 176 200 / 14%);
+  --control-line: rgb(140 176 200 / 10%);
+  --surface: rgb(17 32 46 / 42%);
+  --surface-strong: rgb(17 32 46 / 56%);
+  --panel-bg: rgb(10 20 33 / 28%);
+  --panel-border: rgb(169 209 232 / 16%);
+  --text-soft: #d4dee6;
+  --glow-1: #0b2633;
+  --glow-2: #050a18;
+  --shape-1: #071427;
+  --shape-2: #0b5e52;
+  --contact-hover-border: rgb(169 209 232 / 18%);
+  --contact-hover-shadow: 0 34px 90px rgb(0 0 0 / 55%);
+  --shadow: 0 18px 50px rgb(0 0 0 / 28%);
+  --overlay-bg: rgb(2 8 17 / 58%);
+  --table-horizontal-borderColor: rgb(140 176 200 / 10%);
+
+  /* Sub-block tokens (dark) */
+  --sub-block-bg: rgb(255 255 255 / 3%);
+  --sub-block-border: rgb(255 255 255 / 6%);
+
+  /* Form design tokens — dark-glass */
+  --cell-borderColor: rgba(255, 255, 255, 0.10);
+  --cell-backgroundColor: rgba(255, 255, 255, 0.05);
+  --cell-foregroundColor: #e7ecef;
+  --cell-foregroundDarkerColor: rgba(255, 255, 255, 0.22);
+  --default-backgroundColor: rgba(255, 255, 255, 0.07);
+  --default-borderColor: rgba(255, 255, 255, 0.14);
+  --default-foregroundColor: #e7ecef;
+  --default-foregroundDarkerColor: rgba(255, 255, 255, 0.35);
+  --FocusBorderColor: rgba(89, 214, 207, 0.5);
+  --radius-input: 10px;
+  --MainTextColor: #e7ecef;
+  --MainTextColorLight: rgba(255, 255, 255, 0.22);
+}
+
+html[data-theme-style='light-glass'] {
+  /* Form design tokens — light-glass-warm */
+  --cell-borderColor: rgba(143, 214, 228, 0.45);
+  --cell-backgroundColor: rgba(255, 255, 255, 0.38);
+  --cell-foregroundColor: #1f1f1f;
+  --cell-foregroundDarkerColor: rgba(111, 106, 98, 0.38);
+  --default-backgroundColor: rgba(255, 255, 255, 0.42);
+  --default-borderColor: rgba(255, 255, 255, 0.75);
+  --default-foregroundColor: #1f1f1f;
+  --default-foregroundDarkerColor: #6f6a62;
+  --FocusBorderColor: rgba(33, 133, 160, 0.5);
+  --radius-input: 12px;
+  --MainTextColor: #1f1f1f;
+  --MainTextColorLight: rgba(111, 106, 98, 0.38);
+
+  /* Aivazovsky sea palette */
+  --sea-deep: #1a5f7a;
+  --sea-mid: #2185a0;
+  --sea-bright: #3db8c8;
+  --sea-foam: rgba(143, 214, 228, 0.45);
+}
+
+#app[data-theme-style='light-glass'],
+#app[data-theme-style='dark-glass'] {
+  --MainTextColor: var(--ink);
+  --MainTextColorLight: var(--muted);
+  --MainBackgroundColor: var(--card);
+  --MainBorderColor: var(--line);
+  --default-foregroundColor: var(--ink);
+  --default-foregroundDarkerColor: var(--muted);
+  --default-backgroundColor: var(--card);
+  --default-backgroundDarker1Color: var(--surface);
+  --default-backgroundDarker2Color: var(--surface-strong);
+  --default-borderColor: var(--line);
+  --default-shadowColor: rgb(15 23 42 / 40%);
+
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 0% 0%, var(--glow-1) 0%, transparent 35%),
+    radial-gradient(circle at 90% 20%, var(--glow-2) 0%, transparent 35%),
+    radial-gradient(circle at 92% 88%, var(--glow-3) 0%, transparent 42%),
+    var(--bg);
+  color: var(--ink);
+  font-family:
+    Manrope,
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'SF Pro Display',
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+}
+
+#app[data-theme-style='light-glass'] h1,
+#app[data-theme-style='dark-glass'] h1,
+#app[data-theme-style='light-glass'] h2,
+#app[data-theme-style='dark-glass'] h2,
+#app[data-theme-style='light-glass'] h3,
+#app[data-theme-style='dark-glass'] h3,
+#app[data-theme-style='light-glass'] .menu-header,
+#app[data-theme-style='dark-glass'] .menu-header,
+#app[data-theme-style='light-glass'] .button-caption,
+#app[data-theme-style='dark-glass'] .button-caption {
+  font-family:
+    'Space Grotesk',
+    Manrope,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+#app[data-theme-style='light-glass']::before,
+#app[data-theme-style='dark-glass']::before,
+#app[data-theme-style='light-glass']::after,
+#app[data-theme-style='dark-glass']::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  opacity: 0.55;
+  border-radius: 999px;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+#app[data-theme-style='light-glass']::before,
+#app[data-theme-style='dark-glass']::before {
+  top: -80px;
+  left: -60px;
+  width: 320px;
+  height: 320px;
+  background: var(--shape-1);
+}
+
+#app[data-theme-style='light-glass']::after,
+#app[data-theme-style='dark-glass']::after {
+  top: 20%;
+  right: -80px;
+  width: 280px;
+  height: 280px;
+  background: var(--shape-2);
+}
+
+@keyframes glass-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#app[data-theme-style='light-glass'] .header-panel,
+#app[data-theme-style='dark-glass'] .header-panel,
+#app[data-theme-style='light-glass'] .menu_category_block,
+#app[data-theme-style='dark-glass'] .menu_category_block,
+#app[data-theme-style='light-glass'] .root-wrapper,
+#app[data-theme-style='dark-glass'] .root-wrapper,
+html[data-theme-style='light-glass'] .vm--modal,
+html[data-theme-style='dark-glass'] .vm--modal,
+html[data-theme-style='light-glass'] .modal-content,
+html[data-theme-style='dark-glass'] .modal-content {
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  background: var(--panel-bg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+  animation: glass-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-dialog,
+html[data-theme-style='dark-glass'] .glass-confirm-dialog {
+  max-width: min(560px, calc(100vw - 1.5rem));
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-content,
+html[data-theme-style='dark-glass'] .glass-confirm-content {
+  border-radius: 22px;
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-content {
+  border-color: rgb(210 194 143 / 55%);
+  background:
+    linear-gradient(180deg, rgb(248 241 216 / 98%) 0%, rgb(244 236 211 / 96%) 100%),
+    var(--panel-bg);
+}
+
+html[data-theme-style='dark-glass'] .glass-confirm-content,
+html[data-theme-style='dark-glass'] .glass-confirm-content .modal-title,
+html[data-theme-style='dark-glass'] .glass-confirm-content .modal-body {
+  color: var(--ink);
+}
+
+html[data-theme-style='dark-glass'] .glass-confirm-content .close {
+  color: var(--ink);
+  text-shadow: none;
+  opacity: 0.88;
+}
+
+html[data-theme-style='dark-glass'] .glass-confirm-content .close:hover,
+html[data-theme-style='dark-glass'] .glass-confirm-content .close:focus {
+  color: #fff;
+  opacity: 1;
+}
+
+html[data-theme-style='dark-glass'] .modal-content,
+html[data-theme-style='dark-glass'] .modal-content .modal-title,
+html[data-theme-style='dark-glass'] .modal-content .modal-body,
+html[data-theme-style='dark-glass'] .modal-content .modal-header,
+html[data-theme-style='dark-glass'] .modal-content .modal-footer {
+  color: var(--ink);
+}
+
+html[data-theme-style='dark-glass'] .modal-content .close {
+  color: var(--ink) !important;
+  text-shadow: none;
+  opacity: 0.9;
+}
+
+html[data-theme-style='dark-glass'] .modal-content .close:hover,
+html[data-theme-style='dark-glass'] .modal-content .close:focus {
+  color: #fff !important;
+  opacity: 1;
+}
+
+html[data-theme-style='light-glass'] .modal-content,
+html[data-theme-style='light-glass'] .modal-content .modal-title,
+html[data-theme-style='light-glass'] .modal-content .modal-body,
+html[data-theme-style='light-glass'] .modal-content .modal-header,
+html[data-theme-style='light-glass'] .modal-content .modal-footer {
+  color: #fff;
+}
+
+html[data-theme-style='light-glass'] .modal-content .close {
+  color: #fff !important;
+  text-shadow: none;
+  opacity: 0.92;
+}
+
+html[data-theme-style='light-glass'] .modal-content .close:hover,
+html[data-theme-style='light-glass'] .modal-content .close:focus {
+  color: #fff !important;
+  opacity: 1;
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-body,
+html[data-theme-style='dark-glass'] .glass-confirm-body {
+  padding: 1.5rem 1.75rem 1.15rem;
+  font-size: clamp(1.05rem, 0.92rem + 0.65vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-body {
+  color: #fff;
+}
+
+html[data-theme-style='dark-glass'] .glass-confirm-body {
+  color: var(--ink);
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-footer,
+html[data-theme-style='dark-glass'] .glass-confirm-footer {
+  border-top: 1px solid var(--line);
+  padding: 1rem 1.75rem 1.35rem;
+  gap: 0.65rem;
+}
+
+html[data-theme-style='light-glass'] .glass-confirm-footer .btn-outline-secondary,
+html[data-theme-style='dark-glass'] .glass-confirm-footer .btn-outline-secondary {
+  border-color: var(--line);
+  background: var(--surface-strong);
+  color: var(--ink);
+}
+
+html[data-theme-style='light-glass'] .popper,
+html[data-theme-style='dark-glass'] .popper {
+  z-index: 100050;
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  background: var(--panel-bg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+  animation: none !important;
+}
+
+/* Glass dropdown/menu items: transparent so the frosted popper itself is the
+   surface. Opaque items left page show-through gaps next to content-width
+   link items; this keeps the panel uniform. */
+html[data-theme-style='light-glass'] .popper .list-group-item,
+html[data-theme-style='dark-glass'] .popper .list-group-item {
+  background: transparent !important;
+}
+
+html[data-theme-style='light-glass'] .vm--modal,
+html[data-theme-style='dark-glass'] .vm--modal {
+  overflow: hidden;
+}
+
+html[data-theme-style='light-glass'] .tabbed-modal .header,
+html[data-theme-style='dark-glass'] .tabbed-modal .header {
+  flex-shrink: 0;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+#app[data-theme-style='light-glass'] .tabbed-modal .header-panel,
+#app[data-theme-style='dark-glass'] .tabbed-modal .header-panel {
+  border: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+
+/* Glass tab header — visible bar above form content */
+#app[data-theme-style='light-glass'] .modal__tab_header.only_tab,
+#app[data-theme-style='dark-glass'] .modal__tab_header.only_tab {
+  background-color: var(--surface) !important;
+  border-bottom: 1px solid var(--line);
+}
+
+html[data-theme-style='light-glass'] .tabbed-modal .header-panel,
+html[data-theme-style='dark-glass'] .tabbed-modal .header-panel {
+  border-bottom-right-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+#app[data-theme-style='light-glass'] .header-panel.is-root,
+#app[data-theme-style='dark-glass'] .header-panel.is-root {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin: 0.55rem 0.55rem 0;
+  box-sizing: border-box;
+  width: calc(100% - 1.1rem);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+#app[data-theme-style='light-glass'] .userview-upper-div > .userview-div,
+#app[data-theme-style='dark-glass'] .userview-upper-div > .userview-div {
+  margin: 0.5rem 0.55rem 0;
+  box-sizing: border-box;
+  width: calc(100% - 1.1rem);
+}
+
+#app[data-theme-style='light-glass'] .header-panel,
+#app[data-theme-style='dark-glass'] .header-panel {
+  border-bottom-color: var(--line);
+  background: var(--surface);
+}
+
+#app[data-theme-style='light-glass'] .profile-button-wrapper,
+#app[data-theme-style='dark-glass'] .profile-button-wrapper {
+  padding-right: 0;
+}
+
+#app[data-theme-style='light-glass'] .menu_category_block,
+#app[data-theme-style='dark-glass'] .menu_category_block {
+  padding: 1rem;
+}
+
+#app[data-theme-style='light-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant,
+#app[data-theme-style='dark-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant {
+  border: none;
+}
+
+#app[data-theme-style='light-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry,
+#app[data-theme-style='dark-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: none !important;
+}
+
+#app[data-theme-style='light-glass'] .table-wrapper,
+#app[data-theme-style='dark-glass'] .table-wrapper {
+  background-color: transparent !important;
+}
+
+#app[data-theme-style='light-glass'] .table-wrapper.root,
+#app[data-theme-style='dark-glass'] .table-wrapper.root {
+  border-color: var(--panel-border);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#app[data-theme-style='light-glass'] .root-wrapper,
+#app[data-theme-style='dark-glass'] .root-wrapper {
+  padding: 0.5rem;
+}
+
+#app[data-theme-style='light-glass'] .custom-table,
+#app[data-theme-style='dark-glass'] .custom-table {
+  background: transparent;
+  border-collapse: separate !important;
+  border-spacing: 0 6px !important;
+}
+
+#app[data-theme-style='light-glass'] .table-th,
+#app[data-theme-style='dark-glass'] .table-th,
+#app[data-theme-style='light-glass'] .table-footer-row .table-footer-cell,
+#app[data-theme-style='dark-glass'] .table-footer-row .table-footer-cell {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+#app[data-theme-style='light-glass'] th,
+#app[data-theme-style='dark-glass'] th,
+#app[data-theme-style='light-glass'] th.fixed-cell,
+#app[data-theme-style='dark-glass'] th.fixed-cell,
+#app[data-theme-style='light-glass'] .table-th,
+#app[data-theme-style='dark-glass'] .table-th {
+  background: var(--surface);
+  backdrop-filter: blur(6px) saturate(130%);
+  -webkit-backdrop-filter: blur(6px) saturate(130%);
+}
+
+/* ── Glass form controls — shared ── */
+#app[data-theme-style='light-glass'] .list-group-item,
+#app[data-theme-style='dark-glass'] .list-group-item,
+#app[data-theme-style='light-glass'] .input-group-text,
+#app[data-theme-style='dark-glass'] .input-group-text {
+  border-color: var(--control-line, var(--line)) !important;
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+/* ── Form inputs — dark-glass ── */
+#app[data-theme-style='dark-glass'] .form-control,
+#app[data-theme-style='dark-glass'] .custom-select {
+  background: var(--cell-backgroundColor) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  border-radius: var(--radius-input, 10px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  color: var(--ink) !important;
+}
+
+/* ── Form inputs — light-glass-warm ── */
+#app[data-theme-style='light-glass'] .form-control,
+#app[data-theme-style='light-glass'] .custom-select {
+  background: var(--cell-backgroundColor) !important;
+  border: 1px solid rgba(143, 214, 228, 0.45) !important;
+  border-radius: var(--radius-input, 12px) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 4px rgba(28, 23, 15, 0.05) !important;
+  color: var(--ink) !important;
+}
+
+/* ── Input focus — dark-glass ── */
+#app[data-theme-style='dark-glass'] .form-control:focus {
+  border-color: rgba(89, 214, 207, 0.5) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(89, 214, 207, 0.12), 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Input focus — light-glass-warm ── */
+#app[data-theme-style='light-glass'] .form-control:focus {
+  border-color: rgba(33, 133, 160, 0.5) !important;
+  background: rgba(220, 244, 248, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(61, 184, 200, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9),
+              0 1px 4px rgba(28, 23, 15, 0.05) !important;
+}
+
+#app[data-theme-style='light-glass'] .select-container,
+#app[data-theme-style='dark-glass'] .select-container {
+  border-color: var(--control-line, var(--line));
+  background: var(--surface);
+  overflow: hidden;
+}
+
+#app[data-theme-style='light-glass'] .select-container:focus-within,
+#app[data-theme-style='dark-glass'] .select-container:focus-within,
+#app[data-theme-style='light-glass'] .select-container:focus,
+#app[data-theme-style='dark-glass'] .select-container:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.12rem rgb(15 118 110 / 10%);
+}
+
+#app[data-theme-style='light-glass'] .select-container .input-group-append,
+#app[data-theme-style='dark-glass'] .select-container .input-group-append {
+  margin-left: 0;
+}
+
+#app[data-theme-style='light-glass'] .select-container .select-icon,
+#app[data-theme-style='dark-glass'] .select-container .select-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border: none !important;
+  border-left: 1px solid var(--control-line, var(--line)) !important;
+  border-radius: 0 !important;
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+  background: var(--surface-strong);
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+#app[data-theme-style='light-glass'] .btn,
+#app[data-theme-style='dark-glass'] .btn,
+#app[data-theme-style='light-glass'] .material-button,
+#app[data-theme-style='dark-glass'] .material-button,
+#app[data-theme-style='light-glass'] .menu-entry,
+#app[data-theme-style='dark-glass'] .menu-entry,
+#app[data-theme-style='light-glass'] .save-cluster-button,
+#app[data-theme-style='dark-glass'] .save-cluster-button {
+  border: 1px solid var(--control-line, var(--line));
+  background: var(--surface);
+  transition:
+    transform 0.5s ease,
+    box-shadow 0.5s ease,
+    background 0.5s ease,
+    border-color 0.5s ease;
+}
+
+#app[data-theme-style='light-glass'] .btn,
+#app[data-theme-style='dark-glass'] .btn {
+  border-radius: 999px;
+}
+
+#app[data-theme-style='light-glass'] .btn:hover:not(:disabled),
+#app[data-theme-style='dark-glass'] .btn:hover:not(:disabled),
+#app[data-theme-style='light-glass'] .material-button:hover:not(:disabled),
+#app[data-theme-style='dark-glass'] .material-button:hover:not(:disabled),
+#app[data-theme-style='light-glass'] .menu-entry:hover:not(.disabled),
+#app[data-theme-style='dark-glass'] .menu-entry:hover:not(.disabled),
+#app[data-theme-style='light-glass'] .btn:focus-visible:not(:disabled),
+#app[data-theme-style='dark-glass'] .btn:focus-visible:not(:disabled),
+#app[data-theme-style='light-glass'] .material-button:focus-visible:not(:disabled),
+#app[data-theme-style='dark-glass'] .material-button:focus-visible:not(:disabled),
+#app[data-theme-style='light-glass'] .menu-entry:focus-visible:not(.disabled),
+#app[data-theme-style='dark-glass'] .menu-entry:focus-visible:not(.disabled) {
+  transform: translateY(-2px);
+  border-color: var(--contact-hover-border);
+  background: var(--contact-hover-bg);
+  box-shadow: var(--contact-hover-shadow);
+}
+
+#app[data-theme-style='dark-glass']
+  .table-td
+  .reference-open-modal:hover:not(.disabled),
+#app[data-theme-style='dark-glass']
+  .table-td
+  .reference-open-modal:focus:not(.disabled),
+#app[data-theme-style='dark-glass']
+  .table-td
+  .reference-open-modal:focus-visible:not(.disabled) {
+  border-color: rgb(255 255 255 / 20%) !important;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 14%) !important;
+}
+
+#app[data-theme-style='light-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry:hover:not(.disabled),
+#app[data-theme-style='dark-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry:hover:not(.disabled),
+#app[data-theme-style='light-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry:focus-visible:not(.disabled),
+#app[data-theme-style='dark-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry:focus-visible:not(.disabled) {
+  border: none;
+  box-shadow: none;
+  transform: none;
+}
+
+#app[data-theme-style='dark-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry:hover:not(.disabled),
+#app[data-theme-style='dark-glass']
+  .menu_category_block.menuEntry-variant.menuEntry-local-variant
+  .menu-entry:focus-visible:not(.disabled) {
+  background: rgb(169 209 232 / 10%);
+}
+
+#app[data-theme-style='light-glass'] .badge,
+#app[data-theme-style='dark-glass'] .badge {
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  color: var(--text-soft);
+}
+
+/* ── Save button — dark-glass ── */
+#app[data-theme-style='dark-glass'] .save-button,
+#app[data-theme-style='dark-glass'] .saving-indicator {
+  background: linear-gradient(135deg, rgba(89, 214, 207, 0.25), rgba(15, 118, 110, 0.25)) !important;
+  border: 1.5px solid rgba(89, 214, 207, 0.5) !important;
+  border-radius: 999px !important;
+  color: #59d6cf !important;
+  box-shadow: 0 0 20px rgba(89, 214, 207, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Save button — light-glass-warm ── */
+#app[data-theme-style='light-glass'] .save-button,
+#app[data-theme-style='light-glass'] .saving-indicator {
+  background: linear-gradient(135deg, #3db8c8 0%, #2185a0 50%, #1a5f7a 100%) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  box-shadow: 0 4px 18px rgba(33, 133, 160, 0.35), 0 0 24px rgba(61, 184, 200, 0.15) !important;
+}
+
+/* ── Delete button pill — dark-glass ── */
+#app[data-theme-style='dark-glass'] .btn-outline-danger {
+  background: transparent !important;
+  border: 1px solid rgba(255, 80, 60, 0.25) !important;
+  border-radius: 999px !important;
+  color: rgba(255, 120, 100, 0.7) !important;
+}
+
+/* ── Delete button pill — light-glass-warm ── */
+#app[data-theme-style='light-glass'] .btn-outline-danger {
+  background: transparent !important;
+  border: 1px solid rgba(220, 60, 40, 0.2) !important;
+  border-radius: 999px !important;
+  color: rgba(200, 60, 40, 0.6) !important;
+}
+
+/* ── Overlay ── */
+html[data-theme-style='light-glass'] .vm--overlay,
+html[data-theme-style='dark-glass'] .vm--overlay {
+  background: var(--overlay-bg) !important;
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+}
+
+/* ── Form cards — dark-glass ── */
+#app[data-theme-style='dark-glass'] .first_level_grid_block:not(.has-sub-blocks) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ── Form cards — light-glass-warm ── */
+#app[data-theme-style='light-glass'] .first_level_grid_block:not(.has-sub-blocks) {
+  background: rgba(255, 255, 255, 0.42) !important;
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.03) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 48px rgba(28, 23, 15, 0.09),
+              0 0 40px rgba(246, 185, 65, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* ── Form blocks with sub-blocks: transparent in glass themes ── */
+#app[data-theme-style='dark-glass'] .first_level_grid_block.has-sub-blocks,
+#app[data-theme-style='light-glass'] .first_level_grid_block.has-sub-blocks {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 !important;
+}
+
+/* ── Inline blocks (no sub-block): glass background ── */
+#app[data-theme-style='dark-glass'] .form_inline_block,
+#app[data-theme-style='light-glass'] .form_inline_block {
+  border: 1px solid var(--sub-block-border, var(--panel-border)) !important;
+  border-radius: 0.75rem !important;
+  background: var(--sub-block-bg, rgb(255 255 255 / 3%)) !important;
+  box-shadow: none !important;
+  padding: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_inline_block:last-child,
+#app[data-theme-style='light-glass'] .form_inline_block:last-child {
+  margin-bottom: 0 !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_inline_block .border-label,
+#app[data-theme-style='light-glass'] .form_inline_block .border-label {
+  background-color: transparent !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_inline_block .form-control,
+#app[data-theme-style='dark-glass'] .form_inline_block .custom-select {
+  background: var(--cell-backgroundColor) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  border-radius: var(--radius-input, 10px) !important;
+}
+
+#app[data-theme-style='light-glass'] .form_inline_block .form-control,
+#app[data-theme-style='light-glass'] .form_inline_block .custom-select {
+  background: var(--cell-backgroundColor) !important;
+  border-color: rgba(143, 214, 228, 0.45) !important;
+  border-radius: var(--radius-input, 12px) !important;
+}
+
+/* ── Form sub-blocks — dark-glass ── */
+#app[data-theme-style='dark-glass'] .form_sub_block {
+  background: var(--sub-block-color, rgba(255, 255, 255, 0.07)) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  padding: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* ── Form sub-blocks — light-glass-warm ── */
+#app[data-theme-style='light-glass'] .form_sub_block {
+  background: var(--sub-block-color, rgba(255, 255, 255, 0.42)) !important;
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.03) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 16px 48px rgba(28, 23, 15, 0.09),
+              0 0 40px rgba(246, 185, 65, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  padding: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_sub_block:last-child,
+#app[data-theme-style='light-glass'] .form_sub_block:last-child {
+  margin-bottom: 0 !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_sub_block__title,
+#app[data-theme-style='light-glass'] .form_sub_block__title {
+  font-family: 'Space Grotesk', Manrope, sans-serif !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 1.25rem !important;
+  padding-bottom: 0 !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_sub_block__title {
+  color: rgba(89, 214, 207, 0.6) !important;
+}
+
+#app[data-theme-style='light-glass'] .form_sub_block__title {
+  color: #1a5f7a !important;
+}
+
+/* ── border-label inside sub-blocks: use sub-block bg ── */
+#app[data-theme-style='dark-glass'] .form_sub_block .border-label,
+#app[data-theme-style='light-glass'] .form_sub_block .border-label {
+  background-color: transparent !important;
+}
+
+/* ── Inputs inside sub-blocks ── */
+#app[data-theme-style='dark-glass'] .form_sub_block .form-control,
+#app[data-theme-style='dark-glass'] .form_sub_block .custom-select {
+  background: var(--cell-backgroundColor) !important;
+  border-color: rgba(255, 255, 255, 0.10) !important;
+  border-radius: var(--radius-input, 10px) !important;
+}
+
+#app[data-theme-style='light-glass'] .form_sub_block .form-control,
+#app[data-theme-style='light-glass'] .form_sub_block .custom-select {
+  background: var(--cell-backgroundColor) !important;
+  border-color: rgba(143, 214, 228, 0.45) !important;
+  border-radius: var(--radius-input, 12px) !important;
+}
+
+/* ── Nested user-views inside sub-blocks: remove extra borders ── */
+#app[data-theme-style='dark-glass'] .form_sub_block .nested-userview,
+#app[data-theme-style='light-glass'] .form_sub_block .nested-userview {
+  border: none !important;
+  border-radius: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* ── Tables inside sub-blocks: glass-table styling ── */
+#app[data-theme-style='dark-glass'] .form_sub_block .table,
+#app[data-theme-style='light-glass'] .form_sub_block .table {
+  border-collapse: separate !important;
+  border-spacing: 0 6px !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_sub_block .table td {
+  background: rgb(255 255 255 / 2%) !important;
+  border: none !important;
+}
+
+#app[data-theme-style='dark-glass'] .form_sub_block .table th {
+  font-size: 0.7rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: var(--muted) !important;
+  border: none !important;
+}
+
+/* ── Glass table: floating rows ──
+   Each tbody tr renders as a pill-shaped card. All td have .cell-alpha-blur which
+   uses a ::before pseudo-element with background-color: var(--cell-backgroundColor).
+   cell-local-variant maps --backgroundColor → --cell-backgroundColor.
+
+   Strategy:
+   - Set --cell-backgroundColor on tr so it cascades to td (CSS vars DO inherit).
+     cell-alpha-blur ::before reads --cell-backgroundColor from the td itself via
+     inheritance from tr. Variant classes (.amount_income-variant etc.) set
+     --backgroundColor on the td which cell-local-variant maps to --cell-backgroundColor
+     at the td level, overriding the inherited tr value. ── */
+
+/* dark-glass — row variables */
+#app[data-theme-style='dark-glass'] .custom-table tbody tr {
+  --glass-row-bg: rgba(255, 255, 255, 0.012);
+  --glass-row-border: rgba(255, 255, 255, 0.03);
+  --glass-fixed-bg: #081120;
+  background: var(--glass-row-bg);
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td {
+  /* cell-local-variant computes --cell-backgroundColor from --backgroundColor.
+     default-variant class on td sets --backgroundColor: #0b1623 which overrides
+     the inherited value from tr. We override --backgroundColor directly on td
+     to force the glass row bg — variant chips override this at a more specific
+     level via their own variant class on the inner .option element. */
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+  background: transparent !important;
+  border-top: 1px solid var(--glass-row-border) !important;
+  border-bottom: 1px solid var(--glass-row-border) !important;
+  border-left: none !important;
+  border-right: none !important;
+  color: #e7ecef;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td:first-child {
+  border: none !important;
+  border-radius: 14px 0 0 14px !important;
+  overflow: hidden;
+  background-image:
+    linear-gradient(to right, transparent 14px, var(--glass-row-border) 14px),
+    linear-gradient(to right, transparent 14px, var(--glass-row-border) 14px) !important;
+  background-size: 100% 1px, 100% 1px !important;
+  background-position: top left, bottom left !important;
+  background-repeat: no-repeat !important;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td:first-child::before {
+  border-radius: 14px 0 0 14px;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td:last-child {
+  border: none !important;
+  border-radius: 0 14px 14px 0 !important;
+  overflow: hidden;
+  background-image:
+    linear-gradient(to right, var(--glass-row-border) calc(100% - 14px), transparent calc(100% - 14px)),
+    linear-gradient(to right, var(--glass-row-border) calc(100% - 14px), transparent calc(100% - 14px)) !important;
+  background-size: 100% 1px, 100% 1px !important;
+  background-position: top left, bottom left !important;
+  background-repeat: no-repeat !important;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td:last-child::before {
+  border-radius: 0 14px 14px 0;
+}
+
+/* dark-glass — hover */
+#app[data-theme-style='dark-glass'] .custom-table tbody tr:hover {
+  --glass-row-bg: rgba(79, 214, 190, 0.08);
+  --glass-row-border: rgba(79, 214, 190, 0.18);
+  --glass-fixed-bg: #0b1e29;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr:hover td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+}
+
+/* dark-glass — cursor (active row on tap/click) */
+#app[data-theme-style='dark-glass'] .custom-table tbody tr:has(td.cursor),
+#app[data-theme-style='dark-glass'] .custom-table tbody tr:has(td.selected) {
+  --glass-row-bg: rgba(79, 214, 190, 0.11);
+  --glass-row-border: rgba(79, 214, 190, 0.24);
+  --glass-fixed-bg: #0b1e29;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr:has(td.cursor) td,
+#app[data-theme-style='dark-glass'] .custom-table tbody tr:has(td.selected) td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+}
+
+/* dark-glass — selected row */
+#app[data-theme-style='dark-glass'] .custom-table tbody tr.selected,
+#app[data-theme-style='dark-glass'] .custom-table tbody tr.table-tr.selected {
+  --glass-row-bg: rgba(79, 214, 190, 0.10);
+  --glass-row-border: rgba(79, 214, 190, 0.22);
+  --glass-fixed-bg: #0b1e29;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr.selected td,
+#app[data-theme-style='dark-glass'] .custom-table tbody tr.table-tr.selected td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+}
+
+/* light-glass — row variables */
+#app[data-theme-style='light-glass'] .custom-table tbody tr {
+  --glass-row-bg: rgba(255, 255, 255, 0.22);
+  --glass-row-border: rgba(196, 182, 163, 0.18);
+  --glass-fixed-bg: #faf6f2;
+  background: var(--glass-row-bg);
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+  background: transparent !important;
+  border-top: 1px solid var(--glass-row-border) !important;
+  border-bottom: 1px solid var(--glass-row-border) !important;
+  border-left: none !important;
+  border-right: none !important;
+  color: #1f1f1f;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr td:first-child {
+  border: none !important;
+  border-radius: 14px 0 0 14px !important;
+  overflow: hidden;
+  background-image:
+    linear-gradient(to right, transparent 14px, var(--glass-row-border) 14px),
+    linear-gradient(to right, transparent 14px, var(--glass-row-border) 14px) !important;
+  background-size: 100% 1px, 100% 1px !important;
+  background-position: top left, bottom left !important;
+  background-repeat: no-repeat !important;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr td:first-child::before {
+  border-radius: 14px 0 0 14px;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr td:last-child {
+  border: none !important;
+  border-radius: 0 14px 14px 0 !important;
+  overflow: hidden;
+  background-image:
+    linear-gradient(to right, var(--glass-row-border) calc(100% - 14px), transparent calc(100% - 14px)),
+    linear-gradient(to right, var(--glass-row-border) calc(100% - 14px), transparent calc(100% - 14px)) !important;
+  background-size: 100% 1px, 100% 1px !important;
+  background-position: top left, bottom left !important;
+  background-repeat: no-repeat !important;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr td:last-child::before {
+  border-radius: 0 14px 14px 0;
+}
+
+/* light-glass — hover */
+#app[data-theme-style='light-glass'] .custom-table tbody tr:hover {
+  --glass-row-bg: rgba(33, 133, 160, 0.07);
+  --glass-row-border: rgba(33, 133, 160, 0.22);
+  --glass-fixed-bg: #ebece8;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr:hover td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+}
+
+/* light-glass — cursor */
+#app[data-theme-style='light-glass'] .custom-table tbody tr:has(td.cursor),
+#app[data-theme-style='light-glass'] .custom-table tbody tr:has(td.selected) {
+  --glass-row-bg: rgba(33, 133, 160, 0.12);
+  --glass-row-border: rgba(33, 133, 160, 0.28);
+  --glass-fixed-bg: #ebece8;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr:has(td.cursor) td,
+#app[data-theme-style='light-glass'] .custom-table tbody tr:has(td.selected) td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+}
+
+/* light-glass — selected row */
+#app[data-theme-style='light-glass'] .custom-table tbody tr.selected,
+#app[data-theme-style='light-glass'] .custom-table tbody tr.table-tr.selected {
+  --glass-row-bg: rgba(33, 133, 160, 0.08);
+  --glass-row-border: rgba(33, 133, 160, 0.22);
+  --glass-fixed-bg: #ebece8;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody tr.selected td,
+#app[data-theme-style='light-glass'] .custom-table tbody tr.table-tr.selected td {
+  --backgroundColor: transparent;
+  --cell-backgroundColor: transparent;
+}
+
+/* Accent gradient on the active cell itself */
+#app[data-theme-style='dark-glass'] .custom-table tbody td.cursor::after,
+#app[data-theme-style='dark-glass'] .custom-table tbody td.selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(79, 214, 190, 0.22) 0%,
+    rgba(79, 214, 190, 0.08) 100%
+  );
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody td.cursor::after,
+#app[data-theme-style='light-glass'] .custom-table tbody td.selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(33, 133, 160, 0.22) 0%,
+    rgba(33, 133, 160, 0.08) 100%
+  );
+}
+
+/* ── Glass table: option chip pill shape ──
+   Reference fields with no explicit color get a subtle glass chip.
+   Explicitly coloured variants keep their chip appearance with pill shape. ── */
+
+#app[data-theme-style='dark-glass'] .custom-table .option.option-variant.option-local-variant {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+}
+
+#app[data-theme-style='light-glass'] .custom-table .option.option-variant.option-local-variant {
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(196, 182, 163, 0.18);
+  border-radius: 24px;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table .option:not(.option-variant),
+#app[data-theme-style='light-glass'] .custom-table .option:not(.option-variant) {
+  border-radius: 999px;
+}
+
+/* ── Glass table: vertical padding & utility columns ── */
+
+/* Reduce row height to match design (default is 1rem = 16px, design uses 11px) */
+#app[data-theme-style='dark-glass'] .custom-table tbody .table-td,
+#app[data-theme-style='light-glass'] .custom-table tbody .table-td {
+  --td-vertical-padding: 11px;
+}
+
+/* Disable backdrop-filter on non-fixed tbody td — it kills scroll performance
+   with many rows. Keep it on fixed-cell so pinned columns blur content behind. */
+#app[data-theme-style='dark-glass'] .custom-table tbody td:not(.fixed-cell),
+#app[data-theme-style='dark-glass'] .custom-table tbody td:not(.fixed-cell)::before,
+#app[data-theme-style='light-glass'] .custom-table tbody td:not(.fixed-cell),
+#app[data-theme-style='light-glass'] .custom-table tbody td:not(.fixed-cell)::before {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Fixed-cell (sticky) overlays — backdrop-filter can't blur sibling scroll
+   content (same compositing layer), so we use an opaque --card background. */
+#app[data-theme-style='dark-glass'] .custom-table tbody td.fixed-cell.table-td,
+#app[data-theme-style='light-glass'] .custom-table tbody td.fixed-cell.table-td {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody td.fixed-cell.table-td::before,
+#app[data-theme-style='light-glass'] .custom-table tbody td.fixed-cell.table-td::before {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: var(--glass-fixed-bg) !important;
+}
+
+
+/* select-row-cell and add-entry-cell are rendered by TableRow.vue (not TableCell).
+   They are position:sticky (fixed-cell) so scrolling content passes behind them.
+   Strategy: transparent bg + backdrop-filter blur on cell, then ::before adds the same
+   semi-transparent tint on top → visually matches data fixed-cells.
+   With padding: 0 on wrapper, sticky cells sit at left: 0 — no gap to cover. */
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td.select-row-cell,
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td.add-entry-cell,
+#app[data-theme-style='light-glass'] .custom-table tbody tr td.select-row-cell,
+#app[data-theme-style='light-glass'] .custom-table tbody tr td.add-entry-cell {
+  background: transparent !important;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td.select-row-cell::before,
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td.add-entry-cell::before,
+#app[data-theme-style='light-glass'] .custom-table tbody tr td.select-row-cell::before,
+#app[data-theme-style='light-glass'] .custom-table tbody tr td.add-entry-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--glass-fixed-bg);
+}
+
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td.select-row-cell > *,
+#app[data-theme-style='dark-glass'] .custom-table tbody tr td.add-entry-cell > *,
+#app[data-theme-style='light-glass'] .custom-table tbody tr td.select-row-cell > *,
+#app[data-theme-style='light-glass'] .custom-table tbody tr td.add-entry-cell > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Field row gap — glass themes ── */
+#app[data-theme-style='dark-glass'] .form_grid_block__column:not(:last-child),
+#app[data-theme-style='light-glass'] .form_grid_block__column:not(:last-child) {
+  margin-bottom: 1rem !important;
+}
+
+/* ── Required indicator — glass themes ── */
+#app[data-theme-style='dark-glass'] .required-indicator.empty {
+  background-color: rgba(255, 120, 100, 0.8) !important;
+  box-shadow: 0 0 6px rgba(255, 120, 100, 0.5) !important;
+  width: 5px !important;
+  height: 5px !important;
+}
+
+#app[data-theme-style='light-glass'] .required-indicator.empty {
+  background-color: rgba(220, 80, 60, 0.7) !important;
+  box-shadow: 0 0 5px rgba(220, 80, 60, 0.28) !important;
+  width: 5px !important;
+  height: 5px !important;
+}
+
+/* ── Disabled indicator — glass themes ── */
+#app[data-theme-style='dark-glass'] .disabled-indicator .material-icons,
+#app[data-theme-style='light-glass'] .disabled-indicator .material-icons {
+  opacity: 0.5;
+  font-size: 1rem;
+}
+
+/* ── Floating label typography — glass themes ── */
+#app[data-theme-style='dark-glass'] .border-label,
+#app[data-theme-style='light-glass'] .border-label {
+  font-family: 'Space Grotesk', Manrope, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background-color: transparent !important;
+  top: -0.65rem !important;
+}
+
+#app[data-theme-style='dark-glass'] .border-label {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+#app[data-theme-style='light-glass'] .border-label {
+  color: #6f6a62;
+}
+
+/* Focused state */
+#app[data-theme-style='dark-glass'] .increase-z-index.border-label {
+  color: rgba(89, 214, 207, 0.70);
+}
+
+#app[data-theme-style='light-glass'] .increase-z-index.border-label {
+  color: #1a5f7a;
+}
+
+/* ── Ambient orbs — dark-glass form cards ── */
+#app[data-theme-style='dark-glass'] .first_level_grid_block:not(.has-sub-blocks),
+#app[data-theme-style='dark-glass'] .form_sub_block {
+  position: relative;
+  isolation: isolate;
+}
+
+#app[data-theme-style='dark-glass'] .first_level_grid_block:not(.has-sub-blocks)::before,
+#app[data-theme-style='dark-glass'] .form_sub_block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 999px;
+  background: rgba(89, 214, 207, 0.07);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app[data-theme-style='dark-glass'] .first_level_grid_block:not(.has-sub-blocks)::after,
+#app[data-theme-style='dark-glass'] .form_sub_block::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 250px;
+  height: 250px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.09);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Ambient orbs — light-glass-warm form cards ── */
+#app[data-theme-style='light-glass'] .first_level_grid_block:not(.has-sub-blocks),
+#app[data-theme-style='light-glass'] .form_sub_block {
+  position: relative;
+  isolation: isolate;
+}
+
+#app[data-theme-style='light-glass'] .first_level_grid_block:not(.has-sub-blocks)::before,
+#app[data-theme-style='light-glass'] .form_sub_block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 340px;
+  border-radius: 999px;
+  background: rgba(255, 249, 226, 0.75);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app[data-theme-style='light-glass'] .first_level_grid_block:not(.has-sub-blocks)::after,
+#app[data-theme-style='light-glass'] .form_sub_block::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 280px;
+  height: 280px;
+  border-radius: 999px;
+  background: rgba(219, 248, 240, 0.6);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Card content above orbs ── */
+#app[data-theme-style='dark-glass'] .first_level_grid_block:not(.has-sub-blocks) > *,
+#app[data-theme-style='dark-glass'] .form_sub_block > *,
+#app[data-theme-style='light-glass'] .first_level_grid_block:not(.has-sub-blocks) > *,
+#app[data-theme-style='light-glass'] .form_sub_block > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Glass table: header th ── */
+
+#app[data-theme-style='dark-glass'] .custom-table th,
+#app[data-theme-style='dark-glass'] .custom-table th.fixed-cell,
+#app[data-theme-style='light-glass'] .custom-table th,
+#app[data-theme-style='light-glass'] .custom-table th.fixed-cell {
+  /* --cell-backgroundColor controls the ::before pseudo-element on fixed-cell */
+  --cell-backgroundColor: transparent;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table .table-th .column-capture,
+#app[data-theme-style='light-glass'] .custom-table .table-th .column-capture {
+  text-transform: uppercase !important;
+  letter-spacing: 0.10em !important;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table .table-th {
+  background-color: transparent;
+  color: rgba(79, 214, 190, 0.55);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  letter-spacing: 0.10em !important;
+  text-transform: uppercase !important;
+}
+
+
+#app[data-theme-style='light-glass'] .custom-table .table-th {
+  background-color: transparent;
+  color: #2185a0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  letter-spacing: 0.10em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── Glass table: resize handle & drag affordance ── */
+
+#app[data-theme-style='dark-glass'] .custom-table .resize-column-thumb {
+  background-color: rgba(79, 214, 190, 0.12);
+  width: 4px;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table .resize-column-thumb .material-icons {
+  color: rgba(79, 214, 190, 0.55);
+  font-size: 0.7rem;
+}
+
+#app[data-theme-style='dark-glass'] .custom-table th .table-th .material-icons {
+  color: rgba(79, 214, 190, 0.45);
+}
+
+#app[data-theme-style='light-glass'] .custom-table .resize-column-thumb {
+  background-color: rgba(33, 133, 160, 0.10);
+  width: 4px;
+}
+
+#app[data-theme-style='light-glass'] .custom-table .resize-column-thumb .material-icons {
+  color: rgba(33, 133, 160, 0.50);
+  font-size: 0.7rem;
+}
+
+#app[data-theme-style='light-glass'] .custom-table th .table-th .material-icons {
+  color: rgba(33, 133, 160, 0.45);
+}
+
+/* Column drop-target indicator */
+#app[data-theme-style='dark-glass'] .custom-table th.column-drop-target {
+  outline-color: rgba(79, 214, 190, 0.6);
+}
+
+#app[data-theme-style='light-glass'] .custom-table th.column-drop-target {
+  outline-color: rgba(33, 133, 160, 0.5);
+}
+
+/* ── Glass table: vertical dividers (opt-in) ── */
+
+#app[data-theme-style='dark-glass'] .custom-table.show-vertical-borders tbody tr td + td {
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+#app[data-theme-style='dark-glass'] .custom-table.show-vertical-borders tbody tr:hover td + td {
+  border-left-color: rgba(79, 214, 190, 0.14);
+}
+
+#app[data-theme-style='dark-glass'] .custom-table.show-vertical-borders th {
+  border-right: 1px solid rgba(79, 214, 190, 0.10);
+}
+
+#app[data-theme-style='dark-glass'] .custom-table.show-vertical-borders th:last-child {
+  border-right: none;
+}
+
+#app[data-theme-style='light-glass'] .custom-table.show-vertical-borders tbody tr td + td {
+  border-left: 1px solid rgba(196, 182, 163, 0.18);
+}
+
+#app[data-theme-style='light-glass'] .custom-table.show-vertical-borders tbody tr:hover td + td {
+  border-left-color: rgba(33, 133, 160, 0.15);
+}
+
+#app[data-theme-style='light-glass'] .custom-table.show-vertical-borders th {
+  border-right: 1px solid rgba(33, 133, 160, 0.12);
+}
+
+#app[data-theme-style='light-glass'] .custom-table.show-vertical-borders th:last-child {
+  border-right: none;
+}
+
+/* ── Glass table: footer row ── */
+
+#app[data-theme-style='dark-glass'] .custom-table .table-footer-row .table-footer-cell {
+  background: rgba(255, 255, 255, 0.035);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: none;
+  color: rgba(149, 167, 182, 0.7);
+}
+
+#app[data-theme-style='light-glass'] .custom-table .table-footer-row .table-footer-cell {
+  background: rgba(255, 255, 255, 0.40);
+  border-top: 1px solid rgba(196, 182, 163, 0.22);
+  border-bottom: none;
+  color: rgba(111, 106, 98, 0.7);
+}
+
+/* ── Fixed column shadow border ── */
+
+#app[data-theme-style='dark-glass'] .custom-table.show-fixed-column-border .last-fixed-cell {
+  border-right: 1px solid rgba(79, 214, 190, 0.16);
+}
+
+#app[data-theme-style='light-glass'] .custom-table.show-fixed-column-border .last-fixed-cell {
+  border-right: 1px solid rgba(33, 133, 160, 0.15);
+}
+
+/* ── Glass table: remove default td border-bottom (replaced by pill borders) ── */
+
+#app[data-theme-style='dark-glass'] .custom-table tbody td {
+  border-bottom: none !important;
+}
+
+#app[data-theme-style='light-glass'] .custom-table tbody td {
+  border-bottom: none !important;
+}
+
+/* Also remove the horizontal border inherited on th */
+#app[data-theme-style='dark-glass'] .custom-table thead tr {
+  border-bottom: none;
+}
+
+#app[data-theme-style='light-glass'] .custom-table thead tr {
+  border-bottom: none;
+}
+
+/* ══════════════════════════════════════════════
+   Enum Chips — glass themes
+   ══════════════════════════════════════════════ */
+#app[data-theme-style='dark-glass'] .chip,
+#app[data-theme-style='light-glass'] .chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: 'Space Grotesk', Manrope, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Neutral chip — dark-glass */
+#app[data-theme-style='dark-glass'] .chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Neutral chip — light-glass-warm */
+#app[data-theme-style='light-glass'] .chip {
+  background: rgba(255, 255, 255, 0.55);
+  color: #1f1f1f;
+  border: 1px solid rgba(196, 182, 163, 0.5);
+}
+
+/* Coloured chips — light-glass-warm */
+#app[data-theme-style='light-glass'] .chip.green  { background: rgba(34, 197, 94, 0.15);   color: #16a34a; border-color: rgba(34, 197, 94, 0.3); }
+#app[data-theme-style='light-glass'] .chip.teal   { background: rgba(20, 184, 166, 0.14);  color: #0f766e; border-color: rgba(20, 184, 166, 0.28); }
+#app[data-theme-style='light-glass'] .chip.blue   { background: rgba(59, 130, 246, 0.14);  color: #2563eb; border-color: rgba(59, 130, 246, 0.28); }
+#app[data-theme-style='light-glass'] .chip.indigo { background: rgba(99, 102, 241, 0.14);  color: #4f46e5; border-color: rgba(99, 102, 241, 0.28); }
+#app[data-theme-style='light-glass'] .chip.purple { background: rgba(168, 85, 247, 0.14);  color: #9333ea; border-color: rgba(168, 85, 247, 0.28); }
+#app[data-theme-style='light-glass'] .chip.amber  { background: rgba(245, 158, 11, 0.15);  color: #b45309; border-color: rgba(245, 158, 11, 0.3); }
+#app[data-theme-style='light-glass'] .chip.orange { background: rgba(249, 115, 22, 0.14);  color: #c2410c; border-color: rgba(249, 115, 22, 0.28); }
+#app[data-theme-style='light-glass'] .chip.rose   { background: rgba(244, 63, 94, 0.13);   color: #be123c; border-color: rgba(244, 63, 94, 0.28); }
+#app[data-theme-style='light-glass'] .chip.sky    { background: rgba(14, 165, 233, 0.13);  color: #0369a1; border-color: rgba(14, 165, 233, 0.28); }
+#app[data-theme-style='light-glass'] .chip.lime   { background: rgba(132, 204, 22, 0.13);  color: #4d7c0f; border-color: rgba(132, 204, 22, 0.28); }
+
+/* Coloured chips — dark-glass */
+#app[data-theme-style='dark-glass'] .chip.green  { background: rgba(34, 197, 94, 0.18);   color: #4ade80; border-color: rgba(34, 197, 94, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.teal   { background: rgba(20, 184, 166, 0.18);  color: #2dd4bf; border-color: rgba(20, 184, 166, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.blue   { background: rgba(59, 130, 246, 0.18);  color: #60a5fa; border-color: rgba(59, 130, 246, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.indigo { background: rgba(99, 102, 241, 0.18);  color: #818cf8; border-color: rgba(99, 102, 241, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.purple { background: rgba(168, 85, 247, 0.18);  color: #c084fc; border-color: rgba(168, 85, 247, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.amber  { background: rgba(245, 158, 11, 0.18);  color: #fbbf24; border-color: rgba(245, 158, 11, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.orange { background: rgba(249, 115, 22, 0.18);  color: #fb923c; border-color: rgba(249, 115, 22, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.rose   { background: rgba(244, 63, 94, 0.18);   color: #fb7185; border-color: rgba(244, 63, 94, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.sky    { background: rgba(14, 165, 233, 0.18);  color: #38bdf8; border-color: rgba(14, 165, 233, 0.32); }
+#app[data-theme-style='dark-glass'] .chip.lime   { background: rgba(132, 204, 22, 0.18);  color: #a3e635; border-color: rgba(132, 204, 22, 0.32); }
+
+/* Disable form entry animation in glass themes — transform breaks scrollHeight on first scroll */
+#app[data-theme-style='dark-glass'] .view-form,
+#app[data-theme-style='light-glass'] .view-form {
+  animation: none !important;
+}
+
+/* Remove overflow from nested scroll containers in glass themes — Chrome wastes the first
+   scroll gesture on inner elements with overflow:auto before bubbling to the real scroller */
+html[data-theme-style='dark-glass'] .tabbed-modal .content,
+html[data-theme-style='light-glass'] .tabbed-modal .content,
+#app[data-theme-style='dark-glass'] .userview-wrapper,
+#app[data-theme-style='light-glass'] .userview-wrapper,
+#app[data-theme-style='dark-glass'] .view-container,
+#app[data-theme-style='light-glass'] .view-container,
+#app[data-theme-style='dark-glass'] .view-form,
+#app[data-theme-style='light-glass'] .view-form {
+  overflow: visible !important;
+}
+
+/* Embedded tables in forms: userview-wrapper bg covers glass table content */
+#app[data-theme-style='dark-glass'] .form_sub_block .userview-wrapper,
+#app[data-theme-style='light-glass'] .form_sub_block .userview-wrapper,
+#app[data-theme-style='dark-glass'] .first_level_grid_block .userview-wrapper,
+#app[data-theme-style='light-glass'] .first_level_grid_block .userview-wrapper {
+  background-color: transparent !important;
+}
+
+/* Non-sticky fixed-cells: opaque overlay not needed when columns are static.
+   stick-fixed-columns is toggled by Table.vue ResizeObserver (width > 1000px). */
+#app[data-theme-style='dark-glass'] .table-wrapper:not(.stick-fixed-columns) tbody td.fixed-cell.table-td::before,
+#app[data-theme-style='light-glass'] .table-wrapper:not(.stick-fixed-columns) tbody td.fixed-cell.table-td::before,
+#app[data-theme-style='dark-glass'] .table-wrapper:not(.stick-fixed-columns) tbody tr td.select-row-cell::before,
+#app[data-theme-style='light-glass'] .table-wrapper:not(.stick-fixed-columns) tbody tr td.select-row-cell::before,
+#app[data-theme-style='dark-glass'] .table-wrapper:not(.stick-fixed-columns) tbody tr td.add-entry-cell::before,
+#app[data-theme-style='light-glass'] .table-wrapper:not(.stick-fixed-columns) tbody tr td.add-entry-cell::before {
+  background-color: transparent !important;
+}
+
+/* Sticky fixed-cells inside forms: nearly-opaque bg that lets ambient orb
+   colours subtly bleed through while fully hiding scrolling content. */
+#app[data-theme-style='dark-glass'] .form_sub_block .table-wrapper.stick-fixed-columns tbody td.fixed-cell.table-td::before,
+#app[data-theme-style='dark-glass'] .form_sub_block .table-wrapper.stick-fixed-columns tbody tr td.select-row-cell::before,
+#app[data-theme-style='dark-glass'] .form_sub_block .table-wrapper.stick-fixed-columns tbody tr td.add-entry-cell::before {
+  background-color: rgba(8, 17, 32, 0.92) !important;
+}
+
+#app[data-theme-style='light-glass'] .form_sub_block .table-wrapper.stick-fixed-columns tbody td.fixed-cell.table-td::before,
+#app[data-theme-style='light-glass'] .form_sub_block .table-wrapper.stick-fixed-columns tbody tr td.select-row-cell::before,
+#app[data-theme-style='light-glass'] .form_sub_block .table-wrapper.stick-fixed-columns tbody tr td.add-entry-cell::before {
+  background-color: rgba(250, 246, 242, 0.92) !important;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  #app[data-theme-style='light-glass'] .header-panel,
+  #app[data-theme-style='dark-glass'] .header-panel,
+  #app[data-theme-style='light-glass'] .menu_category_block,
+  #app[data-theme-style='dark-glass'] .menu_category_block,
+  #app[data-theme-style='light-glass'] .table-wrapper.root,
+  #app[data-theme-style='dark-glass'] .table-wrapper.root,
+  html[data-theme-style='light-glass'] .popper,
+  html[data-theme-style='dark-glass'] .popper,
+  html[data-theme-style='light-glass'] .vm--modal,
+  html[data-theme-style='dark-glass'] .vm--modal {
+    background: var(--card) !important;
+  }
+
+  #app[data-theme-style='dark-glass'] .form_sub_block,
+  #app[data-theme-style='light-glass'] .form_sub_block,
+  #app[data-theme-style='dark-glass'] .form_inline_block,
+  #app[data-theme-style='light-glass'] .form_inline_block {
+    background: var(--card) !important;
+  }
+
+  #app[data-theme-style='dark-glass'] .custom-table tbody tr td {
+    background: rgba(17, 32, 46, 0.85) !important;
+  }
+
+  #app[data-theme-style='light-glass'] .custom-table tbody tr td {
+    background: rgba(255, 255, 255, 0.88) !important;
+  }
+}
+
+
+/* finishWith toast — base (all themes) */
+.finish-toast {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+.finish-toast--success {
+  background-color: #d1fae5 !important;
+  border-color: #059669 !important;
+  color: #065f46 !important;
+
+  .toast-header {
+    background-color: #a7f3d0 !important;
+    border-bottom-color: #059669 !important;
+    color: #065f46 !important;
+  }
+}
+
+.finish-toast--warning {
+  background-color: #fef3c7 !important;
+  border-color: #d97706 !important;
+  color: #78350f !important;
+
+  .toast-header {
+    background-color: #fde68a !important;
+    border-bottom-color: #d97706 !important;
+    color: #78350f !important;
+  }
+}
+
+.finish-toast--error {
+  background-color: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #7f1d1d !important;
+
+  .toast-header {
+    background-color: #fecaca !important;
+    border-bottom-color: #dc2626 !important;
+    color: #7f1d1d !important;
+  }
+}
+
+/* finishWith toast — liquid glass */
+html[data-theme-style='light-glass'] {
+  --status-error: #dc2626;
+  --finish-toast-success-rgb: 15, 118, 110;
+  --finish-toast-warning-rgb: 196, 145, 20;
+  --finish-toast-error-rgb: 220, 38, 38;
+}
+
+html[data-theme-style='dark-glass'] {
+  --status-error: #f87171;
+  --finish-toast-success-rgb: 79, 214, 190;
+  --finish-toast-warning-rgb: 246, 185, 65;
+  --finish-toast-error-rgb: 248, 113, 113;
+}
+
+html[data-theme-style='light-glass'],
+html[data-theme-style='dark-glass'] {
+  /* Base glass structure — shared by all statuses.
+     will-change: transform promotes the toast to its own GPU compositing layer,
+     decoupling its repaint from the animated blobs inside #app. */
+  .finish-toast {
+    backdrop-filter: blur(24px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(150%) !important;
+    will-change: transform !important;
+    transform: translateZ(0) !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+  }
+
+  .finish-toast .toast-header {
+    border-bottom-width: 1px !important;
+    border-bottom-style: solid !important;
+    /* Specular highlight on the header top edge */
+    background-image: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.00) 100%
+    ) !important;
+  }
+
+  /* ── Success ── */
+  .finish-toast--success {
+    background-color: rgba(var(--finish-toast-success-rgb), 0.28) !important;
+    border-color: rgba(var(--finish-toast-success-rgb), 0.45) !important;
+    color: var(--accent) !important;
+    box-shadow:
+      0 8px 32px rgba(var(--finish-toast-success-rgb), 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+
+    .toast-header {
+      background-color: rgba(var(--finish-toast-success-rgb), 0.42) !important;
+      border-bottom-color: rgba(var(--finish-toast-success-rgb), 0.35) !important;
+      color: var(--accent) !important;
+    }
+
+    .close { color: var(--accent) !important; opacity: 0.7; }
+    .close:hover { opacity: 1; }
+  }
+
+  /* ── Warning ── */
+  .finish-toast--warning {
+    background-color: rgba(var(--finish-toast-warning-rgb), 0.28) !important;
+    border-color: rgba(var(--finish-toast-warning-rgb), 0.45) !important;
+    color: var(--accent-2) !important;
+    box-shadow:
+      0 8px 32px rgba(var(--finish-toast-warning-rgb), 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+
+    .toast-header {
+      background-color: rgba(var(--finish-toast-warning-rgb), 0.42) !important;
+      border-bottom-color: rgba(var(--finish-toast-warning-rgb), 0.35) !important;
+      color: var(--accent-2) !important;
+    }
+
+    .close { color: var(--accent-2) !important; opacity: 0.7; }
+    .close:hover { opacity: 1; }
+  }
+
+  /* ── Error ── */
+  .finish-toast--error {
+    background-color: rgba(var(--finish-toast-error-rgb), 0.28) !important;
+    border-color: rgba(var(--finish-toast-error-rgb), 0.45) !important;
+    color: var(--status-error) !important;
+    box-shadow:
+      0 8px 32px rgba(var(--finish-toast-error-rgb), 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.30) !important;
+
+    .toast-header {
+      background-color: rgba(var(--finish-toast-error-rgb), 0.42) !important;
+      border-bottom-color: rgba(var(--finish-toast-error-rgb), 0.35) !important;
+      color: var(--status-error) !important;
+    }
+
+    .close { color: var(--status-error) !important; opacity: 0.7; }
+    .close:hover { opacity: 1; }
   }
 }

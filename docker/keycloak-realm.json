@@ -2,7 +2,7 @@
   "id": "ozma",
   "realm": "ozma",
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": true,
   "registrationEmailAsUsername": true,
   "rememberMe": true,
@@ -34,15 +34,48 @@
       "clientId": "ozma",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": ["{EXTERNAL_ORIGIN}/auth_response"],
-      "webOrigins": ["{EXTERNAL_ORIGIN}"],
+      "redirectUris": [
+        "{EXTERNAL_ORIGIN}/auth_response"
+      ],
+      "webOrigins": [
+        "{EXTERNAL_ORIGIN}"
+      ],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "publicClient": true,
       "protocol": "openid-connect",
-      "defaultClientScopes": ["roles", "basic", "email"],
+      "defaultClientScopes": [
+        "roles",
+        "basic",
+        "email"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "id": "ozmadb",
+      "clientId": "ozmadb",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "cKIu9citwiEBBJjZkMaKVoinzxGOb37h",
+      "redirectUris": [
+        "{EXTERNAL_ORIGIN}/*"
+      ],
+      "webOrigins": [
+        "{EXTERNAL_ORIGIN}"
+      ],
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "roles",
+        "basic",
+        "email"
+      ],
       "optionalClientScopes": []
     },
     {
@@ -50,15 +83,23 @@
       "clientId": "ozma-report-generator",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "redirectUris": ["{EXTERNAL_ORIGIN}/report-generator/signin-oidc"],
-      "webOrigins": ["{EXTERNAL_ORIGIN}"],
+      "redirectUris": [
+        "{EXTERNAL_ORIGIN}/report-generator/signin-oidc"
+      ],
+      "webOrigins": [
+        "{EXTERNAL_ORIGIN}"
+      ],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "publicClient": true,
       "protocol": "openid-connect",
-      "defaultClientScopes": ["roles", "basic", "email"],
+      "defaultClientScopes": [
+        "roles",
+        "basic",
+        "email"
+      ],
       "optionalClientScopes": []
     }
   ],
@@ -92,7 +133,10 @@
           "credentialData": "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
         }
       ],
-      "realmRoles": ["ozmadb-admin", "default-roles-ozma"]
+      "realmRoles": [
+        "ozmadb-admin",
+        "default-roles-ozma"
+      ]
     }
   ]
 }

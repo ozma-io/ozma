@@ -16,9 +16,19 @@
   <div
     id="app"
     :data-window="uid"
+    :data-theme-style="themeStyleName"
     :style="styleSettings"
     class="default-variant default-local-variant"
   >
+    <transition name="selection-panel-fade">
+      <div v-if="selectionPanel" class="selection-buttons-wrapper">
+        <div class="selection-buttons-label">{{ selectionPanel.label }}</div>
+        <div class="selection-buttons-panel">
+          <ButtonsPanel :buttons="selectionPanel.buttons" />
+        </div>
+      </div>
+    </transition>
+
     <div class="app-container">
       <ModalPortalTarget name="tabbed-modal" multiple />
 
@@ -76,7 +86,8 @@ import {
   IThemeRef,
   ITheme,
 } from '@/utils_colors'
-import { eventBus, IShowHelpModalArgs } from '@/main'
+import { eventBus, IShowHelpModalArgs, ISelectionPanelArgs } from '@/main'
+import ButtonsPanel from '@/components/panels/ButtonsPanel.vue'
 import InviteUserModal from '@/components/InviteUserModal.vue'
 import { EntityRef } from '@/links'
 import { safeJsonParse } from '@/utils'
@@ -98,6 +109,7 @@ import { setHeadMeta, setHeadLink } from '@/elements'
   components: {
     ModalPortalTarget,
     InviteUserModal,
+    ButtonsPanel,
     ReadonlyDemoInstanceModal: () =>
       import('@/components/ReadonlyDemoInstanceModal.vue'),
     HelpModal: () => import('@/components/HelpModal.vue'),
@@ -105,6 +117,8 @@ import { setHeadMeta, setHeadLink } from '@/elements'
 })
 export default class App extends Vue {
   @Action('callApi') callApi!: ICallApi
+
+  selectionPanel: ISelectionPanelArgs | null = null
   @settings.State('current') settings!: CurrentSettings
   @settings.State('currentThemeRef') currentThemeRef!: IThemeRef | null
   @settings.Getter('language') language!: string
@@ -145,6 +159,8 @@ export default class App extends Vue {
     eventBus.on('show-invite-user-modal', this.showInviteUserModal)
     eventBus.on('show-help-modal', this.showHelpModal)
     eventBus.on('close-all-toasts', this.closeAllToasts)
+    eventBus.on('show-selection-panel', this.showSelectionPanel)
+    eventBus.on('hide-selection-panel', this.hideSelectionPanel)
     /* eslint-enable @typescript-eslint/unbound-method */
   }
 
@@ -158,6 +174,8 @@ export default class App extends Vue {
     eventBus.off('show-invite-user-modal', this.showInviteUserModal)
     eventBus.off('show-help-modal', this.showHelpModal)
     eventBus.off('close-all-toasts', this.closeAllToasts)
+    eventBus.off('show-selection-panel', this.showSelectionPanel)
+    eventBus.off('hide-selection-panel', this.hideSelectionPanel)
     /* eslint-enable @typescript-eslint/unbound-method */
 
     this.destroyWindow(this.uid)
@@ -265,6 +283,16 @@ export default class App extends Vue {
     this.$bvToast.hide()
   }
 
+  private showSelectionPanel(args: ISelectionPanelArgs) {
+    this.selectionPanel = args
+  }
+
+  private hideSelectionPanel({ sourceId }: { sourceId: symbol }) {
+    if (this.selectionPanel?.sourceId === sourceId) {
+      this.selectionPanel = null
+    }
+  }
+
   get url(): UserString {
     return `${window.location.protocol}://${window.location.host}${this.$route.fullPath}`
   }
@@ -278,6 +306,34 @@ export default class App extends Vue {
   private loadLanguage(language: string) {
     moment.locale(language)
     void this.getTranslations(language)
+  }
+
+  get themeStyleName(): string {
+    return this.currentThemeRef?.name ?? 'default'
+  }
+
+  @Watch('themeStyleName', { immediate: true })
+  private syncThemeStyleName(themeStyleName: string) {
+    document.documentElement.setAttribute('data-theme-style', themeStyleName)
+    document.body?.setAttribute('data-theme-style', themeStyleName)
+    document.documentElement.classList.add(
+      'default-variant',
+      'default-local-variant',
+    )
+    document.body?.classList.add('default-variant', 'default-local-variant')
+  }
+
+  @Watch('styleSettings', { immediate: true, deep: true })
+  private syncGlobalStyleSettings(styleSettings: Record<string, unknown>) {
+    const applyVars = (element: HTMLElement | null) => {
+      if (!element) return
+      for (const [name, value] of Object.entries(styleSettings)) {
+        element.style.setProperty(name, String(value))
+      }
+    }
+
+    applyVars(document.documentElement)
+    applyVars(document.body)
   }
 
   @Watch('settings', { immediate: true })
@@ -345,8 +401,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   get themeStyleSettings() {
     let currentTheme: ITheme | undefined
     if (this.currentThemeRef !== null) {
+      // Themes may not be loaded yet — `currentThemeRef` is restored from
+      // localStorage before settings arrive.
       currentTheme =
-        this.settings.themes[this.currentThemeRef.schema][
+        this.settings.themes[this.currentThemeRef.schema]?.[
           this.currentThemeRef.name
         ]
     }
@@ -357,21 +415,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     const oldDefaultVariant = colorVariantFromRaw({ background })
     const defaultVariant =
       currentTheme?.colorVariants['default'] ?? oldDefaultVariant
+    const pageBackgroundVariant =
+      currentTheme?.colorVariants['pageBackground'] ??
+      colorVariantFromRaw({ background: defaultVariant.backgroundDarker1 })
+    const existingTableVariant =
+      currentTheme?.colorVariants['table'] ??
+      currentTheme?.colorVariants['table-background']
+    const tableVariant =
+      existingTableVariant ??
+      colorVariantFromRaw({ background: defaultVariant.background })
     const interfaceButton = {
       ...transparentVariant,
-      backgroundDarker1: 'rgba(0, 0, 0, 0.2)',
-      backgroundDarker2: 'rgba(0, 0, 0, 0.4)',
+      backgroundDarker1: defaultVariant.backgroundDarker1,
+      backgroundDarker2: defaultVariant.backgroundDarker2,
       foreground: defaultVariant.foreground,
       foregroundContrast: defaultVariant.foregroundContrast,
       foregroundDarker: defaultVariant.foregroundDarker,
     }
     const menuEntry = {
       ...interfaceButton,
-      foreground: '#3D3D3D',
     }
     const menuHeader = {
       ...interfaceButton,
-      foreground: '#1F1F1F',
     }
     const outlinedInterfaceButton = {
       ...interfaceButton,
@@ -384,6 +449,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     })
     const defaultColorVariants = {
       default: defaultVariant,
+      'global-userview-background': pageBackgroundVariant,
+      table: tableVariant,
       interfaceButton,
       outlinedInterfaceButton,
       menuEntry,
@@ -400,6 +467,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
   @Watch('themeStyleSettings', { immediate: true })
   private loadColors() {
+    // While the chosen theme is still loading, keep the cached styles injected
+    // by index.html instead of overwriting them with default-built rules.
+    const themeIsPending =
+      this.currentThemeRef !== null &&
+      this.settings.themes[this.currentThemeRef.schema]?.[
+        this.currentThemeRef.name
+      ] === undefined
+    if (themeIsPending) return
+
     const sheet = (document.getElementById('theme-styles') as any)?.sheet as
       | CSSStyleSheet
       | undefined
@@ -410,6 +486,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
       for (const rule of this.themeStyleSettings) {
         sheet.insertRule(rule)
+      }
+    }
+
+    // Cache the generated rules so the inline script in index.html can apply
+    // them before the app boots, avoiding a light-theme flash. Only cache once
+    // the actual theme is loaded — earlier the rules are built from defaults.
+    if (
+      this.currentThemeRef !== null &&
+      this.settings.themes[this.currentThemeRef.schema]?.[
+        this.currentThemeRef.name
+      ] !== undefined
+    ) {
+      try {
+        localStorage.setItem(
+          'themeStylesCache',
+          JSON.stringify({
+            theme: `${this.currentThemeRef.schema}.${this.currentThemeRef.name}`,
+            rules: this.themeStyleSettings,
+          }),
+        )
+      } catch (e) {
+        // Quota errors are not critical here.
       }
     }
   }
@@ -565,6 +663,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   ) !important;
   --MainBorderColor: var(--borderColor, var(--OldMainBorderColor)) !important;
 
+  --userview-background-color: var(--userview-background, var(--default-backgroundDarker1Color, #f2f4f7));
+
   background-color: var(--backgroundColor);
   color: var(--foregroundColor);
 }
@@ -575,5 +675,43 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   position: relative;
   height: 100%;
   overflow: auto;
+}
+
+.input-popup-portal {
+  position: relative;
+  z-index: 200001;
+}
+
+.selection-buttons-wrapper {
+  position: fixed;
+  bottom: 3rem;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 200001;
+  border-radius: 0.5rem;
+  background-color: #000a;
+  padding: 0.5rem;
+
+  .selection-buttons-label {
+    padding: 0.5rem;
+    padding-top: 0;
+    color: white;
+    text-align: center;
+  }
+
+  ::v-deep .buttons-panel {
+    gap: 0.5rem;
+  }
+}
+
+.selection-panel-fade-enter-active,
+.selection-panel-fade-leave-active {
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+.selection-panel-fade-enter,
+.selection-panel-fade-leave-to {
+  transform: translate(-50%, 1rem);
+  opacity: 0;
 }
 </style>

@@ -109,7 +109,10 @@
             "theme_id": { "type": "reference(\"funapp\".\"color_themes\")" },
             "foreground": { "type": "string", "isNullable": true },
             "background": { "type": "string", "isNullable": true },
-            "border": { "type": "string", "isNullable": true }
+            "border": { "type": "string", "isNullable": true },
+            "font_weight": { "type": "string", "isNullable": true, "defaultValue": "'normal'" },
+            "font_style": { "type": "string", "isNullable": true, "defaultValue": "'normal'" },
+            "text_decoration": { "type": "string", "isNullable": true, "defaultValue": "'none'" }
           },
           "computedFields": {
             "full_name": { "expression": "theme_id=>__main || '.' || name" }
@@ -296,6 +299,15 @@
                         "select": "true"
                       },
                       "border": {
+                        "select": "true"
+                      },
+                      "font_weight": {
+                        "select": "true"
+                      },
+                      "font_style": {
+                        "select": "true"
+                      },
+                      "text_decoration": {
                         "select": "true"
                       }
                     }

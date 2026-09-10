@@ -1,0 +1,104 @@
+diff --git a/dist/client/client.d.ts b/dist/client/client.d.ts
+index 55ca19ff866c8ec52c7b14eefbb117880b41999e..9b4a90929ca4f61f4c09670955a39d0cd52e5fc7 100644
+--- a/dist/client/client.d.ts
++++ b/dist/client/client.d.ts
+@@ -51,9 +51,12 @@ export interface IViewExplainResult {
+     rows: IExplainedQuery;
+     attributes?: IExplainedQuery;
+ }
+-export interface IInfoRequestOpts {
++export interface ITransportOpts {
++    signal?: AbortSignal;
+ }
+-export interface IEntriesRequestOpts {
++export interface IInfoRequestOpts extends ITransportOpts {
++}
++export interface IEntriesRequestOpts extends ITransportOpts {
+     chunk?: IQueryChunk;
+     pretendUser?: string;
+     pretendRole?: IEntityRef;
+diff --git a/dist/client/client.js b/dist/client/client.js
+index 3fd8edccbc54cadf81445838355724bfe7a02925..40f7c2f99fe2e936a14d75067a41752137a4c65d 100644
+--- a/dist/client/client.js
++++ b/dist/client/client.js
+@@ -18,6 +18,11 @@ const fetchRawOzmaDB = async (input, init) => {
+         }
+     }
+ };
++// Splits transport-level options away from the ones that belong to the request body.
++const splitTransportOpts = (opts) => {
++    const { signal, ...body } = opts ?? {};
++    return { signal, body };
++};
+ const commonHeaders = {
+     'X-OzmaDB-LongRunning': 'hybrid',
+ };
+@@ -49,6 +54,7 @@ export default class OzmaDBClient {
+                             : {
+                                 Authorization: `Bearer ${this.token}`,
+                             },
++                        signal: opts?.signal,
+                     });
+                     if (!newResponse.ok) {
+                         // eslint-disable-next-line no-await-in-loop
+@@ -86,13 +92,14 @@ export default class OzmaDBClient {
+         });
+         return response.blob();
+     }
+-    fetchJsonApi(subUrl, method, body) {
++    fetchJsonApi(subUrl, method, body, signal) {
+         return this.fetchJson(`${this.apiUrl}/${subUrl}`, {
+             method,
+             headers: {
+                 'Content-Type': 'application/json',
+             },
+             body: JSON.stringify(body),
++            signal,
+         });
+     }
+     fetchSendFileApi(subUrl, method, contentType, body) {
+@@ -105,32 +112,35 @@ export default class OzmaDBClient {
+         });
+     }
+     // We use `POST` method to ensure we won't bloat URLs and to have full access to Chunk APIs.
+-    getUserView = (path, body) => {
+-        return this.fetchJsonApi(`views/${path}/entries`, 'POST', body);
++    getUserView = (path, body, signal) => {
++        return this.fetchJsonApi(`views/${path}/entries`, 'POST', body, signal);
+     };
+-    getUserViewInfo = (path, body) => {
+-        return this.fetchJsonApi(`views/${path}/info`, 'POST', body);
++    getUserViewInfo = (path, body, signal) => {
++        return this.fetchJsonApi(`views/${path}/info`, 'POST', body, signal);
+     };
+     getUserViewExplain = (path, body) => {
+         return this.fetchJsonApi(`views/${path}/explain`, 'POST', body);
+     };
+     getAnonymousUserView = (query, args, opts) => {
++        const { signal, body } = splitTransportOpts(opts);
+         const req = {
+-            ...opts,
++            ...body,
+             query,
+             args,
+         };
+-        return this.getUserView('anonymous', req);
++        return this.getUserView('anonymous', req, signal);
+     };
+     getNamedUserView = (ref, args, opts) => {
++        const { signal, body } = splitTransportOpts(opts);
+         const req = {
+-            ...opts,
++            ...body,
+             args,
+         };
+-        return this.getUserView(`by_name/${ref.schema}/${ref.name}`, req);
++        return this.getUserView(`by_name/${ref.schema}/${ref.name}`, req, signal);
+     };
+     getNamedUserViewInfo = (ref, opts) => {
+-        return this.getUserViewInfo(`by_name/${ref.schema}/${ref.name}`, opts);
++        const { signal, body } = splitTransportOpts(opts);
++        return this.getUserViewInfo(`by_name/${ref.schema}/${ref.name}`, body, signal);
+     };
+     getAnonymousUserViewExplain = (query, args, opts) => {
+         const req = {

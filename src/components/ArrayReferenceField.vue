@@ -30,6 +30,7 @@
     :autofocus="autofocus"
     :compact-mode="compactMode"
     :option-color-variant-attribute="optionColorVariantAttribute"
+    :option-variant-mapping="optionVariantMapping"
     @add-value="addValue"
     @remove-index="removeIndex"
     @clear-values="clearValues"
@@ -47,6 +48,7 @@ import { valueIsNull } from '@/values'
 import { EntriesRef } from '@/state/entries'
 import type { IQuery } from '@/state/query'
 import type { ColorVariantAttribute } from '@/utils_colors'
+import type { IConvertedBoundMapping } from '@/user_views/combined'
 
 @Component({
   components: {
@@ -66,6 +68,7 @@ export default class ArrayReferenceField extends Vue {
   @Prop({ type: String }) label!: string | undefined
   @Prop({ type: Boolean, default: false }) compactMode!: boolean
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
+  @Prop({ type: Object }) optionVariantMapping!: IConvertedBoundMapping | undefined
 
   get entriesRef(): EntriesRef {
     if (this.optionsView) {

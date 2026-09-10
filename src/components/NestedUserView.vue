@@ -8,6 +8,7 @@
     :filter="filterWords"
     :in-container="inContainer"
     :argument-editor-props="argumentEditorProps"
+    :sort-editor-props="sortEditorProps"
     @update:buttons="$emit('update:buttons', $event)"
     @goto="$emit('goto', $event)"
     @update:enable-filter="$emit('update:enable-filter', $event)"
@@ -16,6 +17,7 @@
     @update:argument-editor-props="
       $emit('update:argument-editor-props', $event)
     "
+    @update:sort-editor-props="$emit('update:sort-editor-props', $event)"
   />
 </template>
 
@@ -23,6 +25,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { convertToWords } from '@/utils'
 import { IArgumentEditorProps } from './ArgumentEditor.vue'
+import type { ISortEditorProps } from './SortEditor.vue'
 
 @Component
 export default class NestedUserView extends Vue {
@@ -36,6 +39,7 @@ export default class NestedUserView extends Vue {
   >
   @Prop({ type: Boolean, default: false }) inContainer!: boolean
   @Prop() argumentEditorProps!: IArgumentEditorProps | null
+  @Prop() sortEditorProps!: ISortEditorProps | null
 
   get filterWords() {
     const value = this.filterString

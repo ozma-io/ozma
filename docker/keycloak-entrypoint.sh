@@ -26,10 +26,16 @@ if [ -z "$KEYCLOAK_ADMIN_PASSWORD" ]; then
 fi
 
 mkdir -p /opt/keycloak/data/import
+extra_args=""
+if [ -n "$OZMADB_CLIENT_SECRET" ]; then
+  extra_args="--ozmadb-client-secret $OZMADB_CLIENT_SECRET"
+fi
+# shellcheck disable=SC2086
 /usr/local/bin/keycloak-prepare-realm.py \
   --external-origin "$EXTERNAL_ORIGIN" \
   --admin-email "$ADMIN_EMAIL" \
   --admin-password "$ADMIN_PASSWORD" \
+  $extra_args \
   </etc/keycloak/realm.json \
   >/opt/keycloak/data/import/realm.json
 

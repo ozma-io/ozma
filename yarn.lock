@@ -1575,6 +1575,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/inter@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/inter@npm:5.2.8"
+  checksum: 10c0/f737dd50005e4809887ba55ae0c9b7174216d6d14875d17a4fbb9a0ad75dec4265928b805a43fe16a23f14a878f1974a398bbfc84ad65c79fc4d4b9c3ea154e1
+  languageName: node
+  linkType: hard
+
+"@fontsource/jetbrains-mono@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/jetbrains-mono@npm:5.2.8"
+  checksum: 10c0/a51a1ad9cc847ccb3f5986d00b49fcd0eb2061200eb9caf215f968d658806e96e0ee305ab45df3d167f62223e45935cb7e89f984e7fb88fbe6928855a20e044e
+  languageName: node
+  linkType: hard
+
+"@fontsource/manrope@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/manrope@npm:5.2.8"
+  checksum: 10c0/25144b4c5e185ba20a656f28cf225b3fcf5139a3f741716fcbfcda55f27f241ba1457d0aa395613990fb18ecffd0ad781f21dad4def50a80c0d90fd9252d8664
+  languageName: node
+  linkType: hard
+
+"@fontsource/material-icons@npm:^5.2.7":
+  version: 5.2.7
+  resolution: "@fontsource/material-icons@npm:5.2.7"
+  checksum: 10c0/69e0d40951a4d3b49ee4fa520137aa7f4a27791ce25df6bcc591dcc14cc72be1613e4faf5bf33878304ed337cd7791a5cbeb47119987ccd99c4cfdde2a99ca1a
+  languageName: node
+  linkType: hard
+
+"@fontsource/space-grotesk@npm:^5.2.10":
+  version: 5.2.10
+  resolution: "@fontsource/space-grotesk@npm:5.2.10"
+  checksum: 10c0/dabe027e9ef8e4dc5d6982e3ff5a73a311a151c06f2dc0b881468c9bab4f0b39106f182aa29be8e1a4ea10ce435dea807bdcb982176ee5e81083fd3814f5a5bd
+  languageName: node
+  linkType: hard
+
 "@hapi/hoek@npm:^9.0.0, @hapi/hoek@npm:^9.3.0":
   version: 9.3.0
   resolution: "@hapi/hoek@npm:9.3.0"
@@ -1793,9 +1828,15 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.19.1"
     "@chenfengyuan/vue-qrcode": "npm:^1.0.2"
+    "@fontsource/inter": "npm:^5.2.8"
+    "@fontsource/jetbrains-mono": "npm:^5.2.8"
+    "@fontsource/manrope": "npm:^5.2.8"
+    "@fontsource/material-icons": "npm:^5.2.7"
+    "@fontsource/space-grotesk": "npm:^5.2.10"
     "@intlify/vue-i18n-loader": "npm:^1.1.0"
     "@ozma-io/ozma-embedded": "npm:^0.0.7"
-    "@ozma-io/ozmadb-js": "npm:^0.0.9"
+    "@ozma-io/ozmadb-js": "patch:@ozma-io/ozmadb-js@npm%3A0.0.9#~/.yarn/patches/@ozma-io-ozmadb-js-npm-0.0.9-109c7a16f6.patch"
+    "@playwright/test": "npm:^1.58.2"
     "@toast-ui/editor": "npm:^3.2.2"
     "@toast-ui/vue-editor": "npm:^3.2.3"
     "@types/bootstrap": "npm:^4"
@@ -1820,6 +1861,7 @@ __metadata:
     bootstrap: "npm:^4.6.1"
     bootstrap-vue: "npm:^2.22.0"
     color2k: "npm:^2.0.0"
+    compression-webpack-plugin: "npm:^12.0.0"
     core-js: "npm:^3.25.1"
     create-file-webpack: "npm:^1.0.2"
     eslint: "npm:^8.57.0"
@@ -1837,6 +1879,7 @@ __metadata:
     monaco-editor: "npm:^0.52.0"
     monaco-editor-webpack-plugin: "npm:^7.1.0"
     papaparse: "npm:^5.3.2"
+    popper.js: "npm:^1.16.1"
     portal-vue: "npm:^2.1.7"
     postcss: "npm:^8.4.23"
     postcss-html: "npm:^1.7.0"
@@ -1886,17 +1929,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@ozma-io/ozmadb-js@npm:^0.0.4":
-  version: 0.0.4
-  resolution: "@ozma-io/ozmadb-js@npm:0.0.4"
-  checksum: 10c0/cee879feb6358be22749275c5fda1f54432e4027c83a7602270439de8c78eb9d25b3a644cbb16e8873f0c87cf0c580fd6ba87439f8844ac77482d3fd66877ac9
-  languageName: node
-  linkType: hard
-
-"@ozma-io/ozmadb-js@npm:^0.0.9":
+"@ozma-io/ozmadb-js@npm:0.0.9":
   version: 0.0.9
   resolution: "@ozma-io/ozmadb-js@npm:0.0.9"
   checksum: 10c0/b2b7aff418c0d5947a79c85fe137d50d30ac48951ffc00b54502c40769384f65217ec66445c74b804e9763c7f6ebfebd9a8a39a1d97ac4047da56bb963b290e4
+  languageName: node
+  linkType: hard
+
+"@ozma-io/ozmadb-js@patch:@ozma-io/ozmadb-js@npm%3A0.0.9#~/.yarn/patches/@ozma-io-ozmadb-js-npm-0.0.9-109c7a16f6.patch":
+  version: 0.0.9
+  resolution: "@ozma-io/ozmadb-js@patch:@ozma-io/ozmadb-js@npm%3A0.0.9#~/.yarn/patches/@ozma-io-ozmadb-js-npm-0.0.9-109c7a16f6.patch::version=0.0.9&hash=19aeee"
+  checksum: 10c0/b569de9e899ad11907d3f6520bc311c4baaa1ac8c1358addd4a738a4d17a091ab6c896d822c764ee43e2f601c0b92dc393f8725a0eab31b572e964d2ddcaf9ba
   languageName: node
   linkType: hard
 
@@ -1904,6 +1947,17 @@ __metadata:
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
   checksum: 10c0/5bd7576bb1b38a47a7fc7b51ac9f38748e772beebc56200450c4a817d712232b8f1d3ef70532c80840243c657d491cf6a6be1e3a214cff907645819fdc34aadd
+  languageName: node
+  linkType: hard
+
+"@playwright/test@npm:^1.58.2":
+  version: 1.58.2
+  resolution: "@playwright/test@npm:1.58.2"
+  dependencies:
+    playwright: "npm:1.58.2"
+  bin:
+    playwright: cli.js
+  checksum: 10c0/2164c03ad97c3653ff02e8818a71f3b2bbc344ac07924c9d8e31cd57505d6d37596015a41f51396b3ed8de6840f59143eaa9c21bf65515963da20740119811da
   languageName: node
   linkType: hard
 
@@ -4387,6 +4441,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"compression-webpack-plugin@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "compression-webpack-plugin@npm:12.0.0"
+  dependencies:
+    schema-utils: "npm:^4.2.0"
+    serialize-javascript: "npm:^7.0.3"
+  peerDependencies:
+    webpack: ^5.1.0
+  checksum: 10c0/4e7a07a8dc62521ae043fd2e8bcf11cb263058c3d0b0bdfdbb5a0e2f82edbe384e158fe38c1b4907d1a8268a700bb308b7779260626fded0ed45684e336ae0be
+  languageName: node
+  linkType: hard
+
 "compression@npm:^1.7.4":
   version: 1.7.4
   resolution: "compression@npm:1.7.4"
@@ -6230,12 +6296,31 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fsevents@npm:2.3.2":
+  version: 2.3.2
+  resolution: "fsevents@npm:2.3.2"
+  dependencies:
+    node-gyp: "npm:latest"
+  checksum: 10c0/be78a3efa3e181cda3cf7a4637cb527bcebb0bd0ea0440105a3bb45b86f9245b307dc10a2507e8f4498a7d4ec349d1910f4d73e4d4495b16103106e07eee735b
+  conditions: os=darwin
+  languageName: node
+  linkType: hard
+
 "fsevents@npm:~2.3.2":
   version: 2.3.3
   resolution: "fsevents@npm:2.3.3"
   dependencies:
     node-gyp: "npm:latest"
   checksum: 10c0/a1f0c44595123ed717febbc478aa952e47adfc28e2092be66b8ab1635147254ca6cfe1df792a8997f22716d4cbafc73309899ff7bfac2ac3ad8cf2e4ecc3ec60
+  conditions: os=darwin
+  languageName: node
+  linkType: hard
+
+"fsevents@patch:fsevents@npm%3A2.3.2#optional!builtin<compat/fsevents>":
+  version: 2.3.2
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#optional!builtin<compat/fsevents>::version=2.3.2&hash=df0bf1"
+  dependencies:
+    node-gyp: "npm:latest"
   conditions: os=darwin
   languageName: node
   linkType: hard
@@ -8987,6 +9072,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"playwright-core@npm:1.58.2":
+  version: 1.58.2
+  resolution: "playwright-core@npm:1.58.2"
+  bin:
+    playwright-core: cli.js
+  checksum: 10c0/5aa15b2b764e6ffe738293a09081a6f7023847a0dbf4cd05fe10eed2e25450d321baf7482f938f2d2eb330291e197fa23e57b29a5b552b89927ceb791266225b
+  languageName: node
+  linkType: hard
+
+"playwright@npm:1.58.2":
+  version: 1.58.2
+  resolution: "playwright@npm:1.58.2"
+  dependencies:
+    fsevents: "npm:2.3.2"
+    playwright-core: "npm:1.58.2"
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    playwright: cli.js
+  checksum: 10c0/d060d9b7cc124bd8b5dffebaab5e84f6b34654a553758fe7b19cc598dfbee93f6ecfbdc1832b40a6380ae04eade86ef3285ba03aa0b136799e83402246dc0727
+  languageName: node
+  linkType: hard
+
 "pngjs@npm:^5.0.0":
   version: 5.0.0
   resolution: "pngjs@npm:5.0.0"
@@ -10258,6 +10367,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"schema-utils@npm:^4.2.0":
+  version: 4.3.3
+  resolution: "schema-utils@npm:4.3.3"
+  dependencies:
+    "@types/json-schema": "npm:^7.0.9"
+    ajv: "npm:^8.9.0"
+    ajv-formats: "npm:^2.1.1"
+    ajv-keywords: "npm:^5.1.0"
+  checksum: 10c0/1c8d2c480a026d7c02ab2ecbe5919133a096d6a721a3f201fa50663e4f30f6d6ba020dfddd93cb828b66b922e76b342e103edd19a62c95c8f60e9079cc403202
+  languageName: node
+  linkType: hard
+
 "select-hose@npm:^2.0.0":
   version: 2.0.0
   resolution: "select-hose@npm:2.0.0"
@@ -10329,6 +10450,13 @@ __metadata:
   dependencies:
     randombytes: "npm:^2.1.0"
   checksum: 10c0/2dd09ef4b65a1289ba24a788b1423a035581bef60817bea1f01eda8e3bda623f86357665fe7ac1b50f6d4f583f97db9615b3f07b2a2e8cbcb75033965f771dd2
+  languageName: node
+  linkType: hard
+
+"serialize-javascript@npm:^7.0.3":
+  version: 7.1.0
+  resolution: "serialize-javascript@npm:7.1.0"
+  checksum: 10c0/8a03dd3c6d0c899b21bde218e06907ac26a19f1feaa53250e20adbfb6fef9530032d9f78005fd957fff4b68fe1ddcc6e11b93b340c1bd5301090c68cf97b54fa
   languageName: node
   linkType: hard
 

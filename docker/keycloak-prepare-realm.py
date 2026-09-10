@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--external-origin", type=str, required=True)
     parser.add_argument("--admin-email", type=str, required=True)
     parser.add_argument("--admin-password", type=str, required=True)
+    parser.add_argument("--ozmadb-client-secret", type=str, default=None)
     args = parser.parse_args()
 
     realm = json.load(sys.stdin)
@@ -41,6 +42,13 @@ def main():
                     credential["credentialData"] = json.dumps({"hashIterations": ITERATIONS, "algorithm": "pbkdf2-sha256"})
                     credential["secretData"] = json.dumps({"salt": salt_b64, "value": pwd_hash_b64})
     
+    # Replace ozmadb client secret if provided
+    if args.ozmadb_client_secret is not None:
+        for client in realm.get("clients", []):
+            if client.get("clientId") == "ozmadb":
+                client["secret"] = args.ozmadb_client_secret
+                break
+
     # Replace EXTERNAL_ORIGIN placeholders in clients
     for client in realm.get("clients", []):
         # Update redirectUris

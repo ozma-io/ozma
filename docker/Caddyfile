@@ -1,0 +1,55 @@
+{
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES}
+	}
+}
+
+{$ADDRESS} {
+	# Compress everything we serve, including proxied API responses.
+	# Static assets additionally ship pre-compressed (see `precompressed` below).
+	encode zstd gzip
+
+	handle_path /api/* {
+		reverse_proxy {$OZMA_DB_HOST}:{$OZMA_DB_PORT:5000}
+	}
+
+	handle /auth/* {
+		reverse_proxy {$KEYCLOAK_HOST}:{$KEYCLOAK_PORT:8080}
+	}
+
+	handle /report-generator/* {
+		reverse_proxy {$OZMA_REPORT_GENERATOR_HOST}:{$OZMA_REPORT_GENERATOR_PORT:5000}
+	}
+
+	handle /grafana* {
+		reverse_proxy grafana:{$GRAFANA_PORT:3000}
+	}
+
+	import /etc/caddy/caddy.d/*.caddy
+
+	handle /static/* {
+		root /usr/share/caddy
+		# Hashed build assets can be cached aggressively.
+		header Cache-Control "public, max-age=31536000, immutable"
+		# Brotli beats on-the-fly zstd/gzip by a wide margin on our bundles, and Caddy
+		# has no brotli encoder — so the build writes .br/.gz twins we just hand over.
+		file_server {
+			precompressed br gzip
+		}
+	}
+
+	handle {
+		root /usr/share/caddy
+		# Always revalidate app shell/HTML to avoid stale chunk manifests.
+		header Cache-Control "no-cache, must-revalidate"
+		# Monaco's workers live here and are several megabytes each.
+		file_server {
+			precompressed br gzip
+		}
+		try_files {path} /index.html
+	}
+}
+
+# Whole extra sites (n8n and friends) are dropped in per host. `caddy.d` is imported
+# inside the site block above and so can only hold handlers, not site definitions.
+import /etc/caddy/sites.d/*.caddy

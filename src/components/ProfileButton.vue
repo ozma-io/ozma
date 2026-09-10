@@ -14,6 +14,18 @@
             "disable_development_mode": "Disable development mode",
             "development_mode_indicator": "Development mode is on",
             "change_language": "Language",
+            "vertical_borders": "Vertical borders",
+            "vertical_borders_on": "on",
+            "vertical_borders_off": "off",
+            "ui_animations": "Animations",
+            "ui_animations_on": "on",
+            "ui_animations_off": "off",
+            "form_sub_blocks": "Form sections",
+            "form_sub_blocks_on": "on",
+            "form_sub_blocks_off": "off",
+            "form_sub_block_monochrome": "Monochrome blocks",
+            "form_sub_block_monochrome_on": "on",
+            "form_sub_block_monochrome_off": "off",
             "en": "English",
             "es": "Spanish (Español)",
             "ru": "Russian (Русский)",
@@ -33,6 +45,18 @@
             "disable_development_mode": "Выключить режим разработки",
             "development_mode_indicator": "Включён режим разработки",
             "change_language": "Язык",
+            "vertical_borders": "Вертикальные границы",
+            "vertical_borders_on": "вкл",
+            "vertical_borders_off": "выкл",
+            "ui_animations": "Анимации",
+            "ui_animations_on": "вкл",
+            "ui_animations_off": "выкл",
+            "form_sub_blocks": "Блоки формы",
+            "form_sub_blocks_on": "вкл",
+            "form_sub_blocks_off": "выкл",
+            "form_sub_block_monochrome": "Однотонные блоки",
+            "form_sub_block_monochrome_on": "вкл",
+            "form_sub_block_monochrome_off": "выкл",
             "en": "Английский (English)",
             "es": "Испанский (Español)",
             "ru": "Русский",
@@ -52,6 +76,18 @@
             "disable_development_mode": "Deshabilitar el modo de desarrollo",
             "development_mode_indicator": "El modo de desarrollo está activado",
             "change_language": "El idioma",
+            "vertical_borders": "Bordes verticales",
+            "vertical_borders_on": "activados",
+            "vertical_borders_off": "desactivados",
+            "ui_animations": "Animaciones",
+            "ui_animations_on": "activadas",
+            "ui_animations_off": "desactivadas",
+            "form_sub_blocks": "Secciones de formulario",
+            "form_sub_blocks_on": "activadas",
+            "form_sub_blocks_off": "desactivadas",
+            "form_sub_block_monochrome": "Bloques monocromáticos",
+            "form_sub_block_monochrome_on": "activados",
+            "form_sub_block_monochrome_off": "desactivados",
             "en": "Inglés (English)",
             "es": "Español",
             "ru": "Ruso (Русский)",
@@ -65,6 +101,9 @@
   <popper
     ref="popup"
     trigger="clickToOpen"
+    transition="ozma-popover"
+    enter-active-class="ozma-popover-enter-active"
+    leave-active-class="ozma-popover-leave-active"
     :style="{ height: '2rem' }"
     :visible-arrow="false"
     :options="{
@@ -78,7 +117,7 @@
     }"
     :disabled="!show"
     :force-show="show"
-    @documentClick="show = false"
+    @document-click="show = false"
   >
     <div class="popper">
       <div class="profile-block">
@@ -110,7 +149,7 @@
 <script lang="ts">
 import { namespace } from 'vuex-class'
 import { Component, Vue } from 'vue-property-decorator'
-import Popper from 'vue-popperjs'
+import Popper from '@/components/common/OzmaPopper.vue'
 
 import * as Api from '@/api'
 import { Button } from '@/components/buttons/buttons'
@@ -203,6 +242,82 @@ export default class AppHeader extends Vue {
     )
   }
 
+  private get tableVerticalBordersEnabled(): boolean {
+    return this.currentSettings.getEntry(
+      'table_vertical_borders',
+      Boolean,
+      true,
+    )
+  }
+
+  private toggleTableVerticalBorders() {
+    const value = this.tableVerticalBordersEnabled ? 'false' : 'true'
+    void this.writeUserSettings({
+      name: 'table_vertical_borders',
+      value,
+    })
+  }
+
+  private get tableVerticalBordersCaption(): string {
+    const stateText = this.$t(
+      this.tableVerticalBordersEnabled
+        ? 'vertical_borders_on'
+        : 'vertical_borders_off',
+    ).toString()
+    return `${this.$t('vertical_borders')}: ${stateText}`
+  }
+
+  private get uiAnimationsEnabled(): boolean {
+    return this.currentSettings.getEntry('ui_animations_enabled', Boolean, true)
+  }
+
+  private toggleUiAnimations() {
+    const value = this.uiAnimationsEnabled ? 'false' : 'true'
+    void this.writeUserSettings({
+      name: 'ui_animations_enabled',
+      value,
+    })
+  }
+
+  private get uiAnimationsCaption(): string {
+    const stateText = this.$t(
+      this.uiAnimationsEnabled ? 'ui_animations_on' : 'ui_animations_off',
+    ).toString()
+    return `${this.$t('ui_animations')}: ${stateText}`
+  }
+
+  private get formSubBlocksEnabled(): boolean {
+    return this.currentSettings.getEntry('form_sub_blocks', Boolean, false)
+  }
+
+  private toggleFormSubBlocks() {
+    const value = this.formSubBlocksEnabled ? 'false' : 'true'
+    void this.writeUserSettings({ name: 'form_sub_blocks', value })
+  }
+
+  private get formSubBlocksCaption(): string {
+    const stateText = this.$t(
+      this.formSubBlocksEnabled ? 'form_sub_blocks_on' : 'form_sub_blocks_off',
+    ).toString()
+    return `${this.$t('form_sub_blocks')}: ${stateText}`
+  }
+
+  private get formSubBlockMonochromeEnabled(): boolean {
+    return this.currentSettings.getEntry('form_sub_block_monochrome', Boolean, false)
+  }
+
+  private toggleFormSubBlockMonochrome() {
+    const value = this.formSubBlockMonochromeEnabled ? 'false' : 'true'
+    void this.writeUserSettings({ name: 'form_sub_block_monochrome', value })
+  }
+
+  private get formSubBlockMonochromeCaption(): string {
+    const stateText = this.$t(
+      this.formSubBlockMonochromeEnabled ? 'form_sub_block_monochrome_on' : 'form_sub_block_monochrome_off',
+    ).toString()
+    return `${this.$t('form_sub_block_monochrome')}: ${stateText}`
+  }
+
   private get buttons() {
     const buttons: Button[] = []
 
@@ -219,16 +334,43 @@ export default class AppHeader extends Vue {
         variant: defaultVariantAttribute,
       })
     }
-    /*
     if (this.themeButtons.length > 0) {
       buttons.push({
-        caption: this.$t("theme").toString(),
-        type: "button-group",
+        caption: this.$t('theme').toString(),
+        type: 'button-group',
         buttons: this.themeButtons,
         variant: defaultVariantAttribute,
-      });
+      })
+      buttons.push({
+        caption: this.tableVerticalBordersCaption,
+        type: 'callback',
+        callback: () => this.toggleTableVerticalBorders(),
+        variant: defaultVariantAttribute,
+      })
     }
-    */
+
+    buttons.push({
+      caption: this.uiAnimationsCaption,
+      type: 'callback',
+      callback: () => this.toggleUiAnimations(),
+      variant: defaultVariantAttribute,
+    })
+
+    buttons.push({
+      caption: this.formSubBlocksCaption,
+      type: 'callback',
+      callback: () => this.toggleFormSubBlocks(),
+      variant: defaultVariantAttribute,
+    })
+
+    if (this.formSubBlocksEnabled) {
+      buttons.push({
+        caption: this.formSubBlockMonochromeCaption,
+        type: 'callback',
+        callback: () => this.toggleFormSubBlockMonochrome(),
+        variant: defaultVariantAttribute,
+      })
+    }
 
     buttons.push({
       caption: this.$t('change_language').toString(),
@@ -274,7 +416,7 @@ export default class AppHeader extends Vue {
           caption: this.$t('documentation').toString(),
           variant: defaultVariantAttribute,
           type: 'link',
-          link: { type: 'href', href: 'https://wiki.ozma.io', target: 'blank' },
+          link: { type: 'href', href: 'https://ozma.vientooscuro.ru', target: 'blank' },
         })
 
         buttons.push({
@@ -367,12 +509,12 @@ export default class AppHeader extends Vue {
   align-items: flex-start;
 }
 .user-name {
-  color: #1f1f1f;
+  color: var(--default-foregroundColor);
   font-weight: 600;
   font-size: 0.875rem;
 }
 .user-email {
-  color: #3d3d3d;
+  color: var(--default-foregroundDarkerColor);
   font-weight: 500;
   font-size: 0.75rem;
 }

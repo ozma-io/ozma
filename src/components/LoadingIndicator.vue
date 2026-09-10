@@ -62,7 +62,7 @@ export default class LoadingIndicator extends Vue {
     flex-direction: column;
     gap: 1.2rem;
     border-radius: 0.625rem;
-    background: #fff;
+    background: var(--default-backgroundColor, #fff);
     padding: 2.5rem 1.7rem;
 
     @include mobile {
@@ -72,7 +72,7 @@ export default class LoadingIndicator extends Vue {
 
   .loading-line {
     border-radius: 1.8125rem;
-    background: #efefef;
+    background: var(--default-backgroundDarker1Color, #efefef);
     width: 100%;
     height: 0.6875rem;
   }

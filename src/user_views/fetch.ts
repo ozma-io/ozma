@@ -72,6 +72,9 @@ export const fetchUserViewData = async (
             chunk: { ...opts.chunk, limit: realLimit + 1 },
           }
         }
+        // Counting all matching rows doubles the query cost, so ask the server to skip it and
+        // fetch the count separately — see `fetchRequestLinesNumberAttributes`.
+        reqOpts = { ...reqOpts, deferRequestLinesNumber: true } as any
         // Always recompile user views if development mode is enabled.
         if (developmentMode) {
           reqOpts = { ...reqOpts, forceRecompile: true } as any
@@ -95,6 +98,7 @@ export const fetchUserViewData = async (
           argumentAttributes: res.result.argumentAttributes,
           rows: complete ? res.result.rows : res.result.rows,
           complete,
+          deferredRequestLinesNumber: (res as any).deferredRequestLinesNumber,
         }
       }
     } else if (args.source.type === 'anonymous') {
@@ -137,4 +141,33 @@ export const fetchUserViewData = async (
 
     throw new UserViewError(e.body as UVError, args)
   }
+}
+
+// Fetches only the attributes of a view, with `request_lines_number()` actually computed.
+// `limit: 0` makes the server skip the rows and evaluate the count over the whole filtered set.
+export const fetchRequestLinesNumberAttributes = async (
+  store: Store<any>,
+  args: IUserViewArguments,
+  opts: IEntriesRequestOpts,
+): Promise<IViewExprResult['result']['attributes']> => {
+  const source = args.source
+  if (source.type !== 'named') {
+    throw new Error(
+      'Deferred request_lines_number is supported for named views only',
+    )
+  }
+
+  const reqOpts: IEntriesRequestOpts = {
+    ...opts,
+    chunk: { ...opts.chunk, limit: 0 },
+  }
+  const res: IViewExprResult = await store.dispatch(
+    'callApi',
+    {
+      func: (api: FunDBAPI) =>
+        api.getNamedUserView(source.ref, args.args ?? undefined, reqOpts),
+    },
+    { root: true },
+  )
+  return res.result.attributes
 }

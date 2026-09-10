@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import {
   ISelectOption,
@@ -49,6 +49,11 @@ import {
 import { valueIsNull } from '@/values'
 import type { ColorVariantAttribute } from '@/utils_colors'
 import { UserString, isOptionalUserString } from '@/state/translations'
+
+// Sentinel: `undefined` means "no buffered change pending". `null`, arrays, and
+// scalar values are all valid pending values that get emitted once on the next
+// tick.
+const NO_PENDING = undefined as unknown as undefined
 
 @Component({
   components: {
@@ -67,6 +72,21 @@ export default class ValueSelect extends Vue {
   @Prop({ type: Boolean, default: false }) isCellEdit!: boolean
   @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Object }) optionColorVariantAttribute!: ColorVariantAttribute
+
+  // Buffered next value. `undefined` is the sentinel meaning "no pending
+  // change"; once a click is recorded we always store something concrete here
+  // (an array, a scalar, or `null`).
+  private pendingValue: unknown[] | unknown | null | undefined = NO_PENDING
+  // Set to true while a `nextTick` callback is queued so synchronous-burst
+  // clicks coalesce into a single emit.
+  private flushScheduled = false
+
+  @Watch('value')
+  private onValuePropChanged() {
+    // Parent confirmed the prop — discard any buffered state so the next user
+    // action recomputes from the freshly-arrived prop, not from a stale buffer.
+    this.pendingValue = NO_PENDING
+  }
 
   private getValueIndex(value: unknown) {
     const idx = this.options.findIndex((opt) => opt.value === value)
@@ -89,36 +109,59 @@ export default class ValueSelect extends Vue {
     }
   }
 
+  private currentBase(): unknown {
+    return this.pendingValue !== NO_PENDING ? this.pendingValue : this.value
+  }
+
+  private scheduleEmit() {
+    if (this.flushScheduled) return
+    this.flushScheduled = true
+    void this.$nextTick(() => {
+      this.flushScheduled = false
+      if (this.pendingValue !== NO_PENDING) {
+        this.$emit('update:value', this.pendingValue)
+        // Note: we do NOT clear `pendingValue` here. The parent's prop update
+        // will trigger `@Watch('value')` which clears it. Clearing it now
+        // would re-introduce the race for any synchronous click that lands
+        // between this emit and the parent's prop arrival.
+      }
+    })
+  }
+
   private updateValue(index: number | null) {
     if (index === null) {
-      this.$emit('update:value', null)
+      this.pendingValue = null
     } else {
-      this.$emit('update:value', this.options[index].value)
+      this.pendingValue = this.options[index].value
     }
+    this.scheduleEmit()
   }
 
   private addValue(index: number) {
     const value = this.options[index]
-    if (valueIsNull(this.value)) {
-      this.$emit('update:value', [value.value])
+    const base = this.currentBase()
+    if (valueIsNull(base)) {
+      this.pendingValue = [value.value]
     } else {
-      this.$emit('update:value', [...(this.value as unknown[]), value.value])
+      this.pendingValue = [...(base as unknown[]), value.value]
     }
+    this.scheduleEmit()
   }
 
   private removeValue(index: number) {
-    if (this.value === null) return
+    const base = this.currentBase()
+    if (base === null) return
 
-    const rawNewValue = (this.value as unknown[]).slice()
+    const rawNewValue = (base as unknown[]).slice()
     rawNewValue.splice(index, 1)
-    const newValue =
+    this.pendingValue =
       rawNewValue.length === 0 && !this.required ? null : rawNewValue
-    this.$emit('update:value', newValue)
+    this.scheduleEmit()
   }
 
   private clearValues() {
-    const newValue = !this.required ? null : []
-    this.$emit('update:value', newValue)
+    this.pendingValue = !this.required ? null : []
+    this.scheduleEmit()
   }
 }
 </script>

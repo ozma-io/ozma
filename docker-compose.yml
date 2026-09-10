@@ -1,6 +1,17 @@
 services:
   postgres:
     image: postgres:16
+    # Without query statistics every "what is slow?" question is guesswork.
+    # The library has to be preloaded at startup; the extension itself is created
+    # per database.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.max=5000
+      - -c
+      - pg_stat_statements.track=top
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -33,6 +44,7 @@ services:
       EXTERNAL_ORIGIN: "${EXTERNAL_ORIGIN:-http://localhost:9080}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@example.com}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      OZMADB_CLIENT_SECRET: "${OZMADB_CLIENT_SECRET:-}"
     depends_on:
       - postgres
 
@@ -41,15 +53,25 @@ services:
     restart: unless-stopped
 
   ozmadb:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
     build:
       context: .
       dockerfile: docker/Dockerfile.ozmadb
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "ozma.gogol.school:host-gateway"
     environment:
       DB_HOST: postgres
       DB_USER: ozmadb
       DB_PASSWORD: ozmadb
       DB_NAME: ozmadb
+      OZMADB__JAVASCRIPT__HTTP__ENABLED: "true"
+      OZMADB__JAVASCRIPT__HTTP__ALLOWEDHOSTS__0: "*"
       PRELOAD: /etc/ozmadb/preload/preload.json
       EXTERNAL_ORIGIN: ${EXTERNAL_ORIGIN:-http://localhost:9080}
       AUTH_METADATA_ADDRESS: http://keycloak:8080/auth/realms/ozma/.well-known/openid-configuration
@@ -61,7 +83,7 @@ services:
       - keycloak
 
   ozma-report-generator:
-    image: ozmaio/ozma-report-generator:master
+    image: ghcr.io/vientooscuro/ozma-report-generator:master
     restart: unless-stopped
     environment:
       DB_HOST: postgres
@@ -80,10 +102,20 @@ services:
       - keycloak
 
   ozma:
-    image: ozmaio/ozma:master
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ozma
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
     volumes:
       - caddy_data:/data
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./docker/caddy.d:/etc/caddy/caddy.d:ro
+      - ./docker/sites.d:/etc/caddy/sites.d:ro
     environment:
       ADDRESS: ${CADDY_ADDRESS:-:80}
       KEYCLOAK_HOST: keycloak
@@ -92,6 +124,8 @@ services:
     ports:
       - ${HTTP_PORT:-9080}:80
       - ${HTTPS_PORT:-9443}:443
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - keycloak
       - ozmadb

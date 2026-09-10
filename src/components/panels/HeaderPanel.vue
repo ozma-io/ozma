@@ -59,10 +59,17 @@
           :filter-string="filterString"
           @update:filter-string="$emit('update:filter-string', $event)"
         />
+        <SortEditor
+          v-if="!useCompactLayout && sortEditorProps"
+          :sort-editor-props="sortEditorProps"
+        />
         <ArgumentEditor
           v-if="!useCompactLayout && argumentEditorProps"
           :userView="argumentEditorProps.userView"
           :applyArguments="argumentEditorProps.applyArguments"
+          :initialArgumentsSnapshot="
+            argumentEditorProps.initialArgumentsSnapshot
+          "
         />
         <ButtonsPanel
           v-if="!useCompactLayout && headerButtons.length > 0"
@@ -94,10 +101,15 @@
         :buttons="headerButtons"
         @goto="$emit('goto', $event)"
       />
+      <SortEditor
+        v-if="sortEditorProps"
+        :sort-editor-props="sortEditorProps"
+      />
       <ArgumentEditor
         v-if="argumentEditorProps"
         :userView="argumentEditorProps.userView"
         :applyArguments="argumentEditorProps.applyArguments"
+        :initialArgumentsSnapshot="argumentEditorProps.initialArgumentsSnapshot"
       />
     </div>
   </div>
@@ -105,7 +117,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
-import Popper from 'vue-popperjs'
+import Popper from '@/components/common/OzmaPopper.vue'
 
 import { debounceTillAnimationFrame } from '@/utils'
 import type { IUserViewType } from '@/components/FormControl.vue'
@@ -118,6 +130,7 @@ import { UserString, isOptionalUserString } from '@/state/translations'
 import ArgumentEditor, {
   IArgumentEditorProps,
 } from '@/components/ArgumentEditor.vue'
+import SortEditor, { ISortEditorProps } from '@/components/SortEditor.vue'
 
 const isHelpButton = (button: Button) => button.icon === 'help_outline'
 
@@ -127,6 +140,7 @@ const isHelpButton = (button: Button) => button.icon === 'help_outline'
     ButtonItem,
     Popper,
     ArgumentEditor,
+    SortEditor,
   },
 })
 export default class HeaderPanel extends Vue {
@@ -137,6 +151,7 @@ export default class HeaderPanel extends Vue {
   @Prop({ type: String, required: true }) filterString!: string
   @Prop({ type: Boolean, default: false }) isLoading!: boolean
   @Prop({ type: Object }) argumentEditorProps!: IArgumentEditorProps | null
+  @Prop({ type: Object }) sortEditorProps!: ISortEditorProps | null
   @Prop({ type: String }) type!: 'root' | 'modal' | 'nested' | undefined
 
   get extraButtons() {
@@ -181,11 +196,17 @@ export default class HeaderPanel extends Vue {
   }
   private mounted() {
     if (this.$refs['headerPanel']) {
-      /* eslint-disable-next-line @typescript-eslint/unbound-method */
-      this.panelResizeObserver = new ResizeObserver(
-        debounceTillAnimationFrame(() => this.onPanelResize()),
-      )
-      this.panelResizeObserver.observe(this.$refs['headerPanel'] as HTMLElement)
+      if (typeof ResizeObserver !== 'undefined') {
+        /* eslint-disable-next-line @typescript-eslint/unbound-method */
+        this.panelResizeObserver = new ResizeObserver(
+          debounceTillAnimationFrame(() => this.onPanelResize()),
+        )
+        this.panelResizeObserver.observe(
+          this.$refs['headerPanel'] as HTMLElement,
+        )
+      } else {
+        this.onPanelResize()
+      }
     }
   }
 }
@@ -325,6 +346,18 @@ export default class HeaderPanel extends Vue {
   margin-left: 0;
   overflow: hidden;
   color: var(--MainTextColor);
+  font-family:
+    Manrope,
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Display',
+    'SF Pro Text',
+    Inter,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
   font-weight: 600;
   font-size: 1.25rem;
   text-overflow: ellipsis;
@@ -349,7 +382,7 @@ export default class HeaderPanel extends Vue {
 }
 .placeholder-button {
   border-radius: 0.5rem;
-  background-color: #efefef;
+  background-color: var(--default-backgroundDarker1Color);
   width: 5rem;
   height: 2rem;
 }

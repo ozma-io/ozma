@@ -7,8 +7,8 @@
         v-slot="slotProps"
         :block-content="block"
         :first-level="true"
-        :has-no-content="block.hasNoContent"
-        :single-user-view-section="block.singleUserViewSection"
+        :has-no-content="block.hasNoContent || false"
+        :single-user-view-section="block.singleUserViewSection || false"
       >
         <slot :element="slotProps.element" />
       </FormGridBlock>
@@ -37,7 +37,21 @@ export interface IGridSection<T> extends IGridBase {
   hasNoContent?: boolean
 }
 
-export type GridElement<T> = IGridInput<T> | IGridSection<T>
+export interface IGridSubBlock<T> {
+  title?: string
+  hasCard: boolean
+  color?: string
+  content: GridElement<T>[]
+}
+
+export interface IGridSectionWithSubBlocks<T> extends IGridBase {
+  type: 'section_with_sub_blocks'
+  title?: string
+  subBlocks: IGridSubBlock<T>[]
+  hasNoContent?: boolean
+}
+
+export type GridElement<T> = IGridInput<T> | IGridSection<T> | IGridSectionWithSubBlocks<T>
 
 @Component({ components: { FormGridBlock } })
 export default class FormGrid extends Vue {

@@ -39,7 +39,10 @@ FROM
     name,
     foreground,
     border,
-    background
+    background,
+    font_weight,
+    font_style,
+    text_decoration
   FROM
     funapp.color_variants`,
 

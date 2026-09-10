@@ -85,11 +85,14 @@
                 v-for="(option, index) in selectedOptions"
                 :key="index"
                 :class="[
-                  optionVariantClassName,
+                  getSelectedOptionVariantClassName(option),
                   'option-local-variant',
                   single ? 'single-value' : 'one-of-many-value',
                 ]"
-                :style="{ ...listValueStyle, ...optionVariantVariables }"
+                :style="{
+                  ...listValueStyle,
+                  ...getSelectedOptionVariantVariables(option),
+                }"
               >
                 <slot name="option" :option="option">
                   <!-- eslint-disable vue/no-v-html -->
@@ -108,6 +111,17 @@
           </div>
 
           <b-input-group-append>
+            <button
+              v-if="showClearOptions"
+              type="button"
+              class="clear-all-button"
+              :title="$t('clear')"
+              :aria-label="$t('clear')"
+              @mousedown.stop.prevent
+              @click="onClearAllClick"
+            >
+              <i class="material-icons">close</i>
+            </button>
             <b-input-group-text
               v-if="!(mode === 'modal' && isOpen)"
               :class="[
@@ -144,6 +158,8 @@
               @keydown.enter.prevent.stop="filterInputFinished"
               @keydown.esc.prevent.stop="showPopup = false"
               @focus="onFilterInputFocus"
+              @mousedown.stop
+              @click.stop
             />
             <slot name="qrcode-button" />
           </b-input-group>
@@ -169,11 +185,11 @@
                 v-for="(option, index) in selectedOptions"
                 :key="index"
                 :class="[
-                  optionVariantClassName,
+                  getSelectedOptionVariantClassName(option),
                   'option-local-variant',
                   'option-wrapper',
                 ]"
-                :style="optionVariantVariables"
+                :style="getSelectedOptionVariantVariables(option)"
                 @click.stop="unselectOption(index, false)"
               >
                 <button
@@ -225,7 +241,14 @@
                 @mouseover="hoveredOptionIndex = index"
                 @click.stop="selectOption(option.index)"
               >
-                <div class="option">
+                <div
+                  :class="[
+                    getDropdownOptionVariantClassName(option),
+                    'option-local-variant',
+                    'option',
+                  ]"
+                  :style="getDropdownOptionVariantVariables(option)"
+                >
                   <slot name="option" :option="option">
                     <!-- eslint-disable vue/no-v-html -->
                     <span v-html="option.labelHtml" />
@@ -279,7 +302,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import InfiniteLoading, { StateChanger } from 'vue-infinite-loading'
-import Popper from 'vue-popperjs'
+import Popper from '@/components/common/OzmaPopper.vue'
 
 import {
   deepClone,
@@ -299,6 +322,7 @@ import { UserString, isOptionalUserString } from '@/state/translations'
 export interface ISelectOption<T> {
   label: string
   value: T
+  colorVariant?: ColorVariantAttribute
 }
 
 interface ISelectOptionHtml<T> {
@@ -306,6 +330,7 @@ interface ISelectOptionHtml<T> {
   label: string
   labelHtml: string // Stores label with links replaced with <a> tags.
   value: T
+  colorVariant?: ColorVariantAttribute
 }
 
 export interface IPendingOptions {
@@ -370,6 +395,7 @@ export default class MultiSelect extends Vue {
         label: option.label,
         labelHtml: replaceHtmlLinks(option.label),
         value: option.value,
+        colorVariant: option.colorVariant,
       }
     })
   }
@@ -397,12 +423,34 @@ export default class MultiSelect extends Vue {
     }
   }
 
-  get optionVariantClassName(): string | null {
-    return getColorVariantAttributeClassName(this.optionColorVariantAttribute)
+  getSelectedOptionVariantClassName(
+    option: ISelectOptionHtml<unknown>,
+  ): string | null {
+    const variant = option.colorVariant ?? this.optionColorVariantAttribute
+    return getColorVariantAttributeClassName(variant)
   }
 
-  get optionVariantVariables(): Record<string, string> | null {
-    return getColorVariantAttributeVariables(this.optionColorVariantAttribute)
+  getSelectedOptionVariantVariables(
+    option: ISelectOptionHtml<unknown>,
+  ): Record<string, string> | null {
+    const variant = option.colorVariant ?? this.optionColorVariantAttribute
+    return getColorVariantAttributeVariables(variant)
+  }
+
+  getDropdownOptionVariantClassName(
+    option: ISelectOptionHtml<unknown>,
+  ): string | null {
+    return option.colorVariant
+      ? getColorVariantAttributeClassName(option.colorVariant)
+      : null
+  }
+
+  getDropdownOptionVariantVariables(
+    option: ISelectOptionHtml<unknown>,
+  ): Record<string, string> | null {
+    return option.colorVariant
+      ? getColorVariantAttributeVariables(option.colorVariant)
+      : null
   }
 
   @Watch('loadingState', { immediate: true })
@@ -586,11 +634,24 @@ export default class MultiSelect extends Vue {
   }
 
   focusInput() {
-    ;(this.$refs.filterInput as HTMLInputElement | undefined)?.focus()
+    const input = this.$refs.filterInput as HTMLInputElement | undefined
+    input?.focus()
+    return input
   }
 
   focusSelect() {
     ;(this.$refs.selectContainer as HTMLElement | undefined)?.focus()
+  }
+
+  private async focusFilterInputWhenReady(attempt = 0): Promise<void> {
+    await nextRender()
+    const input = this.focusInput()
+    if (input && document.activeElement === input) {
+      return
+    }
+    if (attempt < 4) {
+      await this.focusFilterInputWhenReady(attempt + 1)
+    }
   }
 
   onFilterInputFocus() {
@@ -607,13 +668,14 @@ export default class MultiSelect extends Vue {
       this.hoveredOptionIndex = null
       this.$emit('popup-opened')
       await nextRender()
+      ;(this.$refs.popup as InputPopup | undefined)?.updatePopper()
       ;(
         this.$refs['infiniteLoading'] as InfiniteLoading | undefined
       )?.stateChanger.reset()
 
       // On-screen keyboard disturbs if there are not so many options to filter.
       if (!this.$isMobile) {
-        this.focusInput()
+        await this.focusFilterInputWhenReady()
       }
     } else {
       this.filterValue = ''
@@ -703,6 +765,20 @@ export default class MultiSelect extends Vue {
     }
 
     this.$emit('clear-values')
+  }
+
+  onClearAllClick(event: MouseEvent) {
+    // Stop the click from reaching the popup-toggle wrapper so the dropdown
+    // does not open in response to a "clear" intent. If the popup happens to
+    // already be open, close it as well — the field has just been emptied so
+    // there is nothing useful left to do in the dropdown.
+    event.stopPropagation()
+    if (this.disabled) return
+    this.unselectAll()
+    if (this.showPopup) {
+      this.showPopup = false
+    }
+    this.focusSelect()
   }
 
   async filterInputFinished() {
@@ -801,6 +877,33 @@ export default class MultiSelect extends Vue {
       display: initial;
     }
   }
+
+  .clear-all-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    transition:
+      color 0.12s ease,
+      background-color 0.12s ease;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    padding: 0 0.35rem;
+    color: var(--cell-foregroundDarkerColor);
+    line-height: 1;
+
+    > .material-icons {
+      font-size: 1rem;
+    }
+
+    &:hover,
+    &:focus {
+      outline: none;
+      background-color: var(--default-backgroundDarker1Color);
+      color: var(--cell-foregroundColor);
+    }
+  }
 }
 
 .values-container {
@@ -840,12 +943,13 @@ export default class MultiSelect extends Vue {
   .filter-input {
     border: none;
     border-color: var(--default-borderColor);
+    border-radius: 0.5rem;
     background-color: var(--default-backgroundColor);
-    padding: 0;
-    color: #000;
+    padding: 0.35rem 0.6rem;
+    color: var(--default-foregroundColor);
 
     &::placeholder {
-      color: #777c87;
+      color: var(--default-foregroundDarkerColor);
     }
 
     &:focus {
@@ -876,13 +980,19 @@ export default class MultiSelect extends Vue {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  border-radius: 0;
-  background: var(--default-backgroundColor);
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+  border: 1px solid var(--default-borderColor);
+  border-radius: 0.5rem;
+  background: var(--default-backgroundDarker1Color);
   padding: 0.6rem 1rem;
   width: 100%;
+  color: var(--default-foregroundColor);
 
   &:hover {
-    background: #ffeeee;
+    border-color: var(--default-borderColor, var(--cell-borderColor));
+    background: var(--default-backgroundDarker2Color);
   }
 }
 
@@ -903,7 +1013,7 @@ export default class MultiSelect extends Vue {
 
 .hovered-value {
   cursor: pointer !important;
-  background-color: #eff6ff !important;
+  background-color: var(--default-backgroundDarker1Color) !important;
 }
 
 div.select-container__options__actions {
@@ -921,9 +1031,9 @@ div.select-container__options__actions {
 .single-value {
   display: inline-flex;
   align-items: center;
-  border-radius: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  height: 1.3rem;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  height: 1.7rem;
   overflow: hidden;
   line-height: 0.9rem;
   white-space: pre;
@@ -940,7 +1050,26 @@ div.select-container__options__actions {
   }
 
   .compact-mode & {
-    height: 1.5rem; /* To match with usual inputs. */
+    height: 1.9rem; /* To match with usual inputs. */
+  }
+}
+
+.selected-values > .single-value {
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+
+  > span,
+  .option-wrapper,
+  .option-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  br {
+    display: none;
   }
 }
 
@@ -951,13 +1080,18 @@ div.select-container__options__actions {
   padding: 0.375rem 1rem;
 
   &:hover {
-    background-color: #eff6ff !important;
+    background-color: var(--default-backgroundDarker1Color) !important;
   }
 
   .option {
-    border-radius: 0.25rem;
-    background: #f2f4f7;
-    padding: 0.3125rem 0.75rem;
+    border: 1px solid var(--option-borderColor, transparent);
+    border-radius: 0.5rem;
+    background: var(
+      --option-backgroundColor,
+      var(--default-backgroundDarker1Color)
+    );
+    padding: 0.5rem 0.75rem;
+    color: var(--option-foregroundColor);
   }
 }
 

@@ -32,14 +32,14 @@
       <popper
         ref="popup"
         trigger="clickToToggle"
-        transition="fade"
-        enter-active-class="fade-enter fade-enter-active"
-        leave-active-class="fade-leave fade-leave-active"
+        transition="ozma-popover"
+        enter-active-class="ozma-popover-enter-active"
+        leave-active-class="ozma-popover-leave-active"
         :visible-arrow="false"
         :options="popperOptions"
         :disabled="!show"
         :force-show="show"
-        @documentClick="onDocumentClick"
+        @document-click="onDocumentClick"
       >
         <!-- eslint-disable vue/no-deprecated-slot-attribute -->
         <!-- TODO: Find or make not deprecated popper.js wrapper -->
@@ -51,10 +51,11 @@
           <slot :mode="mode" :isOpen="show" />
         </div>
         <!-- eslint-enable vue/no-deprecated-slot-attribute -->
-        <div class="popper popup">
+        <div ref="popupEl" class="popper popup" :style="popupStyle">
           <div class="popup-inner-slot">
             <slot name="inner" />
           </div>
+          <div class="resize-handle" @mousedown.prevent.stop="onResizeStart" />
         </div>
       </popper>
     </template>
@@ -62,10 +63,10 @@
 </template>
 
 <script lang="ts">
-import Popper from 'vue-popperjs'
 import { Portal } from 'portal-vue'
 import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
 
+import Popper from '@/components/common/OzmaPopper.vue'
 import TabbedModal from '@/components/modal/TabbedModal.vue'
 import { nextRender } from '@/utils'
 import { UserString, isOptionalUserString } from '@/state/translations'
@@ -77,6 +78,47 @@ export default class InputPopup extends Vue {
   @Prop({ validator: isOptionalUserString }) label!: UserString | undefined
   @Prop({ type: Boolean, default: false }) show!: boolean
   @Prop({ type: Object, default: () => {} }) popperOptions!: object
+  @Prop({ type: String, default: '20rem' }) popupMinWidth!: string
+  @Prop({ type: String, default: '40rem' }) popupMaxWidth!: string
+  @Prop({ type: String, default: '19rem' }) popupHeight!: string
+
+  private resizedWidth: string | null = null
+  private resizedHeight: string | null = null
+
+  get popupStyle(): Record<string, string> {
+    const style: Record<string, string> = {
+      height: this.resizedHeight ?? this.popupHeight,
+      'min-width': this.popupMinWidth,
+      'max-width': this.popupMaxWidth,
+    }
+    if (this.resizedWidth) {
+      style.width = this.resizedWidth
+    }
+    return style
+  }
+
+  onResizeStart(e: MouseEvent) {
+    const el = this.$refs.popupEl as HTMLElement | undefined
+    if (!el) return
+
+    const startX = e.clientX
+    const startY = e.clientY
+    const startW = el.offsetWidth
+    const startH = el.offsetHeight
+
+    const onMouseMove = (ev: MouseEvent) => {
+      this.resizedWidth = `${startW + (ev.clientX - startX)}px`
+      this.resizedHeight = `${startH + (ev.clientY - startY)}px`
+    }
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }
 
   get mode(): Mode {
     return this.$isMobile ? 'modal' : 'popup'
@@ -96,6 +138,11 @@ export default class InputPopup extends Vue {
   async onShow(newValue: boolean) {
     if (newValue === this.isVisible) {
       return
+    }
+
+    if (!newValue) {
+      this.resizedWidth = null
+      this.resizedHeight = null
     }
 
     await nextRender()
@@ -141,22 +188,42 @@ export default class InputPopup extends Vue {
 }
 
 .popup {
+  position: relative;
   display: flex;
   flex-direction: column;
+  z-index: 1002;
   box-shadow: 0px 3px 12px 0px rgba(0, 0, 0, 0.08);
   border: 1px solid #efefef;
   border-radius: 0.5rem;
-  width: 20rem;
-  max-width: 98%;
-  height: 19rem;
+  width: max-content;
   max-height: 80vh;
-  overflow: auto;
-  resize: both;
+  overflow: hidden;
   font-size: 1rem;
 
   .popup-inner-slot {
     flex: 1 1;
-    height: 100%;
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid rgba(0, 0, 0, 0.2);
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    }
   }
 }
 

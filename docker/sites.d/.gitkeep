@@ -1,0 +1,7 @@
+Per-host Caddy site definitions go here, one file per site, e.g.:
+
+    n8n.example.com {
+        reverse_proxy n8n:5678
+    }
+
+Handlers for the main site belong in ../caddy.d instead.

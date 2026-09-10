@@ -17,6 +17,7 @@ import {
   ThemesMap,
   loadThemes,
   getPreferredTheme,
+  getStoredThemeRef,
   IThemeRef,
 } from '@/utils_colors'
 
@@ -112,7 +113,9 @@ const settingsModule: Module<ISettingsState, {}> = {
     current: emptySettings,
     pending: null,
     userId: null,
-    currentThemeRef: null,
+    // Start from the stored theme so the UI doesn't flash the default (light)
+    // theme while settings and themes are loading; validated later in getSettings.
+    currentThemeRef: getStoredThemeRef(),
     userIsRoot: false,
     displayMode: 'business',
   },

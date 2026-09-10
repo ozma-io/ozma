@@ -3,6 +3,9 @@
   <popper
     ref="popup"
     trigger="clickToOpen"
+    transition="ozma-popover"
+    enter-active-class="ozma-popover-enter-active"
+    leave-active-class="ozma-popover-leave-active"
     :visible-arrow="false"
     :options="{
       placement: listItem ? 'right-start' : 'bottom-end',
@@ -16,7 +19,7 @@
     }"
     :disabled="!show"
     :force-show="show"
-    @documentClick="onDocumentClick"
+    @document-click="onDocumentClick"
   >
     <div class="popper shadow">
       <ButtonList
@@ -37,7 +40,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
-import Popper from 'vue-popperjs'
+import Popper from '@/components/common/OzmaPopper.vue'
 
 import type { IButton, IButtonGroup } from '@/components/buttons/buttons'
 import ButtonView from '@/components/buttons/ButtonView.vue'

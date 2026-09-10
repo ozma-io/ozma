@@ -4,47 +4,49 @@ $color-transition:
 
 @mixin material-button($variant: 'default') {
   transition:
-    background 0.1s,
-    opacity 0.2s,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease,
     $color-transition;
   cursor: pointer;
   border: 1px solid var(--#{$variant}-borderColor);
   background-color: var(--#{$variant}-backgroundColor);
   color: var(--#{$variant}-foregroundColor);
+  box-shadow: 0 2px 10px -8px rgb(15 23 42 / 45%);
 
   &:focus:not(.disabled),
   &:hover:not(.disabled) {
-    opacity: 0.7;
-    transition:
-      background 0s,
-      opacity 0.2s,
-      $color-transition;
+    opacity: 1;
+    transform: translateY(-1px);
     border-color: var(--#{$variant}-borderColor) !important;
     background-color: var(--#{$variant}-backgroundDarker1Color) !important;
     color: var(--#{$variant}-foregroundContrastColor) !important;
+    box-shadow: 0 12px 24px -18px rgb(15 23 42 / 45%);
   }
 
   &:focus:not(.disabled) {
-    // box-shadow: 0 0 0 0.2rem var(--#{$variant}-foregroundDarkerColor) !important;
-    box-shadow: none;
+    box-shadow:
+      0 0 0 2px rgb(45 122 255 / 16%),
+      0 10px 22px -18px rgb(15 23 42 / 35%);
   }
 
   &:active:not(.disabled) {
-    transition:
-      $color-transition,
-      background 0s,
-      opacity 0.2s;
+    transform: translateY(0);
     border-color: var(--#{$variant}-borderColor) !important;
     background-color: var(--#{$variant}-backgroundDarker2Color) !important;
     color: var(--#{$variant}-foregroundContrastColor);
+    box-shadow: 0 4px 10px -8px rgb(15 23 42 / 40%);
   }
 
   &.disabled {
-    opacity: 0.7;
+    opacity: 0.55;
     cursor: not-allowed;
     border-color: var(--#{$variant}-backgroundColor) !important;
     background-color: var(--#{$variant}-backgroundColor) !important;
     color: var(--#{$variant}-foregroundDarkerColor) !important;
+    box-shadow: none;
   }
 }
 
@@ -52,6 +54,9 @@ $color-transition:
   border-color: var(--#{$name}-borderColor);
   background-color: var(--#{$name}-backgroundColor);
   color: var(--#{$name}-foregroundColor);
+  font-weight: var(--#{$name}-fontWeightStyle, normal);
+  font-style: var(--#{$name}-fontStyleStyle, normal);
+  text-decoration: var(--#{$name}-textDecorationStyle, none);
 }
 
 /* 24px is material icons best size and 14px is default font size */
@@ -62,7 +67,9 @@ $color-transition:
 @mixin variant-to-local($local-name) {
   /* stylelint-disable value-keyword-case */
   $keys: foregroundColor, foregroundDarkerColor, foregroundContrastColor,
-    backgroundColor, backgroundDarker1Color, backgroundDarker2Color, borderColor;
+    backgroundColor, backgroundDarker1Color, backgroundDarker2Color, borderColor,
+    shadowColor,
+    fontWeightStyle, fontStyleStyle, textDecorationStyle;
 
   .#{$local-name}-local-variant {
     @each $key in $keys {

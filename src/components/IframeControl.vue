@@ -49,7 +49,7 @@ export default class IframeControl extends Vue {
   @Prop({ type: String }) srcdoc!: string | undefined
   @Prop({ type: Object }) iframeRef!: IIframeRef | undefined
   @Prop({ required: true }) value!: unknown
-  @Prop({ type: Number }) height!: number
+  @Prop({ type: [Number, String] }) height!: number | string | undefined
 
   @Action('callApi') callApi!: ICallApi
 
@@ -84,10 +84,14 @@ export default class IframeControl extends Vue {
   }
 
   get style() {
-    if (this.height || this.requestedHeight) {
-      return {
-        height: `${this.requestedHeight ?? this.height}px`,
-      }
+    if (this.requestedHeight) {
+      return { height: `${this.requestedHeight}px` }
+    }
+    if (typeof this.height === 'string' && this.height.endsWith('%')) {
+      return { height: this.height }
+    }
+    if (this.height) {
+      return { height: `${this.height}px` }
     }
     return undefined
   }

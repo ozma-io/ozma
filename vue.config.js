@@ -1,9 +1,11 @@
 import * as fs from 'fs'
+import * as zlib from 'zlib'
 import webpack from 'webpack'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import VueTemplateBabelCompiler from 'vue-template-babel-compiler'
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin'
 import CreateFileWebpack from 'create-file-webpack'
+import CompressionPlugin from 'compression-webpack-plugin'
 
 const configName =
   process.env['CONFIG'] || process.env['NODE_ENV'] || 'development'
@@ -19,6 +21,33 @@ const defaults = {
 
 const analyzeBundle = process.env['ANALYZE']
 const enableLint = process.env['NODE_ENV'] !== 'production'
+const isProduction = process.env['NODE_ENV'] === 'production'
+
+/* Caddy serves these next to the originals via `file_server { precompressed br gzip }`,
+   so the ratio is paid once at build time instead of on every request. Caddy ships no
+   brotli encoder at all, which is the main reason to pre-compress rather than rely on
+   on-the-fly `encode`. */
+const compressibleAssets = /\.(?:js|mjs|css|html|svg|json|txt|map|wasm)$/
+const compressionPlugins = [
+  new CompressionPlugin({
+    filename: '[path][base].br',
+    algorithm: 'brotliCompress',
+    test: compressibleAssets,
+    compressionOptions: {
+      params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+    },
+    threshold: 1024,
+    minRatio: 0.9,
+  }),
+  new CompressionPlugin({
+    filename: '[path][base].gz',
+    algorithm: 'gzip',
+    test: compressibleAssets,
+    compressionOptions: { level: 9 },
+    threshold: 1024,
+    minRatio: 0.9,
+  }),
+]
 const embeddedJs = fs.readFileSync(
   import.meta
     .resolve('@ozma-io/ozma-embedded/embedded')
@@ -59,6 +88,7 @@ export default {
         content: embeddedJs,
       }),
       ...(analyzeBundle ? [new BundleAnalyzerPlugin()] : []),
+      ...(isProduction ? compressionPlugins : []),
     ],
   },
   chainWebpack: (config) => {
@@ -77,6 +107,13 @@ export default {
         { ...definitions, ...defaults, ...buildConfig },
         ...rest,
       ])
+    /* Vue CLI inlines assets below 4 KB, which caught 79 font faces — the small
+       per-script subsets — as base64 in the render-blocking vendor stylesheet. That
+       cost ~600 KB and, worse, defeated `unicode-range`: the browser cannot skip the
+       Greek or Vietnamese cuts it will never draw. Always emit fonts as files. */
+    config.module
+      .rule('fonts')
+      .set('parser', { dataUrlCondition: { maxSize: 0 } })
     config.module
       .rule('i18n')
       .resourceQuery(/blockType=i18n/)

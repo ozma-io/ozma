@@ -218,10 +218,10 @@ export default class AlertBanner extends Vue {
   align-items: center;
   opacity: 1;
   border-radius: 50%;
-  background-color: #eef2fb;
+  background-color: var(--default-backgroundDarker1Color);
   width: 1.75rem;
   height: 1.75rem;
-  color: #777c87;
+  color: var(--default-foregroundDarkerColor);
 }
 
 .content-wrapper {

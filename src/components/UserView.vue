@@ -84,7 +84,12 @@
 -->
 
 <template>
-  <div class="userview-wrapper">
+  <div
+    :class="[
+      'userview-wrapper',
+      { 'iframe-only-wrapper': isFormWithOnlyIframe },
+    ]"
+  >
     <b-modal
       :id="$id('business_mode_edit_view')"
       lazy
@@ -93,7 +98,7 @@
     >
       <div>
         {{ businessModeEditViewText }}
-        <a v-if="userIsRoot" href="https://wiki.ozma.io" target="_blank">
+        <a v-if="userIsRoot" href="https://ozma.vientooscuro.ru" target="_blank">
           wiki
         </a>
         <br />
@@ -175,6 +180,9 @@
             @select="$emit('select', $event)"
             @update:buttons="componentButtons = $event"
             @update:enable-filter="$emit('update:enable-filter', $event)"
+            @update:sort-editor-props="
+              $emit('update:sort-editor-props', $event)
+            "
             @update:current-page="$emit('update:current-page', $event)"
             @update:body-style="$emit('update:body-style', $event)"
             @load-next-chunk="loadNextChunk"
@@ -259,7 +267,11 @@ import type {
   IUserViewArguments,
 } from '@/user_views/combined'
 import { CombinedUserView } from '@/user_views/combined'
-import { fetchUserViewData, UserViewError } from '@/user_views/fetch'
+import {
+  fetchRequestLinesNumberAttributes,
+  fetchUserViewData,
+  UserViewError,
+} from '@/user_views/fetch'
 import { baseUserViewHandler } from '@/components/BaseUserView'
 import Errorbox from '@/components/Errorbox.vue'
 import { CurrentSettings, DisplayMode } from '@/state/settings'
@@ -451,6 +463,8 @@ export default class UserView extends Vue {
   // Old user view is shown while new component for uv is loaded.
   private state: UserViewLoadingState = loadingState
   private nextUv: Promise<void> | null = null
+  private pendingAbort: AbortController | null = null
+  private usesRemoteSearch = false
   private userViewRedirects = 0
 
   protected created() {
@@ -472,12 +486,27 @@ export default class UserView extends Vue {
     this.removeReloadHandler(this.uid)
     // Stop pending operations.
     this.nextUv = null
+    this.pendingAbort?.abort()
+    this.pendingAbort = null
   }
 
   private get transitionKey() {
     return this.state.state === 'show'
       ? JSON.stringify(this.state.uv.args.source)
       : 'none'
+  }
+
+  get isFormWithOnlyIframe(): boolean {
+    if (this.state.state !== 'show') return false
+    const uv = this.state.uv
+    if (
+      this.state.componentName !== 'Form' ||
+      uv.columnAttributes.length !== 1 ||
+      uv.columnAttributes[0]['control'] !== 'iframe'
+    )
+      return false
+    const height = uv.columnAttributes[0]['control_height']
+    return height !== undefined && String(height).endsWith('%')
   }
 
   get showImportInitialInstance() {
@@ -657,16 +686,30 @@ export default class UserView extends Vue {
     this.$emit('update:buttons', this.allButtons)
   }
 
+  // Snapshot of `args.args` from the moment this user view source was first
+  // shown. Reset whenever the source identity changes (different schema/name
+  // or anonymous source). Used by ArgumentEditor's "Reset filters" button.
+  private initialSourceKey: string | null = null
+  private initialArgsSnapshot: IUserViewArguments['args'] = null
+
   @Watch('state', { immediate: true })
   private watchState() {
     if (this.state.state !== 'show') {
       this.$emit('update:argument-editor-props', null)
+      this.$emit('update:sort-editor-props', null)
       return
+    }
+
+    const sourceKey = JSON.stringify(this.state.uv.args.source)
+    if (this.initialSourceKey !== sourceKey) {
+      this.initialSourceKey = sourceKey
+      this.initialArgsSnapshot = this.state.uv.args.args
     }
 
     const argumentEditorProps: IArgumentEditorProps = {
       userView: this.state.uv,
       applyArguments: (params) => this.applyUpdatedArguments(params),
+      initialArgumentsSnapshot: this.initialArgsSnapshot,
     }
     this.$emit('update:argument-editor-props', argumentEditorProps)
   }
@@ -806,7 +849,44 @@ export default class UserView extends Vue {
   private async loadEntriesWithRemoteSearch(search: string | undefined) {
     if (this.state.state !== 'show') return
 
+    this.usesRemoteSearch = true
     await this.reload({ search, differentComponent: true })
+  }
+
+  // Every reload after a remote search — pagination, chunk loading, refresh — must keep the search
+  // applied, otherwise the server returns unrelated rows which the view then filters out locally.
+  private get remoteSearch(): string | undefined {
+    if (!this.usesRemoteSearch || this.filter.length === 0) return undefined
+
+    return this.filter.join(' ')
+  }
+
+  // `request_lines_number()` requires counting the whole filtered set, which roughly doubles the
+  // query cost. We show the rows first and let the counter arrive a moment later.
+  private async loadDeferredRequestLinesNumber(
+    args: IUserViewArguments,
+    opts: IEntriesRequestOpts,
+    uv: ICombinedUserViewAny,
+  ) {
+    let attributes
+    try {
+      attributes = await fetchRequestLinesNumberAttributes(
+        this.$store,
+        args,
+        opts,
+      )
+    } catch (e) {
+      // The counter is cosmetic; a failure here must not break the already displayed view.
+      if (!opts.signal?.aborted) {
+        console.error('Failed to fetch request_lines_number', e)
+      }
+      return
+    }
+
+    // Drop the result if the view has been reloaded in the meantime.
+    if (this.state.state !== 'show' || this.state.uv !== uv) return
+
+    uv.attributes = { ...uv.attributes, ...attributes }
   }
 
   private reload(
@@ -825,8 +905,8 @@ export default class UserView extends Vue {
       loadNextChunk,
       loadAllChunks,
       loadAllChunksLimitless,
-      search,
     } = options
+    const search = 'search' in options ? options.search : this.remoteSearch
     const clonedArgs = deepClone(this.args)
     const args = {
       source: clonedArgs.source,
@@ -845,6 +925,12 @@ export default class UserView extends Vue {
     if (this.state.state === 'error') {
       this.setState({ state: 'loading', args })
     }
+
+    // A new reload supersedes the pending one, so stop the server from finishing a request whose
+    // result we are going to throw away anyway — this matters for search-as-you-type.
+    this.pendingAbort?.abort()
+    const abortController = new AbortController()
+    this.pendingAbort = abortController
 
     let allFetched = false
     const pending: IRef<Promise<void>> = {}
@@ -871,10 +957,33 @@ export default class UserView extends Vue {
         } else {
           limit = maxPerFetch
         }
-        const opts: IEntriesRequestOpts = { chunk: { limit, search } }
+        const opts: IEntriesRequestOpts = {
+          chunk: { limit, search },
+          signal: abortController.signal,
+        }
         let uvData = await fetchUserViewData(this.$store, args, opts)
 
         if (pending.ref !== this.nextUv) return
+
+        // If the view has a lazy_load.per_page larger than our initial limit,
+        // re-fetch with the correct limit so the first page is fully loaded.
+        if (
+          limit !== undefined &&
+          uvData.rows !== null &&
+          uvData.rows.length >= limit
+        ) {
+          const lazyLoad = uvData.attributes['lazy_load'] as any
+          const perPage: number | undefined = lazyLoad?.pagination?.per_page
+          if (perPage !== undefined && perPage > limit) {
+            const opts2: IEntriesRequestOpts = {
+              chunk: { limit: perPage, search },
+              signal: abortController.signal,
+            }
+            uvData = await fetchUserViewData(this.$store, args, opts2)
+            if (pending.ref !== this.nextUv) return
+            limit = perPage
+          }
+        }
 
         if (
           uvData.rows &&
@@ -969,6 +1078,9 @@ export default class UserView extends Vue {
             this.scrollToTop()
           }
           this.nextUv = null
+          if (uvData.deferredRequestLinesNumber) {
+            void this.loadDeferredRequestLinesNumber(args, opts, uv)
+          }
         } else if (newType.type === 'link') {
           if (this.userViewRedirects >= maxUserViewRedirects) {
             this.setState({
@@ -999,6 +1111,9 @@ export default class UserView extends Vue {
           throw new NeverError(newType)
         }
       } catch (e) {
+        // We aborted this request ourselves because a newer one superseded it.
+        if (abortController.signal.aborted) return
+
         if (pending.ref === this.nextUv) {
           this.setState({
             state: 'error',
@@ -1082,6 +1197,11 @@ export default class UserView extends Vue {
     if (newValue === oldValue) return
 
     this.$emit('update:is-loading', newValue === 'loading')
+  }
+
+  @Watch('isFormWithOnlyIframe', { immediate: true })
+  updateIframeOnly(newValue: boolean) {
+    this.$emit('update:iframe-only', newValue)
   }
 
   // FIXME: Do not changed when modal is open — only default values
@@ -1187,6 +1307,15 @@ export default class UserView extends Vue {
   background-color: var(--userview-background-color);
   height: 100%;
   overflow-y: auto;
+
+  &.iframe-only-wrapper {
+    overflow: hidden;
+
+    .b-overlay-wrap,
+    .userview-overlay {
+      height: 100%;
+    }
+  }
 }
 
 .overlay-content {
